@@ -1,6 +1,6 @@
 # PortalForge
 
-Wewnętrzny portal intranetowy dla organizacji 200+ pracowników.
+Wewnętrzny portal intranetowy dla organizacji.
 
 ## Opis projektu
 
