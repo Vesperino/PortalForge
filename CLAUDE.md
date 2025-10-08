@@ -221,12 +221,33 @@ All AI-assisted development should maintain:
 5. CI/CD pipeline setup
 6. Core domain models
 
+**Completed:**
+- [x] Initialize Nuxt 3 project ✅
+- [x] Configure Supabase credentials ✅
+- [x] Setup .env files (safely ignored in git) ✅
+
 **Next Steps:**
-- [ ] Initialize Nuxt 3 project
-- [ ] Configure Supabase project
-- [ ] Setup database schema
-- [ ] Implement authentication
+- [ ] Setup backend Clean Architecture structure
+- [ ] Run Supabase database migrations
+- [ ] Implement Supabase auth in backend
+- [ ] Implement Supabase auth in frontend
+- [ ] Create first API endpoint with authentication
 - [ ] Create CI/CD workflows
+
+## Supabase Configuration
+
+**Project**: https://mqowlgphivdosieakzjb.supabase.co
+
+**Environment Variables:**
+- Frontend: `frontend/.env` (gitignored)
+  - `NUXT_PUBLIC_SUPABASE_URL`
+  - `NUXT_PUBLIC_SUPABASE_KEY` (anon key)
+- Backend: `backend/PortalForge.Api/.env` (gitignored)
+  - `SUPABASE_URL`
+  - `SUPABASE_SERVICE_ROLE_KEY` (secret!)
+  - `CONNECTION_STRING`
+
+**⚠️ SECURITY**: Never commit `.env` files! Always use `.env.example` templates.
 
 ## Key Business Rules
 
