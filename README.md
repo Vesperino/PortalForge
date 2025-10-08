@@ -34,14 +34,33 @@ PortalForge to centralna platforma komunikacji wewnętrznej, która rozwiązuje 
 - Docker
 - Supabase (Database + Auth)
 
-## Struktura projektu
+## Struktura projektu (Monorepo)
 
 ```
 PortalForge/
-├── .ai/              # Dokumentacja AI i PRD
-├── backend/          # .NET 8.0 API
-├── frontend/         # Nuxt 3 Application
+├── .ai/                        # Dokumentacja AI i PRD
+├── backend/
+│   └── PortalForge.Api/       # .NET 8.0 Web API
+├── frontend/                   # Nuxt 3 Application (To be initialized)
+├── PortalForge.sln             # Visual Studio Solution
 └── README.md
+```
+
+## Rozpoczęcie pracy
+
+### Backend
+```bash
+cd backend/PortalForge.Api
+dotnet restore
+dotnet run
+```
+
+### Frontend (Do zainicjalizowania)
+```bash
+cd frontend
+npx nuxi@latest init .
+npm install
+npm run dev
 ```
 
 ## Dokumentacja

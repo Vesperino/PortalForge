@@ -1,0 +1,6 @@
+@PortalForge_HostAddress = http://localhost:5155
+
+GET {{PortalForge_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
