@@ -1,45 +1,89 @@
 # PortalForge Frontend
 
-Frontend application built with Nuxt 3 (Vue 3).
+Frontend application built with Nuxt 3 (Vue 3) and TypeScript.
 
-## Setup (To be completed)
+## Setup
+
+### Install dependencies
 
 ```bash
-# Install dependencies
 npm install
+```
 
-# Development server
+### Create environment file
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` with your configuration values.
+
+### Development server
+
+Start the development server on `http://localhost:3000`:
+
+```bash
 npm run dev
+```
 
-# Build for production
+## Build
+
+Build the application for production:
+
+```bash
 npm run build
+```
+
+Preview production build locally:
+
+```bash
+npm run preview
+```
+
+## Testing
+
+Run unit tests:
+
+```bash
+npm run test
+```
+
+Run E2E tests:
+
+```bash
+npm run test:e2e
 ```
 
 ## Tech Stack
 
-- **Framework**: Nuxt 3
-- **UI Library**: Tailwind CSS
-- **State Management**: Pinia
-- **Testing**: Vitest + Playwright
-- **TypeScript**: Yes
+- **Nuxt 3** - Vue 3 meta-framework
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Utility-first CSS
+- **Pinia** - State management
+- **VueUse** - Composition utilities
+- **Vitest** - Unit testing
+- **Playwright** - E2E testing
 
-## Structure (Planned)
+## Project Structure
 
 ```
 frontend/
-├── components/      # Vue components
-├── composables/     # Vue composables
-├── layouts/         # Nuxt layouts
-├── pages/           # Nuxt pages (auto-routing)
-├── stores/          # Pinia stores
-├── types/           # TypeScript types
-└── tests/           # Unit and E2E tests
+├── assets/         # Uncompiled assets (CSS, images)
+├── components/     # Vue components
+├── composables/    # Composition functions
+├── layouts/        # Layout components
+├── pages/          # File-based routing
+├── public/         # Static assets
+├── stores/         # Pinia stores
+├── types/          # TypeScript types
+└── utils/          # Utility functions
 ```
 
-## Next Steps
+## Documentation
 
-1. Initialize Nuxt 3 project: `npx nuxi@latest init .`
-2. Install Tailwind CSS: `npm install -D @nuxtjs/tailwindcss`
-3. Install Pinia: `npm install @pinia/nuxt`
-4. Configure authentication with Supabase
-5. Setup API client for backend communication
+See [.ai/frontend/README.md](../.ai/frontend/README.md) for detailed documentation.
+
+---
+
+**Version**: 0.1.0
+**Last Updated**: 2025-10-08
