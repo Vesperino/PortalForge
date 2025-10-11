@@ -143,6 +143,25 @@ git checkout -b feature/feature-name
 - **Error Handling**: Use Result pattern or custom exceptions
 - **Logging**: Use Serilog with structured logging
 
+#### .NET Best Practices
+- Use nullable reference types (`#nullable enable`)
+- Implement repository pattern in Infrastructure layer
+- Use value objects for domain primitives
+- Follow SOLID principles
+- Write XML documentation for public APIs
+- Use dependency injection for all services
+- Implement unit tests with AAA pattern (Arrange, Act, Assert)
+- Use FluentAssertions for readable test assertions
+
+#### Error Handling Guidelines
+- Handle errors and edge cases at the beginning of methods
+- Use early returns for error conditions to avoid deeply nested if statements
+- Place the happy path last in the method for improved readability
+- Avoid unnecessary else statements; use if-return pattern instead
+- Use guard clauses to handle preconditions and invalid states early
+- Implement proper error logging with Serilog
+- Return meaningful error messages to the client
+
 ### Frontend (Vue/Nuxt)
 - **Components**: Use Composition API with `<script setup>`
 - **TypeScript**: Always use TypeScript, avoid `any`
@@ -151,6 +170,44 @@ git checkout -b feature/feature-name
 - **State**: Use Pinia for global state, composables for local state
 - **Imports**: Leverage Nuxt auto-imports
 - **Formatting**: Prettier with 2-space indentation
+
+#### Vue/Nuxt Best Practices
+- Use functional, declarative programming - avoid classes
+- Prefer named exports for composables and utils
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError)
+- File structure: imports, types, composables, main logic, template
+- Use `defineProps` and `defineEmits` with TypeScript interfaces
+- Implement proper prop validation
+- Use `computed` for derived state instead of methods
+- Leverage VueUse composables for common functionality
+- Use Nuxt's auto-imported components - no need for manual imports
+- Implement proper loading and error states in components
+
+#### TypeScript Guidelines
+- Always define interfaces for props, emits, and API responses
+- Use `type` for unions and intersections, `interface` for object shapes
+- Avoid `any` - use `unknown` if type is truly unknown
+- Use generics for reusable components and functions
+- Leverage TypeScript's strict mode
+- Define proper return types for functions
+
+#### Tailwind CSS Guidelines
+- Use utility classes directly in templates
+- Use `@apply` directive sparingly - only for frequently repeated patterns
+- Implement responsive design with breakpoint prefixes (sm:, md:, lg:, xl:)
+- Use Tailwind's color palette and spacing scale consistently
+- Leverage dark mode with `dark:` variant when needed
+- Use arbitrary values `[]` only when necessary
+- Group related utilities logically (layout, spacing, colors, typography)
+
+#### Accessibility Guidelines
+- Use semantic HTML elements (button, nav, main, article, etc.)
+- Implement proper ARIA labels and roles
+- Ensure keyboard navigation works correctly
+- Maintain proper heading hierarchy (h1 → h2 → h3)
+- Use `aria-label` or `aria-labelledby` for elements without visible text
+- Implement focus states for interactive elements
+- Test with screen readers when possible
 
 ### Commit Messages
 Follow Conventional Commits:
