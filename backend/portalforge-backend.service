@@ -1,0 +1,19 @@
+[Unit]
+Description=PortalForge Backend API
+After=network.target
+
+[Service]
+Type=notify
+User=githubactions
+WorkingDirectory=/home/githubactions/portalforge/backend
+ExecStart=/usr/bin/dotnet /home/githubactions/portalforge/backend/PortalForge.dll
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+SyslogIdentifier=portalforge-backend
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+EnvironmentFile=/home/githubactions/portalforge/backend/.env
+
+[Install]
+WantedBy=multi-user.target

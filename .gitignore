@@ -76,7 +76,20 @@ Thumbs.db
 # Docker
 docker-compose.override.yml
 
+# Deployment environment files (on VPS only)
+.env.backend
+.env.frontend
+
 # Secrets
 appsettings.Development.json
 *.env
 secrets/
+
+# Logs
+logs/
+*.log
+
+# Backups
+backups/
+*.tar.gz
+*.sql

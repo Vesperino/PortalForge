@@ -1,0 +1,61 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Frontend to VPS
+    runs-on: [self-hosted, vps, production]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Stop existing container
+        run: docker stop portalforge-frontend || true
+
+      - name: Remove existing container
+        run: docker rm portalforge-frontend || true
+
+      - name: Build Docker image
+        run: |
+          cd frontend
+          docker build -t portalforge-frontend:latest \
+            --build-arg NUXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            --build-arg NUXT_PUBLIC_SUPABASE_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+            --build-arg NUXT_PUBLIC_API_BASE_URL=${{ secrets.FRONTEND_API_URL }} \
+            .
+
+      - name: Run Docker container
+        run: |
+          docker run -d \
+            --name portalforge-frontend \
+            --restart unless-stopped \
+            -p 5001:3000 \
+            -e NUXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            -e NUXT_PUBLIC_SUPABASE_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+            -e NUXT_PUBLIC_API_BASE_URL=${{ secrets.FRONTEND_API_URL }} \
+            -e NODE_ENV=production \
+            portalforge-frontend:latest
+
+      - name: Clean up old images
+        run: docker image prune -f
+
+      - name: Check container status
+        run: |
+          sleep 5
+          docker ps | grep portalforge-frontend
+          echo "✅ Frontend container running!"
+
+      - name: Health check
+        run: |
+          echo "Waiting for frontend to start..."
+          sleep 15
+          curl -f http://localhost:5001 || exit 1
+          echo "✅ Frontend health check passed!"
