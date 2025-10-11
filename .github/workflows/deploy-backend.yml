@@ -1,0 +1,54 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Backend to VPS
+    runs-on: [self-hosted, vps, production]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+        working-directory: ./backend
+
+      - name: Build
+        run: dotnet publish -c Release -o ~/portalforge/backend
+        working-directory: ./backend/PortalForge.Api
+
+      - name: Copy systemd service file
+        run: |
+          sudo cp ~/portalforge/backend/portalforge-backend.service /etc/systemd/system/
+          sudo systemctl daemon-reload
+
+      - name: Restart service
+        run: |
+          sudo systemctl restart portalforge-backend
+          sudo systemctl enable portalforge-backend
+
+      - name: Check service status
+        run: |
+          sleep 5
+          sudo systemctl status portalforge-backend --no-pager
+          echo "✅ Backend deployed successfully!"
+
+      - name: Health check
+        run: |
+          echo "Waiting for backend to start..."
+          sleep 10
+          curl -f http://localhost:22022/health || exit 1
+          echo "✅ Backend health check passed!"

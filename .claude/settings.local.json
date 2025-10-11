@@ -10,7 +10,9 @@
       "Bash(dir:*)",
       "Bash(git push:*)",
       "Read(//c/Users/abialecki/**)",
-      "Bash(npm init:*)"
+      "Bash(npm init:*)",
+      "Read(//d/Projekty/WatchdogAPI/**)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
