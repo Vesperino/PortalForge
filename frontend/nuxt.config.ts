@@ -4,6 +4,9 @@ export default defineNuxtConfig({
 
   devtools: { enabled: true },
 
+  // Disable SSR - build as static SPA for path-based deployment
+  ssr: false,
+
   modules: [
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',

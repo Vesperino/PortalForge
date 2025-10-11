@@ -17,47 +17,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Stop existing container
-        run: docker stop portalforge-frontend || true
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Remove existing container
-        run: docker rm portalforge-frontend || true
-
-      - name: Build Docker image
+      - name: Install dependencies
         run: |
           cd frontend
-          docker build -t portalforge-frontend:latest \
-            --build-arg NUXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
-            --build-arg NUXT_PUBLIC_SUPABASE_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
-            --build-arg NUXT_PUBLIC_API_BASE_URL=${{ secrets.FRONTEND_API_URL }} \
-            --build-arg NUXT_APP_BASE_URL=/portalforge/fe/ \
-            .
+          npm ci
 
-      - name: Run Docker container
+      - name: Build static site
         run: |
-          docker run -d \
-            --name portalforge-frontend \
-            --restart unless-stopped \
-            -p 5001:3000 \
-            -e NUXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
-            -e NUXT_PUBLIC_SUPABASE_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
-            -e NUXT_PUBLIC_API_BASE_URL=${{ secrets.FRONTEND_API_URL }} \
-            -e NUXT_APP_BASE_URL=/portalforge/fe/ \
-            -e NODE_ENV=production \
-            portalforge-frontend:latest
+          cd frontend
+          npm run build
+        env:
+          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          NUXT_PUBLIC_API_URL: https://krablab.pl/portalforge/be
 
-      - name: Clean up old images
-        run: docker image prune -f
-
-      - name: Check container status
+      - name: Deploy static files to Nginx
         run: |
-          sleep 5
-          docker ps | grep portalforge-frontend
-          echo "✅ Frontend container running!"
-
-      - name: Health check
-        run: |
-          echo "Waiting for frontend to start..."
-          sleep 15
-          curl -f http://localhost:5001 || exit 1
-          echo "✅ Frontend health check passed!"
+          sudo mkdir -p /var/www/portalforge-frontend
+          sudo rsync -av --delete frontend/.output/public/ /var/www/portalforge-frontend/
+          sudo chown -R www-data:www-data /var/www/portalforge-frontend
+          echo "✅ Static files deployed!"
