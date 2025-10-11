@@ -44,3 +44,76 @@ jobs:
           sudo rsync -av --delete frontend/.output/public/ /var/www/portalforge-frontend/
           sudo chown -R www-data:www-data /var/www/portalforge-frontend
           echo "✅ Static files deployed!"
+
+      - name: Update Nginx configuration
+        run: |
+          set -e  # Exit on any error
+
+          NGINX_CONF="/etc/nginx/sites-available/krablab.pl"
+          BACKUP_CONF="/etc/nginx/sites-available/krablab.pl.backup.$(date +%Y%m%d_%H%M%S)"
+          TEMP_CONF="/tmp/krablab.pl.new"
+
+          echo "📋 Creating backup: $BACKUP_CONF"
+          sudo cp "$NGINX_CONF" "$BACKUP_CONF"
+
+          echo "🔧 Updating PortalForge frontend configuration..."
+
+          # Remove old PortalForge frontend section if exists
+          sudo awk '
+            /# ===== PORTALFORGE FRONTEND/ {
+              skip=1
+              next
+            }
+            /# ===== Krablab main web/ {
+              if (skip) {
+                skip=0
+                print ""
+              }
+            }
+            !skip { print }
+          ' "$NGINX_CONF" > "$TEMP_CONF"
+
+          # Insert new frontend config before Krablab main web section
+          sudo awk '
+            /# ===== Krablab main web/ {
+              while ((getline line < ".deployment/nginx/portalforge-frontend.conf") > 0) {
+                print line
+              }
+              print ""
+            }
+            { print }
+          ' "$TEMP_CONF" | sudo tee "${TEMP_CONF}.final" > /dev/null
+
+          sudo mv "${TEMP_CONF}.final" "$NGINX_CONF"
+          sudo rm -f "$TEMP_CONF"
+
+          echo "✅ Configuration updated!"
+
+      - name: Test Nginx configuration
+        run: |
+          if sudo nginx -t; then
+            echo "✅ Nginx configuration is valid!"
+          else
+            echo "❌ Nginx configuration test failed! Rolling back..."
+            LATEST_BACKUP=$(ls -t /etc/nginx/sites-available/krablab.pl.backup.* | head -1)
+            sudo cp "$LATEST_BACKUP" /etc/nginx/sites-available/krablab.pl
+            echo "⏪ Rolled back to: $LATEST_BACKUP"
+            exit 1
+          fi
+
+      - name: Reload Nginx
+        run: |
+          sudo systemctl reload nginx
+          echo "✅ Nginx reloaded successfully!"
+
+      - name: Verify deployment
+        run: |
+          echo "Waiting for Nginx to process new config..."
+          sleep 3
+
+          # Test if frontend is accessible
+          if curl -f -s -o /dev/null -w "%{http_code}" https://krablab.pl/portalforge/fe/ | grep -q "200"; then
+            echo "✅ Frontend is accessible!"
+          else
+            echo "⚠️  Frontend returned non-200 status code, check manually"
+          fi
