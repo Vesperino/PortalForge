@@ -30,7 +30,7 @@ export default defineNuxtConfig({
   },
 
   app: {
-    // Base URL for deployment behind reverse proxy
+    // Base URL for path-based deployment
     baseURL: process.env.NUXT_APP_BASE_URL || '/portalforge/fe/',
 
     head: {
