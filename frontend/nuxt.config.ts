@@ -31,7 +31,7 @@ export default defineNuxtConfig({
 
   app: {
     // Base URL for path-based deployment
-    baseURL: process.env.NUXT_APP_BASE_URL || '/portalforge/fe/',
+    baseURL: '/portalforge/fe/',
 
     head: {
       title: 'PortalForge',
