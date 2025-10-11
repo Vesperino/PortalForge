@@ -25,9 +25,9 @@ RUN apk add --no-cache dumb-init
 COPY --from=build /app/.output /app/.output
 COPY --from=build /app/package*.json /app/
 
-# Create non-root user
-RUN addgroup -g 1000 appuser && \
-    adduser -D -u 1000 -G appuser appuser && \
+# Create non-root user (use existing group if GID 1000 exists)
+RUN addgroup -g 1001 appuser || true && \
+    adduser -D -u 1001 -G appuser appuser && \
     chown -R appuser:appuser /app
 
 USER appuser
