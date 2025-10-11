@@ -45,9 +45,9 @@ if (!string.IsNullOrEmpty(pathBase))
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
-    // Use relative path to work with PathBase
-    options.SwaggerEndpoint("../swagger/v1/swagger.json", "PortalForge API v1");
-    options.RoutePrefix = "swagger"; // Access at /swagger or /portalforge/be/swagger
+    // Swagger endpoint relative to current path
+    options.SwaggerEndpoint("v1/swagger.json", "PortalForge API v1");
+    options.RoutePrefix = "swagger"; // Access at /portalforge/be/swagger
 });
 
 app.UseHttpsRedirection();
