@@ -30,6 +30,9 @@ export default defineNuxtConfig({
   },
 
   app: {
+    // Base URL for deployment behind reverse proxy
+    baseURL: process.env.NUXT_APP_BASE_URL || '/portalforge/fe/',
+
     head: {
       title: 'PortalForge',
       meta: [

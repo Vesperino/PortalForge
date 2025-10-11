@@ -30,6 +30,7 @@ jobs:
             --build-arg NUXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
             --build-arg NUXT_PUBLIC_SUPABASE_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             --build-arg NUXT_PUBLIC_API_BASE_URL=${{ secrets.FRONTEND_API_URL }} \
+            --build-arg NUXT_APP_BASE_URL=/portalforge/fe/ \
             .
 
       - name: Run Docker container
@@ -41,6 +42,7 @@ jobs:
             -e NUXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
             -e NUXT_PUBLIC_SUPABASE_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             -e NUXT_PUBLIC_API_BASE_URL=${{ secrets.FRONTEND_API_URL }} \
+            -e NUXT_APP_BASE_URL=/portalforge/fe/ \
             -e NODE_ENV=production \
             portalforge-frontend:latest
 
