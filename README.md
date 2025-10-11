@@ -6,6 +6,11 @@
 
 > Wewnętrzny portal intranetowy dla organizacji 200+ pracowników
 
+## 🚀 Live Demo
+
+- **Frontend**: [https://krablab.pl/portalforge/fe/](https://krablab.pl/portalforge/fe/)
+- **Backend API (Swagger)**: [https://krablab.pl/portalforge/be/swagger/index.html](https://krablab.pl/portalforge/be/swagger/index.html)
+
 ## Przegląd projektu
 
 **PortalForge** to scentralizowana platforma komunikacji zaprojektowana do rozwiązania problemów związanych z chaosem dokumentowym i brakiem centralizacji informacji w dużych organizacjach. System dostarcza kompleksowe narzędzia do zarządzania strukturą organizacyjną, kalendarzem wydarzeń firmowych oraz komunikacją wewnętrzną.
