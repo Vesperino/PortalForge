@@ -17,34 +17,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET 8.0
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
+      - name: Stop existing container
+        run: docker stop portalforge-backend || true
 
-      - name: Restore dependencies
-        run: dotnet restore
-        working-directory: ./backend
+      - name: Remove existing container
+        run: docker rm portalforge-backend || true
 
-      - name: Build
-        run: dotnet publish -c Release -o ~/portalforge/backend
-        working-directory: ./backend/PortalForge.Api
-
-      - name: Copy systemd service file
+      - name: Build Docker image
         run: |
-          sudo cp ~/portalforge/backend/portalforge-backend.service /etc/systemd/system/
-          sudo systemctl daemon-reload
+          cd backend
+          docker build -t portalforge-backend:latest .
 
-      - name: Restart service
+      - name: Run Docker container
         run: |
-          sudo systemctl restart portalforge-backend
-          sudo systemctl enable portalforge-backend
+          docker run -d \
+            --name portalforge-backend \
+            --restart unless-stopped \
+            -p 22022:5000 \
+            --env-file ~/portalforge/backend/.env \
+            portalforge-backend:latest
 
-      - name: Check service status
+      - name: Clean up old images
+        run: docker image prune -f
+
+      - name: Check container status
         run: |
           sleep 5
-          sudo systemctl status portalforge-backend --no-pager
-          echo "✅ Backend deployed successfully!"
+          docker ps | grep portalforge-backend
+          echo "✅ Backend container running!"
 
       - name: Health check
         run: |
