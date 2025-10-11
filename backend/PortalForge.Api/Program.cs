@@ -20,6 +20,14 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+// Health check endpoint
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "healthy",
+    timestamp = DateTime.UtcNow,
+    environment = app.Environment.EnvironmentName
+}));
+
 app.MapControllers();
 
 app.Run();
