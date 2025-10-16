@@ -1,15 +1,61 @@
 <script setup lang="ts">
 const { register, isLoading, error } = useAuth()
 
+const firstName = ref('')
+const lastName = ref('')
 const email = ref('')
+const department = ref('')
+const position = ref('')
+const phoneNumber = ref('')
 const password = ref('')
 const confirmPassword = ref('')
-const formErrors = ref<{ email?: string; password?: string; confirmPassword?: string }>({})
+const formErrors = ref<{
+  firstName?: string
+  lastName?: string
+  email?: string
+  department?: string
+  position?: string
+  phoneNumber?: string
+  password?: string
+  confirmPassword?: string
+}>({})
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 
+const validatePassword = (pwd: string): string | null => {
+  if (!pwd) {
+    return 'Hasło jest wymagane'
+  }
+  if (pwd.length < 8) {
+    return 'Hasło musi mieć minimum 8 znaków'
+  }
+  if (!/[A-Z]/.test(pwd)) {
+    return 'Hasło musi zawierać przynajmniej jedną wielką literę'
+  }
+  if (!/[a-z]/.test(pwd)) {
+    return 'Hasło musi zawierać przynajmniej jedną małą literę'
+  }
+  if (!/\d/.test(pwd)) {
+    return 'Hasło musi zawierać przynajmniej jedną cyfrę'
+  }
+  if (!/[\W_]/.test(pwd)) {
+    return 'Hasło musi zawierać przynajmniej jeden znak specjalny'
+  }
+  return null
+}
+
 const validateForm = (): boolean => {
   formErrors.value = {}
+
+  if (!firstName.value) {
+    formErrors.value.firstName = 'Imię jest wymagane'
+    return false
+  }
+
+  if (!lastName.value) {
+    formErrors.value.lastName = 'Nazwisko jest wymagane'
+    return false
+  }
 
   if (!email.value) {
     formErrors.value.email = 'Email jest wymagany'
@@ -21,13 +67,19 @@ const validateForm = (): boolean => {
     return false
   }
 
-  if (!password.value) {
-    formErrors.value.password = 'Hasło jest wymagane'
+  if (!department.value) {
+    formErrors.value.department = 'Dział jest wymagany'
     return false
   }
 
-  if (password.value.length < 8) {
-    formErrors.value.password = 'Hasło musi mieć minimum 8 znaków'
+  if (!position.value) {
+    formErrors.value.position = 'Stanowisko jest wymagane'
+    return false
+  }
+
+  const passwordError = validatePassword(password.value)
+  if (passwordError) {
+    formErrors.value.password = passwordError
     return false
   }
 
@@ -52,13 +104,18 @@ const handleSubmit = async () => {
   await register({
     email: email.value,
     password: password.value,
-    confirmPassword: confirmPassword.value
+    confirmPassword: confirmPassword.value,
+    firstName: firstName.value,
+    lastName: lastName.value,
+    department: department.value,
+    position: position.value,
+    phoneNumber: phoneNumber.value || undefined
   })
 }
 </script>
 
 <template>
-  <form class="space-y-6" @submit.prevent="handleSubmit">
+  <form class="space-y-4" @submit.prevent="handleSubmit">
     <div>
       <h2 class="text-2xl font-bold text-gray-900 text-center mb-2">
         Utwórz konto
@@ -72,15 +129,73 @@ const handleSubmit = async () => {
       {{ error }}
     </BaseAlert>
 
+    <div class="grid grid-cols-2 gap-4">
+      <BaseInput
+        v-model="firstName"
+        type="text"
+        label="Imię"
+        placeholder="Jan"
+        autocomplete="given-name"
+        :error="formErrors.firstName"
+        :disabled="isLoading"
+        required
+      />
+
+      <BaseInput
+        v-model="lastName"
+        type="text"
+        label="Nazwisko"
+        placeholder="Kowalski"
+        autocomplete="family-name"
+        :error="formErrors.lastName"
+        :disabled="isLoading"
+        required
+      />
+    </div>
+
     <BaseInput
       v-model="email"
       type="email"
-      label="Email"
-      placeholder="twoj.email@firma.pl"
+      label="Email służbowy"
+      placeholder="jan.kowalski@firma.pl"
       autocomplete="email"
       :error="formErrors.email"
       :disabled="isLoading"
       required
+    />
+
+    <div class="grid grid-cols-2 gap-4">
+      <BaseInput
+        v-model="department"
+        type="text"
+        label="Dział"
+        placeholder="IT"
+        autocomplete="organization-title"
+        :error="formErrors.department"
+        :disabled="isLoading"
+        required
+      />
+
+      <BaseInput
+        v-model="position"
+        type="text"
+        label="Stanowisko"
+        placeholder="Developer"
+        autocomplete="organization-title"
+        :error="formErrors.position"
+        :disabled="isLoading"
+        required
+      />
+    </div>
+
+    <BaseInput
+      v-model="phoneNumber"
+      type="tel"
+      label="Numer telefonu (opcjonalnie)"
+      placeholder="+48 123 456 789"
+      autocomplete="tel"
+      :error="formErrors.phoneNumber"
+      :disabled="isLoading"
     />
 
     <div>
@@ -199,8 +314,15 @@ const handleSubmit = async () => {
       </div>
     </div>
 
-    <div class="text-xs text-gray-500">
-      Hasło musi zawierać minimum 8 znaków.
+    <div class="text-xs text-gray-500 space-y-1">
+      <p class="font-medium">Wymagania dotyczące hasła:</p>
+      <ul class="list-disc list-inside space-y-0.5 ml-2">
+        <li>Minimum 8 znaków</li>
+        <li>Przynajmniej jedna wielka litera (A-Z)</li>
+        <li>Przynajmniej jedna mała litera (a-z)</li>
+        <li>Przynajmniej jedna cyfra (0-9)</li>
+        <li>Przynajmniej jeden znak specjalny (!@#$%^&*)</li>
+      </ul>
     </div>
 
     <BaseButton

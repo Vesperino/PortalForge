@@ -27,6 +27,11 @@ export interface RegisterCredentials {
   email: string
   password: string
   confirmPassword: string
+  firstName: string
+  lastName: string
+  department: string
+  position: string
+  phoneNumber?: string
 }
 
 export interface AuthResponse {
