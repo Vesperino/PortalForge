@@ -23,7 +23,13 @@
       "Bash(dotnet add package:*)",
       "Bash(dotnet build:*)",
       "Bash(dotnet ef migrations add:*)",
-      "Bash(dotnet tool install:*)"
+      "Bash(dotnet tool install:*)",
+      "Bash(curl:*)",
+      "Bash(dotnet ef database update:*)",
+      "Bash(taskkill:*)",
+      "Bash(dotnet run)",
+      "Bash(dotnet test:*)",
+      "Bash(gh pr create:*)"
     ],
     "deny": [],
     "ask": []
