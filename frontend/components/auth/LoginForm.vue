@@ -14,8 +14,8 @@ const validateForm = (): boolean => {
     return false
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(email.value)) {
+  // Simple email validation - checks for @ and . characters
+  if (!email.value.includes('@') || !email.value.includes('.')) {
     formErrors.value.email = 'Nieprawidłowy format email'
     return false
   }
@@ -50,7 +50,7 @@ const togglePasswordVisibility = () => {
 </script>
 
 <template>
-  <form @submit.prevent="handleSubmit" class="space-y-6">
+  <form class="space-y-6" @submit.prevent="handleSubmit">
     <div>
       <h2 class="text-2xl font-bold text-gray-900 text-center mb-2">
         Zaloguj się

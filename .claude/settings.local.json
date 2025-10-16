@@ -29,7 +29,9 @@
       "Bash(taskkill:*)",
       "Bash(dotnet run)",
       "Bash(dotnet test:*)",
-      "Bash(gh pr create:*)"
+      "Bash(gh pr create:*)",
+      "Bash(npm run postinstall:*)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []
