@@ -35,7 +35,8 @@
       "Bash(npm install:*)",
       "Bash(git reflog:*)",
       "Bash(git gc:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(npm run test)"
     ],
     "deny": [],
     "ask": []

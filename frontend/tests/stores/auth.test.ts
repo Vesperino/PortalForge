@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 import type { User } from '~/types/auth'
+import { UserRole } from '~/types/auth'
 
 describe('useAuthStore', () => {
   beforeEach(() => {
@@ -20,11 +21,13 @@ describe('useAuthStore', () => {
   it('should set user correctly', () => {
     const authStore = useAuthStore()
     const mockUser: User = {
+      id: '1',
       userId: 1,
       email: 'test@example.com',
       firstName: 'John',
       lastName: 'Doe',
-      role: 'Employee',
+      isEmailVerified: true,
+      role: UserRole.Employee,
     }
 
     authStore.setUser(mockUser)
@@ -55,11 +58,13 @@ describe('useAuthStore', () => {
   it('should clear user', () => {
     const authStore = useAuthStore()
     const mockUser: User = {
+      id: '1',
       userId: 1,
       email: 'test@example.com',
       firstName: 'John',
       lastName: 'Doe',
-      role: 'Employee',
+      isEmailVerified: true,
+      role: UserRole.Employee,
     }
 
     authStore.setUser(mockUser)

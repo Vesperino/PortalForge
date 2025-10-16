@@ -1,6 +1,11 @@
 export interface User {
   id: string
+  userId?: number
   email: string
+  firstName?: string
+  lastName?: string
+  phoneNumber?: string
+  isEmailVerified: boolean
   role?: UserRole
   createdAt?: string
 }
