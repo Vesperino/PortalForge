@@ -28,6 +28,13 @@ jobs:
           Supabase__Key=${{ secrets.SUPABASE_ANON_KEY }}
           Supabase__ServiceRoleKey=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           Supabase__JwtSecret=${{ secrets.SUPABASE_JWT_SECRET }}
+          EmailSettings__SmtpServer=${{ secrets.SMTP_SERVER }}
+          EmailSettings__SmtpPort=${{ secrets.SMTP_PORT }}
+          EmailSettings__UseTLS=${{ secrets.SMTP_USE_TLS }}
+          EmailSettings__Username=${{ secrets.SMTP_USERNAME }}
+          EmailSettings__Password=${{ secrets.SMTP_PASSWORD }}
+          EmailSettings__FromEmail=${{ secrets.SMTP_FROM_EMAIL }}
+          EmailSettings__FromName=${{ secrets.SMTP_FROM_NAME }}
           Serilog__MinimumLevel__Default=Information
           Serilog__MinimumLevel__Override__Microsoft=Warning
           Serilog__MinimumLevel__Override__System=Warning
