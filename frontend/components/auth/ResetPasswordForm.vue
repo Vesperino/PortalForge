@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const router = useRouter()
+const config = useRuntimeConfig()
 
 const email = ref('')
 const isLoading = ref(false)
@@ -32,8 +33,9 @@ const handleSubmit = async () => {
   error.value = null
 
   try {
-    const { error: fetchError } = await useFetch('/api/auth/reset-password', {
+    const { error: fetchError } = await useFetch('/Auth/reset-password', {
       method: 'POST',
+      baseURL: config.public.apiUrl,
       body: { email: email.value }
     })
 

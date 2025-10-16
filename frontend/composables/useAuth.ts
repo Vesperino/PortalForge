@@ -3,14 +3,16 @@ import type { LoginCredentials, RegisterCredentials, AuthResponse, User } from '
 export const useAuth = () => {
   const authStore = useAuthStore()
   const router = useRouter()
+  const config = useRuntimeConfig()
 
   const login = async (credentials: LoginCredentials) => {
     authStore.setLoading(true)
     authStore.clearError()
 
     try {
-      const { data, error } = await useFetch<AuthResponse>('/api/auth/login', {
+      const { data, error } = await useFetch<AuthResponse>('/Auth/login', {
         method: 'POST',
+        baseURL: config.public.apiUrl,
         body: credentials
       })
 
@@ -42,8 +44,9 @@ export const useAuth = () => {
     authStore.clearError()
 
     try {
-      const { data, error } = await useFetch<AuthResponse>('/api/auth/register', {
+      const { data, error } = await useFetch<AuthResponse>('/Auth/register', {
         method: 'POST',
+        baseURL: config.public.apiUrl,
         body: credentials
       })
 
@@ -74,8 +77,9 @@ export const useAuth = () => {
     authStore.setLoading(true)
 
     try {
-      await useFetch('/api/auth/logout', {
-        method: 'POST'
+      await useFetch('/Auth/logout', {
+        method: 'POST',
+        baseURL: config.public.apiUrl
       })
 
       authStore.clearUser()
@@ -92,7 +96,9 @@ export const useAuth = () => {
 
   const checkAuth = async () => {
     try {
-      const { data } = await useFetch<{ user: User }>('/api/auth/me')
+      const { data } = await useFetch<{ user: User }>('/Auth/me', {
+        baseURL: config.public.apiUrl
+      })
 
       if (data.value?.user) {
         authStore.setUser(data.value.user)
