@@ -130,7 +130,7 @@ public class AuthController : ControllerBase
 
         if (!result)
         {
-            return BadRequest(new { message = "Nie udało się wysłać emaila weryfikacyjnego" });
+            return BadRequest(new { message = "Nie udało się wysłać emaila weryfikacyjnego. Możliwe przyczyny: email został już zweryfikowany, użytkownik nie istnieje, lub limit czasowy (2 minuty) nie upłynął od ostatniego wysłania." });
         }
 
         return Ok(new { message = "Email weryfikacyjny został wysłany ponownie" });

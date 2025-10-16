@@ -18,6 +18,7 @@ public class SupabaseAuthService : ISupabaseAuthService
     private readonly ApplicationDbContext _dbContext;
     private readonly IEmailService _emailService;
     private readonly ILogger<SupabaseAuthService> _logger;
+    private readonly EmailVerificationTracker _verificationTracker;
     private readonly string _frontendUrl;
 
     public SupabaseAuthService(
@@ -25,11 +26,13 @@ public class SupabaseAuthService : ISupabaseAuthService
         IOptions<AppSettings> appSettings,
         ApplicationDbContext dbContext,
         IEmailService emailService,
+        EmailVerificationTracker verificationTracker,
         ILogger<SupabaseAuthService> logger)
     {
         var settings = supabaseSettings.Value;
         _dbContext = dbContext;
         _emailService = emailService;
+        _verificationTracker = verificationTracker;
         _logger = logger;
         _frontendUrl = appSettings.Value.FrontendUrl;
 
@@ -363,6 +366,15 @@ public class SupabaseAuthService : ISupabaseAuthService
         {
             _logger.LogInformation("Resending verification email to: {Email}", email);
 
+            // Check rate limiting (2 minute cooldown)
+            if (!_verificationTracker.CanResendEmail(email))
+            {
+                var remaining = _verificationTracker.GetRemainingCooldown(email);
+                _logger.LogWarning("Rate limit exceeded for {Email}. {Seconds} seconds remaining",
+                    email, remaining.TotalSeconds);
+                return false;
+            }
+
             // Check if user exists and is not verified
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null)
@@ -376,6 +388,9 @@ public class SupabaseAuthService : ISupabaseAuthService
                 _logger.LogWarning("User {Email} is already verified", email);
                 return false;
             }
+
+            // Record this resend attempt
+            _verificationTracker.RecordResend(email);
 
             // TODO: Implement resend verification email via Supabase REST API
             // The current Supabase C# client doesn't have a direct method for this

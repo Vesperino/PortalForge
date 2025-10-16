@@ -43,6 +43,9 @@ public static class DependencyInjection
         // Register Unit of Work and Repositories
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+        // Register Email Verification Tracker (Singleton for rate limiting)
+        services.AddSingleton<EmailVerificationTracker>();
+
         // Configure JWT Authentication with Supabase
         ConfigureAuthentication(services, configuration);
 
