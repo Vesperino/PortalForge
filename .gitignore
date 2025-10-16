@@ -93,3 +93,8 @@ logs/
 backups/
 *.tar.gz
 *.sql
+
+# AI Prompts (internal use only)
+promptBE.md
+promptFE.md
+prompt*.md
