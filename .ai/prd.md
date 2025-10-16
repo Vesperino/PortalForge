@@ -81,18 +81,37 @@ Organizacje 200+ pracowników borykają się z:
 
 ### 4.1 User Stories
 
-#### US-001: Logowanie do systemu
-**Jako** pracownik
-**Chcę** zalogować się do systemu
-**Aby** uzyskać dostęp do portalu firmowego
+#### US-001: Bezpieczny dostęp i uwierzytelnianie
+**Jako** użytkownik systemu
+**Chcę** mieć możliwość rejestracji i logowania się do systemu w sposób zapewniający bezpieczeństwo moich danych
+**Aby** uzyskać dostęp do portalu firmowego i zarządzać swoim kontem
 
 **Kryteria akceptacji:**
-- Użytkownik może zalogować się używając email i hasła
-- System zapamiętuje sesję użytkownika
+- Logowanie i rejestracja odbywają się na dedykowanych stronach
+- Logowanie wymaga podania adresu email i hasła
+- Rejestracja wymaga podania adresu email, hasła i potwierdzenia hasła
+- Walidacja siły hasła (min. 8 znaków)
+- Użytkownik może logować się do systemu poprzez przycisk w prawym górnym rogu głównego layoutu
+- Użytkownik może się wylogować z systemu poprzez przycisk w prawym górnym rogu
+- System zapamiętuje sesję użytkownika (8h nieaktywności)
 - Po nieudanej próbie logowania wyświetla się komunikat błędu
-- Możliwość wylogowania z systemu
+- Nie korzystamy z zewnętrznych serwisów logowania (np. Google, GitHub) w MVP
+- Wszystkie strony wymagają aktywnej sesji użytkownika (z wyjątkiem stron publicznych)
 
-#### US-002: Import użytkowników
+#### US-002: Odzyskiwanie hasła
+**Jako** użytkownik
+**Chcę** móc zresetować zapomniane hasło
+**Aby** odzyskać dostęp do swojego konta
+
+**Kryteria akceptacji:**
+- Link "Zapomniałeś hasła?" na stronie logowania
+- Użytkownik podaje adres email
+- System wysyła link do resetowania hasła
+- Link jest ważny przez 1 godzinę
+- Użytkownik może ustawić nowe hasło
+- Po zmianie hasła wszystkie aktywne sesje są wylogowywane
+
+#### US-003: Import użytkowników
 **Jako** administrator
 **Chcę** zaimportować listę użytkowników z pliku CSV/Excel
 **Aby** szybko dodać wielu pracowników do systemu
@@ -103,7 +122,7 @@ Organizacje 200+ pracowników borykają się z:
 - Raport błędów importu
 - Możliwość mapowania kolumn
 
-#### US-003: Zarządzanie strukturą działu
+#### US-004: Zarządzanie strukturą działu
 **Jako** manager
 **Chcę** edytować strukturę mojego działu
 **Aby** odzwierciedlić aktualne zależności służbowe
@@ -114,7 +133,7 @@ Organizacje 200+ pracowników borykają się z:
 - Zmiany są logowane w historii
 - Walidacja spójności struktury
 
-#### US-004: Wizualizacja struktury organizacyjnej
+#### US-005: Wizualizacja struktury organizacyjnej
 **Jako** pracownik
 **Chcę** zobaczyć strukturę organizacyjną
 **Aby** zrozumieć zależności służbowe w firmie
@@ -125,7 +144,7 @@ Organizacje 200+ pracowników borykają się z:
 - Wyszukiwanie pracownika
 - Wyświetlanie szczegółów pracownika
 
-#### US-005: Tworzenie wydarzenia w kalendarzu
+#### US-006: Tworzenie wydarzenia w kalendarzu
 **Jako** HR
 **Chcę** utworzyć wydarzenie firmowe
 **Aby** poinformować pracowników o nadchodzących eventach
@@ -136,7 +155,7 @@ Organizacje 200+ pracowników borykają się z:
 - Automatyczne tworzenie newsa
 - Walidacja daty i czasu
 
-#### US-006: Przeglądanie kalendarza
+#### US-007: Przeglądanie kalendarza
 **Jako** pracownik
 **Chcę** przeglądać kalendarz wydarzeń
 **Aby** być na bieżąco z wydarzeniami firmowymi
@@ -147,7 +166,7 @@ Organizacje 200+ pracowników borykają się z:
 - Szczegóły wydarzenia po kliknięciu
 - Oznaczenie wydarzeń dla mojego działu
 
-#### US-007: Publikacja newsa
+#### US-008: Publikacja newsa
 **Jako** Marketing
 **Chcę** opublikować news
 **Aby** informować pracowników o ważnych sprawach
@@ -158,7 +177,7 @@ Organizacje 200+ pracowników borykają się z:
 - Opcja powiązania z wydarzeniem
 - Podgląd przed publikacją
 
-#### US-008: Eksport struktury organizacyjnej
+#### US-009: Eksport struktury organizacyjnej
 **Jako** administrator
 **Chcę** wyeksportować strukturę do PDF/Excel
 **Aby** wykorzystać dane w dokumentach zewnętrznych
