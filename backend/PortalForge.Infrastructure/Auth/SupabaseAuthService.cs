@@ -12,7 +12,7 @@ using SupabaseUser = Supabase.Gotrue.User;
 
 namespace PortalForge.Infrastructure.Auth;
 
-public class SupabaseAuthService : IAuthService
+public class SupabaseAuthService : ISupabaseAuthService
 {
     private readonly Client _supabaseClient;
     private readonly ApplicationDbContext _dbContext;

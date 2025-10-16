@@ -6,6 +6,7 @@ using PortalForge.Infrastructure.Auth;
 using PortalForge.Infrastructure.Email;
 using PortalForge.Infrastructure.Email.Models;
 using PortalForge.Infrastructure.Persistence;
+using PortalForge.Infrastructure.Repositories;
 using PortalForge.Infrastructure.Validation;
 
 namespace PortalForge.Infrastructure;
@@ -34,7 +35,10 @@ public static class DependencyInjection
 
         // Register Supabase Settings and Auth Service
         services.Configure<SupabaseSettings>(configuration.GetSection("Supabase"));
-        services.AddScoped<IAuthService, SupabaseAuthService>();
+        services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
+
+        // Register Unit of Work and Repositories
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }

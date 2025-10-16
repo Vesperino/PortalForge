@@ -2,7 +2,7 @@ using PortalForge.Application.Common.Models;
 
 namespace PortalForge.Application.Common.Interfaces;
 
-public interface IAuthService
+public interface ISupabaseAuthService
 {
     Task<AuthResult> RegisterAsync(string email, string password, string firstName, string lastName);
     Task<AuthResult> LoginAsync(string email, string password);
