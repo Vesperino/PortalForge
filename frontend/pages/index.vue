@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'auth',
+  middleware: 'verified',
 })
 
 const config = useRuntimeConfig()

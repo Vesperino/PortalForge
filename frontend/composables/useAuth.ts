@@ -54,6 +54,8 @@ export const useAuth = () => {
       }
 
       if (data.value?.user) {
+        // Redirect to verify email page
+        await router.push(`/auth/verify-email?email=${credentials.email}`)
         return { success: true, error: null }
       }
 
