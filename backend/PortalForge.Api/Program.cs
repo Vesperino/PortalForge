@@ -1,6 +1,14 @@
+using PortalForge.Api.Middleware;
+using PortalForge.Application;
+using PortalForge.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+// Add Application and Infrastructure layers
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -29,6 +37,9 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 var app = builder.Build();
+
+// Use custom error handling middleware (must be first)
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 // Use forwarded headers (must be before other middleware)
 app.UseForwardedHeaders();

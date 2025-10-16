@@ -21,7 +21,9 @@
       "Bash(dotnet add reference:*)",
       "Bash(dotnet add:*)",
       "Bash(dotnet add package:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(dotnet tool install:*)"
     ],
     "deny": [],
     "ask": []
