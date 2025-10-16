@@ -17,6 +17,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create .env file from secrets
+        run: |
+          mkdir -p ~/portalforge/backend
+          cat > ~/portalforge/backend/.env << EOF
+          ASPNETCORE_ENVIRONMENT=Production
+          ASPNETCORE_URLS=http://localhost:22022
+          ConnectionStrings__DefaultConnection=${{ secrets.DB_CONNECTION_STRING }}
+          Supabase__Url=${{ secrets.SUPABASE_URL }}
+          Supabase__ServiceRoleKey=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          Supabase__JwtSecret=${{ secrets.SUPABASE_JWT_SECRET }}
+          Serilog__MinimumLevel__Default=Information
+          Serilog__MinimumLevel__Override__Microsoft=Warning
+          Serilog__MinimumLevel__Override__System=Warning
+          EOF
+          echo "✅ .env file created"
+
       - name: Stop existing container
         run: docker stop portalforge-backend || true
 
