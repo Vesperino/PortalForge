@@ -22,7 +22,7 @@ jobs:
           mkdir -p ~/portalforge/backend
           cat > ~/portalforge/backend/.env << EOF
           ASPNETCORE_ENVIRONMENT=Production
-          ASPNETCORE_URLS=http://localhost:22022
+          ASPNETCORE_URLS=http://0.0.0.0:5000
           ConnectionStrings__DefaultConnection=${{ secrets.DB_CONNECTION_STRING }}
           Supabase__Url=${{ secrets.SUPABASE_URL }}
           Supabase__ServiceRoleKey=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -66,5 +66,5 @@ jobs:
         run: |
           echo "Waiting for backend to start..."
           sleep 10
-          curl -f http://localhost:22022/health || exit 1
+          curl -f http://localhost:22022/portalforge/be/health || exit 1
           echo "✅ Backend health check passed!"
