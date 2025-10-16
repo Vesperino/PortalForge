@@ -12,7 +12,18 @@
       "Read(//c/Users/abialecki/**)",
       "Bash(npm init:*)",
       "Read(//d/Projekty/WatchdogAPI/**)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(npm run build)",
+      "Bash(npm run generate:*)",
+      "Bash(git checkout:*)",
+      "Bash(dotnet new:*)",
+      "Bash(dotnet sln:*)",
+      "Bash(dotnet add reference:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet add package:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(dotnet tool install:*)"
     ],
     "deny": [],
     "ask": []
