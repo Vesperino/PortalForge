@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
-  // @ts-ignore - Vitest bundles its own version of Vite which may have type conflicts
+  // @ts-expect-error - Vitest bundles its own version of Vite which may have type conflicts
   plugins: [vue()],
   test: {
     globals: true,

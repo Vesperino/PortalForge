@@ -47,7 +47,7 @@ const resendEmail = async () => {
   messageType.value = ''
 
   try {
-    const { data, error } = await useFetch('/api/auth/resend-verification', {
+    const { error } = await useFetch('/api/auth/resend-verification', {
       method: 'POST',
       baseURL: config.public.apiUrl,
       body: {
@@ -63,7 +63,7 @@ const resendEmail = async () => {
       messageType.value = 'success'
       startCooldown()
     }
-  } catch (err) {
+  } catch {
     message.value = 'Wystąpił błąd podczas wysyłania emaila'
     messageType.value = 'error'
   } finally {
@@ -98,7 +98,7 @@ onMounted(() => {
         <!-- Icon -->
         <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900">
           <svg class="h-6 w-6 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
           </svg>
         </div>
 
@@ -137,7 +137,7 @@ onMounted(() => {
             required
             class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
             placeholder="twoj@email.pl"
-          />
+          >
         </div>
 
         <!-- Resend Button -->
@@ -145,13 +145,13 @@ onMounted(() => {
           <button
             type="button"
             :disabled="!canResend"
-            @click="resendEmail"
             class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="resendEmail"
           >
             <span v-if="isLoading">
               <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
               </svg>
               Wysyłanie...
             </span>
