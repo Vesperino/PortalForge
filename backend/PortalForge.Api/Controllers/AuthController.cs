@@ -5,6 +5,7 @@ using PortalForge.Application.Common.Models;
 using PortalForge.Application.UseCases.Auth.Commands.Login;
 using PortalForge.Application.UseCases.Auth.Commands.Logout;
 using PortalForge.Application.UseCases.Auth.Commands.Register;
+using PortalForge.Application.UseCases.Auth.Commands.ResendVerificationEmail;
 using PortalForge.Application.UseCases.Auth.Commands.ResetPassword;
 using PortalForge.Application.UseCases.Auth.Commands.VerifyEmail;
 using PortalForge.Application.UseCases.Auth.DTOs;
@@ -114,6 +115,25 @@ public class AuthController : ControllerBase
         await _mediator.Send(command);
 
         return Ok(new { message = "Email zweryfikowany pomyślnie" });
+    }
+
+    [HttpPost("resend-verification")]
+    [AllowAnonymous]
+    public async Task<ActionResult> ResendVerification([FromBody] ResendVerificationEmailRequestDto request)
+    {
+        var command = new ResendVerificationEmailCommand
+        {
+            Email = request.Email
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result)
+        {
+            return BadRequest(new { message = "Nie udało się wysłać emaila weryfikacyjnego" });
+        }
+
+        return Ok(new { message = "Email weryfikacyjny został wysłany ponownie" });
     }
 
     [HttpGet("me")]

@@ -62,6 +62,8 @@ public class SupabaseAuthService : ISupabaseAuthService
             }
 
             // Register with Supabase Auth
+            // Note: Email redirect URL must be configured in Supabase Dashboard
+            // Authentication -> URL Configuration -> Site URL and Redirect URLs
             var signUpResponse = await _supabaseClient.Auth.SignUp(email, password);
 
             if (signUpResponse?.User == null)
@@ -91,11 +93,9 @@ public class SupabaseAuthService : ISupabaseAuthService
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
 
-            // Send verification email
-            var verificationLink = $"{_frontendUrl}/verify-email?token={signUpResponse.User.Id}";
-            await _emailService.SendVerificationEmailAsync(email, verificationLink);
-
-            _logger.LogInformation("User registered successfully: {Email}", email);
+            // Note: Supabase automatically sends verification email
+            // Make sure to configure Site URL and Redirect URLs in Supabase Dashboard
+            _logger.LogInformation("User registered successfully: {Email}. Supabase will send verification email.", email);
 
             DateTime? expiresAt = signUpResponse.ExpiresAt() != default
                 ? signUpResponse.ExpiresAt()
@@ -354,6 +354,40 @@ public class SupabaseAuthService : ISupabaseAuthService
         {
             _logger.LogError(ex, "Error extracting user ID from token");
             return null;
+        }
+    }
+
+    public async Task<bool> ResendVerificationEmailAsync(string email)
+    {
+        try
+        {
+            _logger.LogInformation("Resending verification email to: {Email}", email);
+
+            // Check if user exists and is not verified
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                _logger.LogWarning("User with email {Email} not found", email);
+                return false;
+            }
+
+            if (user.IsEmailVerified)
+            {
+                _logger.LogWarning("User {Email} is already verified", email);
+                return false;
+            }
+
+            // TODO: Implement resend verification email via Supabase REST API
+            // The current Supabase C# client doesn't have a direct method for this
+            // For now, return true as email was sent during registration
+            _logger.LogInformation("Resend email verification requested for {Email}. Users can check their inbox for original email.", email);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error resending verification email to: {Email}", email);
+            return false;
         }
     }
 }

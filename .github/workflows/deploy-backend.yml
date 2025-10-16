@@ -28,6 +28,8 @@ jobs:
           Supabase__Key=${{ secrets.SUPABASE_ANON_KEY }}
           Supabase__ServiceRoleKey=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           Supabase__JwtSecret=${{ secrets.SUPABASE_JWT_SECRET }}
+          AppSettings__FrontendUrl=${{ secrets.FRONTEND_URL }}
+          AppSettings__ApiUrl=${{ secrets.API_URL }}
           EmailSettings__SmtpServer=${{ secrets.SMTP_SERVER }}
           EmailSettings__SmtpPort=${{ secrets.SMTP_PORT }}
           EmailSettings__UseTLS=${{ secrets.SMTP_USE_TLS }}

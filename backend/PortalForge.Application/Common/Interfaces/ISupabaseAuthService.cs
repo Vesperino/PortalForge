@@ -12,4 +12,5 @@ public interface ISupabaseAuthService
     Task<AuthResult> ResetPasswordAsync(string accessToken, string newPassword);
     Task<bool> VerifyEmailAsync(string token);
     Task<Guid?> GetUserIdFromTokenAsync(string accessToken);
+    Task<bool> ResendVerificationEmailAsync(string email);
 }
