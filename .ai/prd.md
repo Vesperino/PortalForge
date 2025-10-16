@@ -81,22 +81,39 @@ Organizacje 200+ pracowników borykają się z:
 
 ### 4.1 User Stories
 
-#### US-001: Bezpieczny dostęp i uwierzytelnianie
+#### US-001: Bezpieczny dostęp i uwierzytelnianie ✅ ZREALIZOWANE
 **Jako** użytkownik systemu
 **Chcę** mieć możliwość rejestracji i logowania się do systemu w sposób zapewniający bezpieczeństwo moich danych
 **Aby** uzyskać dostęp do portalu firmowego i zarządzać swoim kontem
 
 **Kryteria akceptacji:**
-- Logowanie i rejestracja odbywają się na dedykowanych stronach
-- Logowanie wymaga podania adresu email i hasła
-- Rejestracja wymaga podania adresu email, hasła i potwierdzenia hasła
-- Walidacja siły hasła (min. 8 znaków)
-- Użytkownik może logować się do systemu poprzez przycisk w prawym górnym rogu głównego layoutu
-- Użytkownik może się wylogować z systemu poprzez przycisk w prawym górnym rogu
-- System zapamiętuje sesję użytkownika (8h nieaktywności)
-- Po nieudanej próbie logowania wyświetla się komunikat błędu
-- Nie korzystamy z zewnętrznych serwisów logowania (np. Google, GitHub) w MVP
-- Wszystkie strony wymagają aktywnej sesji użytkownika (z wyjątkiem stron publicznych)
+- ✅ Logowanie i rejestracja odbywają się na dedykowanych stronach
+- ✅ Logowanie wymaga podania adresu email i hasła
+- ✅ Rejestracja wymaga podania adresu email, hasła, imienia i nazwiska
+- ✅ Walidacja siły hasła (min. 8 znaków) - obsługiwana przez Supabase Auth
+- ✅ Po rejestracji użytkownik otrzymuje email weryfikacyjny
+- ✅ Użytkownik może ponownie wysłać email weryfikacyjny (z limitem 2 minuty)
+- ✅ Użytkownik może się wylogować z systemu poprzez dedykowany endpoint
+- ✅ System używa JWT tokenów z Supabase dla autoryzacji
+- ✅ Po nieudanej próbie logowania wyświetla się komunikat błędu
+- ✅ Wszystkie strony wymagają aktywnej sesji użytkownika (middleware 'auth' i 'verified')
+- ✅ Middleware sprawdza czy email użytkownika został zweryfikowany
+
+#### US-001a: Weryfikacja emaila ✅ ZREALIZOWANE
+**Jako** nowy użytkownik
+**Chcę** zweryfikować swój adres email po rejestracji
+**Aby** aktywować moje konto i uzyskać pełny dostęp do portalu
+
+**Kryteria akceptacji:**
+- ✅ Po rejestracji Supabase automatycznie wysyła email weryfikacyjny
+- ✅ Email zawiera link z tokenem weryfikacyjnym
+- ✅ Link przekierowuje na stronę /auth/callback która weryfikuje token
+- ✅ Po udanej weryfikacji użytkownik jest automatycznie przekierowywany do logowania
+- ✅ Niezweryfikowani użytkownicy są przekierowywani na stronę /auth/verify-email
+- ✅ Użytkownik może ponownie wysłać email weryfikacyjny
+- ✅ Resend email ma rate limiting (2 minuty cooldown)
+- ✅ Timer pokazuje ile czasu pozostało do następnego wysłania
+- ✅ Backend loguje wszystkie próby resend dla monitoringu
 
 #### US-002: Odzyskiwanie hasła
 **Jako** użytkownik

@@ -60,19 +60,32 @@ frontend/
 
 ### ✅ Completed
 - Frontend folder structure created
-
-### 🚧 In Progress
 - Nuxt 3 project initialization
 - Tailwind CSS configuration
+- **Authentication pages**:
+  - `/auth/login` - Login page
+  - `/auth/callback` - Email verification callback handler
+  - `/auth/verify-email` - Email verification with resend functionality
+- **Middleware**:
+  - `auth.ts` - Authentication guard
+  - `guest.ts` - Guest-only guard
+  - `verified.ts` - Email verification check guard
+- **Composables**:
+  - `useAuth.ts` - Authentication logic with email verification flow
+- **Stores**:
+  - `auth.ts` - Authentication state management
+- API integration with backend (Supabase Auth + .NET API)
+
+### 🚧 In Progress
+- Dashboard layout
+- Homepage improvements
 
 ### ⏳ Planned
-- Authentication pages (login)
-- Dashboard layout
 - Employee management pages
 - Calendar view
 - News feed
 - Organizational chart visualization
-- API integration
+- Advanced API features
 
 ## Key Technologies
 
@@ -88,18 +101,20 @@ frontend/
 
 ## Pages & Routes (Planned)
 
-### Public Routes
-- `/` - Landing page
-- `/login` - Login page
+### Public Routes (✅ Implemented)
+- `/auth/login` - Login page
+- `/auth/callback` - Email verification callback (from Supabase email link)
+- `/auth/verify-email` - Email verification page with resend functionality
 
 ### Authenticated Routes
-- `/dashboard` - Main dashboard
-- `/employees` - Employee list
-- `/employees/:id` - Employee details
-- `/organization` - Org chart visualization
-- `/calendar` - Events calendar
-- `/news` - News feed
-- `/profile` - User profile
+- `/` - Main homepage (requires verified email)
+- `/dashboard` - Main dashboard (planned)
+- `/employees` - Employee list (planned)
+- `/employees/:id` - Employee details (planned)
+- `/organization` - Org chart visualization (planned)
+- `/calendar` - Events calendar (planned)
+- `/news` - News feed (planned)
+- `/profile` - User profile (planned)
 
 ### Role-Specific Routes
 - `/admin/users` - User management (Admin only)
@@ -378,6 +393,35 @@ NUXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NUXT_PUBLIC_SUPABASE_KEY=your-supabase-anon-key
 ```
 
+## Email Verification Flow
+
+### Implementation Details
+
+The email verification flow is fully implemented:
+
+1. **Registration**: User registers at `/auth/login` (register form)
+2. **Email Sent**: Supabase automatically sends verification email
+3. **Redirect**: Frontend redirects to `/auth/verify-email?email=user@example.com`
+4. **Timer**: 2-minute cooldown timer starts automatically
+5. **Email Link**: User clicks verification link from email
+6. **Callback**: Link redirects to `/auth/callback?token=xyz&type=signup`
+7. **Verification**: Callback page verifies token via backend API
+8. **Success**: User is redirected to `/auth/login` with success message
+
+### Resend Email Feature
+
+- **Rate Limiting**: 2-minute cooldown between resend attempts
+- **Visual Timer**: MM:SS countdown display
+- **Button State**: Disabled during cooldown with remaining time
+- **Error Handling**: Clear error messages for failed attempts
+- **Auto-start**: Timer starts automatically when redirected from registration
+
+### Middleware Protection
+
+- **`auth.ts`**: Checks if user is authenticated
+- **`guest.ts`**: Redirects authenticated users away from auth pages
+- **`verified.ts`**: Checks if email is verified, redirects to verify-email if not
+
 ---
 
-**Last Updated**: 2025-10-08
+**Last Updated**: 2025-10-17

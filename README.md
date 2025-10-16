@@ -348,13 +348,17 @@ docker-compose up
 
 ## Harmonogram projektu
 
-### Faza 1: Fundament - Aktualna
+### Faza 1: Fundament - ✅ Zakończona
 - [x] Setup projektu i struktury monorepo
 - [x] Konfiguracja Supabase
 - [x] Przygotowanie reguł AI i dokumentacji
-- [ ] Implementacja Clean Architecture w backendzie
-- [ ] Podstawowy przepływ uwierzytelniania
-- [ ] Setup pipeline CI/CD
+- [x] Implementacja Clean Architecture w backendzie
+- [x] Podstawowy przepływ uwierzytelniania (rejestracja, logowanie, weryfikacja emaila)
+- [x] Setup pipeline CI/CD (GitHub Actions + Docker deployment)
+- [x] Konfiguracja SMTP z Supabase dla emaili weryfikacyjnych
+- [x] Rate limiting dla resend email (2 minuty cooldown)
+- [x] Frontend: strony callback i verify-email z timerem
+- [x] Middleware sprawdzające weryfikację emaila
 
 ### Faza 2: Struktura organizacyjna
 - [ ] Operacje CRUD pracowników
@@ -392,6 +396,7 @@ All Rights Reserved - Projekt wewnętrzny
 
 ---
 
-**Aktualna wersja**: 1.0.0-alpha
-**Ostatnia aktualizacja**: 2025-10-11
+**Aktualna wersja**: 1.1.0-alpha
+**Ostatnia aktualizacja**: 2025-10-17
+**Status**: Faza 1 (Fundament) zakończona, rozpoczęcie Fazy 2
 **Utrzymywany przez**: Zespół deweloperski
