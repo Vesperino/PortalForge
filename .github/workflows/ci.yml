@@ -21,16 +21,13 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
-        working-directory: ./backend
+        run: dotnet restore PortalForge.sln
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
-        working-directory: ./backend
+        run: dotnet build PortalForge.sln --configuration Release --no-restore
 
       - name: Run tests
-        run: dotnet test --configuration Release --no-build --verbosity normal
-        working-directory: ./backend
+        run: dotnet test PortalForge.sln --configuration Release --no-build --verbosity normal
 
   frontend-test:
     name: Frontend - Build & Test

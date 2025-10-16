@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Infrastructure.Auth;
 using PortalForge.Infrastructure.Email;
@@ -8,6 +10,7 @@ using PortalForge.Infrastructure.Email.Models;
 using PortalForge.Infrastructure.Persistence;
 using PortalForge.Infrastructure.Repositories;
 using PortalForge.Infrastructure.Validation;
+using System.Text;
 
 namespace PortalForge.Infrastructure;
 
@@ -40,6 +43,47 @@ public static class DependencyInjection
         // Register Unit of Work and Repositories
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+        // Configure JWT Authentication with Supabase
+        ConfigureAuthentication(services, configuration);
+
         return services;
+    }
+
+    private static void ConfigureAuthentication(IServiceCollection services, IConfiguration configuration)
+    {
+        var supabaseUrl = configuration["Supabase:Url"];
+        var supabaseJwtSecret = configuration["Supabase:JwtSecret"];
+
+        if (string.IsNullOrEmpty(supabaseJwtSecret))
+        {
+            throw new InvalidOperationException(
+                "Supabase:JwtSecret is not configured. Please set it in your appsettings.json or environment variables.");
+        }
+
+        var key = Encoding.ASCII.GetBytes(supabaseJwtSecret);
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.RequireHttpsMetadata = false; // Set to true in production with HTTPS
+            options.SaveToken = true;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = supabaseUrl,
+                ValidateAudience = true,
+                ValidAudience = "authenticated",
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+
+        services.AddAuthorization();
     }
 }
