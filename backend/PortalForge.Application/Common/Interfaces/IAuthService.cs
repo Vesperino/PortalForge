@@ -1,0 +1,15 @@
+using PortalForge.Application.Common.Models;
+
+namespace PortalForge.Application.Common.Interfaces;
+
+public interface IAuthService
+{
+    Task<AuthResult> RegisterAsync(string email, string password, string firstName, string lastName);
+    Task<AuthResult> LoginAsync(string email, string password);
+    Task<bool> LogoutAsync(string accessToken);
+    Task<AuthResult> RefreshTokenAsync(string refreshToken);
+    Task<bool> SendPasswordResetEmailAsync(string email);
+    Task<AuthResult> ResetPasswordAsync(string accessToken, string newPassword);
+    Task<bool> VerifyEmailAsync(string token);
+    Task<Guid?> GetUserIdFromTokenAsync(string accessToken);
+}
