@@ -32,9 +32,10 @@ USER appuser
 # Expose port
 EXPOSE 5000
 
-# Health check
+# Health check - check on port 5000 since container internal port is 5000
+# The external port mapping 22022:5000 is done by docker run
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:5000/health || exit 1
+  CMD curl -f http://localhost:5000/portalforge/be/health || exit 1
 
 # Start application
 ENTRYPOINT ["dotnet", "PortalForge.dll"]
