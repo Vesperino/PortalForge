@@ -1,4 +1,4 @@
-import type { LoginCredentials, RegisterCredentials, AuthResponse } from '~/types/auth'
+import type { LoginCredentials, RegisterCredentials, AuthResponse, User } from '~/types/auth'
 
 export const useAuth = () => {
   const authStore = useAuthStore()
@@ -28,7 +28,7 @@ export const useAuth = () => {
 
       authStore.setError('Wystąpił nieoczekiwany błąd')
       return { success: false, error: 'Wystąpił nieoczekiwany błąd' }
-    } catch (err) {
+    } catch {
       const errorMessage = 'Wystąpił błąd podczas logowania'
       authStore.setError(errorMessage)
       return { success: false, error: errorMessage }
@@ -59,7 +59,7 @@ export const useAuth = () => {
 
       authStore.setError('Wystąpił nieoczekiwany błąd')
       return { success: false, error: 'Wystąpił nieoczekiwany błąd' }
-    } catch (err) {
+    } catch {
       const errorMessage = 'Wystąpił błąd podczas rejestracji'
       authStore.setError(errorMessage)
       return { success: false, error: errorMessage }
@@ -79,7 +79,7 @@ export const useAuth = () => {
       authStore.clearUser()
       await router.push('/auth/login')
       return { success: true, error: null }
-    } catch (err) {
+    } catch {
       const errorMessage = 'Wystąpił błąd podczas wylogowania'
       authStore.setError(errorMessage)
       return { success: false, error: errorMessage }
@@ -90,7 +90,7 @@ export const useAuth = () => {
 
   const checkAuth = async () => {
     try {
-      const { data } = await useFetch<{ user: any }>('/api/auth/me')
+      const { data } = await useFetch<{ user: User }>('/api/auth/me')
 
       if (data.value?.user) {
         authStore.setUser(data.value.user)
@@ -99,7 +99,7 @@ export const useAuth = () => {
 
       authStore.clearUser()
       return false
-    } catch (err) {
+    } catch {
       authStore.clearUser()
       return false
     }

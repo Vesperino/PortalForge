@@ -12,8 +12,12 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   type: 'text',
+  label: undefined,
+  placeholder: undefined,
+  error: undefined,
   disabled: false,
-  required: false
+  required: false,
+  autocomplete: undefined
 })
 
 interface Emits {
