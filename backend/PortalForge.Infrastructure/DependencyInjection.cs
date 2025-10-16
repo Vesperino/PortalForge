@@ -29,6 +29,9 @@ public static class DependencyInjection
         services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
         services.AddScoped<IEmailService, EmailService>();
 
+        // Register App Settings
+        services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
+
         // Register Supabase Settings and Auth Service
         services.Configure<SupabaseSettings>(configuration.GetSection("Supabase"));
         services.AddScoped<IAuthService, SupabaseAuthService>();

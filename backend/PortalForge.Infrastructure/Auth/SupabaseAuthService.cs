@@ -22,6 +22,7 @@ public class SupabaseAuthService : IAuthService
 
     public SupabaseAuthService(
         IOptions<SupabaseSettings> supabaseSettings,
+        IOptions<AppSettings> appSettings,
         ApplicationDbContext dbContext,
         IEmailService emailService,
         ILogger<SupabaseAuthService> logger)
@@ -30,7 +31,7 @@ public class SupabaseAuthService : IAuthService
         _dbContext = dbContext;
         _emailService = emailService;
         _logger = logger;
-        _frontendUrl = "http://localhost:3000"; // TODO: Move to configuration
+        _frontendUrl = appSettings.Value.FrontendUrl;
 
         var options = new SupabaseOptions
         {
