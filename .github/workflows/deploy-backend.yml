@@ -25,6 +25,7 @@ jobs:
           ASPNETCORE_URLS=http://0.0.0.0:5000
           ConnectionStrings__DefaultConnection=${{ secrets.DB_CONNECTION_STRING }}
           Supabase__Url=${{ secrets.SUPABASE_URL }}
+          Supabase__Key=${{ secrets.SUPABASE_ANON_KEY }}
           Supabase__ServiceRoleKey=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           Supabase__JwtSecret=${{ secrets.SUPABASE_JWT_SECRET }}
           Serilog__MinimumLevel__Default=Information

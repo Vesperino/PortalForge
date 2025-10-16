@@ -31,7 +31,8 @@
       "Bash(dotnet test:*)",
       "Bash(gh pr create:*)",
       "Bash(npm run postinstall:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
