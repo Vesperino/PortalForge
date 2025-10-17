@@ -26,7 +26,7 @@ export default defineNuxtConfig({
 
     // Public keys (exposed to frontend)
     public: {
-      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:5000',
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL || '',
       supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_KEY || '',
     }

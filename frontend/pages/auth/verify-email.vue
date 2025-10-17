@@ -47,7 +47,7 @@ const resendEmail = async () => {
   messageType.value = ''
 
   try {
-    const { error } = await useFetch('/Auth/resend-verification', {
+    const { error } = await useFetch('/api/Auth/resend-verification', {
       method: 'POST',
       baseURL: config.public.apiUrl,
       body: {

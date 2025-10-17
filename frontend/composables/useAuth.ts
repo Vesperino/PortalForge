@@ -10,7 +10,7 @@ export const useAuth = () => {
     authStore.clearError()
 
     try {
-      const { data, error } = await useFetch<AuthResponse>('/Auth/login', {
+      const { data, error } = await useFetch<AuthResponse>('/api/Auth/login', {
         method: 'POST',
         baseURL: config.public.apiUrl,
         body: credentials
@@ -44,7 +44,7 @@ export const useAuth = () => {
     authStore.clearError()
 
     try {
-      const { data, error } = await useFetch<AuthResponse>('/Auth/register', {
+      const { data, error } = await useFetch<AuthResponse>('/api/Auth/register', {
         method: 'POST',
         baseURL: config.public.apiUrl,
         body: credentials
@@ -77,7 +77,7 @@ export const useAuth = () => {
     authStore.setLoading(true)
 
     try {
-      await useFetch('/Auth/logout', {
+      await useFetch('/api/Auth/logout', {
         method: 'POST',
         baseURL: config.public.apiUrl
       })
@@ -96,7 +96,7 @@ export const useAuth = () => {
 
   const checkAuth = async () => {
     try {
-      const { data } = await useFetch<{ user: User }>('/Auth/me', {
+      const { data } = await useFetch<{ user: User }>('/api/Auth/me', {
         baseURL: config.public.apiUrl
       })
 

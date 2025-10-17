@@ -24,7 +24,7 @@ onMounted(async () => {
     }
 
     // Call backend to verify email
-    const { error } = await useFetch('/Auth/verify-email', {
+    const { error } = await useFetch('/api/Auth/verify-email', {
       method: 'POST',
       baseURL: config.public.apiUrl,
       body: {

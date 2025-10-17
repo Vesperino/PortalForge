@@ -33,7 +33,7 @@ const handleSubmit = async () => {
   error.value = null
 
   try {
-    const { error: fetchError } = await useFetch('/Auth/reset-password', {
+    const { error: fetchError } = await useFetch('/api/Auth/reset-password', {
       method: 'POST',
       baseURL: config.public.apiUrl,
       body: { email: email.value }
