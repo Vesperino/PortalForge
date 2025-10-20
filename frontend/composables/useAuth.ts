@@ -31,7 +31,14 @@ export const useAuth = () => {
 
       if (data.value?.user) {
         authStore.setUser(data.value.user)
-        await router.push('/')
+
+        // Check if email is verified - redirect accordingly
+        if (data.value.user.isEmailVerified) {
+          await router.push('/')
+        } else {
+          await router.push(`/auth/verify-email?email=${encodeURIComponent(data.value.user.email)}`)
+        }
+
         return { success: true, error: null }
       }
 

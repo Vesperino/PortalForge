@@ -9,4 +9,5 @@ public class AuthResult
     public string? Email { get; set; }
     public DateTime? ExpiresAt { get; set; }
     public string? ErrorMessage { get; set; }
+    public bool RequiresEmailVerification { get; set; }
 }

@@ -20,6 +20,8 @@ public class SupabaseAuthService : ISupabaseAuthService
     private readonly ILogger<SupabaseAuthService> _logger;
     private readonly EmailVerificationTracker _verificationTracker;
     private readonly string _frontendUrl;
+    private readonly string _supabaseUrl;
+    private readonly string _supabaseKey;
 
     public SupabaseAuthService(
         IOptions<SupabaseSettings> supabaseSettings,
@@ -35,6 +37,8 @@ public class SupabaseAuthService : ISupabaseAuthService
         _verificationTracker = verificationTracker;
         _logger = logger;
         _frontendUrl = appSettings.Value.FrontendUrl;
+        _supabaseUrl = settings.Url;
+        _supabaseKey = settings.Key;
 
         var options = new SupabaseOptions
         {
@@ -56,43 +60,28 @@ public class SupabaseAuthService : ISupabaseAuthService
             var existingUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (existingUser != null)
             {
-                // If user exists but email is not verified, allow re-registration
+                // If user exists and email is verified, reject registration
                 if (existingUser.IsEmailVerified)
                 {
                     _logger.LogWarning("Verified user with email {Email} already exists", email);
                     return new AuthResult
                     {
                         Success = false,
-                        ErrorMessage = "User with this email already exists"
+                        ErrorMessage = "Email already exists. Please choose a different email"
                     };
                 }
 
-                // For unverified users, resend verification email instead of creating new account
-                _logger.LogInformation("User {Email} exists but is not verified. Resending verification email.", email);
-
-                // Try to resend verification email
-                var resendSuccess = await ResendVerificationEmailAsync(email);
-                if (resendSuccess)
-                {
-                    return new AuthResult
-                    {
-                        Success = true,
-                        UserId = existingUser.Id,
-                        Email = existingUser.Email,
-                        AccessToken = null,
-                        RefreshToken = null
-                    };
-                }
-
-                // If resend failed (rate limit), just return success with existing user
-                _logger.LogWarning("Could not resend verification email for {Email}, but returning success", email);
+                // For unverified users, just return success so frontend redirects to verify-email page
+                // User can use "Resend Email" button on verify-email page
+                _logger.LogInformation("User {Email} exists but is not verified. Redirecting to verify-email page.", email);
                 return new AuthResult
                 {
                     Success = true,
                     UserId = existingUser.Id,
                     Email = existingUser.Email,
                     AccessToken = null,
-                    RefreshToken = null
+                    RefreshToken = null,
+                    RequiresEmailVerification = true
                 };
             }
 
@@ -444,11 +433,42 @@ public class SupabaseAuthService : ISupabaseAuthService
             // Record this resend attempt
             _verificationTracker.RecordResend(email);
 
-            // TODO: Implement resend verification email via Supabase REST API
-            // The current Supabase C# client doesn't have a direct method for this
-            // For now, return true as email was sent during registration
-            _logger.LogInformation("Resend email verification requested for {Email}. Users can check their inbox for original email.", email);
+            // Resend verification email via Supabase REST API
+            var redirectUrl = $"{_frontendUrl}/auth/callback";
 
+            using var httpClient = new HttpClient();
+
+            var requestBody = new
+            {
+                type = "signup",
+                email = email,
+                options = new
+                {
+                    redirect_to = redirectUrl
+                }
+            };
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{_supabaseUrl}/auth/v1/resend")
+            {
+                Content = new StringContent(
+                    System.Text.Json.JsonSerializer.Serialize(requestBody),
+                    System.Text.Encoding.UTF8,
+                    "application/json")
+            };
+
+            request.Headers.Add("apikey", _supabaseKey);
+
+            var response = await httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to resend verification email to {Email}. Status: {Status}, Error: {Error}",
+                    email, response.StatusCode, errorContent);
+                return false;
+            }
+
+            _logger.LogInformation("Successfully resent verification email to {Email}", email);
             return true;
         }
         catch (Exception ex)

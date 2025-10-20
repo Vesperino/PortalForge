@@ -45,6 +45,13 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
     private async Task<bool> BeUniqueEmail(string email, CancellationToken cancellationToken)
     {
         var existingUser = await _unitOfWork.UserRepository.GetByEmailAsync(email);
+
+        // Allow re-registration if user exists but email is not verified
+        if (existingUser != null && !existingUser.IsEmailVerified)
+        {
+            return true;
+        }
+
         return existingUser == null;
     }
 }
