@@ -67,11 +67,33 @@ public class SupabaseAuthService : ISupabaseAuthService
                     };
                 }
 
-                // Delete unverified user from database to allow re-registration
-                // Note: Supabase Auth will handle the duplicate signup by returning the existing user
-                _logger.LogInformation("Deleting unverified user {Email} from database to allow re-registration", email);
-                _dbContext.Users.Remove(existingUser);
-                await _dbContext.SaveChangesAsync();
+                // For unverified users, resend verification email instead of creating new account
+                _logger.LogInformation("User {Email} exists but is not verified. Resending verification email.", email);
+
+                // Try to resend verification email
+                var resendSuccess = await ResendVerificationEmailAsync(email);
+                if (resendSuccess)
+                {
+                    return new AuthResult
+                    {
+                        Success = true,
+                        UserId = existingUser.Id,
+                        Email = existingUser.Email,
+                        AccessToken = null,
+                        RefreshToken = null
+                    };
+                }
+
+                // If resend failed (rate limit), just return success with existing user
+                _logger.LogWarning("Could not resend verification email for {Email}, but returning success", email);
+                return new AuthResult
+                {
+                    Success = true,
+                    UserId = existingUser.Id,
+                    Email = existingUser.Email,
+                    AccessToken = null,
+                    RefreshToken = null
+                };
             }
 
             // Register with Supabase Auth with redirect URL
@@ -369,11 +391,19 @@ public class SupabaseAuthService : ISupabaseAuthService
     {
         try
         {
-            // Set the session with the access token
-            await _supabaseClient.Auth.SetSession(accessToken, "");
-            var user = _supabaseClient.Auth.CurrentUser;
+            _logger.LogInformation("Attempting to get user ID from access token");
 
-            return user != null ? Guid.Parse(user.Id) : null;
+            // Get user from Supabase using the access token
+            var user = await _supabaseClient.Auth.GetUser(accessToken);
+
+            if (user == null)
+            {
+                _logger.LogWarning("No user found for provided access token");
+                return null;
+            }
+
+            _logger.LogInformation("Successfully extracted user ID: {UserId}", user.Id);
+            return Guid.Parse(user.Id);
         }
         catch (Exception ex)
         {

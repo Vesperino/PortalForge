@@ -17,7 +17,14 @@ export const useAuth = () => {
       })
 
       if (error.value) {
-        const errorMessage = error.value.data?.message || 'Nieprawidłowy email lub hasło'
+        // Parse error message - check both 'message' and 'errors' array
+        let errorMessage = error.value.data?.message || error.value.data?.error || 'Nieprawidłowy email lub hasło'
+
+        // If there's an errors array, use the first error
+        if (error.value.data?.errors && Array.isArray(error.value.data.errors) && error.value.data.errors.length > 0) {
+          errorMessage = error.value.data.errors[0]
+        }
+
         authStore.setError(errorMessage)
         return { success: false, error: errorMessage }
       }
@@ -51,7 +58,14 @@ export const useAuth = () => {
       })
 
       if (error.value) {
-        const errorMessage = error.value.data?.message || 'Rejestracja nie powiodła się'
+        // Parse error message - check both 'message' and 'errors' array
+        let errorMessage = error.value.data?.message || error.value.data?.error || 'Rejestracja nie powiodła się'
+
+        // If there's an errors array, use the first error
+        if (error.value.data?.errors && Array.isArray(error.value.data.errors) && error.value.data.errors.length > 0) {
+          errorMessage = error.value.data.errors[0]
+        }
+
         authStore.setError(errorMessage)
         return { success: false, error: errorMessage }
       }
