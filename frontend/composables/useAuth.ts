@@ -29,8 +29,10 @@ export const useAuth = () => {
         return { success: false, error: errorMessage }
       }
 
-      if (data.value?.user) {
+      if (data.value?.user && data.value?.accessToken && data.value?.refreshToken) {
+        // Store user and tokens in Pinia store (persists to localStorage)
         authStore.setUser(data.value.user)
+        authStore.setTokens(data.value.accessToken, data.value.refreshToken)
 
         // Check if email is verified - redirect accordingly
         if (data.value.user.isEmailVerified) {
@@ -104,7 +106,9 @@ export const useAuth = () => {
         baseURL: config.public.apiUrl
       })
 
+      // Clear user and tokens from store (which also clears localStorage)
       authStore.clearUser()
+
       await router.push('/auth/login')
       return { success: true, error: null }
     } catch {

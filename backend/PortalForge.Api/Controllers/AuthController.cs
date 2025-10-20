@@ -65,7 +65,7 @@ public class AuthController : ControllerBase
                 Email = result.Email ?? string.Empty,
                 FirstName = string.Empty,
                 LastName = string.Empty,
-                IsEmailVerified = false,
+                IsEmailVerified = !result.RequiresEmailVerification,
                 CreatedAt = DateTime.UtcNow
             },
             AccessToken = result.AccessToken ?? string.Empty,

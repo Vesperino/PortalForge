@@ -169,17 +169,20 @@ public class SupabaseAuthService : ISupabaseAuthService
                 };
             }
 
-            // Update last login time
+            // Update last login time and get email verification status
             var userId = Guid.Parse(signInResponse.User!.Id);
             var user = await _dbContext.Users.FindAsync(userId);
+
+            bool isEmailVerified = false;
 
             if (user != null)
             {
                 user.LastLoginAt = DateTime.UtcNow;
+                isEmailVerified = user.IsEmailVerified;
                 await _dbContext.SaveChangesAsync();
             }
 
-            _logger.LogInformation("User logged in successfully: {Email}", email);
+            _logger.LogInformation("User logged in successfully: {Email}, EmailVerified: {IsEmailVerified}", email, isEmailVerified);
 
             DateTime? expiresAt = signInResponse.ExpiresAt() != default
                 ? signInResponse.ExpiresAt()
@@ -192,7 +195,8 @@ public class SupabaseAuthService : ISupabaseAuthService
                 Email = email,
                 AccessToken = signInResponse.AccessToken,
                 RefreshToken = signInResponse.RefreshToken,
-                ExpiresAt = expiresAt
+                ExpiresAt = expiresAt,
+                RequiresEmailVerification = !isEmailVerified
             };
         }
         catch (Exception ex)

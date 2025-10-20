@@ -4,7 +4,6 @@ definePageMeta({
   middleware: 'guest'
 })
 
-const route = useRoute()
 const router = useRouter()
 const config = useRuntimeConfig()
 

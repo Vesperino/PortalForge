@@ -1,16 +1,39 @@
 import { defineStore } from 'pinia'
-import { ref, computed, readonly } from 'vue'
+import { ref, computed } from 'vue'
 import type { User } from '~/types/auth'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
+  const accessToken = ref<string | null>(null)
+  const refreshToken = ref<string | null>(null)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  const isAuthenticated = computed(() => user.value !== null)
+  const isAuthenticated = computed(() => user.value !== null && accessToken.value !== null)
 
   const setUser = (userData: User | null) => {
     user.value = userData
+
+    // Persist user to localStorage for hydration on app restart
+    if (userData) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(userData))
+      }
+    } else {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('user')
+      }
+    }
+  }
+
+  const setTokens = (access: string, refresh: string) => {
+    accessToken.value = access
+    refreshToken.value = refresh
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('accessToken', access)
+      localStorage.setItem('refreshToken', refresh)
+    }
   }
 
   const setLoading = (loading: boolean) => {
@@ -23,22 +46,59 @@ export const useAuthStore = defineStore('auth', () => {
 
   const clearUser = () => {
     user.value = null
+    accessToken.value = null
+    refreshToken.value = null
     error.value = null
+
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user')
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+    }
   }
 
   const clearError = () => {
     error.value = null
   }
 
+  const hydrateFromStorage = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedUser = localStorage.getItem('user')
+        const storedAccessToken = localStorage.getItem('accessToken')
+        const storedRefreshToken = localStorage.getItem('refreshToken')
+
+        if (storedUser) {
+          user.value = JSON.parse(storedUser) as User
+        }
+        if (storedAccessToken) {
+          accessToken.value = storedAccessToken
+        }
+        if (storedRefreshToken) {
+          refreshToken.value = storedRefreshToken
+        }
+      } catch (error) {
+        console.error('Failed to hydrate from localStorage:', error)
+        localStorage.removeItem('user')
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+      }
+    }
+  }
+
   return {
-    user: readonly(user),
-    isLoading: readonly(isLoading),
-    error: readonly(error),
+    user,
+    accessToken,
+    refreshToken,
+    isLoading,
+    error,
     isAuthenticated,
     setUser,
+    setTokens,
     setLoading,
     setError,
     clearUser,
-    clearError
+    clearError,
+    hydrateFromStorage
   }
 })
