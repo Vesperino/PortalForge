@@ -37,7 +37,8 @@
       "Bash(git gc:*)",
       "Bash(git log:*)",
       "Bash(npm run test)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(dotnet list package)"
     ],
     "deny": [],
     "ask": []

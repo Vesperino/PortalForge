@@ -74,10 +74,15 @@ public class SupabaseAuthService : ISupabaseAuthService
                 await _dbContext.SaveChangesAsync();
             }
 
-            // Register with Supabase Auth
-            // Note: Email redirect URL must be configured in Supabase Dashboard
-            // Authentication -> URL Configuration -> Site URL and Redirect URLs
-            var signUpResponse = await _supabaseClient.Auth.SignUp(email, password);
+            // Register with Supabase Auth with redirect URL
+            var redirectUrl = $"{_frontendUrl}/auth/callback";
+            var signUpOptions = new SignUpOptions
+            {
+                RedirectTo = redirectUrl
+            };
+
+            _logger.LogInformation("Registering user with redirect URL: {RedirectUrl}", redirectUrl);
+            var signUpResponse = await _supabaseClient.Auth.SignUp(email, password, signUpOptions);
 
             if (signUpResponse?.User == null)
             {
