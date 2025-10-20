@@ -41,9 +41,9 @@ onMounted(async () => {
 
     status.value = 'success'
 
-    // Redirect to login after 3 seconds
+    // Redirect to home page after 3 seconds
     setTimeout(() => {
-      router.push('/auth/login')
+      router.push('/')
     }, 3000)
   } catch {
     status.value = 'error'
@@ -69,16 +69,19 @@ onMounted(async () => {
 
       <!-- Success State -->
       <div v-else-if="status === 'success'" class="text-center py-8">
-        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-          <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900">
+          <svg class="h-6 w-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
         </div>
         <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">
-          Email zweryfikowany pomyślnie!
+          Konto zostało aktywowane!
         </h3>
         <p class="mt-2 text-gray-600 dark:text-gray-300">
-          Za chwilę zostaniesz przekierowany do logowania...
+          Twój email został pomyślnie zweryfikowany.
+        </p>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Za chwilę zostaniesz przekierowany do strony głównej...
         </p>
       </div>
 

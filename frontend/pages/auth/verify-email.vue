@@ -73,8 +73,9 @@ const resendEmail = async () => {
 
 // Check if there's an email from registration
 onMounted(() => {
-  if (email.value) {
-    // If redirected from registration, show message
+  const autostart = route.query.autostart as string
+  if (email.value && autostart === 'true') {
+    // If redirected from registration, show message and start timer
     message.value = 'Sprawdź swoją skrzynkę pocztową. Email weryfikacyjny został wysłany.'
     messageType.value = 'success'
     startCooldown()

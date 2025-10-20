@@ -56,12 +56,22 @@ public class SupabaseAuthService : ISupabaseAuthService
             var existingUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (existingUser != null)
             {
-                _logger.LogWarning("User with email {Email} already exists", email);
-                return new AuthResult
+                // If user exists but email is not verified, allow re-registration
+                if (existingUser.IsEmailVerified)
                 {
-                    Success = false,
-                    ErrorMessage = "User with this email already exists"
-                };
+                    _logger.LogWarning("Verified user with email {Email} already exists", email);
+                    return new AuthResult
+                    {
+                        Success = false,
+                        ErrorMessage = "User with this email already exists"
+                    };
+                }
+
+                // Delete unverified user from database to allow re-registration
+                // Note: Supabase Auth will handle the duplicate signup by returning the existing user
+                _logger.LogInformation("Deleting unverified user {Email} from database to allow re-registration", email);
+                _dbContext.Users.Remove(existingUser);
+                await _dbContext.SaveChangesAsync();
             }
 
             // Register with Supabase Auth

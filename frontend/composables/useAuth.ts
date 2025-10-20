@@ -44,7 +44,7 @@ export const useAuth = () => {
     authStore.clearError()
 
     try {
-      const { data, error } = await useFetch<AuthResponse>('/api/Auth/register', {
+      const { data, error } = await useFetch<{ userId: string; email: string; message: string }>('/api/Auth/register', {
         method: 'POST',
         baseURL: config.public.apiUrl,
         body: credentials
@@ -56,17 +56,18 @@ export const useAuth = () => {
         return { success: false, error: errorMessage }
       }
 
-      if (data.value?.user) {
-        // Redirect to verify email page
-        await router.push(`/auth/verify-email?email=${credentials.email}`)
+      if (data.value) {
+        // Redirect to verify email page with auto-start timer
+        await router.push(`/auth/verify-email?email=${encodeURIComponent(credentials.email)}&autostart=true`)
         return { success: true, error: null }
       }
 
       authStore.setError('Wystąpił nieoczekiwany błąd')
       return { success: false, error: 'Wystąpił nieoczekiwany błąd' }
-    } catch {
+    } catch (err) {
       const errorMessage = 'Wystąpił błąd podczas rejestracji'
       authStore.setError(errorMessage)
+      console.error('Registration error:', err)
       return { success: false, error: errorMessage }
     } finally {
       authStore.setLoading(false)
