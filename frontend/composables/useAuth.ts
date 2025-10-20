@@ -139,11 +139,43 @@ export const useAuth = () => {
     }
   }
 
+  const refreshToken = async () => {
+    try {
+      const currentRefreshToken = authStore.refreshToken
+
+      if (!currentRefreshToken) {
+        throw new Error('No refresh token available')
+      }
+
+      const { data, error } = await useFetch<{ accessToken: string; refreshToken: string }>('/api/Auth/refresh-token', {
+        method: 'POST',
+        baseURL: config.public.apiUrl,
+        body: { refreshToken: currentRefreshToken }
+      })
+
+      if (error.value || !data.value) {
+        authStore.clearUser()
+        await router.push('/auth/login')
+        return { success: false, error: 'Token refresh failed' }
+      }
+
+      // Update tokens in store
+      authStore.setTokens(data.value.accessToken, data.value.refreshToken)
+
+      return { success: true, error: null }
+    } catch (err) {
+      authStore.clearUser()
+      await router.push('/auth/login')
+      return { success: false, error: 'Token refresh failed' }
+    }
+  }
+
   return {
     login,
     register,
     logout,
     checkAuth,
+    refreshToken,
     isLoading: computed(() => authStore.isLoading),
     error: computed(() => authStore.error),
     user: computed(() => authStore.user),

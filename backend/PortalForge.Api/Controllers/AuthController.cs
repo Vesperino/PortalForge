@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using PortalForge.Application.Common.Models;
 using PortalForge.Application.UseCases.Auth.Commands.Login;
 using PortalForge.Application.UseCases.Auth.Commands.Logout;
+using PortalForge.Application.UseCases.Auth.Commands.RefreshToken;
 using PortalForge.Application.UseCases.Auth.Commands.Register;
 using PortalForge.Application.UseCases.Auth.Commands.ResendVerificationEmail;
 using PortalForge.Application.UseCases.Auth.Commands.ResetPassword;
@@ -86,6 +87,33 @@ public class AuthController : ControllerBase
         Response.Cookies.Delete("refresh_token");
 
         return Ok(new { message = "Wylogowano pomyślnie" });
+    }
+
+    [HttpPost("refresh-token")]
+    [AllowAnonymous]
+    public async Task<ActionResult<RefreshTokenResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto request)
+    {
+        var command = new RefreshTokenCommand
+        {
+            RefreshToken = request.RefreshToken
+        };
+
+        var result = await _mediator.Send(command);
+
+        var response = new RefreshTokenResponseDto
+        {
+            AccessToken = result.AccessToken ?? string.Empty,
+            RefreshToken = result.RefreshToken ?? string.Empty,
+            ExpiresAt = result.ExpiresAt
+        };
+
+        // Update refresh token cookie
+        if (!string.IsNullOrEmpty(result.RefreshToken))
+        {
+            SetRefreshTokenCookie(result.RefreshToken);
+        }
+
+        return Ok(response);
     }
 
     [HttpPost("reset-password")]
