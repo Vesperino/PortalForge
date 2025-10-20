@@ -328,28 +328,35 @@ public class SupabaseAuthService : ISupabaseAuthService
         }
     }
 
-    public async Task<bool> VerifyEmailAsync(string token)
+    public async Task<bool> VerifyEmailAsync(string accessToken)
     {
         try
         {
-            _logger.LogInformation("Attempting email verification");
+            _logger.LogInformation("Attempting email verification with access token");
 
-            // Set the session with the token
-            await _supabaseClient.Auth.SetSession(token, token);
-            var currentUser = _supabaseClient.Auth.CurrentUser;
+            // Get user from access token
+            var userId = await GetUserIdFromTokenAsync(accessToken);
 
-            if (currentUser != null)
+            if (userId == null)
             {
-                var dbUser = await _dbContext.Users.FindAsync(Guid.Parse(currentUser.Id));
-                if (dbUser != null)
-                {
-                    dbUser.IsEmailVerified = true;
-                    await _dbContext.SaveChangesAsync();
-                }
+                _logger.LogWarning("Email verification failed - invalid token");
+                return false;
             }
 
-            _logger.LogInformation("Email verified successfully");
-            return true;
+            // Update user in our database
+            var dbUser = await _dbContext.Users.FindAsync(userId);
+            if (dbUser != null)
+            {
+                dbUser.IsEmailVerified = true;
+                await _dbContext.SaveChangesAsync();
+                _logger.LogInformation("Email verified successfully for user: {UserId}", dbUser.Id);
+                return true;
+            }
+            else
+            {
+                _logger.LogWarning("User not found in database: {UserId}", userId);
+                return false;
+            }
         }
         catch (Exception ex)
         {

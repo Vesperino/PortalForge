@@ -13,29 +13,43 @@ const errorMessage = ref('')
 
 onMounted(async () => {
   try {
-    // Get token from URL
-    const token = route.query.token as string
-    const type = route.query.type as string
+    // Supabase redirects with tokens in the URL hash
+    // Format: #access_token=XXX&refresh_token=YYY&expires_in=3600&token_type=bearer&type=signup
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
 
-    if (!token || type !== 'signup') {
+    const accessToken = hashParams.get('access_token')
+    const refreshToken = hashParams.get('refresh_token')
+    const type = hashParams.get('type')
+    const error = hashParams.get('error')
+    const errorDescription = hashParams.get('error_description')
+
+    // Check for errors first
+    if (error) {
+      status.value = 'error'
+      errorMessage.value = errorDescription || 'Weryfikacja nie powiodła się'
+      return
+    }
+
+    // Verify we have tokens for signup
+    if (!accessToken || !refreshToken || type !== 'signup') {
       status.value = 'error'
       errorMessage.value = 'Nieprawidłowy link weryfikacyjny'
       return
     }
 
-    // Call backend to verify email
-    const { error } = await useFetch('/api/Auth/verify-email', {
+    // Call backend to verify email and update database
+    const { error: verifyError } = await useFetch('/api/Auth/verify-email', {
       method: 'POST',
       baseURL: config.public.apiUrl,
       body: {
-        token,
-        email: route.query.email || ''
+        token: accessToken,
+        email: '' // Email not needed, we get it from token
       }
     })
 
-    if (error.value) {
+    if (verifyError.value) {
       status.value = 'error'
-      errorMessage.value = error.value.data?.message || 'Weryfikacja nie powiodła się'
+      errorMessage.value = verifyError.value.data?.message || 'Weryfikacja nie powiodła się'
       return
     }
 
@@ -45,7 +59,8 @@ onMounted(async () => {
     setTimeout(() => {
       router.push('/')
     }, 3000)
-  } catch {
+  } catch (err) {
+    console.error('Email verification error:', err)
     status.value = 'error'
     errorMessage.value = 'Wystąpił błąd podczas weryfikacji emaila'
   }
@@ -63,15 +78,17 @@ onMounted(async () => {
 
       <!-- Loading State -->
       <div v-if="status === 'loading'" class="text-center py-8">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"/>
-        <p class="mt-4 text-gray-600 dark:text-gray-300">Weryfikowanie emaila...</p>
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+        <p class="mt-4 text-gray-600 dark:text-gray-300">
+          Weryfikowanie emaila...
+        </p>
       </div>
 
       <!-- Success State -->
       <div v-else-if="status === 'success'" class="text-center py-8">
         <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900">
           <svg class="h-6 w-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
         </div>
         <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">
@@ -87,9 +104,9 @@ onMounted(async () => {
 
       <!-- Error State -->
       <div v-else-if="status === 'error'" class="text-center py-8">
-        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-          <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900">
+          <svg class="h-6 w-6 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </div>
         <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">
