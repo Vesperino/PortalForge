@@ -188,6 +188,14 @@ https://mqowlgphivdosieakzjb.supabase.co/auth/v1/verify?
 
 **Zwróć uwagę na `redirect_to`** - powinien wskazywać na Twój frontend!
 
+### Test 4: Format przekierowania
+Po kliknięciu w link, Supabase automatycznie przekierowuje na `{redirect_to}` z tokenami w hash:
+```
+https://krablab.pl/portalforge/fe/auth/callback#access_token=XXX&refresh_token=YYY&expires_in=3600&token_type=bearer&type=signup
+```
+
+Frontend callback wyciąga tokeny z hash i weryfikuje przez backend.
+
 ## 🐛 Rozwiązywanie problemów
 
 ### Problem: Email nie zawiera redirect_to lub wskazuje zły URL
