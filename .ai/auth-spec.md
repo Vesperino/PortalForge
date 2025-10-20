@@ -183,9 +183,11 @@ async function handleLogin() {
 
 ### 4.1 Tokeny JWT
 
-**Struktur tokenów:**
-- **Access Token**: Krótkotrwały token (1h), przechowywany w HTTP-only cookie
-- **Refresh Token**: Długotrwały token (7 dni), przechowywany w HTTP-only cookie
+**Struktura tokenów:**
+- **Access Token**: Krótkotrwały token (1h), przechowywany w localStorage
+- **Refresh Token**: Długotrwały token (7 dni), przechowywany w localStorage
+
+**Uwaga**: Tokeny przechowywane w localStorage (nie w cookies) dla uproszczenia MVP. W produkcji rozważyć migrację na HTTP-only cookies dla większego bezpieczeństwa.
 
 **Payload Access Token:**
 ```json
@@ -200,12 +202,60 @@ async function handleLogin() {
 
 ### 4.2 Odświeżanie tokenów
 
-**Przepływ:**
-1. Middleware sprawdza czy access_token wygasł
-2. Jeśli tak, wywołuje Supabase Auth API `refreshSession()` z refresh_token
-3. Supabase generuje nowy access_token
-4. Middleware ustawia nowe ciasteczko
-5. Żądanie jest kontynuowane
+**Przepływ automatyczny (Frontend):**
+1. Plugin `token-refresh.ts` uruchamia się co 50 minut (tokeny ważne 1h)
+2. Wywołuje `useAuth().refreshToken()`
+3. Wysyła żądanie POST `/api/auth/refresh-token` z refresh_token z localStorage
+4. Backend wywołuje Supabase Auth API `refreshSession()`
+5. Supabase generuje nowy access_token + refresh_token
+6. Frontend zapisuje nowe tokeny do localStorage
+7. Proces powtarza się automatycznie
+
+**Endpoint Backend (.NET 8.0):**
+```csharp
+// POST /api/auth/refresh-token
+public class RefreshTokenCommand : IRequest<AuthResult>
+{
+    public string RefreshToken { get; set; }
+}
+
+public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, AuthResult>
+{
+    private readonly ISupabaseAuthService _authService;
+
+    public async Task<AuthResult> Handle(RefreshTokenCommand request, CancellationToken ct)
+    {
+        var result = await _authService.RefreshTokenAsync(request.RefreshToken);
+
+        if (!result.Success)
+            throw new UnauthorizedException("Token refresh failed");
+
+        return result;
+    }
+}
+```
+
+**Frontend (Nuxt 3):**
+```typescript
+// composables/useAuth.ts
+const refreshToken = async () => {
+  const currentRefreshToken = authStore.refreshToken;
+
+  const { data, error } = await useFetch('/api/auth/refresh-token', {
+    method: 'POST',
+    body: { refreshToken: currentRefreshToken }
+  });
+
+  if (!error.value && data.value) {
+    // Update tokens in store (persists to localStorage)
+    authStore.setTokens(data.value.accessToken, data.value.refreshToken);
+  }
+};
+
+// plugins/token-refresh.ts - Auto refresh every 50 minutes
+const REFRESH_INTERVAL = 50 * 60 * 1000;
+setInterval(() => refreshToken(), REFRESH_INTERVAL);
+```
 
 ## 5. Middleware autoryzacyjny
 
@@ -253,25 +303,35 @@ public class AuthenticationMiddleware
 ### 5.2 Frontend Middleware (Nuxt 3)
 
 ```typescript
-// middleware/auth.global.ts
-export default defineNuxtRouteMiddleware(async (to, from) => {
+// middleware/auth.ts - Podstawowa ochrona tras
+export default defineNuxtRouteMiddleware((to) => {
   const authStore = useAuthStore();
 
-  // Ścieżki publiczne
-  const publicPaths = ['/auth/login', '/auth/register', '/auth/reset-password'];
-
-  if (publicPaths.includes(to.path)) {
-    return;
+  if (!authStore.isAuthenticated && to.path !== '/auth/login') {
+    return navigateTo('/auth/login');
   }
+});
 
-  // Sprawdź sesję
-  const { data: user } = await useFetch('/api/auth/me');
+// middleware/verified.ts - Wymaga weryfikacji emaila
+export default defineNuxtRouteMiddleware((to) => {
+  const authStore = useAuthStore();
 
-  if (!user.value) {
+  if (!authStore.isAuthenticated) {
     return navigateTo('/auth/login');
   }
 
-  authStore.setUser(user.value);
+  if (!authStore.user?.isEmailVerified && to.path !== '/auth/verify-email') {
+    return navigateTo('/auth/verify-email?email=' + authStore.user?.email);
+  }
+});
+
+// middleware/guest.ts - Blokuje zalogowanych użytkowników
+export default defineNuxtRouteMiddleware(() => {
+  const authStore = useAuthStore();
+
+  if (authStore.isAuthenticated) {
+    return navigateTo('/');
+  }
 });
 ```
 
@@ -288,24 +348,34 @@ backend/
 │   │   └── AuthenticationMiddleware.cs
 │   └── Program.cs
 ├── PortalForge.Application/
-│   ├── Auth/
-│   │   ├── Commands/
-│   │   │   ├── Login/
-│   │   │   │   ├── LoginCommand.cs
-│   │   │   │   ├── LoginCommandHandler.cs
-│   │   │   │   └── Validation/
-│   │   │   │       └── LoginCommandValidator.cs
-│   │   │   ├── Register/
-│   │   │   │   ├── RegisterCommand.cs
-│   │   │   │   ├── RegisterCommandHandler.cs
-│   │   │   │   └── Validation/
-│   │   │   │       └── RegisterCommandValidator.cs
-│   │   │   └── ResetPassword/
-│   │   └── Queries/
-│   │       └── GetCurrentUser/
+│   ├── UseCases/
+│   │   └── Auth/
+│   │       ├── Commands/
+│   │       │   ├── Login/
+│   │       │   │   ├── LoginCommand.cs
+│   │       │   │   ├── LoginCommandHandler.cs
+│   │       │   │   └── Validation/
+│   │       │   │       └── LoginCommandValidator.cs
+│   │       │   ├── Register/
+│   │       │   │   ├── RegisterCommand.cs
+│   │       │   │   ├── RegisterCommandHandler.cs
+│   │       │   │   └── Validation/
+│   │       │   │       └── RegisterCommandValidator.cs
+│   │       │   ├── RefreshToken/
+│   │       │   │   ├── RefreshTokenCommand.cs
+│   │       │   │   ├── RefreshTokenCommandHandler.cs
+│   │       │   │   └── Validation/
+│   │       │   │       └── RefreshTokenCommandValidator.cs
+│   │       │   └── ResetPassword/
+│   │       ├── Queries/
+│   │       │   └── GetCurrentUser/
+│   │       └── DTOs/
+│   │           ├── AuthResponseDto.cs
+│   │           ├── RefreshTokenRequestDto.cs
+│   │           └── RefreshTokenResponseDto.cs
 │   └── Common/
 │       └── Interfaces/
-│           └── ISupabaseClient.cs
+│           └── ISupabaseAuthService.cs
 └── PortalForge.Infrastructure/
     └── Auth/
         └── SupabaseClient.cs
@@ -325,14 +395,23 @@ frontend/
 ├── layouts/
 │   └── auth.vue
 ├── middleware/
-│   └── auth.global.ts
+│   ├── auth.ts
+│   ├── guest.ts
+│   └── verified.ts
 ├── pages/
+│   ├── index.vue (dashboard)
 │   └── auth/
 │       ├── login.vue
 │       ├── register.vue
 │       ├── reset-password.vue
-│       └── verify-email.vue
-└── stores/
+│       ├── verify-email.vue
+│       └── callback.vue
+├── plugins/
+│   ├── auth-hydration.ts
+│   └── token-refresh.ts
+├── stores/
+│   └── auth.ts
+└── types/
     └── auth.ts
 ```
 
@@ -340,13 +419,14 @@ frontend/
 
 ### 7.1 Najlepsze praktyki
 
-1. **Ciasteczka HTTP-only**: Tokeny przechowywane tylko w HTTP-only cookies
+1. **Tokeny w localStorage**: Tokeny przechowywane w localStorage (MVP). W produkcji rozważyć HTTP-only cookies dla większego bezpieczeństwa
 2. **HTTPS**: Wszystkie połączenia przez HTTPS
 3. **CSRF Protection**: Token CSRF dla wszystkich mutujących operacji
 4. **Rate Limiting**: Ograniczenie liczby prób logowania (5/minutę)
 5. **Hashowanie haseł**: Supabase używa bcrypt
 6. **Walidacja dwuetapowa**: Frontend + Backend
-7. **Sesje**: Automatyczne wylogowanie po 8h nieaktywności
+7. **Sesje**: Automatyczne odświeżanie tokenów co 50 minut
+8. **Hydration**: Odtwarzanie stanu auth z localStorage przy starcie aplikacji
 
 ### 7.2 Zmienne środowiskowe
 
@@ -477,5 +557,10 @@ test('should login with valid credentials', async ({ page }) => {
 ---
 
 *Dokument utworzony: 2025-10-16*
-*Wersja: 1.0*
-*Następna rewizja: Po implementacji MVP*
+*Ostatnia aktualizacja: 2025-10-20*
+*Wersja: 1.1*
+*Zmiany w wersji 1.1:*
+- Dodano implementację refresh token z automatycznym odświeżaniem
+- Zmiana przechowywania tokenów z cookies na localStorage (MVP)
+- Dodano pluginy auth-hydration i token-refresh
+- Zaktualizowano strukturę projektu

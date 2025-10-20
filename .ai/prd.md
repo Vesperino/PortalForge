@@ -95,9 +95,11 @@ Organizacje 200+ pracowników borykają się z:
 - ✅ Użytkownik może ponownie wysłać email weryfikacyjny (z limitem 2 minuty)
 - ✅ Użytkownik może się wylogować z systemu poprzez dedykowany endpoint
 - ✅ System używa JWT tokenów z Supabase dla autoryzacji
+- ✅ Tokeny (access + refresh) przechowywane w localStorage i automatycznie odświeżane co 50 minut
 - ✅ Po nieudanej próbie logowania wyświetla się komunikat błędu
 - ✅ Wszystkie strony wymagają aktywnej sesji użytkownika (middleware 'auth' i 'verified')
 - ✅ Middleware sprawdza czy email użytkownika został zweryfikowany
+- ✅ Stan autentykacji jest przywracany z localStorage przy odświeżeniu strony (hydration)
 
 #### US-001a: Weryfikacja emaila ✅ ZREALIZOWANE
 **Jako** nowy użytkownik
