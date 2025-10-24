@@ -3,8 +3,8 @@ definePageMeta({
   middleware: 'verified',
 })
 
-// Redirect to news page (default dashboard view)
-navigateTo('/dashboard/news')
+// Redirect to dashboard home page
+navigateTo('/dashboard')
 </script>
 
 <template>

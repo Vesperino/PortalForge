@@ -1,0 +1,322 @@
+<script setup lang="ts">
+definePageMeta({
+  layout: 'default',
+  middleware: ['auth']
+})
+
+const { getLatestNews, getUpcomingEvents, getEmployees } = useMockData()
+
+const latestNews = getLatestNews(3)
+const upcomingEvents = getUpcomingEvents(5)
+const employees = getEmployees()
+
+const stats = computed(() => ({
+  totalEmployees: employees.length,
+  upcomingEventsCount: upcomingEvents.length,
+  newsThisWeek: latestNews.filter(n => {
+    const weekAgo = new Date()
+    weekAgo.setDate(weekAgo.getDate() - 7)
+    return n.createdAt >= weekAgo
+  }).length
+}))
+
+const formatDate = (date: Date) => {
+  return new Intl.DateTimeFormat('pl-PL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(date)
+}
+
+const formatEventDate = (date: Date) => {
+  return new Intl.DateTimeFormat('pl-PL', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date)
+}
+
+const getEventTagColor = (tag: string) => {
+  const colors: Record<string, string> = {
+    'szkolenie': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    'impreza': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    'spotkanie': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+    'meeting': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    'all-hands': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    'urodziny': 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+    'święto': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+  }
+  return colors[tag] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+}
+
+const getCategoryColor = (category: string) => {
+  const colors: Record<string, string> = {
+    'announcement': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    'product': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    'hr': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    'tech': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+    'event': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+  }
+  return colors[category] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+}
+
+const getCategoryLabel = (category: string) => {
+  const labels: Record<string, string> = {
+    'announcement': 'Ogłoszenie',
+    'product': 'Produkt',
+    'hr': 'HR',
+    'tech': 'Tech',
+    'event': 'Event'
+  }
+  return labels[category] || category
+}
+</script>
+
+<template>
+  <div class="space-y-6">
+    <!-- Welcome Section -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-lg p-8 text-white">
+      <h1 class="text-3xl font-bold mb-2">
+        Witaj w PortalForge! 👋
+      </h1>
+      <p class="text-blue-100">
+        {{ formatDate(new Date()) }}
+      </p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+              Pracownicy
+            </p>
+            <p class="text-3xl font-bold text-gray-900 dark:text-white">
+              {{ stats.totalEmployees }}
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+              Nadchodzące wydarzenia
+            </p>
+            <p class="text-3xl font-bold text-gray-900 dark:text-white">
+              {{ stats.upcomingEventsCount }}
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+              Aktualności (7 dni)
+            </p>
+            <p class="text-3xl font-bold text-gray-900 dark:text-white">
+              {{ stats.newsThisWeek }}
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Latest News - 2 columns -->
+      <div class="lg:col-span-2 space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+            Najnowsze aktualności
+          </h2>
+          <NuxtLink
+            to="/dashboard/news"
+            class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            Zobacz wszystkie →
+          </NuxtLink>
+        </div>
+
+        <div class="space-y-4">
+          <article
+            v-for="news in latestNews"
+            :key="news.id"
+            class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+          >
+            <div v-if="news.imageUrl" class="h-48 overflow-hidden">
+              <img
+                :src="news.imageUrl"
+                :alt="news.title"
+                class="w-full h-full object-cover"
+              >
+            </div>
+            <div class="p-6">
+              <div class="flex items-center gap-2 mb-3">
+                <span
+                  :class="getCategoryColor(news.category)"
+                  class="px-2 py-1 text-xs font-medium rounded-full"
+                >
+                  {{ getCategoryLabel(news.category) }}
+                </span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ formatDate(news.createdAt) }}
+                </span>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                {{ news.title }}
+              </h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
+                {{ news.excerpt }}
+              </p>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>{{ news.author?.firstName }} {{ news.author?.lastName }}</span>
+                </div>
+                <NuxtLink
+                  :to="`/dashboard/news/${news.id}`"
+                  class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  Czytaj więcej
+                </NuxtLink>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <!-- Upcoming Events - 1 column -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+            Nadchodzące wydarzenia
+          </h2>
+          <NuxtLink
+            to="/dashboard/calendar"
+            class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            Kalendarz →
+          </NuxtLink>
+        </div>
+
+        <div class="space-y-3">
+          <div
+            v-for="event in upcomingEvents"
+            :key="event.id"
+            class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer"
+          >
+            <div class="flex gap-4">
+              <!-- Date Badge -->
+              <div class="flex-shrink-0 w-14 h-14 bg-blue-600 rounded-lg flex flex-col items-center justify-center text-white">
+                <span class="text-xs font-medium">
+                  {{ new Intl.DateTimeFormat('pl-PL', { month: 'short' }).format(event.startDate) }}
+                </span>
+                <span class="text-xl font-bold">
+                  {{ event.startDate.getDate() }}
+                </span>
+              </div>
+
+              <!-- Event Info -->
+              <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 dark:text-white mb-1 truncate">
+                  {{ event.title }}
+                </h3>
+                <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                  {{ formatEventDate(event.startDate) }}
+                </p>
+                <div class="flex flex-wrap gap-1">
+                  <span
+                    v-for="tag in event.tags.slice(0, 2)"
+                    :key="tag"
+                    :class="getEventTagColor(tag)"
+                    class="px-2 py-0.5 text-xs font-medium rounded-full"
+                  >
+                    #{{ tag }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="upcomingEvents.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+            <svg class="mx-auto h-12 w-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p>Brak nadchodzących wydarzeń</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+        Szybkie linki
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <NuxtLink
+          to="/dashboard/organization"
+          class="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        >
+          <svg class="w-8 h-8 text-blue-600 dark:text-blue-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">Struktura org</span>
+        </NuxtLink>
+
+        <NuxtLink
+          to="/dashboard/documents"
+          class="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        >
+          <svg class="w-8 h-8 text-green-600 dark:text-green-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">Dokumenty</span>
+        </NuxtLink>
+
+        <NuxtLink
+          to="/dashboard/account"
+          class="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        >
+          <svg class="w-8 h-8 text-purple-600 dark:text-purple-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">Moje konto</span>
+        </NuxtLink>
+
+        <NuxtLink
+          to="/dashboard/calendar"
+          class="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        >
+          <svg class="w-8 h-8 text-orange-600 dark:text-orange-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">Kalendarz</span>
+        </NuxtLink>
+      </div>
+    </div>
+  </div>
+</template>
