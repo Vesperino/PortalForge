@@ -77,10 +77,6 @@ const goToToday = () => {
 }
 
 const openEventModal = (event: Event) => {
-  if (event.newsId) {
-    router.push(`/dashboard/news/${event.newsId}`)
-    return
-  }
   selectedEvent.value = event
   showEventModal.value = true
 }
