@@ -86,6 +86,18 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const logout = async () => {
+    try {
+      // TODO: Integrate with Supabase when @nuxtjs/supabase is installed
+      // const supabase = useSupabaseClient()
+      // await supabase.auth.signOut()
+      clearUser()
+    } catch (err) {
+      console.error('Logout error:', err)
+      clearUser()
+    }
+  }
+
   return {
     user,
     accessToken,
@@ -99,6 +111,7 @@ export const useAuthStore = defineStore('auth', () => {
     setError,
     clearUser,
     clearError,
-    hydrateFromStorage
+    hydrateFromStorage,
+    logout
   }
 })
