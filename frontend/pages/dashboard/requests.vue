@@ -257,8 +257,19 @@ definePageMeta({
 })
 
 type RequestPriority = 'standard' | 'pilne'
-type StepStatus = 'pending' | 'in_review' | 'approved'
-type RequestStatus = 'draft' | 'in_review' | 'approved' | 'rejected'
+type StepStatus = 'pending' | 'in_review' | 'approved' | 'requires_survey' | 'survey_failed'
+type RequestStatus = 'draft' | 'in_review' | 'approved' | 'rejected' | 'awaiting_survey'
+
+interface SurveyQuestion {
+  id: string
+  question: string
+  options: Array<{ value: string; label: string; isCorrect: boolean }>
+}
+
+interface SurveyAnswer {
+  questionId: string
+  selectedAnswer: string
+}
 
 interface ApprovalStep {
   id: number
@@ -267,6 +278,11 @@ interface ApprovalStep {
   startedAt?: Date
   finishedAt?: Date
   comment?: string
+  requiresSurvey?: boolean
+  surveyQuestions?: SurveyQuestion[]
+  surveyAnswers?: SurveyAnswer[]
+  surveyScore?: number
+  surveyPassed?: boolean
 }
 
 interface RequestRecord {
@@ -308,6 +324,10 @@ const formData = ref<Record<string, unknown>>({})
 const priority = ref<RequestPriority>('standard')
 const escalateToSecondary = ref(true)
 
+// Request type selection with search
+const requestTypeSearch = ref('')
+const showRequestTypeDropdown = ref(false)
+
 // Requests list
 const requests = ref<RequestRecord[]>([])
 const seeded = ref(false)
@@ -318,6 +338,12 @@ const searchQuery = ref('')
 const statusFilter = ref<RequestStatus | 'all'>('all')
 const selectedRequest = ref<RequestRecord | null>(null)
 
+// Survey modal
+const showSurveyModal = ref(false)
+const surveyRequest = ref<RequestRecord | null>(null)
+const surveyStepIndex = ref<number>(-1)
+const surveyAnswers = ref<SurveyAnswer[]>([])
+
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
 
@@ -325,6 +351,16 @@ const successMessage = ref<string | null>(null)
 const currentRequestType = computed(() => {
   if (!selectedRequestType.value) return null
   return getRequestTypeById(selectedRequestType.value)
+})
+
+const filteredRequestTypes = computed(() => {
+  if (!requestTypeSearch.value.trim()) return requestTypes
+  const query = requestTypeSearch.value.toLowerCase()
+  return requestTypes.filter(type =>
+    type.name.toLowerCase().includes(query) ||
+    type.description.toLowerCase().includes(query) ||
+    type.category.toLowerCase().includes(query)
+  )
 })
 
 const approvalSteps = computed(() => {
@@ -358,6 +394,11 @@ const filteredRequests = computed(() => {
   return filtered
 })
 
+const currentSurveyStep = computed(() => {
+  if (!surveyRequest.value || surveyStepIndex.value < 0) return null
+  return surveyRequest.value.approvals[surveyStepIndex.value]
+})
+
 // Helper functions
 const formatDate = (date: Date) =>
   new Intl.DateTimeFormat('pl-PL', {
@@ -374,6 +415,8 @@ const getStatusBadgeClass = (status: RequestStatus) => {
       return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
     case 'in_review':
       return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+    case 'awaiting_survey':
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
     case 'rejected':
       return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
     case 'draft':
@@ -385,6 +428,7 @@ const getStatusLabel = (status: RequestStatus) => {
   switch (status) {
     case 'approved': return 'Zatwierdzony'
     case 'in_review': return 'W akceptacji'
+    case 'awaiting_survey': return 'Wymaga ankiety'
     case 'rejected': return 'Odrzucony'
     case 'draft': return 'Szkic'
   }
@@ -396,8 +440,22 @@ const getStepBadgeClass = (status: StepStatus) => {
       return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
     case 'in_review':
       return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+    case 'requires_survey':
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+    case 'survey_failed':
+      return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
     case 'pending':
       return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+  }
+}
+
+const getStepStatusLabel = (status: StepStatus) => {
+  switch (status) {
+    case 'approved': return 'Zatwierdzony'
+    case 'in_review': return 'W trakcie'
+    case 'requires_survey': return 'Wymaga ankiety'
+    case 'survey_failed': return 'Test niezaliczony'
+    case 'pending': return 'Oczekuje'
   }
 }
 
@@ -516,6 +574,14 @@ const advanceRequest = (id: number) => {
   const current = request.approvals.find(step => step.status === 'in_review')
   if (!current) return
 
+  // Check if this step requires survey
+  if (current.requiresSurvey && !current.surveyPassed) {
+    current.status = 'requires_survey'
+    request.status = 'awaiting_survey'
+    requests.value = [...requests.value]
+    return
+  }
+
   current.status = 'approved'
   current.finishedAt = new Date()
 
@@ -529,6 +595,86 @@ const advanceRequest = (id: number) => {
   }
 
   requests.value = [...requests.value]
+}
+
+// Survey functions
+const openSurvey = (request: RequestRecord, stepIndex: number) => {
+  surveyRequest.value = request
+  surveyStepIndex.value = stepIndex
+  surveyAnswers.value = []
+  showSurveyModal.value = true
+}
+
+const closeSurvey = () => {
+  showSurveyModal.value = false
+  surveyRequest.value = null
+  surveyStepIndex.value = -1
+  surveyAnswers.value = []
+}
+
+const submitSurvey = () => {
+  if (!surveyRequest.value || surveyStepIndex.value < 0) return
+
+  const step = surveyRequest.value.approvals[surveyStepIndex.value]
+  if (!step || !step.surveyQuestions) return
+
+  // Calculate score
+  let correctAnswers = 0
+  const totalQuestions = step.surveyQuestions.length
+
+  step.surveyQuestions.forEach(question => {
+    const userAnswer = surveyAnswers.value.find(a => a.questionId === question.id)
+    if (userAnswer) {
+      const correctOption = question.options.find(o => o.isCorrect)
+      if (correctOption && userAnswer.selectedAnswer === correctOption.value) {
+        correctAnswers++
+      }
+    }
+  })
+
+  const score = (correctAnswers / totalQuestions) * 100
+  step.surveyScore = score
+  step.surveyAnswers = [...surveyAnswers.value]
+
+  // Check if passed (80% threshold)
+  const passed = score >= 80
+
+  if (passed) {
+    // Auto-approve
+    step.surveyPassed = true
+    step.status = 'approved'
+    step.finishedAt = new Date()
+    step.comment = `Test zaliczony (${score.toFixed(0)}% poprawnych odpowiedzi)`
+
+    // Move to next step or complete
+    const next = surveyRequest.value.approvals.find(s => s.status === 'pending')
+    if (next) {
+      next.status = 'in_review'
+      next.startedAt = new Date()
+      surveyRequest.value.status = 'in_review'
+    } else {
+      surveyRequest.value.status = 'approved'
+    }
+
+    successMessage.value = `✓ Test zaliczony! Wynik: ${score.toFixed(0)}%. Wniosek został zatwierdzony.`
+  } else {
+    // Failed - send back to approver
+    step.surveyPassed = false
+    step.status = 'survey_failed'
+    step.comment = `Test niezaliczony (${score.toFixed(0)}% poprawnych odpowiedzi). Wymaga decyzji przełożonego.`
+    surveyRequest.value.status = 'in_review'
+
+    errorMessage.value = `Test niezaliczony. Wynik: ${score.toFixed(0)}%. Wniosek został przekazany do przełożonego.`
+  }
+
+  requests.value = [...requests.value]
+  closeSurvey()
+
+  // Auto-hide messages
+  setTimeout(() => {
+    successMessage.value = null
+    errorMessage.value = null
+  }, 5000)
 }
 
 // Seed mock data
@@ -648,7 +794,84 @@ watchEffect(() => {
     status: 'approved'
   }
 
-  requests.value = [sample1, sample2, sample3]
+  // Mock 4: AI Agent request - requires survey after approval
+  const aiSurveyQuestions: SurveyQuestion[] = [
+    {
+      id: 'q1',
+      question: 'Jakie są główne zastosowania agenta AI w pracy programisty?',
+      options: [
+        { value: 'a', label: 'Tylko pisanie kodu', isCorrect: false },
+        { value: 'b', label: 'Generowanie kodu, refaktoryzacja, dokumentacja i pomoc w debugowaniu', isCorrect: true },
+        { value: 'c', label: 'Zastępowanie programistów', isCorrect: false }
+      ]
+    },
+    {
+      id: 'q2',
+      question: 'Czy kod wygenerowany przez AI zawsze wymaga weryfikacji?',
+      options: [
+        { value: 'a', label: 'Nie, kod AI jest zawsze poprawny', isCorrect: false },
+        { value: 'b', label: 'Tak, zawsze należy sprawdzić i przetestować kod', isCorrect: true },
+        { value: 'c', label: 'Tylko w przypadku skomplikowanych funkcji', isCorrect: false }
+      ]
+    },
+    {
+      id: 'q3',
+      question: 'Jakie dane można udostępniać agentowi AI?',
+      options: [
+        { value: 'a', label: 'Wszystkie dane firmowe bez ograniczeń', isCorrect: false },
+        { value: 'b', label: 'Tylko dane publiczne i niezawierające informacji poufnych', isCorrect: true },
+        { value: 'c', label: 'Hasła i klucze API', isCorrect: false }
+      ]
+    },
+    {
+      id: 'q4',
+      question: 'Jak często należy aktualizować wiedzę o narzędziach AI?',
+      options: [
+        { value: 'a', label: 'Raz na kilka lat', isCorrect: false },
+        { value: 'b', label: 'Regularnie, technologia szybko się rozwija', isCorrect: true },
+        { value: 'c', label: 'Nigdy, wystarczy początkowe szkolenie', isCorrect: false }
+      ]
+    }
+  ]
+
+  const approvals4: ApprovalStep[] = [
+    {
+      id: 1,
+      approver: mockSupervisor,
+      status: 'approved',
+      startedAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
+      finishedAt: new Date(Date.now() - 1000 * 60 * 60 * 12),
+      comment: 'Zatwierdzam - dobry pomysł'
+    },
+    {
+      id: 2,
+      approver: mockSecondaryApprover,
+      status: 'requires_survey',
+      startedAt: new Date(Date.now() - 1000 * 60 * 60 * 12),
+      requiresSurvey: true,
+      surveyQuestions: aiSurveyQuestions,
+      comment: 'Zatwierdzam pod warunkiem zaliczenia testu wiedzy o AI'
+    }
+  ]
+
+  const sample4: RequestRecord = {
+    id: ++requestSeed,
+    requestNumber: 'ZAP-2025-0004',
+    requestTypeId: 'software-license',
+    requestTypeName: 'Agent AI do pracy',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
+    priority: 'standard',
+    formData: {
+      'software-name': 'GitHub Copilot Enterprise',
+      'license-type': 'subscription',
+      'seats': 1,
+      'justification': 'Zwiększenie produktywności w pisaniu kodu i automatyzacji zadań programistycznych'
+    },
+    approvals: approvals4,
+    status: 'awaiting_survey'
+  }
+
+  requests.value = [sample4, sample1, sample2, sample3]
   seeded.value = true
 })
 </script>
@@ -725,36 +948,105 @@ watchEffect(() => {
       <div v-if="wizardStep === 'select-type'" class="space-y-6">
         <div>
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Wybierz typ wniosku</h2>
-          <p class="text-gray-600 dark:text-gray-400">Kliknij na kartę, aby rozpocząć składanie wniosku</p>
+          <p class="text-gray-600 dark:text-gray-400">Wyszukaj i wybierz typ wniosku z listy dostępnych</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <button
-            v-for="reqType in requestTypes"
-            :key="reqType.id"
-            class="group relative flex flex-col items-start gap-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 text-left transition-all hover:border-blue-500 hover:shadow-lg hover:-translate-y-1"
-            @click="selectRequestType(reqType.id)"
+        <!-- Search box -->
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            v-model="requestTypeSearch"
+            type="text"
+            placeholder="Szukaj typu wniosku..."
+            class="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           >
-            <div class="flex items-center gap-3 w-full">
-              <span class="text-4xl">{{ reqType.icon }}</span>
-              <div class="flex-1">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                  {{ reqType.name }}
-                </h3>
-                <p v-if="reqType.estimatedProcessingDays" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  ⏱ ~{{ reqType.estimatedProcessingDays }} dni roboczych
-                </p>
-              </div>
-            </div>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              {{ reqType.description }}
-            </p>
-            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-              <svg class="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </div>
-          </button>
+        </div>
+
+        <!-- Request types table -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Typ wniosku
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Kategoria
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Czas realizacji
+                  </th>
+                  <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Akcja
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                <tr
+                  v-for="reqType in filteredRequestTypes"
+                  :key="reqType.id"
+                  class="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors"
+                >
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <span class="text-3xl">{{ reqType.icon }}</span>
+                      <div>
+                        <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                          {{ reqType.name }}
+                        </div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          {{ reqType.description }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span :class="[
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      reqType.category === 'hardware' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                      reqType.category === 'software' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
+                      reqType.category === 'access' ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300' :
+                      reqType.category === 'training' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' :
+                      'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                    ]">
+                      {{ reqType.category }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                    <span v-if="reqType.estimatedProcessingDays">
+                      ~{{ reqType.estimatedProcessingDays }} dni
+                    </span>
+                    <span v-else class="text-gray-400">-</span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <button
+                      @click="selectRequestType(reqType.id)"
+                      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
+                    >
+                      Wybierz
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty state -->
+          <div v-if="filteredRequestTypes.length === 0" class="px-6 py-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">Nie znaleziono typów wniosków</h3>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Spróbuj zmienić kryteria wyszukiwania</p>
+          </div>
         </div>
       </div>
 
@@ -1021,6 +1313,7 @@ watchEffect(() => {
               <option value="all">Wszystkie</option>
               <option value="draft">Szkice</option>
               <option value="in_review">W akceptacji</option>
+              <option value="awaiting_survey">Wymaga ankiety</option>
               <option value="approved">Zatwierdzone</option>
               <option value="rejected">Odrzucone</option>
             </select>
@@ -1164,6 +1457,8 @@ watchEffect(() => {
                 :class="[
                   approval.status === 'approved' ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20' :
                   approval.status === 'in_review' ? 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20' :
+                  approval.status === 'requires_survey' ? 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20' :
+                  approval.status === 'survey_failed' ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20' :
                   'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20'
                 ]"
               >
@@ -1171,6 +1466,8 @@ watchEffect(() => {
                   :class="[
                     approval.status === 'approved' ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300' :
                     approval.status === 'in_review' ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300' :
+                    approval.status === 'requires_survey' ? 'bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-300' :
+                    approval.status === 'survey_failed' ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300' :
                     'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                   ]"
                 >
@@ -1185,7 +1482,13 @@ watchEffect(() => {
                       <p class="text-sm text-gray-600 dark:text-gray-400">{{ approval.approver.position }}</p>
                     </div>
                     <span :class="getStepBadgeClass(approval.status)" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold">
-                      {{ approval.status === 'approved' ? '✓ Zatwierdzony' : approval.status === 'in_review' ? '⏳ W trakcie' : '⏸ Oczekuje' }}
+                      {{
+                        approval.status === 'approved' ? '✓ Zatwierdzony' :
+                        approval.status === 'in_review' ? '⏳ W trakcie' :
+                        approval.status === 'requires_survey' ? '📝 Wymaga ankiety' :
+                        approval.status === 'survey_failed' ? '❌ Test niezaliczony' :
+                        '⏸ Oczekuje'
+                      }}
                     </span>
                   </div>
                   <div v-if="approval.startedAt" class="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -1197,6 +1500,31 @@ watchEffect(() => {
                   <div v-if="approval.comment" class="mt-2 text-sm text-gray-700 dark:text-gray-300 italic">
                     "{{ approval.comment }}"
                   </div>
+
+                  <!-- Survey score display -->
+                  <div v-if="approval.surveyScore !== undefined" class="mt-3 p-3 rounded-lg bg-gray-100 dark:bg-gray-800">
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Wynik testu:</span>
+                      <span :class="[
+                        'text-sm font-bold',
+                        approval.surveyPassed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                      ]">
+                        {{ approval.surveyScore.toFixed(0) }}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Survey button -->
+                  <button
+                    v-if="approval.status === 'requires_survey' && approval.requiresSurvey"
+                    class="mt-3 px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700 transition-colors flex items-center gap-2"
+                    @click="openSurvey(selectedRequest, selectedRequest.approvals.indexOf(approval))"
+                  >
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    📝 Wypełnij ankietę
+                  </button>
 
                   <!-- Demo: Advance button -->
                   <button
@@ -1220,6 +1548,113 @@ watchEffect(() => {
           >
             Zamknij
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Survey Modal -->
+    <div
+      v-if="showSurveyModal && surveyRequest && currentSurveyStep"
+      class="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+      @click.self="closeSurvey"
+    >
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <!-- Survey Header -->
+        <div class="sticky top-0 bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-6 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-white">Test wiedzy</h2>
+            <p class="text-amber-100 mt-1">
+              Wniosek: {{ surveyRequest.requestNumber }} - {{ surveyRequest.requestTypeName }}
+            </p>
+            <p class="text-amber-100 text-sm mt-1">
+              Wymagane minimum: 80% poprawnych odpowiedzi
+            </p>
+          </div>
+          <button
+            class="text-white hover:text-amber-100 transition-colors"
+            @click="closeSurvey"
+          >
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Survey Content -->
+        <div class="px-8 py-6 space-y-6 overflow-y-auto flex-1">
+          <div
+            v-for="(question, qIndex) in currentSurveyStep.surveyQuestions"
+            :key="question.id"
+            class="p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"
+          >
+            <div class="flex items-start gap-3 mb-4">
+              <span class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-300 flex items-center justify-center font-bold text-sm">
+                {{ qIndex + 1 }}
+              </span>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex-1">
+                {{ question.question }}
+              </h3>
+            </div>
+
+            <div class="space-y-3 ml-11">
+              <label
+                v-for="option in question.options"
+                :key="option.value"
+                class="flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                :class="[
+                  surveyAnswers.find(a => a.questionId === question.id)?.selectedAnswer === option.value
+                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
+                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
+                ]"
+              >
+                <input
+                  type="radio"
+                  :name="`question-${question.id}`"
+                  :value="option.value"
+                  :checked="surveyAnswers.find(a => a.questionId === question.id)?.selectedAnswer === option.value"
+                  class="mt-1 h-4 w-4 text-amber-600 focus:ring-amber-500"
+                  @change="() => {
+                    const existingIndex = surveyAnswers.findIndex(a => a.questionId === question.id)
+                    if (existingIndex >= 0 && surveyAnswers[existingIndex]) {
+                      surveyAnswers[existingIndex].selectedAnswer = option.value
+                    } else {
+                      surveyAnswers.push({ questionId: question.id, selectedAnswer: option.value })
+                    }
+                  }"
+                >
+                <span class="text-sm text-gray-900 dark:text-white flex-1">
+                  {{ option.label }}
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Survey Footer -->
+        <div class="sticky bottom-0 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-8 py-4 flex items-center justify-between">
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Odpowiedzi: {{ surveyAnswers.length }} / {{ currentSurveyStep.surveyQuestions?.length || 0 }}
+          </p>
+          <div class="flex gap-3">
+            <button
+              class="px-6 py-2 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-white dark:hover:bg-gray-800 transition-colors"
+              @click="closeSurvey"
+            >
+              Anuluj
+            </button>
+            <button
+              :disabled="surveyAnswers.length < (currentSurveyStep.surveyQuestions?.length || 0)"
+              :class="[
+                'px-6 py-2 rounded-lg font-semibold transition-colors',
+                surveyAnswers.length < (currentSurveyStep.surveyQuestions?.length || 0)
+                  ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                  : 'bg-amber-600 hover:bg-amber-700 text-white'
+              ]"
+              @click="submitSurvey"
+            >
+              Wyślij odpowiedzi
+            </button>
+          </div>
         </div>
       </div>
     </div>
