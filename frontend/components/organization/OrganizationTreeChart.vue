@@ -32,10 +32,16 @@ const chartRef = ref<HTMLDivElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
 let removeResizeListener: (() => void) | null = null
 
-const BASE_NODE_WIDTH = 180
-const BASE_LAYER_HEIGHT = 160
-const MIN_SCALE_FLOOR = 0.01
-const MAX_SCALE_CEILING = 6
+const BASE_NODE_WIDTH = 220
+const BASE_LAYER_HEIGHT = 210
+const BASE_LABEL_WIDTH = 180
+const BASE_NAME_FONT = 13
+const BASE_POSITION_FONT = 11
+const BASE_DEPARTMENT_FONT = 10
+const MIN_SCALE_FLOOR = 0.02
+const MAX_SCALE_CEILING = 8
+
+let currentVisualScale = 1
 
 const { getDepartments } = useMockData()
 const departments = getDepartments()
@@ -44,9 +50,69 @@ const getDepartmentColor = (employee: Employee) => {
   return employee.department?.color || '#3b82f6'
 }
 
+const clampScale = (scale: number) => Math.min(1, Math.max(scale, 0.3))
+
+const buildLabelConfig = (color: string) => {
+  const scale = clampScale(currentVisualScale)
+  const labelWidth = Math.max(120, Math.round(BASE_LABEL_WIDTH * scale))
+  const nameFontSize = Math.max(10, Math.round(BASE_NAME_FONT * Math.max(scale, 0.75)))
+  const positionFontSize = Math.max(9, Math.round(BASE_POSITION_FONT * Math.max(scale, 0.7)))
+  const departmentFontSize = Math.max(8, Math.round(BASE_DEPARTMENT_FONT * Math.max(scale, 0.65)))
+  const primaryLineHeight = Math.round(18 * Math.max(scale, 0.7))
+  const secondaryLineHeight = Math.round(16 * Math.max(scale, 0.65))
+  const verticalPadding = Math.round(6 * Math.max(scale, 0.7))
+
+  return {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderColor: color,
+    borderWidth: Math.max(1, 1.2 * scale),
+    borderRadius: 6,
+    padding: [verticalPadding, 10, verticalPadding, 10],
+    width: labelWidth,
+    overflow: 'truncate',
+    color: '#1f2937',
+    fontSize: nameFontSize,
+    fontWeight: 'bold',
+    rich: {
+      name: {
+        fontSize: nameFontSize,
+        fontWeight: 'bold',
+        color: '#1f2937',
+        lineHeight: primaryLineHeight,
+        width: labelWidth,
+        overflow: 'truncate'
+      },
+      position: {
+        fontSize: positionFontSize,
+        color: '#4b5563',
+        lineHeight: secondaryLineHeight,
+        width: labelWidth,
+        overflow: 'truncate'
+      },
+      dept: {
+        fontSize: departmentFontSize,
+        color: '#6b7280',
+        lineHeight: secondaryLineHeight,
+        width: labelWidth,
+        overflow: 'truncate'
+      }
+    }
+  }
+}
+
 // Convert employee hierarchy to ECharts tree data format
 const convertToTreeData = (employee: Employee): any => {
   const color = getDepartmentColor(employee)
+
+  const labelConfig = buildLabelConfig(color)
+  labelConfig.formatter = (params: any) => {
+    const emp = findEmployeeById(employee.id)
+    if (!emp) return params.name
+    const fullName = `${emp.firstName} ${emp.lastName}`
+    const position = emp.position?.name || ''
+    const dept = emp.department?.name || ''
+    return `{name|${fullName}}\n{position|${position}}\n{dept|${dept}}`
+  }
 
   const node: any = {
     name: `${employee.firstName} ${employee.lastName}`,
@@ -54,52 +120,9 @@ const convertToTreeData = (employee: Employee): any => {
     itemStyle: {
       color: color,
       borderColor: color,
-      borderWidth: 2
+      borderWidth: getNodeBorderWidth(currentVisualScale)
     },
-    label: {
-      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-      borderColor: color,
-      borderWidth: 1.5,
-      borderRadius: 6,
-      padding: [6, 10],
-      color: '#333',
-      fontSize: 11,
-      fontWeight: 'bold',
-      width: 140,
-      overflow: 'truncate',
-      formatter: (params: any) => {
-        const emp = findEmployeeById(employee.id)
-        if (!emp) return params.name
-        const fullName = `${emp.firstName} ${emp.lastName}`
-        const position = emp.position?.name || ''
-        const dept = emp.department?.name || ''
-        return `{name|${fullName}}\n{position|${position}}\n{dept|${dept}}`
-      },
-      rich: {
-        name: {
-          fontSize: 12,
-          fontWeight: 'bold',
-          color: '#1f2937',
-          lineHeight: 18,
-          width: 140,
-          overflow: 'truncate'
-        },
-        position: {
-          fontSize: 10,
-          color: '#6b7280',
-          lineHeight: 16,
-          width: 140,
-          overflow: 'truncate'
-        },
-        dept: {
-          fontSize: 9,
-          color: '#9ca3af',
-          lineHeight: 14,
-          width: 140,
-          overflow: 'truncate'
-        }
-      }
-    },
+    label: labelConfig,
     tooltip: {
       formatter: (params: any) => {
         const emp = findEmployeeById(params.value)
@@ -157,44 +180,85 @@ const calculateTreeMetrics = (employee: Employee) => {
 }
 
 const treeMetrics = computed(() => calculateTreeMetrics(props.employee))
-const treeData = computed(() => convertToTreeData(props.employee))
 
-const getDynamicGaps = () => {
+const computeLayoutMetrics = () => {
   const { maxDepth, maxBreadth } = treeMetrics.value
-
-  const nodeGap =
-    maxBreadth > 10 ? 28 :
-    maxBreadth > 8 ? 34 :
-    maxBreadth > 6 ? 42 :
-    maxBreadth > 4 ? 50 : 60
-
-  const layerGap =
-    maxDepth > 6 ? 110 :
-    maxDepth > 4 ? 125 :
-    maxDepth > 3 ? 135 : 150
-
-  return { nodeGap, layerGap }
+  const nodeGap = 90 + maxBreadth * 14
+  const layerGap = 160 + maxDepth * 14
+  const requiredWidth = Math.max(maxBreadth, 1) * (BASE_NODE_WIDTH + nodeGap) + 240
+  const requiredHeight = Math.max(maxDepth + 1, 1) * (BASE_LAYER_HEIGHT + layerGap) + 260
+  return { nodeGap, layerGap, requiredWidth, requiredHeight }
 }
 
 const getAutoScaleConfig = () => {
-  if (!chartRef.value) {
-    return { autoScale: 1, minScale: 0.2 }
-  }
+  const containerWidth = chartRef.value?.clientWidth ?? 800
+  const containerHeight = chartRef.value?.clientHeight ?? 600
 
-  const { maxDepth, maxBreadth } = treeMetrics.value
-  const containerWidth = chartRef.value.clientWidth || 800
-  const containerHeight = chartRef.value.clientHeight || 600
-
-  const requiredWidth = Math.max(maxBreadth, 1) * BASE_NODE_WIDTH
-  const requiredHeight = Math.max(maxDepth + 1, 1) * BASE_LAYER_HEIGHT
+  const { requiredWidth, requiredHeight } = computeLayoutMetrics()
 
   const widthScale = containerWidth / requiredWidth
   const heightScale = containerHeight / requiredHeight
-
-  const autoScale = Math.min(1, widthScale, heightScale)
-  const minScale = Math.max(Math.min(autoScale * 0.8, 0.05), MIN_SCALE_FLOOR)
+  const autoScale = Math.max(MIN_SCALE_FLOOR, Math.min(1, widthScale, heightScale))
+  const minScale = Math.max(MIN_SCALE_FLOOR, autoScale * 0.5)
 
   return { autoScale, minScale }
+}
+
+const getSymbolSize = (scale: number) => Math.max(8, Math.round(18 * Math.max(scale, 0.55)))
+const getLineWidth = (scale: number) => Math.max(1, Number((2 * Math.max(scale, 0.6)).toFixed(1)))
+const getNodeBorderWidth = (scale: number) => Math.max(1, Number((2 * Math.max(scale, 0.6)).toFixed(1)))
+
+const buildSeriesLabel = (scale: number, isLeaf = false) => {
+  const effective = clampScale(scale)
+  const baseDistance = isLeaf ? 22 : 26
+  const distance = Math.max(12, Math.round(baseDistance * effective))
+  return {
+    position: isLeaf ? 'bottom' : 'top',
+    distance,
+    verticalAlign: 'middle',
+    align: 'center'
+  }
+}
+
+const refreshSeriesVisuals = (scale: number, includeData = false) => {
+  currentVisualScale = clampScale(scale)
+  if (!chartInstance) return
+
+  const symbolSize = getSymbolSize(currentVisualScale)
+  const lineWidth = getLineWidth(currentVisualScale)
+
+  chartInstance.setOption({
+    series: [
+      {
+        zoom: currentVisualScale,
+        symbolSize,
+        label: buildSeriesLabel(currentVisualScale, false),
+        leaves: {
+          label: buildSeriesLabel(currentVisualScale, true)
+        },
+        lineStyle: {
+          color: '#cbd5e1',
+          width: lineWidth,
+          curveness: 0.5
+        },
+        emphasis: {
+          focus: 'descendant',
+          lineStyle: {
+            width: lineWidth + 1.5,
+            color: '#3b82f6'
+          },
+          itemStyle: {
+            shadowBlur: 10,
+            shadowColor: 'rgba(0, 0, 0, 0.3)'
+          }
+        },
+        itemStyle: {
+          borderWidth: getNodeBorderWidth(currentVisualScale)
+        },
+        ...(includeData ? { data: [convertToTreeData(props.employee)] } : {})
+      }
+    ]
+  }, false, false)
 }
 
 const updateScaleLimits = (minScale: number) => {
@@ -209,7 +273,7 @@ const updateScaleLimits = (minScale: number) => {
         }
       }
     ]
-  })
+  }, false, false)
 }
 
 const applyInitialZoom = (targetScale: number) => {
@@ -231,11 +295,22 @@ const applyInitialZoom = (targetScale: number) => {
   }
 }
 
+const handleTreeRoam = () => {
+  if (!chartInstance) return
+  const option = chartInstance.getOption()
+  const series = Array.isArray(option.series) ? option.series[0] : null
+  const zoom = typeof series?.zoom === 'number' ? series.zoom : currentVisualScale
+  const clamped = Math.max(MIN_SCALE_FLOOR, Math.min(zoom, MAX_SCALE_CEILING))
+  if (Math.abs(clamped - currentVisualScale) > 0.01) {
+    refreshSeriesVisuals(clamped, true)
+  }
+}
+
 const initChart = () => {
   if (!chartRef.value) return
 
-  // Dispose existing chart
   if (chartInstance) {
+    chartInstance.off('treeRoam', handleTreeRoam)
     removeResizeListener?.()
     chartInstance.dispose()
     removeResizeListener = null
@@ -244,7 +319,12 @@ const initChart = () => {
   chartInstance = echarts.init(chartRef.value)
 
   const { autoScale, minScale } = getAutoScaleConfig()
-  const { nodeGap, layerGap } = getDynamicGaps()
+  const { nodeGap, layerGap } = computeLayoutMetrics()
+  currentVisualScale = clampScale(autoScale)
+
+  const initialData = convertToTreeData(props.employee)
+  const initialSymbolSize = getSymbolSize(currentVisualScale)
+  const initialLineWidth = getLineWidth(currentVisualScale)
 
   const option = {
     tooltip: {
@@ -255,33 +335,26 @@ const initChart = () => {
     toolbox: {
       show: true,
       feature: {
-        restore: {
-          show: true,
-          title: 'Reset View'
-        },
-        saveAsImage: {
-          show: true,
-          title: 'Save as Image',
-          pixelRatio: 2
-        }
+        restore: { show: true, title: 'Resetuj widok' },
+        saveAsImage: { show: true, title: 'Zapisz jako obraz', pixelRatio: 2 }
       },
-      right: '5%',
-      top: '2%'
+      right: 16,
+      top: 16
     },
     series: [
       {
         type: 'tree',
-        data: [treeData.value],
-        top: '8%',
-        left: '5%',
-        bottom: '5%',
-        right: '5%',
-        symbolSize: 16,
+        data: [initialData],
+        top: '3%',
+        left: '2%',
+        bottom: '3%',
+        right: '2%',
+        symbolSize: initialSymbolSize,
         orient: 'vertical',
         expandAndCollapse: true,
         initialTreeDepth: 2,
-        animationDuration: 550,
-        animationDurationUpdate: 750,
+        animationDuration: 450,
+        animationDurationUpdate: 450,
         layout: 'orthogonal',
         roam: true,
         scaleLimit: {
@@ -290,29 +363,19 @@ const initChart = () => {
         },
         nodeGap,
         layerGap,
-        label: {
-          position: 'top',
-          distance: 30,
-          verticalAlign: 'middle',
-          align: 'center'
-        },
+        label: buildSeriesLabel(currentVisualScale, false),
         leaves: {
-          label: {
-            position: 'bottom',
-            distance: 30,
-            verticalAlign: 'middle',
-            align: 'center'
-          }
+          label: buildSeriesLabel(currentVisualScale, true)
         },
         lineStyle: {
           color: '#cbd5e1',
-          width: 2,
+          width: initialLineWidth,
           curveness: 0.5
         },
         emphasis: {
           focus: 'descendant',
           lineStyle: {
-            width: 3,
+            width: initialLineWidth + 1.5,
             color: '#3b82f6'
           },
           itemStyle: {
@@ -321,7 +384,7 @@ const initChart = () => {
           }
         },
         itemStyle: {
-          borderWidth: 2
+          borderWidth: getNodeBorderWidth(currentVisualScale)
         }
       }
     ]
@@ -329,24 +392,33 @@ const initChart = () => {
 
   chartInstance.setOption(option)
   applyInitialZoom(autoScale)
+  refreshSeriesVisuals(currentVisualScale, true)
 
-  // Handle click events
   chartInstance.on('click', (params: any) => {
     if (params.data && params.data.employeeData) {
       props.onSelectEmployee(params.data.employeeData)
     }
   })
 
-  // Handle window resize
   const handleResize = () => {
     chartInstance?.resize()
-    const { minScale: updatedMin } = getAutoScaleConfig()
+    const { autoScale: resizedAuto, minScale: updatedMin } = getAutoScaleConfig()
     updateScaleLimits(updatedMin)
+    const option = chartInstance?.getOption()
+    const currentZoom = Array.isArray(option?.series) && typeof option.series[0]?.zoom === 'number'
+      ? option.series[0].zoom
+      : currentVisualScale
+    const targetScale = Math.min(resizedAuto, currentZoom)
+    chartInstance?.setOption({ series: [{ zoom: targetScale }] }, false, false)
+    refreshSeriesVisuals(targetScale, true)
   }
+
   window.addEventListener('resize', handleResize)
   removeResizeListener = () => {
     window.removeEventListener('resize', handleResize)
   }
+
+  chartInstance.on('treeRoam', handleTreeRoam)
 }
 
 onMounted(() => {
@@ -361,38 +433,24 @@ watch(() => props.employee, () => {
 onUnmounted(() => {
   removeResizeListener?.()
   if (chartInstance) {
+    chartInstance.off('treeRoam', handleTreeRoam)
     chartInstance.dispose()
     chartInstance = null
   }
 })
 </script>
 
-<template>
-  <div class="w-full">
-    <div class="mb-4 p-3 md:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-      <div class="flex items-start gap-2 md:gap-3">
-        <svg class="w-4 h-4 md:w-5 md:h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <div class="text-xs md:text-sm text-blue-800 dark:text-blue-200">
-          <p class="font-medium mb-1">Interaktywne drzewo organizacyjne</p>
-          <ul class="list-disc list-inside space-y-0.5 md:space-y-1 text-[10px] md:text-xs">
-            <li>Kliknij na pracownika aby zobaczyć szczegóły</li>
-            <li class="hidden md:list-item">Kliknij na węzeł aby rozwinąć/zwinąć podwładnych</li>
-            <li>Użyj scroll/pinch aby przybliżyć/oddalić (zoom: 0.01x - 6x)</li>
-            <li>Przeciągnij aby przesunąć widok po strukturze</li>
-            <li class="hidden md:list-item">Użyj przycisków w prawym górnym rogu aby zresetować widok lub zapisać jako obraz</li>
-          </ul>
-        </div>
-      </div>
-    </div>
+<template>
+  <div class="w-full">
+    <div class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
+      <div
+        ref="chartRef"
+        class="w-full"
+        style="min-height: clamp(560px, 70vh, 820px); cursor: grab;"
+      />
+    </div>
+  </div>
+</template>
+
 
-    <div class="w-full overflow-x-auto overflow-y-hidden">
-      <div
-        ref="chartRef"
-        class="w-full min-w-[600px] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg"
-        style="height: 600px; cursor: grab;"
-      />
-    </div>
-  </div>
-</template>
+
