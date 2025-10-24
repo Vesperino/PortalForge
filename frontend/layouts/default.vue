@@ -15,12 +15,6 @@ const { getEmployees } = useMockData()
 const employees = getEmployees()
 const currentUser = computed(() => employees.length > 0 ? employees[0] : null)
 
-// Employee vacation and time-off data (mock data for intranet)
-const vacationDaysTotal = 26
-const vacationDaysUsed = 8
-const vacationDaysLeft = computed(() => vacationDaysTotal - vacationDaysUsed)
-const sickDaysThisYear = 3
-
 // Function to force text color updates when switching themes
 function forceTextColorUpdate() {
   if (process.client) {
@@ -183,7 +177,7 @@ onBeforeUnmount(() => {
                 >
                   <div
                     v-if="isUserMenuOpen"
-                    class="absolute right-0 mt-2 w-80 rounded-lg shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 dark:divide-gray-700 z-50"
+                    class="absolute right-0 mt-2 w-64 rounded-lg shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 dark:divide-gray-700 z-50"
                   >
                     <!-- User info -->
                     <div class="px-4 py-3">
@@ -194,46 +188,8 @@ onBeforeUnmount(() => {
                         {{ currentUser?.email || 'user@example.com' }}
                       </p>
                       <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {{ currentUser?.position || 'Stanowisko' }}
+                        {{ currentUser?.position?.name || 'Stanowisko' }}
                       </p>
-                    </div>
-
-                    <!-- Vacation & Time Off Stats -->
-                    <div class="px-4 py-3 bg-blue-50 dark:bg-blue-900/20">
-                      <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Urlopy i absencje
-                      </p>
-                      <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                          <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span class="text-xs text-gray-600 dark:text-gray-400">Dni urlopu pozostało</span>
-                          </div>
-                          <span class="text-sm font-bold text-blue-600 dark:text-blue-400">
-                            {{ vacationDaysLeft }} / {{ vacationDaysTotal }}
-                          </span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                          <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <span class="text-xs text-gray-600 dark:text-gray-400">Dni chorobowe w tym roku</span>
-                          </div>
-                          <span class="text-sm font-bold text-orange-600 dark:text-orange-400">{{ sickDaysThisYear }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                          <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            <span class="text-xs text-gray-600 dark:text-gray-400">Staż pracy</span>
-                          </div>
-                          <span class="text-sm font-bold text-green-600 dark:text-green-400">{{ currentUser?.yearsOfService || 0 }} lat</span>
-                        </div>
-                      </div>
                     </div>
 
                     <!-- Menu items -->

@@ -48,17 +48,16 @@ const navItems: NavItem[] = [
 
 <template>
   <!-- Desktop Sidebar - Always visible on md and up -->
-  <aside class="w-64 hidden md:flex flex-col bg-white dark:bg-gray-800 shadow-md border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0">
-    <div class="flex flex-col h-full">
-      <!-- Sidebar Header -->
-      <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-          PortalForge
-        </h2>
-      </div>
+  <aside class="w-64 hidden md:flex flex-col bg-white dark:bg-gray-800 shadow-md border-r border-gray-200 dark:border-gray-700">
+    <!-- Sidebar Header -->
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+      <h2 class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+        PortalForge
+      </h2>
+    </div>
 
-      <!-- Navigation -->
-      <nav class="flex-1 p-4 space-y-2 overflow-y-auto" aria-label="Main navigation">
+    <!-- Navigation -->
+    <nav class="flex-1 p-4 space-y-2 overflow-y-auto" aria-label="Main navigation">
         <NuxtLink
           v-for="item in navItems"
           :key="item.name"
@@ -131,24 +130,6 @@ const navItems: NavItem[] = [
             {{ item.label }}
           </span>
         </NuxtLink>
-      </nav>
-
-      <!-- User Section -->
-      <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-        <div class="flex items-center gap-3 px-4 py-3">
-          <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-            U
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-              Użytkownik
-            </p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-              user@example.com
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+    </nav>
   </aside>
 </template>
