@@ -1,75 +1,43 @@
 <script setup lang="ts">
+import type { Employee } from '~/types'
+
 definePageMeta({
   layout: 'default',
   middleware: ['auth']
 })
 
-interface Employee {
-  id: number
-  name: string
-  position: string
-  department: string
-  email: string
-  phone: string
-  subordinates?: Employee[]
-}
+const { getOrganizationTree, getDepartments, getEmployees } = useMockData()
 
-const organizationData = ref<Employee>({
-  id: 1,
-  name: 'Anna Nowak',
-  position: 'CEO',
-  department: 'Zarząd',
-  email: 'anna.nowak@company.com',
-  phone: '+48 100 000 000',
-  subordinates: [
-    {
-      id: 2,
-      name: 'Piotr Wiśniewski',
-      position: 'CTO',
-      department: 'IT',
-      email: 'piotr.wisniewski@company.com',
-      phone: '+48 100 000 001',
-      subordinates: [
-        {
-          id: 3,
-          name: 'Jan Kowalski',
-          position: 'Senior Developer',
-          department: 'IT',
-          email: 'jan.kowalski@company.com',
-          phone: '+48 100 000 002'
-        },
-        {
-          id: 4,
-          name: 'Maria Kowalczyk',
-          position: 'Junior Developer',
-          department: 'IT',
-          email: 'maria.kowalczyk@company.com',
-          phone: '+48 100 000 003'
-        }
-      ]
-    },
-    {
-      id: 5,
-      name: 'Krzysztof Lewandowski',
-      position: 'HR Manager',
-      department: 'HR',
-      email: 'krzysztof.lewandowski@company.com',
-      phone: '+48 100 000 004',
-      subordinates: [
-        {
-          id: 6,
-          name: 'Agnieszka Wójcik',
-          position: 'HR Specialist',
-          department: 'HR',
-          email: 'agnieszka.wojcik@company.com',
-          phone: '+48 100 000 005'
-        }
-      ]
-    }
-  ]
-})
+const viewMode = ref<'tree' | 'departments' | 'list'>('tree')
+const selectedDepartment = ref<number | null>(null)
+const searchQuery = ref<string>('')
+
+const organizationTree = getOrganizationTree()
+const departments = getDepartments()
+const allEmployees = getEmployees()
 
 const selectedEmployee = ref<Employee | null>(null)
+
+const filteredEmployees = computed(() => {
+  let filtered = allEmployees
+
+  if (selectedDepartment.value) {
+    filtered = filtered.filter(e => e.departmentId === selectedDepartment.value)
+  }
+
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    filtered = filtered.filter(e =>
+      e.firstName.toLowerCase().includes(query) ||
+      e.lastName.toLowerCase().includes(query) ||
+      e.email.toLowerCase().includes(query) ||
+      e.position?.name.toLowerCase().includes(query) ||
+      e.department?.name.toLowerCase().includes(query)
+    )
+  }
+
+  return filtered
+})
 
 const selectEmployee = (employee: Employee) => {
   selectedEmployee.value = employee
@@ -78,85 +46,305 @@ const selectEmployee = (employee: Employee) => {
 const closeDetails = () => {
   selectedEmployee.value = null
 }
+
+const getInitials = (employee: Employee) => {
+  return `${employee.firstName[0]}${employee.lastName[0]}`
+}
+
+const getEmployeesByDepartment = (departmentId: number) => {
+  return allEmployees.filter(e => e.departmentId === departmentId)
+}
 </script>
 
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
         Struktura organizacyjna
       </h1>
-      <BaseButton variant="primary">
-        Eksportuj do PDF
-      </BaseButton>
+      <div class="flex gap-2">
+        <BaseButton variant="secondary">
+          Eksportuj do Excel
+        </BaseButton>
+        <BaseButton variant="primary">
+          Eksportuj do PDF
+        </BaseButton>
+      </div>
+    </div>
+
+    <!-- View Mode Tabs -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+      <div class="flex flex-wrap gap-2 mb-4">
+        <button
+          :class="[
+            'px-4 py-2 rounded-lg font-medium transition-colors',
+            viewMode === 'tree'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+          ]"
+          @click="viewMode = 'tree'"
+        >
+          Drzewo organizacyjne
+        </button>
+        <button
+          :class="[
+            'px-4 py-2 rounded-lg font-medium transition-colors',
+            viewMode === 'departments'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+          ]"
+          @click="viewMode = 'departments'"
+        >
+          Według działów
+        </button>
+        <button
+          :class="[
+            'px-4 py-2 rounded-lg font-medium transition-colors',
+            viewMode === 'list'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+          ]"
+          @click="viewMode = 'list'"
+        >
+          Lista pracowników
+        </button>
+      </div>
+
+      <!-- Search and Filters -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Szukaj pracownika
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              id="search"
+              v-model="searchQuery"
+              type="text"
+              placeholder="Imię, nazwisko, email..."
+              class="pl-10 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+          </div>
+        </div>
+
+        <div v-if="viewMode === 'list'">
+          <label for="department" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Dział
+          </label>
+          <select
+            id="department"
+            v-model="selectedDepartment"
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            <option :value="null">
+              Wszystkie działy
+            </option>
+            <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+              {{ dept.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+        <p class="text-sm text-gray-600 dark:text-gray-400">Liczba pracowników</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ allEmployees.length }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+        <p class="text-sm text-gray-600 dark:text-gray-400">Liczba działów</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ departments.length }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+        <p class="text-sm text-gray-600 dark:text-gray-400">Wyświetlane</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ filteredEmployees.length }}</p>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Organization Tree -->
-      <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-          Schemat organizacyjny
-        </h2>
-
-        <!-- CEO Level -->
-        <div class="flex flex-col items-center">
+      <!-- Main Content Area -->
+      <div class="lg:col-span-2">
+        <!-- Departments View -->
+        <div v-if="viewMode === 'departments'" class="space-y-4">
           <div
-            class="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500 rounded-lg p-4 cursor-pointer hover:shadow-lg transition-shadow max-w-xs w-full"
-            @click="selectEmployee(organizationData)"
+            v-for="dept in departments"
+            :key="dept.id"
+            class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
           >
-            <h3 class="font-semibold text-gray-900 dark:text-white">
-              {{ organizationData.name }}
-            </h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              {{ organizationData.position }}
-            </p>
-            <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-              {{ organizationData.department }}
-            </p>
-          </div>
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                  {{ dept.name }}
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  {{ dept.description }}
+                </p>
+              </div>
+              <div class="text-right">
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                  {{ getEmployeesByDepartment(dept.id).length }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">pracowników</p>
+              </div>
+            </div>
 
-          <!-- Direct Reports -->
-          <div v-if="organizationData.subordinates" class="mt-8 w-full">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Department Manager -->
+            <div v-if="dept.manager" class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kierownik działu</p>
               <div
-                v-for="manager in organizationData.subordinates"
-                :key="manager.id"
-                class="flex flex-col items-center"
+                class="flex items-center gap-3 cursor-pointer"
+                @click="selectEmployee(dept.manager)"
               >
-                <!-- Manager -->
-                <div
-                  class="bg-green-50 dark:bg-green-900/20 border-2 border-green-500 rounded-lg p-4 cursor-pointer hover:shadow-lg transition-shadow w-full"
-                  @click="selectEmployee(manager)"
-                >
-                  <h3 class="font-semibold text-gray-900 dark:text-white">
-                    {{ manager.name }}
-                  </h3>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
-                    {{ manager.position }}
-                  </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                    {{ manager.department }}
-                  </p>
+                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+                  {{ getInitials(dept.manager) }}
                 </div>
-
-                <!-- Team Members -->
-                <div v-if="manager.subordinates" class="mt-6 w-full space-y-3">
-                  <div
-                    v-for="employee in manager.subordinates"
-                    :key="employee.id"
-                    class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow"
-                    @click="selectEmployee(employee)"
-                  >
-                    <h4 class="font-medium text-gray-900 dark:text-white text-sm">
-                      {{ employee.name }}
-                    </h4>
-                    <p class="text-xs text-gray-600 dark:text-gray-400">
-                      {{ employee.position }}
-                    </p>
-                  </div>
+                <div>
+                  <p class="font-medium text-gray-900 dark:text-white">
+                    {{ dept.manager.firstName }} {{ dept.manager.lastName }}
+                  </p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                    {{ dept.manager.position?.name }}
+                  </p>
                 </div>
               </div>
+            </div>
+
+            <!-- Department Employees -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div
+                v-for="employee in getEmployeesByDepartment(dept.id).filter(e => e.id !== dept.managerId)"
+                :key="employee.id"
+                class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                @click="selectEmployee(employee)"
+              >
+                <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 font-semibold text-sm">
+                  {{ getInitials(employee) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-gray-900 dark:text-white truncate text-sm">
+                    {{ employee.firstName }} {{ employee.lastName }}
+                  </p>
+                  <p class="text-xs text-gray-600 dark:text-gray-400 truncate">
+                    {{ employee.position?.name }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- List View -->
+        <div v-else-if="viewMode === 'list'" class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Pracownik
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Stanowisko
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Dział
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Telefon
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tr
+                  v-for="employee in filteredEmployees"
+                  :key="employee.id"
+                  class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                  @click="selectEmployee(employee)"
+                >
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                        {{ getInitials(employee) }}
+                      </div>
+                      <div>
+                        <p class="font-medium text-gray-900 dark:text-white">
+                          {{ employee.firstName }} {{ employee.lastName }}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    {{ employee.position?.name }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                      {{ employee.department?.name }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    {{ employee.email }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    {{ employee.phone || '-' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty State -->
+          <div v-if="filteredEmployees.length === 0" class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+              Brak pracowników
+            </h3>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Nie znaleziono pracowników spełniających kryteria wyszukiwania.
+            </p>
+          </div>
+        </div>
+
+        <!-- Tree View -->
+        <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+            Drzewo organizacyjne
+          </h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Kliknij na pracownika, aby zobaczyć szczegóły
+          </p>
+          <div v-if="organizationTree" class="space-y-4">
+            <!-- Simple tree representation - CEO and direct reports -->
+            <div class="flex flex-col items-center">
+              <div
+                class="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500 rounded-lg p-4 cursor-pointer hover:shadow-lg transition-shadow max-w-xs w-full text-center"
+                @click="selectEmployee(organizationTree)"
+              >
+                <div class="w-16 h-16 mx-auto mb-2 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">
+                  {{ getInitials(organizationTree) }}
+                </div>
+                <h3 class="font-semibold text-gray-900 dark:text-white">
+                  {{ organizationTree.firstName }} {{ organizationTree.lastName }}
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  {{ organizationTree.position?.name }}
+                </p>
+              </div>
+
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
+                Pełne drzewo organizacyjne z hierarchią dostępne po kliknięciu w pracownika
+              </p>
             </div>
           </div>
         </div>
@@ -187,20 +375,20 @@ const closeDetails = () => {
             <!-- Avatar -->
             <div class="flex justify-center">
               <div class="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center text-2xl font-bold text-white">
-                {{ selectedEmployee.name.split(' ').map(n => n[0]).join('') }}
+                {{ getInitials(selectedEmployee) }}
               </div>
             </div>
 
             <!-- Name & Position -->
             <div class="text-center">
               <h4 class="text-xl font-bold text-gray-900 dark:text-white">
-                {{ selectedEmployee.name }}
+                {{ selectedEmployee.firstName }} {{ selectedEmployee.lastName }}
               </h4>
               <p class="text-gray-600 dark:text-gray-400">
-                {{ selectedEmployee.position }}
+                {{ selectedEmployee.position?.name }}
               </p>
               <span class="inline-block mt-2 px-3 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                {{ selectedEmployee.department }}
+                {{ selectedEmployee.department?.name }}
               </span>
             </div>
 
@@ -221,7 +409,7 @@ const closeDetails = () => {
                 </div>
               </div>
 
-              <div class="flex items-start gap-3">
+              <div v-if="selectedEmployee.phone" class="flex items-start gap-3">
                 <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
@@ -237,17 +425,56 @@ const closeDetails = () => {
               </div>
             </div>
 
+            <!-- Supervisor Info -->
+            <div v-if="selectedEmployee.supervisor" class="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                Przełożony
+              </p>
+              <div
+                class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                @click="selectEmployee(selectedEmployee.supervisor)"
+              >
+                <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 font-semibold text-sm">
+                  {{ getInitials(selectedEmployee.supervisor) }}
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ selectedEmployee.supervisor.firstName }} {{ selectedEmployee.supervisor.lastName }}
+                  </p>
+                  <p class="text-xs text-gray-600 dark:text-gray-400">
+                    {{ selectedEmployee.supervisor.position?.name }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <!-- Team Info -->
-            <div v-if="selectedEmployee.subordinates" class="pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div v-if="selectedEmployee.subordinates && selectedEmployee.subordinates.length > 0" class="pt-4 border-t border-gray-200 dark:border-gray-700">
               <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
                 Zarządza zespołem
               </p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              <p class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                 {{ selectedEmployee.subordinates.length }}
                 <span class="text-sm font-normal text-gray-600 dark:text-gray-400">
                   {{ selectedEmployee.subordinates.length === 1 ? 'osoba' : 'osób' }}
                 </span>
               </p>
+              <div class="space-y-2">
+                <div
+                  v-for="sub in selectedEmployee.subordinates.slice(0, 3)"
+                  :key="sub.id"
+                  class="flex items-center gap-2 text-sm p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                  @click="selectEmployee(sub)"
+                >
+                  <div class="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 font-semibold text-xs">
+                    {{ getInitials(sub) }}
+                  </div>
+                  <span class="text-gray-900 dark:text-white">{{ sub.firstName }} {{ sub.lastName }}</span>
+                </div>
+                <p v-if="selectedEmployee.subordinates.length > 3" class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                  +{{ selectedEmployee.subordinates.length - 3 }} więcej
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -255,7 +482,7 @@ const closeDetails = () => {
         <!-- Empty State -->
         <div
           v-else
-          class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center sticky top-6"
         >
           <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

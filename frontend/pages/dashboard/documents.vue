@@ -4,68 +4,33 @@ definePageMeta({
   middleware: ['auth']
 })
 
-interface Document {
-  id: number
-  name: string
-  type: string
-  size: string
-  uploadedBy: string
-  uploadedAt: Date
-  category: string
-}
+const { getDocuments, getDocumentsByCategory, searchDocuments } = useMockData()
 
-const documents = ref<Document[]>([
-  {
-    id: 1,
-    name: 'Regulamin pracy.pdf',
-    type: 'PDF',
-    size: '2.5 MB',
-    uploadedBy: 'HR Team',
-    uploadedAt: new Date('2024-01-10'),
-    category: 'Regulaminy'
-  },
-  {
-    id: 2,
-    name: 'Polityka prywatności.pdf',
-    type: 'PDF',
-    size: '1.8 MB',
-    uploadedBy: 'Legal Team',
-    uploadedAt: new Date('2024-01-08'),
-    category: 'Polityki'
-  },
-  {
-    id: 3,
-    name: 'Wzór umowy.docx',
-    type: 'DOCX',
-    size: '0.5 MB',
-    uploadedBy: 'HR Team',
-    uploadedAt: new Date('2024-01-05'),
-    category: 'Wzory'
-  }
-])
-
-const selectedCategory = ref<string>('Wszystkie')
+const selectedCategory = ref<string>('all')
 const searchQuery = ref<string>('')
 
-const categories = ref<string[]>([
-  'Wszystkie',
-  'Regulaminy',
-  'Polityki',
-  'Wzory',
-  'Instrukcje'
-])
+const allDocuments = getDocuments()
+
+const categories = [
+  { value: 'all', label: 'Wszystkie' },
+  { value: 'policy', label: 'Polityki' },
+  { value: 'procedure', label: 'Procedury' },
+  { value: 'template', label: 'Szablony' },
+  { value: 'report', label: 'Raporty' },
+  { value: 'presentation', label: 'Prezentacje' },
+  { value: 'manual', label: 'Instrukcje' }
+]
 
 const filteredDocuments = computed(() => {
-  let filtered = documents.value
-
-  if (selectedCategory.value !== 'Wszystkie') {
-    filtered = filtered.filter(doc => doc.category === selectedCategory.value)
-  }
+  let filtered = selectedCategory.value === 'all'
+    ? allDocuments
+    : getDocumentsByCategory(selectedCategory.value)
 
   if (searchQuery.value) {
-    filtered = filtered.filter(doc =>
-      doc.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-    )
+    filtered = searchDocuments(searchQuery.value)
+    if (selectedCategory.value !== 'all') {
+      filtered = filtered.filter(doc => doc.category === selectedCategory.value)
+    }
   }
 
   return filtered
@@ -79,20 +44,63 @@ const formatDate = (date: Date) => {
   }).format(date)
 }
 
-const getFileIcon = (type: string) => {
-  switch (type) {
-    case 'PDF':
-      return 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z'
-    case 'DOCX':
-      return 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
-    default:
-      return 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
-  }
+const formatFileSize = (bytes: number) => {
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
-const downloadDocument = (document: Document) => {
-  // TODO: Implement download functionality
+const getFileIcon = (type: string) => {
+  const icons: Record<string, string> = {
+    'pdf': 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z',
+    'docx': 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+    'xlsx': 'M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z',
+    'pptx': 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z',
+    'txt': 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+  }
+  return icons[type] || icons['txt']
+}
+
+const getFileIconColor = (type: string) => {
+  const colors: Record<string, string> = {
+    'pdf': 'text-red-500',
+    'docx': 'text-blue-500',
+    'xlsx': 'text-green-500',
+    'pptx': 'text-orange-500',
+    'txt': 'text-gray-500'
+  }
+  return colors[type] || 'text-gray-500'
+}
+
+const getCategoryColor = (category: string) => {
+  const colors: Record<string, string> = {
+    'policy': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    'procedure': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    'template': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    'report': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+    'presentation': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+    'manual': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+  }
+  return colors[category] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+}
+
+const getCategoryLabel = (category: string) => {
+  const labels: Record<string, string> = {
+    'policy': 'Polityka',
+    'procedure': 'Procedura',
+    'template': 'Szablon',
+    'report': 'Raport',
+    'presentation': 'Prezentacja',
+    'manual': 'Instrukcja'
+  }
+  return labels[category] || category
+}
+
+const downloadDocument = (document: any) => {
+  // TODO: Implement actual download functionality
   console.log('Downloading:', document.name)
+  // In real implementation, this would trigger a file download
+  alert(`Pobieranie: ${document.name}`)
 }
 </script>
 
@@ -142,11 +150,29 @@ const downloadDocument = (document: Document) => {
             v-model="selectedCategory"
             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
-            <option v-for="category in categories" :key="category" :value="category">
-              {{ category }}
+            <option v-for="cat in categories" :key="cat.value" :value="cat.value">
+              {{ cat.label }}
             </option>
           </select>
         </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+        <p class="text-sm text-gray-600 dark:text-gray-400">Wszystkie dokumenty</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ allDocuments.length }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+        <p class="text-sm text-gray-600 dark:text-gray-400">Wyświetlane</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ filteredDocuments.length }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+        <p class="text-sm text-gray-600 dark:text-gray-400">Ten miesiąc</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ allDocuments.filter(d => d.uploadedAt.getMonth() === new Date().getMonth()).length }}
+        </p>
       </div>
     </div>
 
@@ -185,7 +211,8 @@ const downloadDocument = (document: Document) => {
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center gap-3">
                   <svg
-                    class="w-8 h-8 text-blue-500"
+                    :class="getFileIconColor(document.fileType)"
+                    class="w-8 h-8"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -194,7 +221,7 @@ const downloadDocument = (document: Document) => {
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      :d="getFileIcon(document.type)"
+                      :d="getFileIcon(document.fileType)"
                     />
                   </svg>
                   <div>
@@ -202,21 +229,31 @@ const downloadDocument = (document: Document) => {
                       {{ document.name }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                      {{ document.type }}
+                      {{ document.fileType.toUpperCase() }}
                     </p>
                   </div>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                  {{ document.category }}
+                <span
+                  :class="getCategoryColor(document.category)"
+                  class="px-2 py-1 text-xs font-medium rounded-full"
+                >
+                  {{ getCategoryLabel(document.category) }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                {{ document.size }}
+                {{ formatFileSize(document.size) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                {{ document.uploadedBy }}
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-xs">
+                    {{ document.uploader?.firstName?.[0] }}{{ document.uploader?.lastName?.[0] }}
+                  </div>
+                  <span class="text-sm text-gray-700 dark:text-gray-300">
+                    {{ document.uploader?.firstName }} {{ document.uploader?.lastName }}
+                  </span>
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                 {{ formatDate(document.uploadedAt) }}
@@ -224,7 +261,7 @@ const downloadDocument = (document: Document) => {
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button
                   type="button"
-                  class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+                  class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1 transition-colors"
                   @click="downloadDocument(document)"
                 >
                   Pobierz
