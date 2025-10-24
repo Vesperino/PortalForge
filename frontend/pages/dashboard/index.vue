@@ -41,6 +41,14 @@ const quickLinks = [
     icon: 'calendar',
     iconColor: 'text-orange-600 dark:text-orange-400',
     iconBackground: 'bg-orange-100 dark:bg-orange-900'
+  },
+  {
+    name: 'requests',
+    label: 'Wnioski',
+    to: '/dashboard/requests',
+    icon: 'requests',
+    iconColor: 'text-teal-600 dark:text-teal-400',
+    iconBackground: 'bg-teal-100 dark:bg-teal-900'
   }
 ]
 
@@ -164,6 +172,16 @@ const getCategoryLabel = (category: string) => {
               viewBox="0 0 24 24"
             >
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <svg
+              v-else-if="link.icon === 'requests'"
+              class="w-6 h-6"
+              :class="link.iconColor"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m2-6h-3.586a1 1 0 01-.707-.293L12 3l-1.707 1.707A1 1 0 019.586 5H6a2 2 0 00-2 2v11a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2z" />
             </svg>
           </span>
           <span class="text-sm font-medium text-gray-900 dark:text-white">

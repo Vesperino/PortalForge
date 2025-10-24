@@ -7,6 +7,7 @@ definePageMeta({
 })
 
 const { getEvents, getEventsByMonth } = useMockData()
+const router = useRouter()
 
 const currentDate = ref(new Date())
 const selectedEvent = ref<Event | null>(null)
@@ -76,6 +77,10 @@ const goToToday = () => {
 }
 
 const openEventModal = (event: Event) => {
+  if (event.newsId) {
+    router.push(`/dashboard/news/${event.newsId}`)
+    return
+  }
   selectedEvent.value = event
   showEventModal.value = true
 }
