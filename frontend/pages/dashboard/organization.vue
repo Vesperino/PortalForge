@@ -286,9 +286,9 @@ const exportToExcel = () => {
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
       <!-- Main Content Area -->
-      <div class="lg:col-span-2">
+      <div class="xl:col-span-2">
         <!-- Departments View -->
         <div v-if="viewMode === 'departments'" class="space-y-4">
           <div
@@ -473,10 +473,10 @@ const exportToExcel = () => {
       </div>
 
       <!-- Employee Details Sidebar -->
-      <div class="lg:col-span-1">
+      <div class="xl:col-span-1">
         <div
           v-if="selectedEmployee"
-          class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 sticky top-6"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 xl:sticky xl:top-6"
         >
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -604,7 +604,7 @@ const exportToExcel = () => {
         <!-- Empty State -->
         <div
           v-else
-          class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center sticky top-6"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center xl:sticky xl:top-6"
         >
           <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

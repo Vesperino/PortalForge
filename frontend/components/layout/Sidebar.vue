@@ -48,7 +48,7 @@ const navItems: NavItem[] = [
 
 <template>
   <!-- Desktop Sidebar - Always visible on md and up -->
-  <aside class="w-64 hidden md:block bg-white dark:bg-gray-800 shadow-md border-r border-gray-200 dark:border-gray-700">
+  <aside class="w-64 hidden md:flex flex-col bg-white dark:bg-gray-800 shadow-md border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0">
     <div class="flex flex-col h-full">
       <!-- Sidebar Header -->
       <div class="p-4 border-b border-gray-200 dark:border-gray-700">

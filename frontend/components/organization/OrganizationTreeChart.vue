@@ -175,30 +175,30 @@ const initChart = () => {
         left: '5%',
         bottom: '5%',
         right: '5%',
-        symbolSize: 14,
+        symbolSize: 16,
         orient: 'vertical',
         expandAndCollapse: true,
-        initialTreeDepth: 3,
+        initialTreeDepth: 2,
         animationDuration: 550,
         animationDurationUpdate: 750,
         layout: 'orthogonal',
         roam: true,
         scaleLimit: {
-          min: 0.3,
-          max: 3
+          min: 0.2,
+          max: 4
         },
-        nodeGap: 40,
-        layerGap: 120,
+        nodeGap: 60,
+        layerGap: 150,
         label: {
           position: 'top',
-          distance: 25,
+          distance: 30,
           verticalAlign: 'middle',
           align: 'center'
         },
         leaves: {
           label: {
             position: 'bottom',
-            distance: 25,
+            distance: 30,
             verticalAlign: 'middle',
             align: 'center'
           }
@@ -266,29 +266,31 @@ onUnmounted(() => {
 
 <template>
   <div class="w-full">
-    <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-      <div class="flex items-start gap-3">
-        <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mb-4 p-3 md:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+      <div class="flex items-start gap-2 md:gap-3">
+        <svg class="w-4 h-4 md:w-5 md:h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <div class="text-sm text-blue-800 dark:text-blue-200">
+        <div class="text-xs md:text-sm text-blue-800 dark:text-blue-200">
           <p class="font-medium mb-1">Interaktywne drzewo organizacyjne</p>
-          <ul class="list-disc list-inside space-y-1 text-xs">
+          <ul class="list-disc list-inside space-y-0.5 md:space-y-1 text-[10px] md:text-xs">
             <li>Kliknij na pracownika aby zobaczyć szczegóły</li>
-            <li>Kliknij na węzeł aby rozwinąć/zwinąć podwładnych</li>
-            <li>Użyj scroll myszki lub gesty pinch aby przybliżyć/oddalić (zoom: 0.3x - 3x)</li>
-            <li>Przeciągnij myszką aby przesunąć widok po całej strukturze</li>
-            <li>Użyj przycisków w prawym górnym rogu aby zresetować widok lub zapisać jako obraz</li>
+            <li class="hidden md:list-item">Kliknij na węzeł aby rozwinąć/zwinąć podwładnych</li>
+            <li>Użyj scroll/pinch aby przybliżyć/oddalić (zoom: 0.2x - 4x)</li>
+            <li>Przeciągnij aby przesunąć widok po strukturze</li>
+            <li class="hidden md:list-item">Użyj przycisków w prawym górnym rogu aby zresetować widok lub zapisać jako obraz</li>
           </ul>
         </div>
       </div>
     </div>
 
-    <div
-      ref="chartRef"
-      class="w-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg"
-      style="height: 800px; cursor: grab;"
-    />
+    <div class="w-full overflow-x-auto overflow-y-hidden">
+      <div
+        ref="chartRef"
+        class="w-full min-w-[600px] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg"
+        style="height: 600px; cursor: grab;"
+      />
+    </div>
   </div>
 </template>
 
