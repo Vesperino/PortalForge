@@ -367,7 +367,12 @@ onUnmounted(() => {
 }
 
 /* Connection lines - PrimeVue uses connector classes */
-/* Vertical connector (down arrow) */
+/* Parent td cell that contains the vertical connector */
+:deep(td:has(.p-organizationchart-connector-down)) {
+  border-bottom: 2px solid #1e40af !important;
+}
+
+/* Vertical connector (down arrow) - visual line from node to horizontal connector */
 :deep(.p-organizationchart-connector-down) {
   width: 2px !important;
   height: 20px !important;
@@ -393,6 +398,10 @@ onUnmounted(() => {
 }
 
 /* Dark mode */
+:global(.dark) :deep(td:has(.p-organizationchart-connector-down)) {
+  border-bottom-color: #60a5fa !important;
+}
+
 :global(.dark) :deep(.p-organizationchart-connector-down) {
   background-color: #60a5fa !important; /* blue-400 */
 }
