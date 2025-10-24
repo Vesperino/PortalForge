@@ -16,20 +16,22 @@
   },
   "dependencies": {
     "@nuxtjs/color-mode": "^3.5.2",
+    "@primeuix/themes": "^1.2.5",
     "d3-org-chart": "^3.1.1",
     "echarts": "^6.0.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.3",
     "nuxt": "^3.14.159",
+    "primevue": "^4.4.1",
     "vue": "^3.5.13",
-    "vue-echarts": "^8.0.1",
-    "vue3-organization-chart": "^1.9.4"
+    "vue-echarts": "^8.0.1"
   },
   "devDependencies": {
     "@nuxt/eslint": "^0.7.4",
     "@nuxtjs/tailwindcss": "^6.12.2",
     "@pinia/nuxt": "^0.5.5",
     "@playwright/test": "^1.49.1",
+    "@primevue/nuxt-module": "^4.4.1",
     "@types/node": "^22.10.2",
     "@vitejs/plugin-vue": "^5.2.4",
     "@vue/test-utils": "^2.4.6",

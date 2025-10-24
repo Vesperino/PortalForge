@@ -12,6 +12,7 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@vueuse/nuxt',
     '@nuxtjs/color-mode',
+    '@primevue/nuxt-module',
   ],
 
   colorMode: {
@@ -55,7 +56,7 @@ export default defineNuxtConfig({
 
   // Build configuration
   build: {
-    transpile: ['echarts', 'vue-echarts', 'vue3-organization-chart'],
+    transpile: [],
   },
 
   vite: {

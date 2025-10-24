@@ -317,25 +317,20 @@ const getEmployeesByDepartment = (departmentId: number) => {
 
         <!-- Tree View -->
         <div v-else>
-          <div v-if="organizationTree" class="min-h-[600px] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-            <h2 class="text-2xl font-bold mb-4">Struktura organizacyjna - Hierarchia</h2>
-            <p class="mb-2">CEO: {{ organizationTree.firstName }} {{ organizationTree.lastName }}</p>
-            <p class="mb-4">Podwładni: {{ organizationTree.subordinates?.length || 0 }}</p>
+          <div v-if="organizationTree" class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <div class="p-6">
+              <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Struktura organizacyjna - Hierarchia
+              </h2>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                CEO: {{ organizationTree.firstName }} {{ organizationTree.lastName }}
+              </p>
 
-            <!-- Manual list rendering -->
-            <div class="space-y-2">
-              <div
-                v-for="emp in allEmployees.slice(0, 31)"
-                :key="emp.id"
-                class="p-3 border rounded hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
-                @click="selectEmployee(emp)"
-              >
-                <strong class="text-gray-900 dark:text-white">{{ emp.firstName }} {{ emp.lastName }}</strong>
-                <span class="text-gray-600 dark:text-gray-400">- {{ emp.position?.name }}</span>
-                <span class="ml-2 px-2 py-1 text-xs rounded-full text-white" :style="{ backgroundColor: emp.department?.color }">
-                  {{ emp.department?.name }}
-                </span>
-              </div>
+              <OrganizationOrgTreeChart
+                :employee="organizationTree"
+                :on-select-employee="selectEmployee"
+                @select-employee="selectEmployee"
+              />
             </div>
           </div>
 
