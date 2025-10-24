@@ -39,6 +39,57 @@ const stats = computed(() => ({
   lastLogin: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) // Random date within last week
 }))
 
+// Vacation and sick leave data (mock data)
+const vacationData = ref({
+  total: 26,
+  used: 8,
+  remaining: 18,
+  history: [
+    {
+      id: 1,
+      startDate: new Date(2024, 6, 15),
+      endDate: new Date(2024, 6, 19),
+      days: 5,
+      type: 'Urlop wypoczynkowy',
+      status: 'Zatwierdzony'
+    },
+    {
+      id: 2,
+      startDate: new Date(2024, 4, 10),
+      endDate: new Date(2024, 4, 11),
+      days: 2,
+      type: 'Urlop na żądanie',
+      status: 'Zatwierdzony'
+    },
+    {
+      id: 3,
+      startDate: new Date(2024, 2, 20),
+      endDate: new Date(2024, 2, 20),
+      days: 1,
+      type: 'Urlop okolicznościowy',
+      status: 'Zatwierdzony'
+    }
+  ]
+})
+
+const sickLeaveData = ref({
+  total: 3,
+  history: [
+    {
+      id: 1,
+      startDate: new Date(2024, 8, 5),
+      endDate: new Date(2024, 8, 7),
+      days: 3,
+      reason: 'Przeziębienie'
+    }
+  ]
+})
+
+const workData = ref({
+  startDate: new Date(2022, 0, 15),
+  yearsOfService: 2
+})
+
 const formatDate = (date: Date) => {
   return new Intl.DateTimeFormat('pl-PL', {
     year: 'numeric',
@@ -47,6 +98,20 @@ const formatDate = (date: Date) => {
     hour: '2-digit',
     minute: '2-digit'
   }).format(date)
+}
+
+const formatDateShort = (date: Date) => {
+  return new Intl.DateTimeFormat('pl-PL', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date)
+}
+
+const formatDateRange = (startDate: Date, endDate: Date) => {
+  const start = formatDateShort(startDate)
+  const end = formatDateShort(endDate)
+  return start === end ? start : `${start} - ${end}`
 }
 
 const toggleEdit = () => {
@@ -207,6 +272,193 @@ const logout = async () => {
           <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
             {{ formatDate(stats.lastLogin) }}
           </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vacation and Sick Leave Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+        Urlopy i absencje
+      </h3>
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div class="flex items-center gap-3">
+            <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <div>
+              <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {{ vacationData.total }}
+              </p>
+              <p class="text-xs text-gray-600 dark:text-gray-400">
+                Dni urlopu w roku
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+          <div class="flex items-center gap-3">
+            <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <p class="text-2xl font-bold text-green-600 dark:text-green-400">
+                {{ vacationData.remaining }}
+              </p>
+              <p class="text-xs text-gray-600 dark:text-gray-400">
+                Dni pozostało
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+          <div class="flex items-center gap-3">
+            <svg class="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                {{ vacationData.used }}
+              </p>
+              <p class="text-xs text-gray-600 dark:text-gray-400">
+                Dni wykorzystano
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+          <div class="flex items-center gap-3">
+            <svg class="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div>
+              <p class="text-2xl font-bold text-red-600 dark:text-red-400">
+                {{ sickLeaveData.total }}
+              </p>
+              <p class="text-xs text-gray-600 dark:text-gray-400">
+                Dni chorobowe w roku
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="mb-6">
+        <div class="flex justify-between text-sm mb-2">
+          <span class="text-gray-700 dark:text-gray-300">Wykorzystanie urlopu</span>
+          <span class="font-semibold text-gray-900 dark:text-white">
+            {{ vacationData.used }} / {{ vacationData.total }} dni ({{ Math.round((vacationData.used / vacationData.total) * 100) }}%)
+          </span>
+        </div>
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+          <div
+            class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300"
+            :style="{ width: `${(vacationData.used / vacationData.total) * 100}%` }"
+          />
+        </div>
+      </div>
+
+      <!-- Vacation and Sick Leave History -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Vacation History -->
+        <div>
+          <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Historia urlopów ({{ vacationData.history.length }})
+          </h4>
+          <div class="space-y-2">
+            <div
+              v-for="vacation in vacationData.history"
+              :key="vacation.id"
+              class="p-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
+            >
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">
+                      {{ vacation.type }}
+                    </span>
+                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                      {{ vacation.status }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-gray-600 dark:text-gray-400">
+                    {{ formatDateRange(vacation.startDate, vacation.endDate) }}
+                  </p>
+                </div>
+                <span class="text-sm font-bold text-blue-600 dark:text-blue-400">
+                  {{ vacation.days }} {{ vacation.days === 1 ? 'dzień' : 'dni' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sick Leave History -->
+        <div>
+          <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Historia L4 ({{ sickLeaveData.history.length }})
+          </h4>
+          <div class="space-y-2">
+            <div
+              v-for="leave in sickLeaveData.history"
+              :key="leave.id"
+              class="p-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
+            >
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <div class="mb-1">
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">
+                      {{ leave.reason }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-gray-600 dark:text-gray-400">
+                    {{ formatDateRange(leave.startDate, leave.endDate) }}
+                  </p>
+                </div>
+                <span class="text-sm font-bold text-red-600 dark:text-red-400">
+                  {{ leave.days }} {{ leave.days === 1 ? 'dzień' : 'dni' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Work Experience -->
+      <div class="mt-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+        <div class="flex items-center gap-3">
+          <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-900 dark:text-white">
+              Staż pracy w firmie
+            </p>
+            <p class="text-xs text-gray-600 dark:text-gray-400">
+              Od {{ formatDateShort(workData.startDate) }}
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              {{ workData.yearsOfService }}
+            </p>
+            <p class="text-xs text-gray-600 dark:text-gray-400">
+              {{ workData.yearsOfService === 1 ? 'rok' : 'lat' }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
