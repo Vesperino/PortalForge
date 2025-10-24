@@ -7,28 +7,21 @@ const colorMode = useColorMode()
 const isUserMenuOpen = ref(false)
 const isMobileSidebarOpen = ref(false)
 
-// Computed for dark mode
 const isDark = computed(() => colorMode.value === 'dark')
 
-// Get current user from mock data
 const { getEmployees } = useMockData()
 const employees = getEmployees()
 const currentUser = computed(() => employees.length > 0 ? employees[0] : null)
 
-// Function to force text color updates when switching themes
 function forceTextColorUpdate() {
   if (process.client) {
-    // Add a temporary class to force a DOM reflow
     document.documentElement.classList.add('force-color-refresh')
-
-    // Use setTimeout to ensure the DOM has time to update
     setTimeout(() => {
       document.documentElement.classList.remove('force-color-refresh')
     }, 50)
   }
 }
 
-// Watch for dark mode changes and force text color updates
 watch(() => isDark.value, () => {
   forceTextColorUpdate()
 })
@@ -47,16 +40,10 @@ const closeUserMenu = () => {
 
 const toggleMobileSidebar = () => {
   isMobileSidebarOpen.value = !isMobileSidebarOpen.value
-  if (isMobileSidebarOpen.value) {
-    document.body.style.overflow = 'hidden'
-  } else {
-    document.body.style.overflow = ''
-  }
 }
 
 const closeMobileSidebar = () => {
   isMobileSidebarOpen.value = false
-  document.body.style.overflow = ''
 }
 
 const handleLogout = async () => {
@@ -64,7 +51,6 @@ const handleLogout = async () => {
   navigateTo('/auth/login')
 }
 
-// Close dropdown when clicking outside and handle route changes
 onMounted(() => {
   if (process.client) {
     document.addEventListener('click', (e) => {
@@ -74,319 +60,463 @@ onMounted(() => {
       }
     })
 
-    // Close mobile sidebar on route change
     const router = useRouter()
     router.afterEach(() => {
       closeMobileSidebar()
-
-      // Reset scroll position in main content area
-      const mainContent = document.querySelector('main')
-      if (mainContent) {
-        mainContent.scrollTop = 0
-      }
     })
-  }
-})
-
-// Cleanup
-onBeforeUnmount(() => {
-  if (process.client) {
-    document.body.style.overflow = ''
   }
 })
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-    <div class="flex h-screen">
-      <!-- Desktop Sidebar -->
-      <Sidebar />
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <Sidebar :is-open="isMobileSidebarOpen" @close="closeMobileSidebar" />
 
-      <!-- Main Content Area -->
-      <div class="flex-1 flex flex-col">
-        <!-- Top Navigation Bar -->
-        <header class="bg-white dark:bg-gray-800 shadow-sm z-10 border-b border-gray-200 dark:border-gray-700">
-          <div class="flex items-center justify-between p-4">
-            <!-- Mobile menu button -->
+    <!-- Main Content -->
+    <div class="app-main">
+      <!-- Top Header -->
+      <header class="app-header">
+        <button
+          class="hamburger-btn"
+          @click="toggleMobileSidebar"
+          aria-label="Toggle menu"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
+        <div class="header-right">
+          <!-- Notifications -->
+          <button class="icon-btn" aria-label="Notifications">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <span class="notification-badge"></span>
+          </button>
+
+          <!-- Dark Mode Toggle -->
+          <button
+            class="icon-btn"
+            @click="toggleDarkMode"
+            aria-label="Toggle dark mode"
+          >
+            <svg v-if="isDark" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+
+          <!-- User Menu -->
+          <div class="user-dropdown">
             <button
-              @click="toggleMobileSidebar"
-              class="md:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              aria-label="Toggle sidebar"
+              class="user-btn"
+              @click="toggleUserMenu"
+              aria-label="User menu"
             >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              <div class="user-avatar">
+                {{ currentUser ? ((currentUser.firstName?.[0] || '') + (currentUser.lastName?.[0] || '')) : 'U' }}
+              </div>
+              <svg class="w-4 h-4 chevron" :class="{ 'chevron-open': isUserMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
-            <!-- Right side - User menu -->
-            <div class="flex items-center gap-2 md:gap-4">
-              <!-- Notifications -->
-              <button
-                type="button"
-                class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 relative"
-                aria-label="Notifications"
-              >
-                <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <!-- Notification badge -->
-                <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-              </button>
+            <!-- Dropdown Menu -->
+            <transition name="dropdown">
+              <div v-if="isUserMenuOpen" class="dropdown-menu">
+                <div class="user-info">
+                  <p class="user-name">
+                    {{ currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Użytkownik' }}
+                  </p>
+                  <p class="user-email">
+                    {{ currentUser?.email || 'user@example.com' }}
+                  </p>
+                  <p class="user-position">
+                    {{ currentUser?.position?.name || 'Stanowisko' }}
+                  </p>
+                </div>
 
-              <!-- Dark mode toggle -->
-              <button
-                type="button"
-                class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-colors"
-                aria-label="Toggle dark mode"
-                @click="toggleDarkMode"
-              >
-                <!-- Sun icon for light mode -->
-                <svg v-if="colorMode.value === 'dark'" class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                <!-- Moon icon for dark mode -->
-                <svg v-else class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              </button>
-
-              <!-- User dropdown -->
-              <div class="relative user-dropdown">
-                <button
-                  type="button"
-                  class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-colors"
-                  aria-label="User menu"
-                  @click="toggleUserMenu"
-                >
-                  <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-                    {{ currentUser ? ((currentUser.firstName?.[0] || '') + (currentUser.lastName?.[0] || '')) : 'U' }}
-                  </div>
-                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 hidden sm:block transition-transform" :class="{ 'rotate-180': isUserMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                <!-- Dropdown menu -->
-                <Transition
-                  enter-active-class="transition ease-out duration-100"
-                  enter-from-class="transform opacity-0 scale-95"
-                  enter-to-class="transform opacity-100 scale-100"
-                  leave-active-class="transition ease-in duration-75"
-                  leave-from-class="transform opacity-100 scale-100"
-                  leave-to-class="transform opacity-0 scale-95"
-                >
-                  <div
-                    v-if="isUserMenuOpen"
-                    class="absolute right-0 mt-2 w-64 rounded-lg shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 dark:divide-gray-700 z-50"
-                  >
-                    <!-- User info -->
-                    <div class="px-4 py-3">
-                      <p class="text-sm font-medium text-gray-900 dark:text-white">
-                        {{ currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Użytkownik' }}
-                      </p>
-                      <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {{ currentUser?.email || 'user@example.com' }}
-                      </p>
-                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {{ currentUser?.position?.name || 'Stanowisko' }}
-                      </p>
-                    </div>
-
-                    <!-- Menu items -->
-                    <div class="py-1">
-                      <NuxtLink
-                        to="/dashboard/account"
-                        class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        @click="closeUserMenu"
-                      >
-                        <div class="flex items-center gap-2">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          Moje konto
-                        </div>
-                      </NuxtLink>
-                      <button
-                        type="button"
-                        class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <div class="flex items-center gap-2">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          Ustawienia
-                        </div>
-                      </button>
-                    </div>
-
-                    <!-- Logout -->
-                    <div class="py-1">
-                      <button
-                        type="button"
-                        class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                        @click="handleLogout"
-                      >
-                        <div class="flex items-center gap-2">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                          </svg>
-                          Wyloguj
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                </Transition>
+                <div class="menu-items">
+                  <NuxtLink to="/dashboard/account" class="menu-item" @click="closeUserMenu">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Mój profil
+                  </NuxtLink>
+                  <button class="menu-item" @click="handleLogout">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Wyloguj
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-        </header>
-
-        <!-- Page Content -->
-        <main class="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
-          <slot />
-        </main>
-
-        <!-- Footer -->
-        <footer class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <div class="px-4 sm:px-6 lg:px-8 py-6">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <p class="text-sm text-gray-600 dark:text-gray-400">
-                &copy; {{ new Date().getFullYear() }} PortalForge. Wszystkie prawa zastrzeżone.
-              </p>
-              <div class="flex gap-6">
-                <a href="#" class="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
-                  Pomoc
-                </a>
-                <a href="#" class="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
-                  Polityka prywatności
-                </a>
-                <a href="#" class="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
-                  Kontakt
-                </a>
-              </div>
-            </div>
-          </div>
-        </footer>
-      </div>
-
-      <!-- Mobile Sidebar -->
-      <div
-        v-if="isMobileSidebarOpen"
-        class="md:hidden fixed inset-0 z-40 bg-gray-900 bg-opacity-50"
-        @click="closeMobileSidebar"
-      >
-        <div
-          class="absolute inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-md"
-          @click.stop
-        >
-          <div class="flex flex-col h-full">
-            <!-- Mobile Sidebar Header -->
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <h2 class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                PortalForge
-              </h2>
-              <button
-                @click="closeMobileSidebar"
-                class="p-2 rounded-md text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-                aria-label="Close navigation"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <!-- Mobile Navigation - reuse navItems from Sidebar -->
-            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-              <NuxtLink
-                to="/dashboard"
-                class="flex items-center p-3 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
-                active-class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                @click="closeMobileSidebar"
-              >
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                <span>Strona główna</span>
-              </NuxtLink>
-              <NuxtLink
-                to="/dashboard/calendar"
-                class="flex items-center p-3 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
-                active-class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                @click="closeMobileSidebar"
-              >
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>Kalendarz</span>
-              </NuxtLink>
-              <NuxtLink
-                to="/dashboard/news"
-                class="flex items-center p-3 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
-                active-class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                @click="closeMobileSidebar"
-              >
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                </svg>
-                <span>Aktualności</span>
-              </NuxtLink>
-              <NuxtLink
-                to="/dashboard/account"
-                class="flex items-center p-3 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
-                active-class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                @click="closeMobileSidebar"
-              >
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span>Moje konto</span>
-              </NuxtLink>
-              <NuxtLink
-                to="/dashboard/organization"
-                class="flex items-center p-3 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
-                active-class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                @click="closeMobileSidebar"
-              >
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span>Struktura organizacyjna</span>
-              </NuxtLink>
-              <NuxtLink
-                to="/dashboard/documents"
-                class="flex items-center p-3 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
-                active-class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                @click="closeMobileSidebar"
-              >
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>Dokumenty</span>
-              </NuxtLink>
-            </nav>
-
-            <!-- Mobile Footer with Dark Mode -->
-            <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600 dark:text-gray-400">Motyw</span>
-                <button
-                  @click="toggleDarkMode"
-                  class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <svg v-if="colorMode.value === 'dark'" class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                  <svg v-else class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+            </transition>
           </div>
         </div>
-      </div>
+      </header>
+
+      <!-- Page Content -->
+      <main class="app-content">
+        <slot />
+      </main>
+
+      <!-- Footer -->
+      <footer class="app-footer">
+        <div class="footer-content">
+          <p>&copy; 2025 PortalForge. Wszystkie prawa zastrzeżone.</p>
+          <div class="footer-links">
+            <a href="#">Polityka prywatności</a>
+            <a href="#">Kontakt</a>
+          </div>
+        </div>
+      </footer>
     </div>
   </div>
 </template>
+
+<style scoped>
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+.dark .app-layout {
+  background-color: #111827;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin-left: 0;
+}
+
+@media (min-width: 768px) {
+  .app-main {
+    margin-left: 256px;
+  }
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.dark .app-header {
+  background-color: #1f2937;
+  border-bottom-color: #374151;
+}
+
+.hamburger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  color: #4b5563;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.hamburger-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.dark .hamburger-btn {
+  color: #9ca3af;
+}
+
+.dark .hamburger-btn:hover {
+  background-color: #374151;
+}
+
+@media (min-width: 768px) {
+  .hamburger-btn {
+    display: none;
+  }
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  color: #4b5563;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.dark .icon-btn {
+  color: #9ca3af;
+}
+
+.dark .icon-btn:hover {
+  background-color: #374151;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: #ef4444;
+  border-radius: 9999px;
+}
+
+/* User Dropdown */
+.user-dropdown {
+  position: relative;
+}
+
+.user-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.user-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.dark .user-btn:hover {
+  background-color: #374151;
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background-color: #3b82f6;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.chevron {
+  color: #6b7280;
+  transition: transform 0.2s;
+}
+
+.chevron-open {
+  transform: rotate(180deg);
+}
+
+.dark .chevron {
+  color: #9ca3af;
+}
+
+@media (max-width: 640px) {
+  .chevron {
+    display: none;
+  }
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  width: 16rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  z-index: 50;
+}
+
+.dark .dropdown-menu {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.user-info {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dark .user-info {
+  border-bottom-color: #374151;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.dark .user-name {
+  color: white;
+}
+
+.user-email {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.dark .user-email {
+  color: #9ca3af;
+}
+
+.user-position {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.dark .user-position {
+  color: #9ca3af;
+}
+
+.menu-items {
+  padding: 0.25rem;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: #374151;
+  text-decoration: none;
+  background: none;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-align: left;
+}
+
+.menu-item:hover {
+  background-color: #f3f4f6;
+}
+
+.dark .menu-item {
+  color: #d1d5db;
+}
+
+.dark .menu-item:hover {
+  background-color: #374151;
+}
+
+/* Dropdown Transition */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* Content */
+.app-content {
+  flex: 1;
+  padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .app-content {
+    padding: 2rem;
+  }
+}
+
+/* Footer */
+.app-footer {
+  padding: 1.5rem 1rem;
+  background-color: white;
+  border-top: 1px solid #e5e7eb;
+}
+
+.dark .app-footer {
+  background-color: #1f2937;
+  border-top-color: #374151;
+}
+
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+@media (min-width: 768px) {
+  .footer-content {
+    flex-direction: row;
+  }
+}
+
+.dark .footer-content {
+  color: #9ca3af;
+}
+
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footer-links a {
+  color: #6b7280;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: #3b82f6;
+}
+
+.dark .footer-links a {
+  color: #9ca3af;
+}
+
+.dark .footer-links a:hover {
+  color: #60a5fa;
+}
+</style>
