@@ -55,7 +55,8 @@ onMounted(() => {
   if (process.client) {
     document.addEventListener('click', (e) => {
       const target = e.target as HTMLElement
-      if (!target.closest('.user-dropdown')) {
+      // Check if click is outside both the dropdown and the button that opens it
+      if (!target.closest('.user-menu') && isUserMenuOpen.value) {
         isUserMenuOpen.value = false
       }
     })
