@@ -55,7 +55,7 @@ export default defineNuxtConfig({
 
   // Build configuration
   build: {
-    transpile: ['echarts', 'vue-echarts'],
+    transpile: ['echarts', 'vue-echarts', 'vue3-organization-chart'],
   },
 
   vite: {

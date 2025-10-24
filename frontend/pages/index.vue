@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'verified',
+  // middleware: 'verified', // Disabled for testing
 })
 
 // Redirect to dashboard home page
