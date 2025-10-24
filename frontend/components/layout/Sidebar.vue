@@ -5,15 +5,11 @@ interface Props {
   isOpen?: boolean
 }
 
-interface Emits {
-  (e: 'close'): void
-}
-
 const props = withDefaults(defineProps<Props>(), {
   isOpen: false
 })
 
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{ close: [] }>()
 
 interface NavItem {
   name: string
@@ -31,35 +27,16 @@ const navItems: NavItem[] = [
   { name: 'documents', label: 'Dokumenty', icon: 'documents', path: '/dashboard/documents' }
 ]
 
-const isActive = (path: string) => {
-  return route.path === path
-}
-
-const handleNavClick = () => {
-  emit('close')
-}
+const isActive = (path: string) => route.path === path
 </script>
 
 <template>
-  <!-- Mobile Overlay -->
-  <div
-    v-if="isOpen"
-    class="mobile-overlay"
-    @click="emit('close')"
-  />
+  <div v-if="isOpen" class="sidebar-overlay" @click="emit('close')" />
 
-  <!-- Sidebar -->
-  <aside
-    class="sidebar"
-    :class="{ 'sidebar-open': isOpen }"
-  >
+  <aside class="app-sidebar" :class="{ 'is-open': isOpen }">
     <div class="sidebar-header">
-      <h2 class="sidebar-title">PortalForge</h2>
-      <button
-        class="sidebar-close"
-        @click="emit('close')"
-        aria-label="Close menu"
-      >
+      <h2 class="sidebar-logo">PortalForge</h2>
+      <button class="sidebar-close-btn" @click="emit('close')" aria-label="Zamknij menu">
         ×
       </button>
     </div>
@@ -69,9 +46,9 @@ const handleNavClick = () => {
         v-for="item in navItems"
         :key="item.name"
         :to="item.path"
-        class="nav-item"
-        :class="{ 'nav-item-active': isActive(item.path) }"
-        @click="handleNavClick"
+        class="sidebar-nav-item"
+        :class="{ 'is-active': isActive(item.path) }"
+        @click="emit('close')"
       >
         <span class="nav-icon">
           <svg v-if="item.icon === 'home'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,177 +75,3 @@ const handleNavClick = () => {
     </nav>
   </aside>
 </template>
-
-<style scoped>
-/* Mobile Overlay */
-.mobile-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 40;
-}
-
-@media (min-width: 768px) {
-  .mobile-overlay {
-    display: none;
-  }
-}
-
-/* Sidebar */
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 256px;
-  background-color: white;
-  border-right: 1px solid #e5e7eb;
-  display: flex;
-  flex-direction: column;
-  z-index: 50;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease-in-out;
-}
-
-.sidebar-open {
-  transform: translateX(0);
-}
-
-@media (min-width: 768px) {
-  .sidebar {
-    position: relative;
-    transform: translateX(0);
-    z-index: 0;
-  }
-}
-
-/* Dark mode */
-.dark .sidebar {
-  background-color: #1f2937;
-  border-right-color: #374151;
-}
-
-/* Sidebar Header */
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.dark .sidebar-header {
-  border-bottom-color: #374151;
-}
-
-.sidebar-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #2563eb;
-}
-
-.dark .sidebar-title {
-  color: #60a5fa;
-}
-
-.sidebar-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  font-size: 2rem;
-  line-height: 1;
-  color: #6b7280;
-  background: none;
-  border: none;
-  cursor: pointer;
-  border-radius: 0.375rem;
-}
-
-.sidebar-close:hover {
-  background-color: #f3f4f6;
-}
-
-.dark .sidebar-close {
-  color: #9ca3af;
-}
-
-.dark .sidebar-close:hover {
-  background-color: #374151;
-}
-
-@media (min-width: 768px) {
-  .sidebar-close {
-    display: none;
-  }
-}
-
-/* Sidebar Navigation */
-.sidebar-nav {
-  flex: 1;
-  padding: 1rem;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-/* Navigation Item */
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  color: #374151;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-
-.nav-item:hover {
-  background-color: #f3f4f6;
-  color: #2563eb;
-}
-
-.dark .nav-item {
-  color: #d1d5db;
-}
-
-.dark .nav-item:hover {
-  background-color: #374151;
-  color: #60a5fa;
-}
-
-.nav-item-active {
-  background-color: #eff6ff;
-  color: #2563eb;
-  font-weight: 600;
-}
-
-.dark .nav-item-active {
-  background-color: #1e3a8a;
-  color: #60a5fa;
-}
-
-/* Navigation Icon */
-.nav-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-.nav-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-/* Navigation Label */
-.nav-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-</style>

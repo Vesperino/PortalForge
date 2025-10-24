@@ -40,7 +40,8 @@
       "Bash(npm run lint:*)",
       "Bash(dotnet list package)",
       "Bash(git merge fix/supabase-auth-integration --no-ff -m \"Merge branch ''fix/supabase-auth-integration'' - Fix Supabase email verification flow\")",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Read(//d/Projects/WatchdogUIVUE/watchdog-ui/**)"
     ],
     "deny": [],
     "ask": []
