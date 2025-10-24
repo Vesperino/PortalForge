@@ -434,20 +434,37 @@ const exportToExcel = () => {
         </div>
 
         <!-- Tree View -->
-        <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 overflow-x-auto">
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-            Drzewo organizacyjne
-          </h2>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-8">
-            Kliknij na pracownika, aby zobaczyć szczegóły. Użyj przycisków powyżej aby wyeksportować drzewo.
-          </p>
-          <div v-if="organizationTree" ref="treeContainerRef" class="min-w-max pb-8">
-            <OrganizationTree
+        <div v-else class="space-y-6">
+          <!-- Interactive ECharts Tree -->
+          <div v-if="organizationTree" ref="treeContainerRef">
+            <OrganizationTreeChart
               :employee="organizationTree"
               :on-select-employee="selectEmployee"
             />
           </div>
-          <div v-else class="text-center py-8">
+
+          <!-- Fallback: Static Tree (for export) -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                Statyczne drzewo (do eksportu)
+              </h3>
+              <button
+                class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                @click="() => {}"
+              >
+                Pokaż/Ukryj
+              </button>
+            </div>
+            <div v-if="organizationTree" class="min-w-max pb-8 hidden" id="static-tree">
+              <OrganizationTree
+                :employee="organizationTree"
+                :on-select-employee="selectEmployee"
+              />
+            </div>
+          </div>
+
+          <div v-if="!organizationTree" class="text-center py-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
             <p class="text-gray-500 dark:text-gray-400">
               Brak danych o strukturze organizacyjnej
             </p>

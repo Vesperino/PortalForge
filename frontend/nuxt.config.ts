@@ -11,7 +11,14 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
     '@vueuse/nuxt',
+    '@nuxtjs/color-mode',
   ],
+
+  colorMode: {
+    classSuffix: '',
+    preference: 'system',
+    fallback: 'light',
+  },
 
   css: ['~/assets/css/main.css'],
 

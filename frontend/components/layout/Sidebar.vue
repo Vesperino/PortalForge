@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
 interface NavItem {
   name: string
   label: string
@@ -46,62 +44,32 @@ const navItems: NavItem[] = [
     path: '/dashboard/documents'
   }
 ]
-
-const isSidebarOpen = ref(false)
-
-const toggleSidebar = () => {
-  isSidebarOpen.value = !isSidebarOpen.value
-}
-
-// Close sidebar when clicking on a link (mobile)
-const handleNavigation = () => {
-  if (window.innerWidth < 1024) {
-    isSidebarOpen.value = false
-  }
-}
 </script>
 
 <template>
-  <aside
-    :class="[
-      'fixed left-0 top-0 z-40 h-screen transition-transform',
-      'bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700',
-      'lg:translate-x-0',
-      isSidebarOpen ? 'translate-x-0' : '-translate-x-full',
-      'lg:w-64 w-64'
-    ]"
-  >
-    <!-- Sidebar Header -->
-    <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-      <h2 class="text-xl font-bold text-gray-900 dark:text-white">
-        PortalForge
-      </h2>
-      <button
-        type="button"
-        class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500"
-        aria-label="Close sidebar"
-        @click="toggleSidebar"
-      >
-        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
+  <!-- Desktop Sidebar - Always visible on md and up -->
+  <aside class="w-64 hidden md:block bg-white dark:bg-gray-800 shadow-md border-r border-gray-200 dark:border-gray-700">
+    <div class="flex flex-col h-full">
+      <!-- Sidebar Header -->
+      <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          PortalForge
+        </h2>
+      </div>
 
-    <!-- Navigation -->
-    <nav class="flex-1 p-4" aria-label="Main navigation">
-      <ul role="list" class="space-y-2">
-        <li v-for="item in navItems" :key="item.name">
-          <NuxtLink
-            :to="item.path"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors group"
-            :class="[
-              'hover:bg-gray-100 dark:hover:bg-gray-700',
-              'focus:ring-2 focus:ring-blue-500 focus:outline-none'
-            ]"
-            active-class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-            @click="handleNavigation"
-          >
+      <!-- Navigation -->
+      <nav class="flex-1 p-4 space-y-2 overflow-y-auto" aria-label="Main navigation">
+        <NuxtLink
+          v-for="item in navItems"
+          :key="item.name"
+          :to="item.path"
+          class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors group"
+          :class="[
+            'hover:bg-gray-100 dark:hover:bg-gray-700',
+            'focus:ring-2 focus:ring-blue-500 focus:outline-none'
+          ]"
+          active-class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+        >
             <!-- Icons -->
             <span class="w-6 h-6 flex-shrink-0">
               <svg
@@ -158,49 +126,29 @@ const handleNavigation = () => {
               >
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-            </span>
-            <span class="text-sm font-medium text-gray-900 dark:text-white">
-              {{ item.label }}
-            </span>
-          </NuxtLink>
-        </li>
-      </ul>
-    </nav>
+          </span>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">
+            {{ item.label }}
+          </span>
+        </NuxtLink>
+      </nav>
 
-    <!-- User Section -->
-    <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-      <div class="flex items-center gap-3 px-4 py-3">
-        <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-          U
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-            Użytkownik
-          </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-            user@example.com
-          </p>
+      <!-- User Section -->
+      <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex items-center gap-3 px-4 py-3">
+          <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+            U
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+              Użytkownik
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+              user@example.com
+            </p>
+          </div>
         </div>
       </div>
     </div>
   </aside>
-
-  <!-- Mobile overlay -->
-  <div
-    v-if="isSidebarOpen"
-    class="fixed inset-0 z-30 bg-gray-900/50 lg:hidden"
-    @click="toggleSidebar"
-  />
-
-  <!-- Mobile toggle button -->
-  <button
-    type="button"
-    class="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500"
-    aria-label="Open sidebar"
-    @click="toggleSidebar"
-  >
-    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-  </button>
 </template>
