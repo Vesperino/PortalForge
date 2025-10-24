@@ -41,13 +41,19 @@ test.describe('Organization Structure Page', () => {
     // Check if CEO info is displayed
     await expect(page.getByText(/CEO: Anna Nowak/)).toBeVisible()
 
-    // Check if employee list is visible - look for employee names
-    await expect(page.getByText('Piotr Kowalski')).toBeVisible({ timeout: 10000 })
+    // Check if organization chart is visible
+    await expect(page.locator('.org-tree-chart-container')).toBeVisible({ timeout: 10000 })
 
-    // Click on first employee card
-    const firstEmployee = page.locator('.cursor-pointer').first()
-    await expect(firstEmployee).toBeVisible({ timeout: 10000 })
-    await firstEmployee.click()
+    // Check if custom nodes are visible (tree structure)
+    const orgNodes = page.locator('.custom-node')
+    await expect(orgNodes.first()).toBeVisible({ timeout: 10000 })
+
+    // Verify we have multiple nodes rendered (at least 5 - CEO + some subordinates)
+    const nodeCount = await orgNodes.count()
+    expect(nodeCount).toBeGreaterThanOrEqual(5)
+
+    // Click on first employee node
+    await orgNodes.first().click()
 
     // Check if employee modal opens
     await expect(page.getByText('Szczegóły pracownika')).toBeVisible({ timeout: 5000 })
@@ -80,10 +86,13 @@ test.describe('Organization Structure Page', () => {
     // Wait for tree to render
     await page.waitForTimeout(2000)
 
-    // Click on first employee card
-    const firstEmployee = page.locator('.cursor-pointer').first()
-    await expect(firstEmployee).toBeVisible({ timeout: 10000 })
-    await firstEmployee.click()
+    // Wait for organization chart to be visible
+    await expect(page.locator('.org-tree-chart-container')).toBeVisible({ timeout: 10000 })
+
+    // Click on first employee node
+    const firstNode = page.locator('.custom-node').first()
+    await expect(firstNode).toBeVisible({ timeout: 10000 })
+    await firstNode.click()
 
     // Check if modal is visible
     const modal = page.getByText('Szczegóły pracownika')
