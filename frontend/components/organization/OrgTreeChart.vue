@@ -205,13 +205,15 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   height: 700px;
-  background: #f9fafb;
+  background: #ffffff;
   border-radius: 12px;
   overflow: hidden;
+  border: 1px solid #e5e7eb;
 }
 
 :global(.dark) .org-chart-wrapper {
-  background: #1f2937;
+  background: #111827;
+  border-color: #374151;
 }
 
 /* Controls */
@@ -366,7 +368,7 @@ onUnmounted(() => {
 
 /* Vertical lines (down) */
 :deep(.p-organizationchart-line-down) {
-  background-color: #475569;
+  background-color: #64748b !important;
   width: 2px;
   height: 20px;
   margin: 0 auto;
@@ -375,26 +377,29 @@ onUnmounted(() => {
 /* Horizontal lines (left and right connectors) */
 :deep(.p-organizationchart-line-left),
 :deep(.p-organizationchart-line-right) {
-  background-color: #475569;
+  background-color: #64748b !important;
   height: 2px;
   width: 100%;
 }
 
 /* Top border for child nodes */
 :deep(.p-organizationchart-line-top) {
-  border-top: 2px solid #475569;
+  border-top: 2px solid #64748b !important;
   height: 20px;
 }
 
 /* Dark mode lines */
-:global(.dark) :deep(.p-organizationchart-line-down),
+:global(.dark) :deep(.p-organizationchart-line-down) {
+  background-color: #cbd5e1 !important;
+}
+
 :global(.dark) :deep(.p-organizationchart-line-left),
 :global(.dark) :deep(.p-organizationchart-line-right) {
-  background-color: #94a3b8;
+  background-color: #cbd5e1 !important;
 }
 
 :global(.dark) :deep(.p-organizationchart-line-top) {
-  border-top-color: #94a3b8;
+  border-top-color: #cbd5e1 !important;
 }
 
 /* Ensure lines container is visible */

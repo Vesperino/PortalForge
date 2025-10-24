@@ -41,7 +41,12 @@
       "Bash(dotnet list package)",
       "Bash(git merge fix/supabase-auth-integration --no-ff -m \"Merge branch ''fix/supabase-auth-integration'' - Fix Supabase email verification flow\")",
       "Bash(npm run dev:*)",
-      "Read(//d/Projects/WatchdogUIVUE/watchdog-ui/**)"
+      "Read(//d/Projects/WatchdogUIVUE/watchdog-ui/**)",
+      "Bash(npx playwright:*)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(cat:*)",
+      "Bash(timeout 5 bash:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []
