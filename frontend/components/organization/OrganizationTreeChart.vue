@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import type { Employee } from '~/types'
 import * as echarts from 'echarts/core'
 import { TreeChart } from 'echarts/charts'
@@ -30,6 +30,12 @@ const props = defineProps<Props>()
 
 const chartRef = ref<HTMLDivElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
+let removeResizeListener: (() => void) | null = null
+
+const BASE_NODE_WIDTH = 180
+const BASE_LAYER_HEIGHT = 160
+const MIN_SCALE_FLOOR = 0.01
+const MAX_SCALE_CEILING = 6
 
 const { getDepartments } = useMockData()
 const departments = getDepartments()
@@ -133,17 +139,112 @@ const findEmployeeById = (id: number): Employee | null => {
   return search(props.employee)
 }
 
+const calculateTreeMetrics = (employee: Employee) => {
+  let maxDepth = 0
+  const levelCounts: Record<number, number> = {}
+
+  const traverse = (node: Employee, depth: number) => {
+    maxDepth = Math.max(maxDepth, depth)
+    levelCounts[depth] = (levelCounts[depth] || 0) + 1
+    node.subordinates?.forEach(sub => traverse(sub, depth + 1))
+  }
+
+  traverse(employee, 0)
+
+  const maxBreadth = Object.values(levelCounts).reduce((acc, count) => Math.max(acc, count), 0) || 1
+
+  return { maxDepth, maxBreadth }
+}
+
+const treeMetrics = computed(() => calculateTreeMetrics(props.employee))
 const treeData = computed(() => convertToTreeData(props.employee))
+
+const getDynamicGaps = () => {
+  const { maxDepth, maxBreadth } = treeMetrics.value
+
+  const nodeGap =
+    maxBreadth > 10 ? 28 :
+    maxBreadth > 8 ? 34 :
+    maxBreadth > 6 ? 42 :
+    maxBreadth > 4 ? 50 : 60
+
+  const layerGap =
+    maxDepth > 6 ? 110 :
+    maxDepth > 4 ? 125 :
+    maxDepth > 3 ? 135 : 150
+
+  return { nodeGap, layerGap }
+}
+
+const getAutoScaleConfig = () => {
+  if (!chartRef.value) {
+    return { autoScale: 1, minScale: 0.2 }
+  }
+
+  const { maxDepth, maxBreadth } = treeMetrics.value
+  const containerWidth = chartRef.value.clientWidth || 800
+  const containerHeight = chartRef.value.clientHeight || 600
+
+  const requiredWidth = Math.max(maxBreadth, 1) * BASE_NODE_WIDTH
+  const requiredHeight = Math.max(maxDepth + 1, 1) * BASE_LAYER_HEIGHT
+
+  const widthScale = containerWidth / requiredWidth
+  const heightScale = containerHeight / requiredHeight
+
+  const autoScale = Math.min(1, widthScale, heightScale)
+  const minScale = Math.max(Math.min(autoScale * 0.8, 0.05), MIN_SCALE_FLOOR)
+
+  return { autoScale, minScale }
+}
+
+const updateScaleLimits = (minScale: number) => {
+  if (!chartInstance) return
+
+  chartInstance.setOption({
+    series: [
+      {
+        scaleLimit: {
+          min: minScale,
+          max: MAX_SCALE_CEILING
+        }
+      }
+    ]
+  })
+}
+
+const applyInitialZoom = (targetScale: number) => {
+  if (!chartInstance || !chartRef.value) return
+
+  if (targetScale >= 1) {
+    return
+  }
+
+  try {
+    chartInstance.dispatchAction({
+      type: 'treeRoam',
+      zoom: targetScale,
+      originX: chartRef.value.clientWidth / 2,
+      originY: 0
+    })
+  } catch (error) {
+    console.warn('Failed to apply initial tree zoom', error)
+  }
+}
 
 const initChart = () => {
   if (!chartRef.value) return
 
   // Dispose existing chart
   if (chartInstance) {
+    removeResizeListener?.()
     chartInstance.dispose()
+    removeResizeListener = null
   }
 
   chartInstance = echarts.init(chartRef.value)
+
+  const { autoScale, minScale } = getAutoScaleConfig()
+  const { nodeGap, layerGap } = getDynamicGaps()
 
   const option = {
     tooltip: {
@@ -184,11 +285,11 @@ const initChart = () => {
         layout: 'orthogonal',
         roam: true,
         scaleLimit: {
-          min: 0.2,
-          max: 4
+          min: minScale,
+          max: MAX_SCALE_CEILING
         },
-        nodeGap: 60,
-        layerGap: 150,
+        nodeGap,
+        layerGap,
         label: {
           position: 'top',
           distance: 30,
@@ -227,6 +328,7 @@ const initChart = () => {
   }
 
   chartInstance.setOption(option)
+  applyInitialZoom(autoScale)
 
   // Handle click events
   chartInstance.on('click', (params: any) => {
@@ -238,13 +340,12 @@ const initChart = () => {
   // Handle window resize
   const handleResize = () => {
     chartInstance?.resize()
+    const { minScale: updatedMin } = getAutoScaleConfig()
+    updateScaleLimits(updatedMin)
   }
   window.addEventListener('resize', handleResize)
-
-  // Cleanup
-  return () => {
+  removeResizeListener = () => {
     window.removeEventListener('resize', handleResize)
-    chartInstance?.dispose()
   }
 }
 
@@ -258,8 +359,10 @@ watch(() => props.employee, () => {
 
 // Cleanup on unmount
 onUnmounted(() => {
+  removeResizeListener?.()
   if (chartInstance) {
     chartInstance.dispose()
+    chartInstance = null
   }
 })
 </script>
@@ -276,7 +379,7 @@ onUnmounted(() => {
           <ul class="list-disc list-inside space-y-0.5 md:space-y-1 text-[10px] md:text-xs">
             <li>Kliknij na pracownika aby zobaczyć szczegóły</li>
             <li class="hidden md:list-item">Kliknij na węzeł aby rozwinąć/zwinąć podwładnych</li>
-            <li>Użyj scroll/pinch aby przybliżyć/oddalić (zoom: 0.2x - 4x)</li>
+            <li>Użyj scroll/pinch aby przybliżyć/oddalić (zoom: 0.01x - 6x)</li>
             <li>Przeciągnij aby przesunąć widok po strukturze</li>
             <li class="hidden md:list-item">Użyj przycisków w prawym górnym rogu aby zresetować widok lub zapisać jako obraz</li>
           </ul>
@@ -293,4 +396,3 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
-
