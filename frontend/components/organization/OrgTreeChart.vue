@@ -204,10 +204,12 @@ onUnmounted(() => {
 .org-chart-wrapper {
   position: relative;
   width: 100%;
+  max-width: 100%;
   height: 700px;
+  max-height: 700px;
   background: #ffffff;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: auto; /* Allow scrolling for wide/tall content */
   border: 1px solid #e5e7eb;
 }
 
@@ -277,22 +279,17 @@ onUnmounted(() => {
 .org-tree-chart-container {
   width: 100%;
   height: 100%;
-  overflow: hidden;
-  cursor: grab;
+  overflow: visible;
   position: relative;
 }
 
-.org-tree-chart-container.is-panning {
-  cursor: grabbing;
-}
-
 .org-tree-chart-content {
-  transform-origin: center;
-  transition: transform 0.1s ease-out;
-  display: inline-block;
-  min-width: 100%;
-  min-height: 100%;
-  padding: 60px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width: min-content;
+  min-height: min-content;
+  padding: 20px;
 }
 
 /* Hint */
@@ -354,11 +351,14 @@ onUnmounted(() => {
 /* PrimeVue OrganizationChart connection lines */
 :deep(.p-organizationchart) {
   padding: 0;
+  display: inline-block; /* Allow it to shrink to content width */
+  margin: 0 auto; /* Center horizontally */
 }
 
 :deep(.p-organizationchart-table) {
   border-spacing: 0;
   border-collapse: separate;
+  margin: 0 auto; /* Center the table */
 }
 
 :deep(.p-organizationchart-node-content) {
@@ -366,47 +366,51 @@ onUnmounted(() => {
   padding: 0 !important;
 }
 
-/* Vertical lines (down) */
-:deep(.p-organizationchart-line-down) {
-  background-color: #64748b !important;
-  width: 2px;
-  height: 20px;
-  margin: 0 auto;
+/* Connection lines - PrimeVue uses connector classes */
+/* Vertical connector (down arrow) */
+:deep(.p-organizationchart-connector-down) {
+  width: 2px !important;
+  height: 20px !important;
+  background-color: #1e40af !important; /* blue-800 */
+  margin: 0 auto !important;
+  display: block !important;
 }
 
-/* Horizontal lines (left and right connectors) */
-:deep(.p-organizationchart-line-left),
-:deep(.p-organizationchart-line-right) {
-  background-color: #64748b !important;
-  height: 2px;
-  width: 100%;
+/* Horizontal connectors */
+:deep(.p-organizationchart-connector-left) {
+  border-top: 2px solid #1e40af !important;
+  border-right: 2px solid #1e40af !important;
 }
 
-/* Top border for child nodes */
-:deep(.p-organizationchart-line-top) {
-  border-top: 2px solid #64748b !important;
-  height: 20px;
+:deep(.p-organizationchart-connector-right) {
+  border-top: 2px solid #1e40af !important;
+  border-left: 2px solid #1e40af !important;
 }
 
-/* Dark mode lines */
-:global(.dark) :deep(.p-organizationchart-line-down) {
-  background-color: #cbd5e1 !important;
+/* Top connectors (to child nodes) */
+:deep(.p-organizationchart-connector-top) {
+  border-top: 2px solid #1e40af !important;
 }
 
-:global(.dark) :deep(.p-organizationchart-line-left),
-:global(.dark) :deep(.p-organizationchart-line-right) {
-  background-color: #cbd5e1 !important;
+/* Dark mode */
+:global(.dark) :deep(.p-organizationchart-connector-down) {
+  background-color: #60a5fa !important; /* blue-400 */
 }
 
-:global(.dark) :deep(.p-organizationchart-line-top) {
-  border-top-color: #cbd5e1 !important;
+:global(.dark) :deep(.p-organizationchart-connector-left) {
+  border-top-color: #60a5fa !important;
+  border-right-color: #60a5fa !important;
 }
 
-/* Ensure lines container is visible */
-:deep(.p-organizationchart-lines) {
-  opacity: 1 !important;
-  visibility: visible !important;
+:global(.dark) :deep(.p-organizationchart-connector-right) {
+  border-top-color: #60a5fa !important;
+  border-left-color: #60a5fa !important;
 }
+
+:global(.dark) :deep(.p-organizationchart-connector-top) {
+  border-top-color: #60a5fa !important;
+}
+
 
 /* Connectors spacing */
 :deep(.p-organizationchart-node-cell) {
