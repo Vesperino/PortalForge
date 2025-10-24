@@ -89,6 +89,84 @@ Wszyscy nowi pracownicy przechodzą 2-tygodniowy program onboardingowy, podczas 
     category: 'hr'
   },
   {
+    id: 5,
+    title: 'Team Building - Paintball już za 3 tygodnie! 🎯',
+    excerpt: 'Przygotuj się na dzień pełen adrenaliny! Paintball, grillowanie i gry zespołowe czekają na całą firmę.',
+    content: `
+# Team Building - Paintball już za 3 tygodnie!
+
+Nadchodzi jeden z najbardziej wyczekiwanych eventów roku - **firmowy wyjazd integracyjny**! Tym razem czeka nas paintball w lesie, grillowanie i mnóstwo zabawy.
+
+## Szczegóły wydarzenia
+
+📅 **Data:** Za 3 tygodnie
+📍 **Miejsce:** PaintballPark, ul. Leśna 45
+🚌 **Transport:** Autokar z biura o 9:00 (wyjazd punktualnie!)
+⏰ **Powrót:** Około 18:00
+
+## Program dnia
+
+### 9:00 - Wyjazd z biura
+Zbiórka przed budynkiem. Nie spóźniaj się - autokar odjeżdża punktualnie!
+
+### 10:00 - Przywitanie i briefing
+Instruktaż bezpieczeństwa, podział na drużyny, wydanie sprzętu.
+
+### 10:30 - 14:00 - Rozgrywki paintballowe
+Seria gier zespołowych:
+- Capture the Flag
+- Team Deathmatch
+- VIP Escort
+- Last Team Standing
+
+### 14:00 - 16:00 - Grill i relaks
+Kiełbaski, szaszłyki, sałatki i napoje. Czas na rozmowy i odpoczynek.
+
+### 16:00 - 17:30 - Gry zespołowe
+Przeciąganie liny, sztafety, konkursy sprawnościowe z nagrodami!
+
+### 18:00 - Powrót do biura
+
+## Dress code
+
+👕 **Sportowy i wygodny!**
+- Ubrania, które możesz pobrudzić (farba z paintballa zmywa się, ale lepiej nie ryzykować ulubionych ciuchów)
+- Wygodne buty sportowe lub trekkingowe
+- Kurtka/bluza (w lesie może być chłodno)
+- Czapka z daszkiem (opcjonalnie)
+
+## Co zabieramy?
+
+✅ Dobry humor i energię!
+✅ Krem z filtrem (jeśli będzie słonecznie)
+✅ Wodę (będzie też na miejscu)
+❌ Nie musisz zabierać jedzenia - wszystko zapewnione!
+
+## Zapisy
+
+Potwierdź swoją obecność do końca tygodnia w systemie HR lub napisz do Moniki Lewandowskiej (monika.lewandowska@portalforge.pl).
+
+**Uwaga:** Liczba miejsc ograniczona do 35 osób - kto pierwszy, ten lepszy!
+
+## Bezpieczeństwo
+
+- Pełny sprzęt ochronny (maska, kamizelka)
+- Instruktorzy na miejscu
+- Apteczka pierwszej pomocy
+- Ubezpieczenie NNW
+
+Nie możemy się doczekać wspólnej zabawy! To będzie dzień pełen adrenaliny, śmiechu i budowania relacji w zespole. 🎯🔫
+
+**Do zobaczenia na polu bitwy!** 💪
+    `,
+    imageUrl: 'https://images.unsplash.com/photo-1588731247989-c5d8e31d4d4c?w=800&h=600&fit=crop',
+    authorId: 26,
+    createdAt: addDays(-20),
+    views: 289,
+    category: 'event',
+    eventId: 3
+  },
+  {
     id: 3,
     title: 'Nowa wersja aplikacji v2.0 już dostępna! 🚀',
     excerpt: 'Po 6 miesiącach intensywnej pracy, z dumą prezentujemy nową wersję naszej platformy z AI, nowym UI i wydajnością.',
@@ -135,6 +213,100 @@ Czekamy na wasze opinie! Jeśli znajdziecie bugi lub macie sugestie - piszcie na
     createdAt: addDays(-7),
     views: 312,
     category: 'product'
+  },
+  {
+    id: 6,
+    title: 'Warsztat TypeScript Advanced - zapisz się już dziś! 📚',
+    excerpt: 'Piotr Kowalski (CTO) poprowadzi zaawansowany warsztat TypeScript. Generics, conditional types, mapped types i więcej!',
+    content: `
+# Warsztat TypeScript Advanced z CTO
+
+Masz już doświadczenie z TypeScript i chcesz poznać zaawansowane techniki? **Piotr Kowalski**, nasz CTO, poprowadzi warsztat dla developerów, którzy chcą podnieść swoje umiejętności na wyższy poziom!
+
+## Dla kogo?
+
+Warsztat jest przeznaczony dla developerów z **co najmniej 1 rokiem doświadczenia z TypeScript**. Jeśli znasz podstawy (typy, interfejsy, klasy), ale chcesz zgłębić bardziej zaawansowane koncepty - to warsztat dla Ciebie!
+
+## Program warsztatu
+
+### 1. Generics - głębsze zrozumienie (45 min)
+- Generic constraints
+- Multiple type parameters
+- Generic utility types
+- Praktyczne przykłady z naszych projektów
+
+### 2. Conditional Types (60 min)
+- Podstawy conditional types
+- Infer keyword
+- Distributive conditional types
+- Tworzenie własnych utility types
+
+### 3. Mapped Types (45 min)
+- Transformacje typów
+- Key remapping
+- Template literal types
+- Praktyczne zastosowania
+
+### 4. Advanced Patterns (60 min)
+- Type guards i type predicates
+- Discriminated unions
+- Builder pattern w TypeScript
+- Dependency injection
+
+### 5. Q&A i live coding (30 min)
+- Pytania uczestników
+- Rozwiązywanie problemów z prawdziwych projektów
+- Best practices z doświadczenia Piotra
+
+## Szczegóły praktyczne
+
+📅 **Data:** Za 2 tygodnie
+⏰ **Godzina:** 10:00 - 14:00 (z przerwą na lunch)
+📍 **Miejsce:** Sala szkoleniowa B
+🍕 **Lunch:** Pizza i napoje zapewnione!
+💻 **Co zabrać:** Laptop z zainstalowanym Node.js i VS Code
+
+## Materiały
+
+Wszyscy uczestnicy otrzymają:
+- Slajdy z prezentacji
+- Przykłady kodu z warsztatu
+- Listę polecanych zasobów do dalszej nauki
+- Certyfikat ukończenia
+
+## Zapisy
+
+Liczba miejsc ograniczona do **15 osób**. Zapisy przez system HR lub email do Piotra (piotr.kowalski@portalforge.pl).
+
+**Deadline na zapisy:** 3 dni przed warsztatem
+
+## Wymagania wstępne
+
+Przed warsztatem upewnij się, że:
+- ✅ Masz co najmniej rok doświadczenia z TypeScript
+- ✅ Znasz podstawowe typy i interfejsy
+- ✅ Rozumiesz koncepcję typowania statycznego
+- ✅ Masz zainstalowane środowisko deweloperskie
+
+## Dlaczego warto?
+
+> "TypeScript to nie tylko dodanie typów do JavaScript. To narzędzie, które zmienia sposób myślenia o kodzie i pozwala budować bardziej niezawodne aplikacje." - Piotr Kowalski
+
+Po warsztacie będziesz w stanie:
+- 🎯 Pisać bardziej type-safe kod
+- 🔧 Tworzyć własne utility types
+- 🚀 Wykorzystywać zaawansowane wzorce TypeScript
+- 💡 Lepiej rozumieć błędy kompilatora
+- 📚 Czytać i rozumieć skomplikowane typy z bibliotek
+
+**Nie przegap tej okazji do nauki od najlepszych!** 🚀
+    `,
+    imageUrl: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800&h=600&fit=crop',
+    authorId: 2,
+    createdAt: addDays(-25),
+    views: 156,
+    category: 'tech',
+    eventId: 2
   },
   {
     id: 4,
