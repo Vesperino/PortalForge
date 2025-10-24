@@ -20,7 +20,12 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("https://krablab.pl", "http://krablab.pl", "http://localhost:3000")
+        policy.WithOrigins(
+                  "https://krablab.pl",
+                  "http://krablab.pl",
+                  "http://localhost:3000",
+                  "https://83.168.107.39",
+                  "http://83.168.107.39")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
