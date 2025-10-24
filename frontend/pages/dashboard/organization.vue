@@ -317,35 +317,23 @@ const getEmployeesByDepartment = (departmentId: number) => {
         </div>
 
         <!-- Tree View -->
-        <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 overflow-x-auto">
           <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
             Drzewo organizacyjne
           </h2>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-8">
             Kliknij na pracownika, aby zobaczyć szczegóły
           </p>
-          <div v-if="organizationTree" class="space-y-4">
-            <!-- Simple tree representation - CEO and direct reports -->
-            <div class="flex flex-col items-center">
-              <div
-                class="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500 rounded-lg p-4 cursor-pointer hover:shadow-lg transition-shadow max-w-xs w-full text-center"
-                @click="selectEmployee(organizationTree)"
-              >
-                <div class="w-16 h-16 mx-auto mb-2 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">
-                  {{ getInitials(organizationTree) }}
-                </div>
-                <h3 class="font-semibold text-gray-900 dark:text-white">
-                  {{ organizationTree.firstName }} {{ organizationTree.lastName }}
-                </h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                  {{ organizationTree.position?.name }}
-                </p>
-              </div>
-
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-                Pełne drzewo organizacyjne z hierarchią dostępne po kliknięciu w pracownika
-              </p>
-            </div>
+          <div v-if="organizationTree" class="min-w-max pb-8">
+            <OrganizationTree
+              :employee="organizationTree"
+              :on-select-employee="selectEmployee"
+            />
+          </div>
+          <div v-else class="text-center py-8">
+            <p class="text-gray-500 dark:text-gray-400">
+              Brak danych o strukturze organizacyjnej
+            </p>
           </div>
         </div>
       </div>

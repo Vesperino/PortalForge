@@ -66,7 +66,8 @@ const handleNavigation = () => {
     :class="[
       'fixed left-0 top-0 z-40 h-screen transition-transform',
       'bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700',
-      isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+      'lg:translate-x-0',
+      isSidebarOpen ? 'translate-x-0' : '-translate-x-full',
       'lg:w-64 w-64'
     ]"
   >
