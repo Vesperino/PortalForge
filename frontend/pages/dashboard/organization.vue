@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { Employee } from '~/types'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 
 definePageMeta({
   layout: 'default',
@@ -11,6 +13,8 @@ const { getOrganizationTree, getDepartments, getEmployees } = useMockData()
 const viewMode = ref<'tree' | 'departments' | 'list'>('tree')
 const selectedDepartment = ref<number | null>(null)
 const searchQuery = ref<string>('')
+const isExporting = ref(false)
+const treeContainerRef = ref<HTMLElement | null>(null)
 
 const organizationTree = getOrganizationTree()
 const departments = getDepartments()
@@ -54,6 +58,92 @@ const getInitials = (employee: Employee) => {
 const getEmployeesByDepartment = (departmentId: number) => {
   return allEmployees.filter(e => e.departmentId === departmentId)
 }
+
+const exportToPNG = async () => {
+  if (!treeContainerRef.value || viewMode.value !== 'tree') return
+
+  isExporting.value = true
+  try {
+    const canvas = await html2canvas(treeContainerRef.value, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      logging: false,
+      useCORS: true
+    })
+
+    const link = document.createElement('a')
+    link.download = `struktura-organizacyjna-${new Date().toISOString().split('T')[0]}.png`
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+  } catch (error) {
+    console.error('Błąd podczas eksportu do PNG:', error)
+    alert('Wystąpił błąd podczas eksportu do PNG')
+  } finally {
+    isExporting.value = false
+  }
+}
+
+const exportToPDF = async () => {
+  if (!treeContainerRef.value || viewMode.value !== 'tree') return
+
+  isExporting.value = true
+  try {
+    const canvas = await html2canvas(treeContainerRef.value, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      logging: false,
+      useCORS: true
+    })
+
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF({
+      orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+      unit: 'px',
+      format: [canvas.width, canvas.height]
+    })
+
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
+    pdf.save(`struktura-organizacyjna-${new Date().toISOString().split('T')[0]}.pdf`)
+  } catch (error) {
+    console.error('Błąd podczas eksportu do PDF:', error)
+    alert('Wystąpił błąd podczas eksportu do PDF')
+  } finally {
+    isExporting.value = false
+  }
+}
+
+const exportToExcel = () => {
+  // Przygotuj dane do eksportu
+  const data = allEmployees.map(emp => ({
+    'Imię': emp.firstName,
+    'Nazwisko': emp.lastName,
+    'Email': emp.email,
+    'Telefon': emp.phone || '',
+    'Stanowisko': emp.position?.name || '',
+    'Dział': emp.department?.name || '',
+    'Przełożony': emp.supervisor ? `${emp.supervisor.firstName} ${emp.supervisor.lastName}` : ''
+  }))
+
+  if (data.length === 0) {
+    alert('Brak danych do eksportu')
+    return
+  }
+
+  // Konwertuj do CSV
+  const firstRow = data[0]!
+  const headers = Object.keys(firstRow)
+  const csv = [
+    headers.join(','),
+    ...data.map(row => headers.map(header => `"${row[header as keyof typeof row]}"`).join(','))
+  ].join('\n')
+
+  // Pobierz plik
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = `struktura-organizacyjna-${new Date().toISOString().split('T')[0]}.csv`
+  link.click()
+}
 </script>
 
 <template>
@@ -64,10 +154,37 @@ const getEmployeesByDepartment = (departmentId: number) => {
         Struktura organizacyjna
       </h1>
       <div class="flex gap-2">
-        <BaseButton variant="secondary">
-          Eksportuj do Excel
+        <BaseButton
+          variant="secondary"
+          :disabled="isExporting"
+          @click="exportToExcel"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Eksportuj do CSV
         </BaseButton>
-        <BaseButton variant="primary">
+        <BaseButton
+          v-if="viewMode === 'tree'"
+          variant="secondary"
+          :disabled="isExporting"
+          @click="exportToPNG"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Eksportuj do PNG
+        </BaseButton>
+        <BaseButton
+          v-if="viewMode === 'tree'"
+          variant="primary"
+          :disabled="isExporting"
+          :loading="isExporting"
+          @click="exportToPDF"
+        >
+          <svg v-if="!isExporting" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
           Eksportuj do PDF
         </BaseButton>
       </div>
@@ -322,9 +439,9 @@ const getEmployeesByDepartment = (departmentId: number) => {
             Drzewo organizacyjne
           </h2>
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-8">
-            Kliknij na pracownika, aby zobaczyć szczegóły
+            Kliknij na pracownika, aby zobaczyć szczegóły. Użyj przycisków powyżej aby wyeksportować drzewo.
           </p>
-          <div v-if="organizationTree" class="min-w-max pb-8">
+          <div v-if="organizationTree" ref="treeContainerRef" class="min-w-max pb-8">
             <OrganizationTree
               :employee="organizationTree"
               :on-select-employee="selectEmployee"

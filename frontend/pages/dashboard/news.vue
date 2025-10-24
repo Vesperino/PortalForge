@@ -8,6 +8,8 @@ const { getNews, getNewsByCategory } = useMockData()
 
 const selectedCategory = ref<string>('all')
 const searchQuery = ref<string>('')
+const currentPage = ref(1)
+const itemsPerPage = 3
 
 const allNews = getNews()
 
@@ -35,6 +37,27 @@ const filteredNews = computed(() => {
   }
 
   return filtered
+})
+
+const totalPages = computed(() => Math.ceil(filteredNews.value.length / itemsPerPage))
+
+const paginatedNews = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredNews.value.slice(start, end)
+})
+
+const goToPage = (page: number) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+    // Scroll to top of news list
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
+// Reset to page 1 when filters change
+watch([selectedCategory, searchQuery], () => {
+  currentPage.value = 1
 })
 
 const formatDate = (date: Date) => {
@@ -142,8 +165,21 @@ const getCategoryLabel = (category: string) => {
 
     <!-- News List -->
     <div class="space-y-4">
+      <!-- Empty state -->
+      <div v-if="paginatedNews.length === 0" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
+        <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+        </svg>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          Brak aktualności
+        </h3>
+        <p class="text-gray-600 dark:text-gray-400">
+          Nie znaleziono aktualności spełniających wybrane kryteria.
+        </p>
+      </div>
+
       <article
-        v-for="news in filteredNews"
+        v-for="news in paginatedNews"
         :key="news.id"
         class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
         @click="navigateTo(`/dashboard/news/${news.id}`)"
@@ -211,21 +247,60 @@ const getCategoryLabel = (category: string) => {
           </div>
         </div>
       </article>
+    </div>
 
-      <!-- Empty State -->
-      <div
-        v-if="filteredNews.length === 0"
-        class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-md"
-      >
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-        </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-          Brak aktualności
-        </h3>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Nie znaleziono aktualności spełniających kryteria wyszukiwania.
-        </p>
+    <!-- Pagination -->
+    <div v-if="totalPages > 1" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+      <div class="flex items-center justify-between">
+        <!-- Page info -->
+        <div class="text-sm text-gray-700 dark:text-gray-300">
+          Strona <span class="font-medium">{{ currentPage }}</span> z <span class="font-medium">{{ totalPages }}</span>
+          <span class="text-gray-500 dark:text-gray-400 ml-2">
+            ({{ paginatedNews.length }} z {{ filteredNews.length }} aktualności)
+          </span>
+        </div>
+
+        <!-- Pagination controls -->
+        <div class="flex items-center gap-2">
+          <!-- Previous button -->
+          <button
+            :disabled="currentPage === 1"
+            class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+            :class="currentPage === 1 ? 'text-gray-400 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300'"
+            @click="goToPage(currentPage - 1)"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <!-- Page numbers -->
+          <div class="flex items-center gap-1">
+            <button
+              v-for="page in totalPages"
+              :key="page"
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              :class="page === currentPage
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+              @click="goToPage(page)"
+            >
+              {{ page }}
+            </button>
+          </div>
+
+          <!-- Next button -->
+          <button
+            :disabled="currentPage === totalPages"
+            class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+            :class="currentPage === totalPages ? 'text-gray-400 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300'"
+            @click="goToPage(currentPage + 1)"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>

@@ -10,12 +10,23 @@ export type DocumentCategory = 'policy' | 'procedure' | 'template' | 'report' | 
 
 export type FileType = 'pdf' | 'docx' | 'xlsx' | 'pptx' | 'txt'
 
+export type LeaveType = 'vacation' | 'sick' | 'personal' | 'parental' | 'unpaid' | 'remote'
+
+export type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled'
+
+export type TaskStatus = 'todo' | 'in-progress' | 'review' | 'done' | 'blocked'
+
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
+
+export type ProjectStatus = 'planning' | 'active' | 'on-hold' | 'completed' | 'cancelled'
+
 export interface Department {
   id: number
   name: string
   description?: string
   managerId?: number
   manager?: Employee
+  color?: string // Kolor dla wizualizacji
 }
 
 export interface Position {
@@ -41,6 +52,10 @@ export interface Employee {
   subordinates?: Employee[]
   yearsOfService?: number
   hireDate?: Date
+  birthDate?: Date
+  address?: string
+  city?: string
+  country?: string
 }
 
 export interface Event {
@@ -85,4 +100,84 @@ export interface Document {
   uploadedAt: Date
   url?: string
   description?: string
+}
+
+export interface LeaveRequest {
+  id: number
+  employeeId: number
+  employee?: Employee
+  type: LeaveType
+  startDate: Date
+  endDate: Date
+  days: number
+  reason?: string
+  status: LeaveStatus
+  requestedAt: Date
+  reviewedBy?: number
+  reviewer?: Employee
+  reviewedAt?: Date
+  reviewComment?: string
+}
+
+export interface Task {
+  id: number
+  title: string
+  description?: string
+  assignedTo: number
+  assignee?: Employee
+  createdBy: number
+  creator?: Employee
+  projectId?: number
+  project?: Project
+  status: TaskStatus
+  priority: TaskPriority
+  dueDate?: Date
+  createdAt: Date
+  updatedAt?: Date
+  completedAt?: Date
+  estimatedHours?: number
+  actualHours?: number
+  tags?: string[]
+}
+
+export interface Project {
+  id: number
+  name: string
+  description?: string
+  status: ProjectStatus
+  startDate: Date
+  endDate?: Date
+  managerId: number
+  manager?: Employee
+  teamMembers: number[]
+  team?: Employee[]
+  departmentId?: number
+  department?: Department
+  progress: number // 0-100
+  budget?: number
+  createdAt: Date
+  updatedAt?: Date
+}
+
+export interface TimeOff {
+  id: number
+  employeeId: number
+  employee?: Employee
+  date: Date
+  hours: number
+  type: LeaveType
+  approved: boolean
+}
+
+export interface Announcement {
+  id: number
+  title: string
+  content: string
+  priority: 'low' | 'medium' | 'high'
+  publishedBy: number
+  publisher?: Employee
+  publishedAt: Date
+  expiresAt?: Date
+  targetDepartments?: number[]
+  isActive: boolean
 }
