@@ -310,9 +310,19 @@ watchEffect(() => {
     return
   }
 
-  const approvals: ApprovalStep[] = []
+  // Przykładowy przełożony dla mocków (Piotr Kowalski - CTO)
+  const mockSupervisor = employees.find(e => e.id === 2) || employees[1]
+  const mockSecondaryApprover = employees.find(e => e.id === 1) || employees[0]
+
+  if (!mockSupervisor || !mockSecondaryApprover) {
+    seeded.value = true
+    return
+  }
+
+  // Mock 1: Wniosek w toku - pierwszy etap akceptacji
+  const approvals1: ApprovalStep[] = []
   if (primaryApprover.value) {
-    approvals.push({
+    approvals1.push({
       id: 1,
       approver: primaryApprover.value,
       status: 'in_review',
@@ -320,14 +330,14 @@ watchEffect(() => {
     })
   }
   if (secondaryApprover.value) {
-    approvals.push({
-      id: approvals.length + 1,
+    approvals1.push({
+      id: approvals1.length + 1,
       approver: secondaryApprover.value,
-      status: approvals.length ? 'pending' : 'in_review'
+      status: approvals1.length ? 'pending' : 'in_review'
     })
   }
 
-  const sample: RequestRecord = {
+  const sample1: RequestRecord = {
     id: ++requestSeed,
     requestNumber: 'ZAP-2025-001',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
@@ -339,11 +349,46 @@ watchEffect(() => {
     softwareItems: [
       { id: ++softwareSeed, name: 'JetBrains All Products Pack', seats: 1, justification: 'IDE dla backendu.', duration: 'annual' }
     ],
-    approvals,
-    status: approvals.length ? 'in_review' : 'approved'
+    approvals: approvals1,
+    status: approvals1.length ? 'in_review' : 'approved'
   }
 
-  requests.value = [sample]
+  // Mock 2: Wniosek w toku - drugi etap akceptacji (pilny)
+  const approvals2: ApprovalStep[] = [
+    {
+      id: 1,
+      approver: mockSupervisor,
+      status: 'approved',
+      startedAt: new Date(Date.now() - 1000 * 60 * 60 * 48),
+      finishedAt: new Date(Date.now() - 1000 * 60 * 60 * 36)
+    },
+    {
+      id: 2,
+      approver: mockSecondaryApprover,
+      status: 'in_review',
+      startedAt: new Date(Date.now() - 1000 * 60 * 60 * 36)
+    }
+  ]
+
+  const sample2: RequestRecord = {
+    id: ++requestSeed,
+    requestNumber: 'ZAP-2025-002',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48),
+    priority: 'pilne',
+    justification: 'Pilne zapotrzebowanie na serwery dla nowego projektu klienta. Termin wdrożenia: 2 tygodnie.',
+    hardwareItems: [
+      { id: ++hardwareSeed, name: 'Dell PowerEdge R750', quantity: 2, justification: 'Serwery produkcyjne dla projektu X.' },
+      { id: ++hardwareSeed, name: 'Switch Cisco Catalyst 9300', quantity: 1, justification: 'Infrastruktura sieciowa.' }
+    ],
+    softwareItems: [
+      { id: ++softwareSeed, name: 'VMware vSphere Enterprise', seats: 2, justification: 'Wirtualizacja serwerów.', duration: 'annual' },
+      { id: ++softwareSeed, name: 'Red Hat Enterprise Linux', seats: 4, justification: 'System operacyjny.', duration: 'annual' }
+    ],
+    approvals: approvals2,
+    status: 'in_review'
+  }
+
+  requests.value = [sample2, sample1]
   seeded.value = true
 })
 </script>
@@ -369,15 +414,55 @@ watchEffect(() => {
         </p>
 
         <form class="space-y-4" @submit.prevent="submitRequest">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-              <input v-model="form.includeHardware" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-              Sprzęt
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+              Typ wniosku
             </label>
-            <label class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-              <input v-model="form.includeSoftware" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-              Oprogramowanie
-            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label
+                class="relative flex items-center gap-3 rounded-lg border-2 p-4 cursor-pointer transition-all"
+                :class="form.includeHardware
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
+              >
+                <input
+                  v-model="form.includeHardware"
+                  type="checkbox"
+                  class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <svg class="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span class="font-semibold text-gray-900 dark:text-white">Sprzęt</span>
+                  </div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Laptopy, monitory, akcesoria</p>
+                </div>
+              </label>
+
+              <label
+                class="relative flex items-center gap-3 rounded-lg border-2 p-4 cursor-pointer transition-all"
+                :class="form.includeSoftware
+                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
+              >
+                <input
+                  v-model="form.includeSoftware"
+                  type="checkbox"
+                  class="h-5 w-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                />
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <svg class="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                    <span class="font-semibold text-gray-900 dark:text-white">Oprogramowanie</span>
+                  </div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Licencje, subskrypcje</p>
+                </div>
+              </label>
+            </div>
           </div>
 
           <div v-if="form.includeHardware" class="space-y-3">
@@ -568,42 +653,134 @@ watchEffect(() => {
         <div
           v-for="request in requests"
           :key="request.id"
-          class="space-y-3 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4"
+          class="space-y-4 rounded-lg border-2 bg-white dark:bg-gray-800 p-5 shadow-sm transition-all hover:shadow-md"
+          :class="request.priority === 'pilne'
+            ? 'border-red-300 dark:border-red-800'
+            : 'border-gray-200 dark:border-gray-700'"
         >
-          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ request.requestNumber }}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">Złożono: {{ formatDate(request.createdAt) }}</p>
+          <!-- Nagłówek wniosku -->
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <p class="text-base font-bold text-gray-900 dark:text-white">{{ request.requestNumber }}</p>
+                <span
+                  v-if="request.priority === 'pilne'"
+                  class="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-900/30 px-2 py-0.5 text-xs font-semibold text-red-700 dark:text-red-300"
+                >
+                  <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                  Pilne
+                </span>
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Złożono: {{ formatDate(request.createdAt) }}
+              </p>
             </div>
-            <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :class="statusClass(request.status)">
+            <span
+              class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap"
+              :class="statusClass(request.status)"
+            >
+              <span class="h-2 w-2 rounded-full" :class="request.status === 'approved' ? 'bg-green-600' : 'bg-amber-600'"></span>
               {{ request.status === 'approved' ? 'Zatwierdzony' : 'W akceptacji' }}
             </span>
           </div>
 
-          <p class="text-sm text-gray-700 dark:text-gray-300">
-            Aktualny etap: {{ currentOwner(request) }}
-          </p>
+          <!-- Uzasadnienie -->
+          <div class="rounded-md bg-gray-50 dark:bg-gray-900/50 p-3">
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Uzasadnienie:</p>
+            <p class="text-sm text-gray-700 dark:text-gray-300">{{ request.justification }}</p>
+          </div>
 
-          <ul class="space-y-1 text-sm text-gray-700 dark:text-gray-300">
-            <li
-              v-for="step in request.approvals"
-              :key="step.id"
-              class="flex items-center justify-between rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2"
-            >
-              <span>{{ step.approver.firstName }} {{ step.approver.lastName }}</span>
-              <span class="rounded-full px-3 py-1 text-xs font-semibold" :class="stepClass(step.status)">
-                {{ step.status === 'approved' ? 'OK' : step.status === 'in_review' ? 'W akceptacji' : 'Oczekuje' }}
-              </span>
-            </li>
-          </ul>
+          <!-- Pozycje sprzętowe -->
+          <div v-if="request.hardwareItems.length" class="space-y-2">
+            <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+              <svg class="h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Sprzęt ({{ request.hardwareItems.length }})
+            </p>
+            <ul class="space-y-1">
+              <li
+                v-for="item in request.hardwareItems"
+                :key="item.id"
+                class="text-xs text-gray-600 dark:text-gray-400 pl-6"
+              >
+                • {{ item.name }} <span class="text-gray-500">({{ item.quantity }} szt.)</span>
+              </li>
+            </ul>
+          </div>
 
+          <!-- Pozycje licencyjne -->
+          <div v-if="request.softwareItems.length" class="space-y-2">
+            <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+              <svg class="h-4 w-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              Oprogramowanie ({{ request.softwareItems.length }})
+            </p>
+            <ul class="space-y-1">
+              <li
+                v-for="item in request.softwareItems"
+                :key="item.id"
+                class="text-xs text-gray-600 dark:text-gray-400 pl-6"
+              >
+                • {{ item.name }} <span class="text-gray-500">({{ item.seats }} {{ item.seats === 1 ? 'licencja' : 'licencje' }}, {{ item.duration === 'annual' ? 'roczna' : item.duration === 'monthly' ? 'miesięczna' : 'bezterminowa' }})</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Ścieżka akceptacji -->
+          <div class="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+            <p class="text-xs font-semibold text-gray-700 dark:text-gray-300">
+              Ścieżka akceptacji:
+            </p>
+            <ul class="space-y-2">
+              <li
+                v-for="step in request.approvals"
+                :key="step.id"
+                class="flex items-center justify-between rounded-lg border px-3 py-2.5 transition-colors"
+                :class="step.status === 'approved'
+                  ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
+                  : step.status === 'in_review'
+                    ? 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'"
+              >
+                <div class="flex items-center gap-2">
+                  <span
+                    class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold"
+                    :class="step.status === 'approved'
+                      ? 'bg-green-600 text-white'
+                      : step.status === 'in_review'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300'"
+                  >
+                    {{ step.id }}
+                  </span>
+                  <div>
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">
+                      {{ step.approver.firstName }} {{ step.approver.lastName }}
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      {{ step.approver.position?.name || 'Brak danych' }}
+                    </p>
+                  </div>
+                </div>
+                <span class="rounded-full px-3 py-1 text-xs font-semibold" :class="stepClass(step.status)">
+                  {{ step.status === 'approved' ? '✓ Zaakceptowano' : step.status === 'in_review' ? '⏳ W akceptacji' : '⏸ Oczekuje' }}
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Przycisk symulacji -->
           <button
             v-if="request.status !== 'approved' && request.approvals.some(step => step.status === 'in_review')"
             type="button"
-            class="w-full rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 px-3 py-2 text-sm font-medium text-blue-700 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-900/50"
+            class="w-full rounded-lg border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 px-4 py-2.5 text-sm font-semibold text-blue-700 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
             @click="advanceRequest(request.id)"
           >
-            Symuluj akceptację bieżącego kroku
+            🔄 Symuluj akceptację bieżącego kroku
           </button>
         </div>
       </section>
