@@ -6,7 +6,8 @@ import { TreeChart } from 'echarts/charts'
 import {
   TitleComponent,
   TooltipComponent,
-  GridComponent
+  GridComponent,
+  ToolboxComponent
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 
@@ -16,7 +17,8 @@ echarts.use([
   TooltipComponent,
   GridComponent,
   TreeChart,
-  CanvasRenderer
+  CanvasRenderer,
+  ToolboxComponent
 ])
 
 interface Props {
@@ -39,7 +41,7 @@ const getDepartmentColor = (employee: Employee) => {
 // Convert employee hierarchy to ECharts tree data format
 const convertToTreeData = (employee: Employee): any => {
   const color = getDepartmentColor(employee)
-  
+
   const node: any = {
     name: `${employee.firstName} ${employee.lastName}`,
     value: employee.id,
@@ -49,35 +51,46 @@ const convertToTreeData = (employee: Employee): any => {
       borderWidth: 2
     },
     label: {
-      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
       borderColor: color,
-      borderWidth: 1,
-      borderRadius: 4,
-      padding: [8, 12],
+      borderWidth: 1.5,
+      borderRadius: 6,
+      padding: [6, 10],
       color: '#333',
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: 'bold',
+      width: 140,
+      overflow: 'truncate',
       formatter: (params: any) => {
         const emp = findEmployeeById(employee.id)
         if (!emp) return params.name
-        return `{name|${params.name}}\n{position|${emp.position?.name || ''}}\n{dept|${emp.department?.name || ''}}`
+        const fullName = `${emp.firstName} ${emp.lastName}`
+        const position = emp.position?.name || ''
+        const dept = emp.department?.name || ''
+        return `{name|${fullName}}\n{position|${position}}\n{dept|${dept}}`
       },
       rich: {
         name: {
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: 'bold',
           color: '#1f2937',
-          lineHeight: 20
+          lineHeight: 18,
+          width: 140,
+          overflow: 'truncate'
         },
         position: {
-          fontSize: 11,
+          fontSize: 10,
           color: '#6b7280',
-          lineHeight: 18
+          lineHeight: 16,
+          width: 140,
+          overflow: 'truncate'
         },
         dept: {
-          fontSize: 10,
+          fontSize: 9,
           color: '#9ca3af',
-          lineHeight: 16
+          lineHeight: 14,
+          width: 140,
+          overflow: 'truncate'
         }
       }
     },
@@ -86,7 +99,7 @@ const convertToTreeData = (employee: Employee): any => {
         const emp = findEmployeeById(params.value)
         if (!emp) return params.name
         return `
-          <div style="padding: 8px;">
+          <div style="padding: 8px; max-width: 250px;">
             <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${emp.firstName} ${emp.lastName}</div>
             <div style="font-size: 12px; color: #666; margin-bottom: 2px;">${emp.position?.name || ''}</div>
             <div style="font-size: 11px; color: #999;">${emp.department?.name || ''}</div>
@@ -138,43 +151,76 @@ const initChart = () => {
       triggerOn: 'mousemove',
       confine: true
     },
+    toolbox: {
+      show: true,
+      feature: {
+        restore: {
+          show: true,
+          title: 'Reset View'
+        },
+        saveAsImage: {
+          show: true,
+          title: 'Save as Image',
+          pixelRatio: 2
+        }
+      },
+      right: '5%',
+      top: '2%'
+    },
     series: [
       {
         type: 'tree',
         data: [treeData.value],
-        top: '5%',
-        left: '10%',
+        top: '8%',
+        left: '5%',
         bottom: '5%',
-        right: '20%',
-        symbolSize: 12,
+        right: '5%',
+        symbolSize: 14,
         orient: 'vertical',
         expandAndCollapse: true,
         initialTreeDepth: 3,
         animationDuration: 550,
         animationDurationUpdate: 750,
+        layout: 'orthogonal',
+        roam: true,
+        scaleLimit: {
+          min: 0.3,
+          max: 3
+        },
+        nodeGap: 40,
+        layerGap: 120,
         label: {
           position: 'top',
-          distance: 15,
+          distance: 25,
           verticalAlign: 'middle',
           align: 'center'
         },
         leaves: {
           label: {
             position: 'bottom',
+            distance: 25,
             verticalAlign: 'middle',
             align: 'center'
           }
         },
         lineStyle: {
-          color: '#ccc',
+          color: '#cbd5e1',
           width: 2,
           curveness: 0.5
         },
         emphasis: {
           focus: 'descendant',
           lineStyle: {
-            width: 3
+            width: 3,
+            color: '#3b82f6'
+          },
+          itemStyle: {
+            shadowBlur: 10,
+            shadowColor: 'rgba(0, 0, 0, 0.3)'
           }
+        },
+        itemStyle: {
+          borderWidth: 2
         }
       }
     ]
@@ -230,17 +276,18 @@ onUnmounted(() => {
           <ul class="list-disc list-inside space-y-1 text-xs">
             <li>Kliknij na pracownika aby zobaczyć szczegóły</li>
             <li>Kliknij na węzeł aby rozwinąć/zwinąć podwładnych</li>
-            <li>Użyj scroll aby przybliżyć/oddalić</li>
-            <li>Przeciągnij aby przesunąć widok</li>
+            <li>Użyj scroll myszki lub gesty pinch aby przybliżyć/oddalić (zoom: 0.3x - 3x)</li>
+            <li>Przeciągnij myszką aby przesunąć widok po całej strukturze</li>
+            <li>Użyj przycisków w prawym górnym rogu aby zresetować widok lub zapisać jako obraz</li>
           </ul>
         </div>
       </div>
     </div>
-    
-    <div 
-      ref="chartRef" 
-      class="w-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
-      style="height: 800px;"
+
+    <div
+      ref="chartRef"
+      class="w-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg"
+      style="height: 800px; cursor: grab;"
     />
   </div>
 </template>

@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
 const colorMode = useColorMode()
 const isUserMenuOpen = ref(false)
 const isMobileSidebarOpen = ref(false)
+
+// Computed for dark mode
+const isDark = computed(() => colorMode.value === 'dark')
 
 // Get current user from mock data
 const { getEmployees } = useMockData()
@@ -18,8 +21,26 @@ const vacationDaysUsed = 8
 const vacationDaysLeft = computed(() => vacationDaysTotal - vacationDaysUsed)
 const sickDaysThisYear = 3
 
+// Function to force text color updates when switching themes
+function forceTextColorUpdate() {
+  if (process.client) {
+    // Add a temporary class to force a DOM reflow
+    document.documentElement.classList.add('force-color-refresh')
+
+    // Use setTimeout to ensure the DOM has time to update
+    setTimeout(() => {
+      document.documentElement.classList.remove('force-color-refresh')
+    }, 50)
+  }
+}
+
+// Watch for dark mode changes and force text color updates
+watch(() => isDark.value, () => {
+  forceTextColorUpdate()
+})
+
 const toggleDarkMode = () => {
-  colorMode.value = colorMode.value === 'dark' ? 'light' : 'dark'
+  colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
 }
 
 const toggleUserMenu = () => {
@@ -32,10 +53,16 @@ const closeUserMenu = () => {
 
 const toggleMobileSidebar = () => {
   isMobileSidebarOpen.value = !isMobileSidebarOpen.value
+  if (isMobileSidebarOpen.value) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
 }
 
 const closeMobileSidebar = () => {
   isMobileSidebarOpen.value = false
+  document.body.style.overflow = ''
 }
 
 const handleLogout = async () => {
@@ -43,7 +70,7 @@ const handleLogout = async () => {
   navigateTo('/auth/login')
 }
 
-// Close dropdown when clicking outside
+// Close dropdown when clicking outside and handle route changes
 onMounted(() => {
   if (process.client) {
     document.addEventListener('click', (e) => {
@@ -52,6 +79,25 @@ onMounted(() => {
         isUserMenuOpen.value = false
       }
     })
+
+    // Close mobile sidebar on route change
+    const router = useRouter()
+    router.afterEach(() => {
+      closeMobileSidebar()
+
+      // Reset scroll position in main content area
+      const mainContent = document.querySelector('main')
+      if (mainContent) {
+        mainContent.scrollTop = 0
+      }
+    })
+  }
+})
+
+// Cleanup
+onBeforeUnmount(() => {
+  if (process.client) {
+    document.body.style.overflow = ''
   }
 })
 </script>
