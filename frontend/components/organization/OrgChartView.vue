@@ -13,6 +13,7 @@ const emit = defineEmits<{
 }>()
 
 const chartContainer = ref<HTMLDivElement | null>(null)
+const containerId = `chart-${Math.random().toString(36).substr(2, 9)}`
 let chartInstance: any = null
 
 // Mapa pracowników dla szybkiego dostępu
@@ -55,31 +56,46 @@ const flattenHierarchy = (employee: Employee, parentId: string | null = null): a
 }
 
 const initChart = () => {
-  if (!chartContainer.value) return
+  if (!chartContainer.value) {
+    console.error('OrgChartView: chartContainer is null')
+    return
+  }
+
+  if (!props.employee) {
+    console.error('OrgChartView: employee prop is null')
+    return
+  }
+
+  console.log('OrgChartView: Initializing chart with employee:', props.employee)
 
   // Wyczyść mapę pracowników
   employeeMap.clear()
 
   // Spłaszcz hierarchię
   const data = flattenHierarchy(props.employee)
+  console.log('OrgChartView: Flattened data:', data)
 
   const isDark = document.documentElement.classList.contains('dark')
 
-  // Utwórz lub zaktualizuj wykres
-  if (!chartInstance) {
-    chartInstance = new OrgChart()
+  // Wyczyść poprzedni wykres
+  if (chartContainer.value) {
+    chartContainer.value.innerHTML = ''
   }
 
-  chartInstance
-    .container(chartContainer.value)
-    .data(data)
-    .nodeWidth(() => 250)
-    .nodeHeight(() => 150)
-    .childrenMargin(() => 80)
-    .compactMarginBetween(() => 40)
-    .compactMarginPair(() => 60)
-    .neighbourMargin(() => 80)
-    .siblingsMargin(() => 80)
+  // Utwórz nowy wykres
+  chartInstance = new OrgChart()
+
+  try {
+    chartInstance
+      .container(`#${containerId}`)
+      .data(data)
+      .nodeWidth(() => 250)
+      .nodeHeight(() => 150)
+      .childrenMargin(() => 80)
+      .compactMarginBetween(() => 40)
+      .compactMarginPair(() => 60)
+      .neighbourMargin(() => 80)
+      .siblingsMargin(() => 80)
     .nodeContent((d: any) => {
       const employee = employeeMap.get(d.data.id)
       const bgColor = isDark ? '#1f2937' : '#ffffff'
@@ -153,21 +169,31 @@ const initChart = () => {
         </div>
       `
     })
-    .onNodeClick((d: any) => {
-      const employee = employeeMap.get(d)
-      if (employee) {
-        emit('selectEmployee', employee)
-        if (props.onSelectEmployee) {
-          props.onSelectEmployee(employee)
+      .onNodeClick((d: any) => {
+        const employee = employeeMap.get(d)
+        if (employee) {
+          emit('selectEmployee', employee)
+          if (props.onSelectEmployee) {
+            props.onSelectEmployee(employee)
+          }
         }
-      }
-    })
-    .render()
+      })
+      .render()
+
+    console.log('OrgChartView: Chart rendered successfully')
+  } catch (error) {
+    console.error('OrgChartView: Error rendering chart:', error)
+  }
 }
 
 onMounted(() => {
+  console.log('OrgChartView: Component mounted')
+  console.log('OrgChartView: chartContainer.value:', chartContainer.value)
+  console.log('OrgChartView: props.employee:', props.employee)
+
   // Opóźnienie dla pewności, że DOM jest gotowy
   setTimeout(() => {
+    console.log('OrgChartView: Calling initChart after timeout')
     initChart()
   }, 100)
 })
@@ -210,23 +236,19 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="w-full h-full bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-auto">
+  <div class="w-full h-full bg-white dark:bg-gray-800 rounded-lg shadow-lg">
     <div
+      :id="containerId"
       ref="chartContainer"
-      class="orgchart-container w-full h-full"
+      class="chart-container"
+      style="width: 100%; height: 100%; min-height: 600px;"
     />
   </div>
 </template>
 
 <style>
-.orgchart-container {
-  min-height: 600px;
-}
-
-/* Customizacja d3-org-chart */
-.orgchart-container svg {
-  width: 100%;
-  height: 100%;
+.chart-container {
+  overflow: auto;
 }
 </style>
 
