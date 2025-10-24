@@ -32,9 +32,9 @@ const chartRef = ref<HTMLDivElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
 let removeResizeListener: (() => void) | null = null
 
-const BASE_NODE_WIDTH = 220
-const BASE_LAYER_HEIGHT = 210
-const BASE_LABEL_WIDTH = 180
+const BASE_NODE_WIDTH = 280
+const BASE_LAYER_HEIGHT = 280
+const BASE_LABEL_WIDTH = 200
 const BASE_NAME_FONT = 13
 const BASE_POSITION_FONT = 11
 const BASE_DEPARTMENT_FONT = 10
@@ -50,17 +50,17 @@ const getDepartmentColor = (employee: Employee) => {
   return employee.department?.color || '#3b82f6'
 }
 
-const clampScale = (scale: number) => Math.min(1, Math.max(scale, 0.3))
+const clampScale = (scale: number) => Math.min(1.2, Math.max(scale, 0.4))
 
 const buildLabelConfig = (color: string) => {
   const scale = clampScale(currentVisualScale)
-  const labelWidth = Math.max(120, Math.round(BASE_LABEL_WIDTH * scale))
-  const nameFontSize = Math.max(10, Math.round(BASE_NAME_FONT * Math.max(scale, 0.75)))
-  const positionFontSize = Math.max(9, Math.round(BASE_POSITION_FONT * Math.max(scale, 0.7)))
-  const departmentFontSize = Math.max(8, Math.round(BASE_DEPARTMENT_FONT * Math.max(scale, 0.65)))
-  const primaryLineHeight = Math.round(18 * Math.max(scale, 0.7))
-  const secondaryLineHeight = Math.round(16 * Math.max(scale, 0.65))
-  const verticalPadding = Math.round(6 * Math.max(scale, 0.7))
+  const labelWidth = Math.max(140, Math.round(BASE_LABEL_WIDTH * scale))
+  const nameFontSize = Math.max(11, Math.round(BASE_NAME_FONT * Math.max(scale, 0.85)))
+  const positionFontSize = Math.max(10, Math.round(BASE_POSITION_FONT * Math.max(scale, 0.8)))
+  const departmentFontSize = Math.max(9, Math.round(BASE_DEPARTMENT_FONT * Math.max(scale, 0.75)))
+  const primaryLineHeight = Math.round(20 * Math.max(scale, 0.8))
+  const secondaryLineHeight = Math.round(18 * Math.max(scale, 0.75))
+  const verticalPadding = Math.round(8 * Math.max(scale, 0.8))
 
   return {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -183,10 +183,11 @@ const treeMetrics = computed(() => calculateTreeMetrics(props.employee))
 
 const computeLayoutMetrics = () => {
   const { maxDepth, maxBreadth } = treeMetrics.value
-  const nodeGap = 90 + maxBreadth * 14
-  const layerGap = 160 + maxDepth * 14
-  const requiredWidth = Math.max(maxBreadth, 1) * (BASE_NODE_WIDTH + nodeGap) + 240
-  const requiredHeight = Math.max(maxDepth + 1, 1) * (BASE_LAYER_HEIGHT + layerGap) + 260
+  // Zwiększone odstępy bazowe dla lepszej czytelności
+  const nodeGap = 150 + maxBreadth * 20
+  const layerGap = 220 + maxDepth * 20
+  const requiredWidth = Math.max(maxBreadth, 1) * (BASE_NODE_WIDTH + nodeGap) + 300
+  const requiredHeight = Math.max(maxDepth + 1, 1) * (BASE_LAYER_HEIGHT + layerGap) + 350
   return { nodeGap, layerGap, requiredWidth, requiredHeight }
 }
 
@@ -198,15 +199,16 @@ const getAutoScaleConfig = () => {
 
   const widthScale = containerWidth / requiredWidth
   const heightScale = containerHeight / requiredHeight
-  const autoScale = Math.max(MIN_SCALE_FLOOR, Math.min(1, widthScale, heightScale))
-  const minScale = Math.max(MIN_SCALE_FLOOR, autoScale * 0.5)
+  // Zwiększona początkowa skala dla lepszej widoczności
+  const autoScale = Math.max(MIN_SCALE_FLOOR, Math.min(0.85, widthScale, heightScale))
+  const minScale = Math.max(MIN_SCALE_FLOOR, autoScale * 0.4)
 
   return { autoScale, minScale }
 }
 
-const getSymbolSize = (scale: number) => Math.max(8, Math.round(18 * Math.max(scale, 0.55)))
-const getLineWidth = (scale: number) => Math.max(1, Number((2 * Math.max(scale, 0.6)).toFixed(1)))
-const getNodeBorderWidth = (scale: number) => Math.max(1, Number((2 * Math.max(scale, 0.6)).toFixed(1)))
+const getSymbolSize = (scale: number) => Math.max(10, Math.round(20 * Math.max(scale, 0.7)))
+const getLineWidth = (scale: number) => Math.max(1.5, Number((2.5 * Math.max(scale, 0.7)).toFixed(1)))
+const getNodeBorderWidth = (scale: number) => Math.max(1.5, Number((2.5 * Math.max(scale, 0.7)).toFixed(1)))
 
 const buildSeriesLabel = (scale: number, isLeaf = false) => {
   const effective = clampScale(scale)
@@ -440,17 +442,29 @@ onUnmounted(() => {
 })
 </script>
 
-<template>
-  <div class="w-full">
-    <div class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
-      <div
-        ref="chartRef"
-        class="w-full"
-        style="min-height: clamp(560px, 70vh, 820px); cursor: grab;"
-      />
-    </div>
-  </div>
-</template>
-
+<template>
+
+  <div class="w-full">
+
+    <div class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
+
+      <div
+
+        ref="chartRef"
+
+        class="w-full"
+
+        style="min-height: clamp(560px, 70vh, 820px); cursor: grab;"
+
+      />
+
+    </div>
+
+  </div>
+
+</template>
+
+
+
 
 
