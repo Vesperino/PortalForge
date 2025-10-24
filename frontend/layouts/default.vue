@@ -70,7 +70,7 @@ onMounted(() => {
 
 <template>
   <div class="app-layout">
-    <Sidebar :is-open="isMobileSidebarOpen" @close="closeMobileSidebar" />
+    <LayoutSidebar :is-open="isMobileSidebarOpen" @close="closeMobileSidebar" />
 
     <div class="app-main">
       <header class="app-header">
