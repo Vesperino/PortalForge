@@ -104,16 +104,6 @@ const buildLabelConfig = (color: string) => {
 const convertToTreeData = (employee: Employee): any => {
   const color = getDepartmentColor(employee)
 
-  const labelConfig = buildLabelConfig(color)
-  labelConfig.formatter = (params: any) => {
-    const emp = findEmployeeById(employee.id)
-    if (!emp) return params.name
-    const fullName = `${emp.firstName} ${emp.lastName}`
-    const position = emp.position?.name || ''
-    const dept = emp.department?.name || ''
-    return `{name|${fullName}}\n{position|${position}}\n{dept|${dept}}`
-  }
-
   const node: any = {
     name: `${employee.firstName} ${employee.lastName}`,
     value: employee.id,
@@ -122,7 +112,17 @@ const convertToTreeData = (employee: Employee): any => {
       borderColor: color,
       borderWidth: getNodeBorderWidth(currentVisualScale)
     },
-    label: labelConfig,
+    label: {
+      ...buildLabelConfig(color),
+      formatter: (params: any) => {
+        const emp = findEmployeeById(params.value)
+        if (!emp) return params.name
+        const fullName = `${emp.firstName} ${emp.lastName}`
+        const position = emp.position?.name || ''
+        const dept = emp.department?.name || ''
+        return `{name|${fullName}}\n{position|${position}}\n{dept|${dept}}`
+      }
+    },
     tooltip: {
       formatter: (params: any) => {
         const emp = findEmployeeById(params.value)
