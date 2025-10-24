@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import type { Employee } from '~/types'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
 
 definePageMeta({
   layout: 'default',
@@ -13,14 +11,13 @@ const { getOrganizationTree, getDepartments, getEmployees } = useMockData()
 const viewMode = ref<'tree' | 'departments' | 'list'>('tree')
 const selectedDepartment = ref<number | null>(null)
 const searchQuery = ref<string>('')
-const isExporting = ref(false)
-const treeContainerRef = ref<HTMLElement | null>(null)
 
 const organizationTree = getOrganizationTree()
 const departments = getDepartments()
 const allEmployees = getEmployees()
 
 const selectedEmployee = ref<Employee | null>(null)
+const showEmployeeModal = ref(false)
 
 const filteredEmployees = computed(() => {
   let filtered = allEmployees
@@ -45,10 +42,12 @@ const filteredEmployees = computed(() => {
 
 const selectEmployee = (employee: Employee) => {
   selectedEmployee.value = employee
+  showEmployeeModal.value = true
 }
 
-const closeDetails = () => {
-  selectedEmployee.value = null
+const closeEmployeeModal = () => {
+  showEmployeeModal.value = false
+  // Nie czyścimy selectedEmployee, żeby można było ponownie otworzyć
 }
 
 const getInitials = (employee: Employee) => {
@@ -59,236 +58,75 @@ const getEmployeesByDepartment = (departmentId: number) => {
   return allEmployees.filter(e => e.departmentId === departmentId)
 }
 
-const exportToPNG = async () => {
-  if (!treeContainerRef.value || viewMode.value !== 'tree') return
 
-  isExporting.value = true
-  try {
-    const canvas = await html2canvas(treeContainerRef.value, {
-      backgroundColor: '#ffffff',
-      scale: 2,
-      logging: false,
-      useCORS: true
-    })
 
-    const link = document.createElement('a')
-    link.download = `struktura-organizacyjna-${new Date().toISOString().split('T')[0]}.png`
-    link.href = canvas.toDataURL('image/png')
-    link.click()
-  } catch (error) {
-    console.error('Błąd podczas eksportu do PNG:', error)
-    alert('Wystąpił błąd podczas eksportu do PNG')
-  } finally {
-    isExporting.value = false
-  }
-}
 
-const exportToPDF = async () => {
-  if (!treeContainerRef.value || viewMode.value !== 'tree') return
-
-  isExporting.value = true
-  try {
-    const canvas = await html2canvas(treeContainerRef.value, {
-      backgroundColor: '#ffffff',
-      scale: 2,
-      logging: false,
-      useCORS: true
-    })
-
-    const imgData = canvas.toDataURL('image/png')
-    const pdf = new jsPDF({
-      orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
-      unit: 'px',
-      format: [canvas.width, canvas.height]
-    })
-
-    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
-    pdf.save(`struktura-organizacyjna-${new Date().toISOString().split('T')[0]}.pdf`)
-  } catch (error) {
-    console.error('Błąd podczas eksportu do PDF:', error)
-    alert('Wystąpił błąd podczas eksportu do PDF')
-  } finally {
-    isExporting.value = false
-  }
-}
-
-const exportToExcel = () => {
-  // Przygotuj dane do eksportu
-  const data = allEmployees.map(emp => ({
-    'Imię': emp.firstName,
-    'Nazwisko': emp.lastName,
-    'Email': emp.email,
-    'Telefon': emp.phone || '',
-    'Stanowisko': emp.position?.name || '',
-    'Dział': emp.department?.name || '',
-    'Przełożony': emp.supervisor ? `${emp.supervisor.firstName} ${emp.supervisor.lastName}` : ''
-  }))
-
-  if (data.length === 0) {
-    alert('Brak danych do eksportu')
-    return
-  }
-
-  // Konwertuj do CSV
-  const firstRow = data[0]!
-  const headers = Object.keys(firstRow)
-  const csv = [
-    headers.join(','),
-    ...data.map(row => headers.map(header => `"${row[header as keyof typeof row]}"`).join(','))
-  ].join('\n')
-
-  // Pobierz plik
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = `struktura-organizacyjna-${new Date().toISOString().split('T')[0]}.csv`
-  link.click()
-}
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-        Struktura organizacyjna
-      </h1>
-      <div class="flex gap-2">
-        <BaseButton
-          variant="secondary"
-          :disabled="isExporting"
-          @click="exportToExcel"
-        >
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Eksportuj do CSV
-        </BaseButton>
-        <BaseButton
-          v-if="viewMode === 'tree'"
-          variant="secondary"
-          :disabled="isExporting"
-          @click="exportToPNG"
-        >
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          Eksportuj do PNG
-        </BaseButton>
-        <BaseButton
-          v-if="viewMode === 'tree'"
-          variant="primary"
-          :disabled="isExporting"
-          :loading="isExporting"
-          @click="exportToPDF"
-        >
-          <svg v-if="!isExporting" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-          Eksportuj do PDF
-        </BaseButton>
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+          Struktura organizacyjna
+        </h1>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          {{ allEmployees.length }} pracowników w {{ departments.length }} działach
+        </p>
       </div>
     </div>
 
     <!-- View Mode Tabs -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-      <div class="flex flex-wrap gap-2 mb-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3">
+      <div class="flex flex-wrap gap-2">
         <button
           :class="[
-            'px-4 py-2 rounded-lg font-medium transition-colors',
+            'px-4 py-2 rounded-lg font-medium transition-colors text-sm',
             viewMode === 'tree'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           ]"
           @click="viewMode = 'tree'"
         >
+          <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
           Drzewo organizacyjne
         </button>
         <button
           :class="[
-            'px-4 py-2 rounded-lg font-medium transition-colors',
+            'px-4 py-2 rounded-lg font-medium transition-colors text-sm',
             viewMode === 'departments'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           ]"
           @click="viewMode = 'departments'"
         >
+          <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
           Według działów
         </button>
         <button
           :class="[
-            'px-4 py-2 rounded-lg font-medium transition-colors',
+            'px-4 py-2 rounded-lg font-medium transition-colors text-sm',
             viewMode === 'list'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           ]"
           @click="viewMode = 'list'"
         >
+          <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
           Lista pracowników
         </button>
       </div>
-
-      <!-- Search and Filters -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Szukaj pracownika
-          </label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <input
-              id="search"
-              v-model="searchQuery"
-              type="text"
-              placeholder="Imię, nazwisko, email..."
-              class="pl-10 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            >
-          </div>
-        </div>
-
-        <div v-if="viewMode === 'list'">
-          <label for="department" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Dział
-          </label>
-          <select
-            id="department"
-            v-model="selectedDepartment"
-            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-            <option :value="null">
-              Wszystkie działy
-            </option>
-            <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-              {{ dept.name }}
-            </option>
-          </select>
-        </div>
-      </div>
     </div>
 
-    <!-- Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-        <p class="text-sm text-gray-600 dark:text-gray-400">Liczba pracowników</p>
-        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ allEmployees.length }}</p>
-      </div>
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-        <p class="text-sm text-gray-600 dark:text-gray-400">Liczba działów</p>
-        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ departments.length }}</p>
-      </div>
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-        <p class="text-sm text-gray-600 dark:text-gray-400">Wyświetlane</p>
-        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ filteredEmployees.length }}</p>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-      <!-- Main Content Area -->
-      <div class="xl:col-span-2">
+    <!-- Main Content Area - Full Width -->
+    <div class="w-full">
         <!-- Departments View -->
         <div v-if="viewMode === 'departments'" class="space-y-4">
           <div
@@ -434,189 +272,197 @@ const exportToExcel = () => {
         </div>
 
         <!-- Tree View -->
-        <div v-else class="space-y-6">
-          <!-- Interactive ECharts Tree -->
-          <div v-if="organizationTree" ref="treeContainerRef">
-            <OrganizationTreeChart
+        <div v-else>
+          <div v-if="organizationTree" class="h-[calc(100vh-220px)]">
+            <OrgChartView
               :employee="organizationTree"
               :on-select-employee="selectEmployee"
+              @select-employee="selectEmployee"
             />
           </div>
 
-          <!-- Fallback: Static Tree (for export) -->
-          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                Statyczne drzewo (do eksportu)
-              </h3>
-              <button
-                class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                @click="() => {}"
-              >
-                Pokaż/Ukryj
-              </button>
-            </div>
-            <div v-if="organizationTree" class="min-w-max pb-8 hidden" id="static-tree">
-              <OrganizationTree
-                :employee="organizationTree"
-                :on-select-employee="selectEmployee"
-              />
-            </div>
-          </div>
-
-          <div v-if="!organizationTree" class="text-center py-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-            <p class="text-gray-500 dark:text-gray-400">
+          <div v-else class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+              Brak danych
+            </h3>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Brak danych o strukturze organizacyjnej
             </p>
           </div>
         </div>
       </div>
 
-      <!-- Employee Details Sidebar -->
-      <div class="xl:col-span-1">
-        <div
-          v-if="selectedEmployee"
-          class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 xl:sticky xl:top-6"
-        >
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-              Szczegóły pracownika
-            </h3>
-            <button
-              type="button"
-              class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
-              @click="closeDetails"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
 
-          <div class="space-y-4">
-            <!-- Avatar -->
-            <div class="flex justify-center">
-              <div class="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center text-2xl font-bold text-white">
-                {{ getInitials(selectedEmployee) }}
-              </div>
-            </div>
+    <!-- Employee Details Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showEmployeeModal && selectedEmployee"
+        class="fixed inset-0 z-50 overflow-y-auto"
+        @click.self="closeEmployeeModal"
+      >
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+          <!-- Background overlay -->
+          <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75" @click="closeEmployeeModal" />
 
-            <!-- Name & Position -->
-            <div class="text-center">
-              <h4 class="text-xl font-bold text-gray-900 dark:text-white">
-                {{ selectedEmployee.firstName }} {{ selectedEmployee.lastName }}
-              </h4>
-              <p class="text-gray-600 dark:text-gray-400">
-                {{ selectedEmployee.position?.name }}
-              </p>
-              <span class="inline-block mt-2 px-3 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                {{ selectedEmployee.department?.name }}
-              </span>
-            </div>
-
-            <!-- Contact Info -->
-            <div class="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <div class="flex-1 min-w-0">
-                  <p class="text-xs text-gray-500 dark:text-gray-400">Email</p>
-                  <a
-                    :href="`mailto:${selectedEmployee.email}`"
-                    class="text-sm text-blue-600 dark:text-blue-400 hover:underline truncate block"
-                  >
-                    {{ selectedEmployee.email }}
-                  </a>
-                </div>
-              </div>
-
-              <div v-if="selectedEmployee.phone" class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                <div class="flex-1 min-w-0">
-                  <p class="text-xs text-gray-500 dark:text-gray-400">Telefon</p>
-                  <a
-                    :href="`tel:${selectedEmployee.phone}`"
-                    class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    {{ selectedEmployee.phone }}
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <!-- Supervisor Info -->
-            <div v-if="selectedEmployee.supervisor" class="pt-4 border-t border-gray-200 dark:border-gray-700">
-              <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                Przełożony
-              </p>
-              <div
-                class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                @click="selectEmployee(selectedEmployee.supervisor)"
-              >
-                <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 font-semibold text-sm">
-                  {{ getInitials(selectedEmployee.supervisor) }}
-                </div>
-                <div>
-                  <p class="text-sm font-medium text-gray-900 dark:text-white">
-                    {{ selectedEmployee.supervisor.firstName }} {{ selectedEmployee.supervisor.lastName }}
-                  </p>
-                  <p class="text-xs text-gray-600 dark:text-gray-400">
-                    {{ selectedEmployee.supervisor.position?.name }}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Team Info -->
-            <div v-if="selectedEmployee.subordinates && selectedEmployee.subordinates.length > 0" class="pt-4 border-t border-gray-200 dark:border-gray-700">
-              <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                Zarządza zespołem
-              </p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                {{ selectedEmployee.subordinates.length }}
-                <span class="text-sm font-normal text-gray-600 dark:text-gray-400">
-                  {{ selectedEmployee.subordinates.length === 1 ? 'osoba' : 'osób' }}
-                </span>
-              </p>
-              <div class="space-y-2">
-                <div
-                  v-for="sub in selectedEmployee.subordinates.slice(0, 3)"
-                  :key="sub.id"
-                  class="flex items-center gap-2 text-sm p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                  @click="selectEmployee(sub)"
+          <!-- Modal panel -->
+          <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-white">
+                  Szczegóły pracownika
+                </h3>
+                <button
+                  type="button"
+                  class="text-white hover:text-gray-200 focus:outline-none"
+                  @click="closeEmployeeModal"
                 >
-                  <div class="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 font-semibold text-xs">
-                    {{ getInitials(sub) }}
-                  </div>
-                  <span class="text-gray-900 dark:text-white">{{ sub.firstName }} {{ sub.lastName }}</span>
-                </div>
-                <p v-if="selectedEmployee.subordinates.length > 3" class="text-xs text-gray-500 dark:text-gray-400 text-center">
-                  +{{ selectedEmployee.subordinates.length - 3 }} więcej
-                </p>
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Empty State -->
-        <div
-          v-else
-          class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center xl:sticky xl:top-6"
-        >
-          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-            Wybierz pracownika
-          </h3>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Kliknij na kartę pracownika, aby zobaczyć szczegóły.
-          </p>
+            <!-- Content -->
+            <div class="px-6 py-6 space-y-6">
+              <!-- Avatar & Basic Info -->
+              <div class="text-center">
+                <div class="inline-flex w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 items-center justify-center text-3xl font-bold text-white shadow-lg">
+                  {{ getInitials(selectedEmployee) }}
+                </div>
+                <h4 class="mt-4 text-2xl font-bold text-gray-900 dark:text-white">
+                  {{ selectedEmployee.firstName }} {{ selectedEmployee.lastName }}
+                </h4>
+                <p class="mt-1 text-gray-600 dark:text-gray-400">
+                  {{ selectedEmployee.position?.name }}
+                </p>
+                <span
+                  class="inline-block mt-3 px-4 py-1.5 text-sm font-medium rounded-full text-white shadow-sm"
+                  :style="{ backgroundColor: selectedEmployee.department?.color || '#3b82f6' }"
+                >
+                  {{ selectedEmployee.department?.name }}
+                </span>
+              </div>
+
+              <!-- Contact Info -->
+              <div class="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center gap-4">
+                  <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</p>
+                    <a
+                      :href="`mailto:${selectedEmployee.email}`"
+                      class="text-sm text-blue-600 dark:text-blue-400 hover:underline truncate block font-medium"
+                    >
+                      {{ selectedEmployee.email }}
+                    </a>
+                  </div>
+                </div>
+
+                <div v-if="selectedEmployee.phone" class="flex items-center gap-4">
+                  <div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Telefon</p>
+                    <a
+                      :href="`tel:${selectedEmployee.phone}`"
+                      class="text-sm text-green-600 dark:text-green-400 hover:underline font-medium"
+                    >
+                      {{ selectedEmployee.phone }}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Supervisor -->
+              <div v-if="selectedEmployee.supervisor" class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-3">
+                  Przełożony
+                </p>
+                <div
+                  class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                  @click="selectEmployee(selectedEmployee.supervisor)"
+                >
+                  <div class="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white font-semibold">
+                    {{ getInitials(selectedEmployee.supervisor) }}
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                      {{ selectedEmployee.supervisor.firstName }} {{ selectedEmployee.supervisor.lastName }}
+                    </p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400">
+                      {{ selectedEmployee.supervisor.position?.name }}
+                    </p>
+                  </div>
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Team -->
+              <div v-if="selectedEmployee.subordinates && selectedEmployee.subordinates.length > 0" class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-3">
+                  Zarządza zespołem
+                </p>
+                <div class="flex items-center gap-2 mb-4">
+                  <div class="text-3xl font-bold text-gray-900 dark:text-white">
+                    {{ selectedEmployee.subordinates.length }}
+                  </div>
+                  <span class="text-sm text-gray-600 dark:text-gray-400">
+                    {{ selectedEmployee.subordinates.length === 1 ? 'osoba' : selectedEmployee.subordinates.length < 5 ? 'osoby' : 'osób' }}
+                  </span>
+                </div>
+                <div class="space-y-2 max-h-48 overflow-y-auto">
+                  <div
+                    v-for="sub in selectedEmployee.subordinates"
+                    :key="sub.id"
+                    class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
+                    @click="selectEmployee(sub)"
+                  >
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 flex items-center justify-center text-gray-700 dark:text-gray-300 font-semibold text-sm">
+                      {{ getInitials(sub) }}
+                    </div>
+                    <div class="flex-1">
+                      <p class="text-sm font-medium text-gray-900 dark:text-white">
+                        {{ sub.firstName }} {{ sub.lastName }}
+                      </p>
+                      <p class="text-xs text-gray-600 dark:text-gray-400">
+                        {{ sub.position?.name }}
+                      </p>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4">
+              <button
+                type="button"
+                class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                @click="closeEmployeeModal"
+              >
+                Zamknij
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
