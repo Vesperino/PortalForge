@@ -54,6 +54,10 @@ export default defineNuxtConfig({
   },
 
   // Build configuration
+  build: {
+    transpile: ['echarts', 'vue-echarts'],
+  },
+
   vite: {
     build: {
       target: 'esnext',

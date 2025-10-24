@@ -16,6 +16,10 @@ const organizationTree = getOrganizationTree()
 const departments = getDepartments()
 const allEmployees = getEmployees()
 
+// Debug logging
+console.log('Organization Tree:', organizationTree)
+console.log('Organization Tree - has subordinates?:', organizationTree?.subordinates?.length)
+
 const selectedEmployee = ref<Employee | null>(null)
 const showEmployeeModal = ref(false)
 
