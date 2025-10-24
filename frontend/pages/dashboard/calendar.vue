@@ -192,7 +192,7 @@ const formatEventTime = (date: Date) => {
                   v-for="event in getEventsForDay(day).slice(0, 3)"
                   :key="event.id"
                   :class="[
-                    getEventTagColor(event.tags[0]),
+                    getEventTagColor(event.tags[0] || ''),
                     'text-white text-xs px-2 py-1 rounded truncate hover:opacity-80 transition'
                   ]"
                   :title="event.title"

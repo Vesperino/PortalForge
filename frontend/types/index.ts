@@ -6,9 +6,9 @@ export type EventTag = 'szkolenie' | 'impreza' | 'spotkanie' | 'meeting' | 'all-
 
 export type NewsCategory = 'announcement' | 'product' | 'hr' | 'tech' | 'event'
 
-export type DocumentCategory = 'regulamin' | 'wzór' | 'instrukcja' | 'procedura'
+export type DocumentCategory = 'policy' | 'procedure' | 'template' | 'report' | 'presentation' | 'manual'
 
-export type FileType = 'PDF' | 'DOCX' | 'XLSX' | 'PPTX'
+export type FileType = 'pdf' | 'docx' | 'xlsx' | 'pptx' | 'txt'
 
 export interface Department {
   id: number
@@ -77,7 +77,7 @@ export interface Document {
   name: string
   category: DocumentCategory
   fileType: FileType
-  size: string
+  size: number
   uploadedBy: number
   uploader?: Employee
   uploadedAt: Date

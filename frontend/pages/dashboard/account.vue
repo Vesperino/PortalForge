@@ -8,7 +8,12 @@ const authStore = useAuthStore()
 const { getEmployees, getNews, getDocuments } = useMockData()
 
 // Get a sample employee as the current user (in real app, this would come from auth store)
-const currentUser = getEmployees()[0]
+const employees = getEmployees()
+const currentUser = employees.length > 0 ? employees[0] : null
+
+if (!currentUser) {
+  throw new Error('No employees found')
+}
 
 const user = ref({
   firstName: currentUser.firstName,
@@ -30,7 +35,7 @@ const userDocuments = getDocuments().filter(doc => doc.uploadedBy === currentUse
 const stats = computed(() => ({
   newsPublished: userNews.length,
   documentsUploaded: userDocuments.length,
-  teamMembers: currentUser.subordinates?.length || 0,
+  teamMembers: currentUser?.subordinates?.length || 0,
   lastLogin: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) // Random date within last week
 }))
 
@@ -258,13 +263,13 @@ const logout = async () => {
     </div>
 
     <!-- Team Members -->
-    <div v-if="currentUser.subordinates && currentUser.subordinates.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+    <div v-if="currentUser?.subordinates && currentUser.subordinates.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
         Twój zespół
       </h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <div
-          v-for="member in currentUser.subordinates"
+          v-for="member in currentUser?.subordinates || []"
           :key="member.id"
           class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
         >
