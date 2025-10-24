@@ -32,9 +32,9 @@ const chartRef = ref<HTMLDivElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
 let removeResizeListener: (() => void) | null = null
 
-const BASE_NODE_WIDTH = 280
-const BASE_LAYER_HEIGHT = 280
-const BASE_LABEL_WIDTH = 200
+const BASE_NODE_WIDTH = 240
+const BASE_LAYER_HEIGHT = 240
+const BASE_LABEL_WIDTH = 190
 const BASE_NAME_FONT = 13
 const BASE_POSITION_FONT = 11
 const BASE_DEPARTMENT_FONT = 10
@@ -183,11 +183,11 @@ const treeMetrics = computed(() => calculateTreeMetrics(props.employee))
 
 const computeLayoutMetrics = () => {
   const { maxDepth, maxBreadth } = treeMetrics.value
-  // Zwiększone odstępy bazowe dla lepszej czytelności
-  const nodeGap = 150 + maxBreadth * 20
-  const layerGap = 220 + maxDepth * 20
-  const requiredWidth = Math.max(maxBreadth, 1) * (BASE_NODE_WIDTH + nodeGap) + 300
-  const requiredHeight = Math.max(maxDepth + 1, 1) * (BASE_LAYER_HEIGHT + layerGap) + 350
+  // Znacznie zwiększone odstępy, aby węzły się nie nakładały
+  const nodeGap = 250 + maxBreadth * 30  // Duży odstęp poziomy między węzłami
+  const layerGap = 280 + maxDepth * 25   // Duży odstęp pionowy między poziomami
+  const requiredWidth = Math.max(maxBreadth, 1) * (BASE_NODE_WIDTH + nodeGap) + 500
+  const requiredHeight = Math.max(maxDepth + 1, 1) * (BASE_LAYER_HEIGHT + layerGap) + 450
   return { nodeGap, layerGap, requiredWidth, requiredHeight }
 }
 
@@ -199,9 +199,9 @@ const getAutoScaleConfig = () => {
 
   const widthScale = containerWidth / requiredWidth
   const heightScale = containerHeight / requiredHeight
-  // Zwiększona początkowa skala dla lepszej widoczności
-  const autoScale = Math.max(MIN_SCALE_FLOOR, Math.min(0.85, widthScale, heightScale))
-  const minScale = Math.max(MIN_SCALE_FLOOR, autoScale * 0.4)
+  // Automatyczne dopasowanie skali, aby cały wykres był widoczny
+  const autoScale = Math.max(MIN_SCALE_FLOOR, Math.min(0.7, widthScale, heightScale))
+  const minScale = Math.max(MIN_SCALE_FLOOR, autoScale * 0.3)
 
   return { autoScale, minScale }
 }
