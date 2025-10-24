@@ -12,6 +12,14 @@ const emit = defineEmits<{
   selectEmployee: [employee: Employee]
 }>()
 
+// Pan and zoom functionality
+const chartContainer = ref<HTMLElement | null>(null)
+const chartContent = ref<HTMLElement | null>(null)
+const scale = ref(1)
+const position = ref({ x: 0, y: 0 })
+const isPanning = ref(false)
+const startPos = ref({ x: 0, y: 0 })
+
 // Store employee lookup map for click handling
 const employeeLookup = new Map<string, Employee>()
 
@@ -49,43 +57,260 @@ const handleNodeClick = (event: any) => {
     }
   }
 }
+
+// Pan functionality
+const handleMouseDown = (e: MouseEvent) => {
+  // Check if clicked on a node or node-related element
+  const target = e.target as HTMLElement
+  const isNode = target.closest('.custom-node') || target.closest('.p-organizationchart-node')
+
+  // Only pan with left mouse button when NOT clicking on nodes
+  if (e.button === 0 && !isNode) {
+    isPanning.value = true
+    startPos.value = {
+      x: e.clientX - position.value.x,
+      y: e.clientY - position.value.y
+    }
+    e.preventDefault()
+  }
+}
+
+const handleMouseMove = (e: MouseEvent) => {
+  if (isPanning.value) {
+    position.value = {
+      x: e.clientX - startPos.value.x,
+      y: e.clientY - startPos.value.y
+    }
+  }
+}
+
+const handleMouseUp = () => {
+  isPanning.value = false
+}
+
+const handleWheel = (e: WheelEvent) => {
+  e.preventDefault()
+  const delta = e.deltaY > 0 ? -0.1 : 0.1
+  const newScale = Math.max(0.5, Math.min(2, scale.value + delta))
+  scale.value = newScale
+}
+
+// Reset view
+const resetView = () => {
+  scale.value = 1
+  position.value = { x: 0, y: 0 }
+}
+
+// Computed transform style
+const transformStyle = computed(() => {
+  return `translate(${position.value.x}px, ${position.value.y}px) scale(${scale.value})`
+})
+
+// Add event listeners
+onMounted(() => {
+  if (chartContainer.value) {
+    chartContainer.value.addEventListener('wheel', handleWheel, { passive: false })
+    window.addEventListener('mouseup', handleMouseUp)
+    window.addEventListener('mousemove', handleMouseMove)
+  }
+})
+
+onUnmounted(() => {
+  if (chartContainer.value) {
+    chartContainer.value.removeEventListener('wheel', handleWheel)
+  }
+  window.removeEventListener('mouseup', handleMouseUp)
+  window.removeEventListener('mousemove', handleMouseMove)
+})
 </script>
 
 <template>
-  <div class="org-tree-chart-container">
-    <OrganizationChart
-      :value="data"
-      collapsible
-      selection-mode="single"
-      @node-select="handleNodeClick"
+  <div class="org-chart-wrapper">
+    <!-- Controls -->
+    <div class="chart-controls">
+      <button
+        class="control-btn"
+        @click="scale = Math.min(2, scale + 0.1)"
+        title="Powiększ"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+        </svg>
+      </button>
+      <button
+        class="control-btn"
+        @click="scale = Math.max(0.5, scale - 0.1)"
+        title="Pomniejsz"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+        </svg>
+      </button>
+      <button
+        class="control-btn"
+        @click="resetView"
+        title="Resetuj widok"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+      </button>
+      <div class="zoom-indicator">{{ Math.round(scale * 100) }}%</div>
+    </div>
+
+    <!-- Chart container with pan/zoom -->
+    <div
+      ref="chartContainer"
+      class="org-tree-chart-container"
+      :class="{ 'is-panning': isPanning }"
+      @mousedown="handleMouseDown"
     >
-      <template #person="slotProps">
-        <div
-          class="custom-node"
-          :style="{ borderColor: slotProps.node.data.color }"
+      <div
+        ref="chartContent"
+        class="org-tree-chart-content"
+        :style="{ transform: transformStyle }"
+      >
+        <OrganizationChart
+          :value="data"
+          collapsible
+          selection-mode="single"
+          @node-select="handleNodeClick"
         >
-          <div class="node-header" :style="{ backgroundColor: slotProps.node.data.color }">
-            <div class="node-name">{{ slotProps.node.data.name }}</div>
-          </div>
-          <div class="node-body">
-            <div class="node-title">{{ slotProps.node.data.title }}</div>
-            <div class="node-department" :style="{ color: slotProps.node.data.color }">
-              {{ slotProps.node.data.department }}
+          <template #person="slotProps">
+            <div
+              class="custom-node"
+              :style="{ borderColor: slotProps.node.data.color }"
+            >
+              <div class="node-header" :style="{ backgroundColor: slotProps.node.data.color }">
+                <div class="node-name">{{ slotProps.node.data.name }}</div>
+              </div>
+              <div class="node-body">
+                <div class="node-title">{{ slotProps.node.data.title }}</div>
+                <div class="node-department" :style="{ color: slotProps.node.data.color }">
+                  {{ slotProps.node.data.department }}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </template>
-    </OrganizationChart>
+          </template>
+        </OrganizationChart>
+      </div>
+    </div>
+
+    <div class="chart-hint">
+      💡 Użyj kółka myszy aby powiększyć/pomniejszyć, przeciągnij myszką aby przesunąć
+    </div>
   </div>
 </template>
 
 <style scoped>
-.org-tree-chart-container {
+.org-chart-wrapper {
+  position: relative;
   width: 100%;
-  overflow-x: auto;
-  padding: 20px;
+  height: 700px;
+  background: #f9fafb;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
+:global(.dark) .org-chart-wrapper {
+  background: #1f2937;
+}
+
+/* Controls */
+.chart-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+  background: white;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+:global(.dark) .chart-controls {
+  background: #374151;
+}
+
+.control-btn {
+  padding: 8px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.control-btn:hover {
+  background: #e5e7eb;
+  transform: scale(1.05);
+}
+
+:global(.dark) .control-btn {
+  background: #4b5563;
+  color: white;
+}
+
+:global(.dark) .control-btn:hover {
+  background: #6b7280;
+}
+
+.zoom-indicator {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+:global(.dark) .zoom-indicator {
+  color: #e5e7eb;
+}
+
+/* Chart container */
+.org-tree-chart-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: grab;
+  position: relative;
+}
+
+.org-tree-chart-container.is-panning {
+  cursor: grabbing;
+}
+
+.org-tree-chart-content {
+  transform-origin: center;
+  transition: transform 0.1s ease-out;
+  display: inline-block;
+  min-width: 100%;
+  min-height: 100%;
+  padding: 60px;
+}
+
+/* Hint */
+.chart-hint {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Custom nodes */
 .custom-node {
   width: 200px;
   border: 2px solid;
@@ -146,5 +371,36 @@ const handleNodeClick = (event: any) => {
 
 :global(.dark) .node-title {
   color: #9ca3af;
+}
+
+/* PrimeVue OrganizationChart connection lines - style the lines */
+:deep(.p-organizationchart-line-down),
+:deep(.p-organizationchart-line-left),
+:deep(.p-organizationchart-line-right) {
+  background-color: #cbd5e1;
+}
+
+:global(.dark) :deep(.p-organizationchart-line-down),
+:global(.dark) :deep(.p-organizationchart-line-left),
+:global(.dark) :deep(.p-organizationchart-line-right) {
+  background-color: #4b5563;
+}
+
+:deep(.p-organizationchart-line-top) {
+  border-top: 2px solid #cbd5e1;
+}
+
+:global(.dark) :deep(.p-organizationchart-line-top) {
+  border-top: 2px solid #4b5563;
+}
+
+/* Make lines more visible */
+:deep(.p-organizationchart-lines) {
+  opacity: 1;
+}
+
+:deep(.p-organizationchart-node-content) {
+  border: none !important;
+  padding: 0 !important;
 }
 </style>
