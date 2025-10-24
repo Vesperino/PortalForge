@@ -166,38 +166,42 @@ const initChart = () => {
 }
 
 onMounted(() => {
-  nextTick(() => {
+  // Opóźnienie dla pewności, że DOM jest gotowy
+  setTimeout(() => {
     initChart()
-  })
+  }, 100)
 })
 
 watch(() => props.employee, () => {
-  nextTick(() => {
+  setTimeout(() => {
     initChart()
-  })
+  }, 100)
 }, { deep: true })
 
 // Obsługa dark mode
 const isDark = ref(false)
+let darkModeObserver: MutationObserver | null = null
+
 onMounted(() => {
   isDark.value = document.documentElement.classList.contains('dark')
-  
-  const observer = new MutationObserver(() => {
+
+  darkModeObserver = new MutationObserver(() => {
     isDark.value = document.documentElement.classList.contains('dark')
-    initChart() // Przerysuj wykres przy zmianie motywu
+    setTimeout(() => {
+      initChart()
+    }, 100)
   })
-  
-  observer.observe(document.documentElement, {
+
+  darkModeObserver.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['class']
-  })
-  
-  onUnmounted(() => {
-    observer.disconnect()
   })
 })
 
 onUnmounted(() => {
+  if (darkModeObserver) {
+    darkModeObserver.disconnect()
+  }
   if (chartContainer.value) {
     chartContainer.value.innerHTML = ''
   }
