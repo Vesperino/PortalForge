@@ -366,7 +366,7 @@ onUnmounted(() => {
 
 /* Vertical lines (down) */
 :deep(.p-organizationchart-line-down) {
-  background-color: #94a3b8;
+  background-color: #475569;
   width: 2px;
   height: 20px;
   margin: 0 auto;
@@ -375,14 +375,14 @@ onUnmounted(() => {
 /* Horizontal lines (left and right connectors) */
 :deep(.p-organizationchart-line-left),
 :deep(.p-organizationchart-line-right) {
-  background-color: #94a3b8;
+  background-color: #475569;
   height: 2px;
   width: 100%;
 }
 
 /* Top border for child nodes */
 :deep(.p-organizationchart-line-top) {
-  border-top: 2px solid #94a3b8;
+  border-top: 2px solid #475569;
   height: 20px;
 }
 
@@ -390,11 +390,11 @@ onUnmounted(() => {
 :global(.dark) :deep(.p-organizationchart-line-down),
 :global(.dark) :deep(.p-organizationchart-line-left),
 :global(.dark) :deep(.p-organizationchart-line-right) {
-  background-color: #64748b;
+  background-color: #94a3b8;
 }
 
 :global(.dark) :deep(.p-organizationchart-line-top) {
-  border-top-color: #64748b;
+  border-top-color: #94a3b8;
 }
 
 /* Ensure lines container is visible */
