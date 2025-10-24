@@ -24,24 +24,40 @@ const emit = defineEmits<{
 const colorMode = useColorMode()
 const isDark = computed(() => colorMode.value === 'dark')
 
-const chartRef = ref<InstanceType<typeof VueECharts> | null>(null)
 const chartInstance = ref<EChartsType | null>(null)
+const employeeLookup = new Map<number, Employee>()
 
-const handleNodeSelect = (employee: Employee) => {
-  emit('selectEmployee', employee)
-  if (props.onSelectEmployee) {
-    props.onSelectEmployee(employee)
+const handleNodeSelect = (employeeId: number) => {
+  const employee = employeeLookup.get(employeeId)
+  if (employee) {
+    emit('selectEmployee', employee)
+    if (props.onSelectEmployee) {
+      props.onSelectEmployee(employee)
+    }
   }
 }
 
 const handleChartNodeClick = (params: any) => {
-  const employee = params?.data?.originalEmployee as Employee | undefined
-  if (employee) {
-    handleNodeSelect(employee)
+  const employeeId = params?.data?.employeeId as number | undefined
+  if (employeeId !== undefined) {
+    handleNodeSelect(employeeId)
   }
 }
 
 const buildTreeNode = (employee: Employee, darkMode: boolean): any => {
+  employeeLookup.set(employee.id, employee)
+
+  const safeEmployee = {
+    id: employee.id,
+    firstName: employee.firstName,
+    lastName: employee.lastName,
+    email: employee.email ?? '',
+    phone: employee.phone ?? '',
+    positionName: employee.position?.name ?? '',
+    departmentName: employee.department?.name ?? '',
+    departmentColor: employee.department?.color ?? '#3b82f6'
+  }
+
   const departmentName = employee.department?.name ?? ''
   const departmentColor = employee.department?.color ?? '#3b82f6'
   const positionName = employee.position?.name ?? ''
@@ -58,11 +74,12 @@ const buildTreeNode = (employee: Employee, darkMode: boolean): any => {
   const node: any = {
     name: `${employee.firstName} ${employee.lastName}`,
     value: employee.id,
+    employeeId: employee.id,
     rawFullName: `${employee.firstName} ${employee.lastName}`,
     rawPosition: positionName,
     rawDepartment: departmentName,
     departmentColor,
-    originalEmployee: employee,
+    originalEmployee: safeEmployee,
     children,
     symbol: 'circle',
     symbolSize: 18,
@@ -123,6 +140,7 @@ const chartOptions = computed<EChartsOption>(() => {
     return { series: [] }
   }
 
+  employeeLookup.clear()
   const treeData = buildTreeNode(props.employee, isDark.value)
 
   const linkColor = isDark.value ? '#4b5563' : '#d1d5db'
@@ -226,7 +244,6 @@ onBeforeUnmount(() => {
 <template>
   <div class="w-full h-full bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
     <VueECharts
-      ref="chartRef"
       class="org-chart-container"
       :option="chartOptions"
       :autoresize="true"
