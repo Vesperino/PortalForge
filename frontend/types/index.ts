@@ -39,6 +39,8 @@ export interface Employee {
   avatar?: string
   role: UserRole
   subordinates?: Employee[]
+  yearsOfService?: number
+  hireDate?: Date
 }
 
 export interface Event {

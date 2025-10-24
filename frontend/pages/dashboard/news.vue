@@ -145,7 +145,8 @@ const getCategoryLabel = (category: string) => {
       <article
         v-for="news in filteredNews"
         :key="news.id"
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+        @click="navigateTo(`/dashboard/news/${news.id}`)"
       >
         <!-- News Image -->
         <div v-if="news.imageUrl" class="h-56 overflow-hidden">

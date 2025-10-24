@@ -246,7 +246,7 @@ Dziękujemy Beacie i zespołowi HR za organizację! Czekamy na kolejne wyjazdy i
 
 📸 **Zdjęcia dostępne na dysku firmowym:** /Team/Events/2025/Paintball
     `,
-    imageUrl: 'https://images.unsplash.com/photo-1526332926088-58d2d0a8e3cd?w=800&h=600&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1628277613967-6abca504d0ac?w=800&h=600&fit=crop',
     authorId: 29,
     createdAt: addDays(-2),
     views: 198,
