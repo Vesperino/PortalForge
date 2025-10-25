@@ -2,8 +2,8 @@
 import type { Event } from '~/types'
 
 definePageMeta({
-  layout: 'default',
-  middleware: ['auth']
+  layout: 'default'
+  // middleware: ['auth'] // Disabled for testing
 })
 
 const { getEvents, getEventsByMonth } = useMockData()
