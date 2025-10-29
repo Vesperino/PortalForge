@@ -14,13 +14,13 @@ export function useAuth() {
 
   async function login(email: string, password: string) {
     try {
-      const response = await $fetch<LoginResponse>(`${apiUrl}/api/auth/login`, {
+      const response = await $fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
         body: {
           email,
           password
         }
-      })
+      }) as LoginResponse
 
       // Zapisz tokeny
       authStore.setTokens(response.accessToken, response.refreshToken)
@@ -61,12 +61,12 @@ export function useAuth() {
         throw new Error('No refresh token available')
       }
 
-      const response = await $fetch<{ accessToken: string; refreshToken: string }>(`${apiUrl}/api/auth/refresh-token`, {
+      const response = await $fetch(`${apiUrl}/api/auth/refresh-token`, {
         method: 'POST',
         body: {
           refreshToken: authStore.refreshToken
         }
-      })
+      }) as { accessToken: string; refreshToken: string }
 
       authStore.setTokens(response.accessToken, response.refreshToken)
 
