@@ -6,7 +6,7 @@ using PortalForge.Domain.Entities;
 
 namespace PortalForge.Application.UseCases.News.Queries.GetAllNews;
 
-public class GetAllNewsQueryHandler : IRequestHandler<GetAllNewsQuery, IEnumerable<NewsDto>>
+public class GetAllNewsQueryHandler : IRequestHandler<GetAllNewsQuery, PaginatedNewsResponse>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<GetAllNewsQueryHandler> _logger;
@@ -19,39 +19,60 @@ public class GetAllNewsQueryHandler : IRequestHandler<GetAllNewsQuery, IEnumerab
         _logger = logger;
     }
 
-    public async Task<IEnumerable<NewsDto>> Handle(GetAllNewsQuery request, CancellationToken cancellationToken)
+    public async Task<PaginatedNewsResponse> Handle(GetAllNewsQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Fetching all news, Category filter: {Category}", request.Category ?? "None");
+        _logger.LogInformation(
+            "Fetching news - Category: {Category}, Page: {PageNumber}, Size: {PageSize}",
+            request.Category ?? "None",
+            request.PageNumber,
+            request.PageSize);
 
-        IEnumerable<Domain.Entities.News> newsList;
+        IEnumerable<Domain.Entities.News> allNews;
 
         if (!string.IsNullOrEmpty(request.Category) && Enum.TryParse<NewsCategory>(request.Category, true, out var category))
         {
-            newsList = await _unitOfWork.NewsRepository.GetByCategoryAsync(category);
+            allNews = await _unitOfWork.NewsRepository.GetByCategoryAsync(category);
         }
         else
         {
-            newsList = await _unitOfWork.NewsRepository.GetAllAsync();
+            allNews = await _unitOfWork.NewsRepository.GetAllAsync();
         }
 
-        var newsDto = newsList.Select(n => new NewsDto
+        var totalCount = allNews.Count();
+
+        // Apply pagination
+        var paginatedNews = allNews
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .Select(n => new NewsDto
+            {
+                Id = n.Id,
+                Title = n.Title,
+                Content = n.Content,
+                Excerpt = n.Excerpt,
+                ImageUrl = n.ImageUrl,
+                AuthorId = n.AuthorId,
+                AuthorName = n.Author != null ? n.Author.FullName : "Unknown",
+                CreatedAt = n.CreatedAt,
+                UpdatedAt = n.UpdatedAt,
+                Views = n.Views,
+                Category = n.Category.ToString(),
+                EventId = n.EventId
+            })
+            .ToList();
+
+        _logger.LogInformation(
+            "Fetched {Count} of {TotalCount} news items (Page {PageNumber})",
+            paginatedNews.Count,
+            totalCount,
+            request.PageNumber);
+
+        return new PaginatedNewsResponse
         {
-            Id = n.Id,
-            Title = n.Title,
-            Content = n.Content,
-            Excerpt = n.Excerpt,
-            ImageUrl = n.ImageUrl,
-            AuthorId = n.AuthorId,
-            AuthorName = n.Author != null ? n.Author.FullName : "Unknown",
-            CreatedAt = n.CreatedAt,
-            UpdatedAt = n.UpdatedAt,
-            Views = n.Views,
-            Category = n.Category.ToString(),
-            EventId = n.EventId
-        });
-
-        _logger.LogInformation("Fetched {Count} news items", newsDto.Count());
-
-        return newsDto;
+            Items = paginatedNews,
+            TotalCount = totalCount,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize
+        };
     }
 }

@@ -3,7 +3,9 @@ using PortalForge.Application.UseCases.News.DTOs;
 
 namespace PortalForge.Application.UseCases.News.Queries.GetAllNews;
 
-public class GetAllNewsQuery : IRequest<IEnumerable<NewsDto>>
+public class GetAllNewsQuery : IRequest<PaginatedNewsResponse>
 {
     public string? Category { get; set; }
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Application.UseCases.News.Commands.CreateNews;
 using PortalForge.Application.UseCases.News.Commands.DeleteNews;
+using PortalForge.Application.UseCases.News.Commands.SeedNewsData;
 using PortalForge.Application.UseCases.News.Commands.UpdateNews;
 using PortalForge.Application.UseCases.News.DTOs;
 using PortalForge.Application.UseCases.News.Queries.GetAllNews;
@@ -27,9 +28,17 @@ public class NewsController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<NewsDto>>> GetAll([FromQuery] string? category = null)
+    public async Task<ActionResult<PaginatedNewsResponse>> GetAll(
+        [FromQuery] string? category = null,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var query = new GetAllNewsQuery { Category = category };
+        var query = new GetAllNewsQuery
+        {
+            Category = category,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
         var result = await _mediator.Send(query);
         return Ok(result);
     }
@@ -104,5 +113,14 @@ public class NewsController : ControllerBase
         var command = new DeleteNewsCommand { NewsId = id };
         await _mediator.Send(command);
         return NoContent();
+    }
+
+    [HttpPost("seed")]
+    [AllowAnonymous]
+    public async Task<ActionResult<int>> SeedData()
+    {
+        var command = new SeedNewsDataCommand();
+        var count = await _mediator.Send(command);
+        return Ok(new { message = $"Seeded {count} news articles", count });
     }
 }
