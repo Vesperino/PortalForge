@@ -12,10 +12,14 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<News> News { get; set; }
+    public DbSet<Event> Events { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new NewsConfiguration());
+        modelBuilder.ApplyConfiguration(new EventConfiguration());
         base.OnModelCreating(modelBuilder);
     }
 }
