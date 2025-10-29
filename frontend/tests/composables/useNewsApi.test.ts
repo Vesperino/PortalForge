@@ -1,30 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
 import { useNewsApi } from '~/composables/useNewsApi'
-
-// Mock the global $fetch
-global.$fetch = vi.fn()
-
-// Mock useRuntimeConfig
-vi.mock('#app', () => ({
-  useRuntimeConfig: () => ({
-    public: {
-      apiUrl: 'http://localhost:5155'
-    }
-  }),
-  useAuth: () => ({
-    data: {
-      value: {
-        session: {
-          access_token: 'mock-token'
-        }
-      }
-    }
-  })
-}))
+import { useAuthStore } from '~/stores/auth'
 
 describe('useNewsApi', () => {
   beforeEach(() => {
+    // Create a fresh pinia instance for each test
+    setActivePinia(createPinia())
     vi.clearAllMocks()
+
+    // Setup auth store with mock token
+    const authStore = useAuthStore()
+    authStore.accessToken = 'mock-token'
   })
 
   describe('fetchAllNews', () => {
@@ -35,22 +22,22 @@ describe('useNewsApi', () => {
           title: 'Test News 1',
           content: 'Content 1',
           excerpt: 'Excerpt 1',
-          authorId: '123',
-          authorName: 'John Doe',
-          createdAt: new Date().toISOString(),
+          authorId: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
           views: 10,
-          category: 'Announcement'
+          category: 'announcement'
         },
         {
           id: 2,
           title: 'Test News 2',
           content: 'Content 2',
           excerpt: 'Excerpt 2',
-          authorId: '456',
-          authorName: 'Jane Smith',
-          createdAt: new Date().toISOString(),
+          authorId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
           views: 5,
-          category: 'Product'
+          category: 'product'
         }
       ]
 
@@ -77,11 +64,11 @@ describe('useNewsApi', () => {
           title: 'HR News',
           content: 'HR Content',
           excerpt: 'HR Excerpt',
-          authorId: '123',
-          authorName: 'John Doe',
-          createdAt: new Date().toISOString(),
+          authorId: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
           views: 10,
-          category: 'Hr'
+          category: 'hr'
         }
       ]
 
@@ -105,11 +92,11 @@ describe('useNewsApi', () => {
         title: 'Test News',
         content: 'Test Content',
         excerpt: 'Test Excerpt',
-        authorId: '123',
-        authorName: 'John Doe',
-        createdAt: new Date().toISOString(),
+        authorId: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
         views: 10,
-        category: 'Announcement'
+        category: 'announcement'
       }
 
       global.$fetch = vi.fn().mockResolvedValue(mockNews)
