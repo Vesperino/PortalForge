@@ -5,7 +5,7 @@ interface Props {
   isOpen?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const _props = withDefaults(defineProps<Props>(), {
   isOpen: false
 })
 
@@ -38,7 +38,7 @@ const isActive = (path: string) => route.path === path
   <aside class="app-sidebar" :class="{ 'is-open': isOpen }">
     <div class="sidebar-header">
       <h2 class="sidebar-logo">PortalForge</h2>
-      <button class="sidebar-close-btn" @click="emit('close')" aria-label="Zamknij menu">
+      <button class="sidebar-close-btn" aria-label="Zamknij menu" @click="emit('close')">
         ×
       </button>
     </div>

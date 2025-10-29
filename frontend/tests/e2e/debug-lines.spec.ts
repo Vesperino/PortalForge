@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test } from '@playwright/test'
 
 test.describe('Debug Organization Chart Lines', () => {
   test('inspect chart HTML structure and CSS', async ({ page }) => {

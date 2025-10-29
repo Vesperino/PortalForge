@@ -385,7 +385,7 @@ const escalateToSecondary = ref(true)
 
 // Request type selection with search
 const requestTypeSearch = ref('')
-const showRequestTypeDropdown = ref(false)
+const _showRequestTypeDropdown = ref(false)
 
 // Requests list
 const requests = ref<RequestRecord[]>([])
@@ -511,7 +511,7 @@ const getStepBadgeClass = (status: StepStatus) => {
   }
 }
 
-const getStepStatusLabel = (status: StepStatus) => {
+const _getStepStatusLabel = (status: StepStatus) => {
   switch (status) {
     case 'approved': return 'Zatwierdzony'
     case 'in_review': return 'W trakcie'
@@ -1070,7 +1070,8 @@ watchEffect(() => {
                     </div>
                   </td>
                   <td class="px-6 py-4">
-                    <span :class="[
+                    <span
+:class="[
                       'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
                       reqType.category === 'hardware' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
                       reqType.category === 'software' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
@@ -1089,8 +1090,8 @@ watchEffect(() => {
                   </td>
                   <td class="px-6 py-4 text-right">
                     <button
-                      @click="selectRequestType(reqType.id)"
                       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
+                      @click="selectRequestType(reqType.id)"
                     >
                       Wybierz
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1153,7 +1154,7 @@ watchEffect(() => {
                 :placeholder="field.placeholder"
                 :required="field.required"
                 class="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-3 text-base text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-              />
+              >
 
               <!-- Textarea -->
               <textarea
@@ -1175,7 +1176,7 @@ watchEffect(() => {
                 :min="field.min"
                 :max="field.max"
                 class="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-3 text-base text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-              />
+              >
 
               <!-- Select -->
               <select
@@ -1197,7 +1198,7 @@ watchEffect(() => {
                 type="date"
                 :required="field.required"
                 class="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-3 text-base text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-              />
+              >
 
               <!-- Checkbox -->
               <label v-if="field.type === 'checkbox'" class="flex items-center gap-3 cursor-pointer">
@@ -1205,7 +1206,7 @@ watchEffect(() => {
                   v-model="(formData[field.id] as boolean)"
                   type="checkbox"
                   class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
+                >
                 <span class="text-sm text-gray-700 dark:text-gray-300">{{ field.label }}</span>
               </label>
             </div>
@@ -1299,7 +1300,8 @@ watchEffect(() => {
           <!-- Priority -->
           <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
             <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Priorytet</h3>
-            <span :class="[
+            <span
+:class="[
               'inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold',
               priority === 'pilne' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
             ]">
@@ -1526,7 +1528,8 @@ watchEffect(() => {
                   'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20'
                 ]"
               >
-                <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg"
+                <div
+class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg"
                   :class="[
                     approval.status === 'approved' ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300' :
                     approval.status === 'in_review' ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300' :
@@ -1569,7 +1572,8 @@ watchEffect(() => {
                   <div v-if="approval.surveyScore !== undefined" class="mt-3 p-3 rounded-lg bg-gray-100 dark:bg-gray-800">
                     <div class="flex items-center justify-between">
                       <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Wynik testu:</span>
-                      <span :class="[
+                      <span
+:class="[
                         'text-sm font-bold',
                         approval.surveyPassed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                       ]">

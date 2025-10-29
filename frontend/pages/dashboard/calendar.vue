@@ -6,7 +6,7 @@ definePageMeta({
   // middleware: ['auth'] // Disabled for testing
 })
 
-const { getEvents, getEventsByMonth } = useMockData()
+const { getEvents: _getEvents, getEventsByMonth } = useMockData()
 const router = useRouter()
 
 const currentDate = ref(new Date())

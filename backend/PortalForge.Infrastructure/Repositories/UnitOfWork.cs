@@ -9,6 +9,8 @@ public class UnitOfWork : IUnitOfWork
     private readonly ApplicationDbContext _context;
     private IDbContextTransaction? _transaction;
     private IUserRepository? _userRepository;
+    private INewsRepository? _newsRepository;
+    private IEventRepository? _eventRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -17,6 +19,12 @@ public class UnitOfWork : IUnitOfWork
 
     public IUserRepository UserRepository =>
         _userRepository ??= new UserRepository(_context);
+
+    public INewsRepository NewsRepository =>
+        _newsRepository ??= new NewsRepository(_context);
+
+    public IEventRepository EventRepository =>
+        _eventRepository ??= new EventRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {

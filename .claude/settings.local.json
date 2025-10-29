@@ -46,7 +46,11 @@
       "Bash(npx vue-tsc:*)",
       "Bash(cat:*)",
       "Bash(timeout 5 bash:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(dotnet tool restore:*)",
+      "Bash(timeout 8 bash:*)",
+      "Bash(npm run test:e2e:*)",
+      "Bash(timeout 10 bash:*)"
     ],
     "deny": [],
     "ask": []
