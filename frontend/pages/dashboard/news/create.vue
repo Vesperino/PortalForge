@@ -4,7 +4,7 @@ import type { NewsCategory } from '~/types'
 
 definePageMeta({
   middleware: 'auth',
-  layout: 'dashboard'
+  layout: 'default'
 })
 
 const { createNews } = useNewsApi()

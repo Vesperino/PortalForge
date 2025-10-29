@@ -22,49 +22,58 @@ export function useNewsApi() {
   const config = useRuntimeConfig()
   const apiUrl = config.public.apiUrl || 'http://localhost:5155'
 
-  const { data: authData } = useAuth()
+  const authStore = useAuthStore()
 
-  const getAuthHeaders = () => {
-    const token = authData.value?.session?.access_token
-    return token ? { Authorization: `Bearer ${token}` } : {}
+  const getAuthHeaders = (): Record<string, string> | undefined => {
+    const token = authStore.accessToken
+
+    if (token) {
+      return { Authorization: `Bearer ${token}` }
+    }
+    return undefined
   }
 
   async function fetchAllNews(category?: NewsCategory): Promise<News[]> {
     const query = category ? `?category=${category}` : ''
+    const headers = getAuthHeaders()
     const response = await $fetch<News[]>(`${apiUrl}/api/news${query}`, {
-      headers: getAuthHeaders()
+      headers
     })
     return response
   }
 
   async function fetchNewsById(id: number): Promise<News> {
+    const headers = getAuthHeaders()
     const response = await $fetch<News>(`${apiUrl}/api/news/${id}`, {
-      headers: getAuthHeaders()
+      headers
     })
     return response
   }
 
   async function createNews(request: CreateNewsRequest): Promise<number> {
+    const headers = getAuthHeaders()
     const response = await $fetch<number>(`${apiUrl}/api/news`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers,
       body: request
     })
     return response
   }
 
   async function updateNews(id: number, request: UpdateNewsRequest): Promise<void> {
+    const headers = getAuthHeaders()
     await $fetch(`${apiUrl}/api/news/${id}`, {
       method: 'PUT',
-      headers: getAuthHeaders(),
+      headers,
       body: request
     })
   }
 
   async function deleteNews(id: number): Promise<void> {
+    const headers = getAuthHeaders()
     await $fetch(`${apiUrl}/api/news/${id}`, {
       method: 'DELETE',
-      headers: getAuthHeaders()
+      headers
     })
   }
 

@@ -130,6 +130,13 @@ const thisMonthCount = computed(() => {
     return createdDate.getMonth() === now.getMonth() && createdDate.getFullYear() === now.getFullYear()
   }).length
 })
+
+const getAuthorName = (news: News) => {
+  if (news.author) {
+    return `${news.author.firstName} ${news.author.lastName}`
+  }
+  return 'Unknown'
+}
 </script>
 
 <template>
@@ -273,7 +280,7 @@ const thisMonthCount = computed(() => {
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    {{ news.authorName || 'Unknown' }}
+                    {{ getAuthorName(news) }}
                   </span>
                   <span class="flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

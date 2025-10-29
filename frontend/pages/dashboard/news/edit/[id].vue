@@ -4,7 +4,7 @@ import type { NewsCategory, News } from '~/types'
 
 definePageMeta({
   middleware: 'auth',
-  layout: 'dashboard'
+  layout: 'default'
 })
 
 const route = useRoute()

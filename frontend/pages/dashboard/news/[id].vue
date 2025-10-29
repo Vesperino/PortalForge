@@ -9,7 +9,7 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 const { fetchNewsById, deleteNews } = useNewsApi()
-const { data: authData } = useAuth()
+const authStore = useAuthStore()
 
 const newsId = Number.parseInt(route.params.id as string)
 const news = ref<News | null>(null)
@@ -20,8 +20,8 @@ const isDeleting = ref(false)
 
 // Check if user can edit/delete (Admin, HR, Marketing)
 const canEdit = computed(() => {
-  const userRole = authData.value?.user?.user_metadata?.role
-  return ['Admin', 'Hr', 'Marketing'].includes(userRole)
+  const userRole = authStore.user?.role
+  return ['Admin', 'Hr', 'Marketing'].includes(userRole || '')
 })
 
 async function loadNews() {
@@ -109,12 +109,27 @@ const goBack = () => {
   router.push('/dashboard/news')
 }
 
+const authorName = computed(() => {
+  if (news.value?.author) {
+    return `${news.value.author.firstName} ${news.value.author.lastName}`
+  }
+  return 'Unknown'
+})
+
 function getAuthorInitials(authorName: string) {
   const parts = authorName.split(' ')
   if (parts.length >= 2) {
-    return parts[0][0] + parts[parts.length - 1][0]
+    const firstInitial = parts[0]?.charAt(0) || ''
+    const lastInitial = parts[parts.length - 1]?.charAt(0) || ''
+    return (firstInitial + lastInitial).toUpperCase()
   }
-  return authorName.substring(0, 2).toUpperCase()
+  return authorName.substring(0, Math.min(2, authorName.length)).toUpperCase()
+}
+
+function copyToClipboard() {
+  if (typeof window !== 'undefined' && window.navigator?.clipboard) {
+    window.navigator.clipboard.writeText(window.location.href)
+  }
 }
 </script>
 
@@ -183,11 +198,11 @@ function getAuthorInitials(authorName: string) {
         <div class="flex items-center gap-6 mb-8 pb-8 border-t border-gray-200 dark:border-gray-700">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-              {{ getAuthorInitials(news.authorName) }}
+              {{ getAuthorInitials(authorName) }}
             </div>
             <div>
               <p class="font-medium text-gray-900 dark:text-white">
-                {{ news.authorName }}
+                {{ authorName }}
               </p>
             </div>
           </div>
@@ -233,7 +248,7 @@ function getAuthorInitials(authorName: string) {
           <button
             type="button"
             class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            @click="() => navigator.clipboard.writeText(window.location.href)"
+            @click="copyToClipboard"
           >
             Kopiuj link
           </button>
