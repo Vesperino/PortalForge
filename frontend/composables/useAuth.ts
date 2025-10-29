@@ -1,183 +1,87 @@
-import type { LoginCredentials, RegisterCredentials, AuthResponse, User } from '~/types/auth'
+import type { User } from '~/types/auth'
 
-export const useAuth = () => {
+interface LoginResponse {
+  user: User
+  accessToken: string
+  refreshToken: string
+}
+
+export function useAuth() {
+  const config = useRuntimeConfig()
+  const apiUrl = config.public.apiUrl || 'http://localhost:5155'
   const authStore = useAuthStore()
   const router = useRouter()
-  const config = useRuntimeConfig()
 
-  const login = async (credentials: LoginCredentials) => {
-    authStore.setLoading(true)
-    authStore.clearError()
-
+  async function login(email: string, password: string) {
     try {
-      const { data, error } = await useFetch<AuthResponse>('/api/Auth/login', {
+      const response = await $fetch<LoginResponse>(`${apiUrl}/api/auth/login`, {
         method: 'POST',
-        baseURL: config.public.apiUrl,
-        body: credentials
+        body: {
+          email,
+          password
+        }
       })
 
-      if (error.value) {
-        // Parse error message - check both 'message' and 'errors' array
-        let errorMessage = error.value.data?.message || error.value.data?.error || 'Nieprawidłowy email lub hasło'
+      // Zapisz tokeny
+      authStore.setTokens(response.accessToken, response.refreshToken)
 
-        // If there's an errors array, use the first error
-        if (error.value.data?.errors && Array.isArray(error.value.data.errors) && error.value.data.errors.length > 0) {
-          errorMessage = error.value.data.errors[0]
-        }
+      // Zapisz użytkownika
+      authStore.setUser(response.user)
 
-        authStore.setError(errorMessage)
-        return { success: false, error: errorMessage }
-      }
-
-      if (data.value?.user && data.value?.accessToken && data.value?.refreshToken) {
-        // Store user and tokens in Pinia store (persists to localStorage)
-        authStore.setUser(data.value.user)
-        authStore.setTokens(data.value.accessToken, data.value.refreshToken)
-
-        // Check if email is verified - redirect accordingly
-        if (data.value.user.isEmailVerified) {
-          await router.push('/')
-        } else {
-          await router.push(`/auth/verify-email?email=${encodeURIComponent(data.value.user.email)}`)
-        }
-
-        return { success: true, error: null }
-      }
-
-      authStore.setError('Wystąpił nieoczekiwany błąd')
-      return { success: false, error: 'Wystąpił nieoczekiwany błąd' }
-    } catch {
-      const errorMessage = 'Wystąpił błąd podczas logowania'
-      authStore.setError(errorMessage)
-      return { success: false, error: errorMessage }
-    } finally {
-      authStore.setLoading(false)
+      return response
+    } catch (error: any) {
+      console.error('Login error:', error)
+      throw new Error(error?.data?.message || 'Nieprawidłowy email lub hasło')
     }
   }
 
-  const register = async (credentials: RegisterCredentials) => {
-    authStore.setLoading(true)
-    authStore.clearError()
-
+  async function logout() {
     try {
-      const { data, error } = await useFetch<{ userId: string; email: string; message: string }>('/api/Auth/register', {
-        method: 'POST',
-        baseURL: config.public.apiUrl,
-        body: credentials
-      })
-
-      if (error.value) {
-        // Parse error message - check both 'message' and 'errors' array
-        let errorMessage = error.value.data?.message || error.value.data?.error || 'Rejestracja nie powiodła się'
-
-        // If there's an errors array, use the first error
-        if (error.value.data?.errors && Array.isArray(error.value.data.errors) && error.value.data.errors.length > 0) {
-          errorMessage = error.value.data.errors[0]
-        }
-
-        authStore.setError(errorMessage)
-        return { success: false, error: errorMessage }
+      // Wywołaj backend logout jeśli jest token
+      if (authStore.accessToken) {
+        await $fetch(`${apiUrl}/api/auth/logout`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${authStore.accessToken}`
+          }
+        })
       }
-
-      if (data.value) {
-        // Redirect to verify email page with auto-start timer
-        await router.push(`/auth/verify-email?email=${encodeURIComponent(credentials.email)}&autostart=true`)
-        return { success: true, error: null }
-      }
-
-      authStore.setError('Wystąpił nieoczekiwany błąd')
-      return { success: false, error: 'Wystąpił nieoczekiwany błąd' }
-    } catch {
-      const errorMessage = 'Wystąpił błąd podczas rejestracji'
-      authStore.setError(errorMessage)
-      return { success: false, error: errorMessage }
+    } catch (error) {
+      console.error('Logout error:', error)
     } finally {
-      authStore.setLoading(false)
-    }
-  }
-
-  const logout = async () => {
-    authStore.setLoading(true)
-
-    try {
-      await useFetch('/api/Auth/logout', {
-        method: 'POST',
-        baseURL: config.public.apiUrl
-      })
-
-      // Clear user and tokens from store (which also clears localStorage)
+      // Zawsze wyczyść lokalnie
       authStore.clearUser()
-
       await router.push('/auth/login')
-      return { success: true, error: null }
-    } catch {
-      const errorMessage = 'Wystąpił błąd podczas wylogowania'
-      authStore.setError(errorMessage)
-      return { success: false, error: errorMessage }
-    } finally {
-      authStore.setLoading(false)
     }
   }
 
-  const checkAuth = async () => {
+  async function refreshToken() {
     try {
-      const { data } = await useFetch<{ user: User }>('/api/Auth/me', {
-        baseURL: config.public.apiUrl
-      })
-
-      if (data.value?.user) {
-        authStore.setUser(data.value.user)
-        return true
-      }
-
-      authStore.clearUser()
-      return false
-    } catch {
-      authStore.clearUser()
-      return false
-    }
-  }
-
-  const refreshToken = async () => {
-    try {
-      const currentRefreshToken = authStore.refreshToken
-
-      if (!currentRefreshToken) {
+      if (!authStore.refreshToken) {
         throw new Error('No refresh token available')
       }
 
-      const { data, error } = await useFetch<{ accessToken: string; refreshToken: string }>('/api/Auth/refresh-token', {
+      const response = await $fetch<{ accessToken: string; refreshToken: string }>(`${apiUrl}/api/auth/refresh-token`, {
         method: 'POST',
-        baseURL: config.public.apiUrl,
-        body: { refreshToken: currentRefreshToken }
+        body: {
+          refreshToken: authStore.refreshToken
+        }
       })
 
-      if (error.value || !data.value) {
-        authStore.clearUser()
-        await router.push('/auth/login')
-        return { success: false, error: 'Token refresh failed' }
-      }
+      authStore.setTokens(response.accessToken, response.refreshToken)
 
-      // Update tokens in store
-      authStore.setTokens(data.value.accessToken, data.value.refreshToken)
-
-      return { success: true, error: null }
-    } catch {
+      return response
+    } catch (error) {
+      console.error('Refresh token error:', error)
       authStore.clearUser()
       await router.push('/auth/login')
-      return { success: false, error: 'Token refresh failed' }
+      throw error
     }
   }
 
   return {
     login,
-    register,
     logout,
-    checkAuth,
-    refreshToken,
-    isLoading: computed(() => authStore.isLoading),
-    error: computed(() => authStore.error),
-    user: computed(() => authStore.user),
-    isAuthenticated: computed(() => authStore.isAuthenticated)
+    refreshToken
   }
 }
