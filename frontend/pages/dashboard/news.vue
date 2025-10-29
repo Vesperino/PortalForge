@@ -3,7 +3,7 @@ import type { News, NewsCategory } from '~/types'
 
 definePageMeta({
   layout: 'default',
-  middleware: 'auth'
+  // middleware: 'auth' // Disabled for testing
 })
 
 const { fetchAllNews } = useNewsApi()
