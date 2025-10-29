@@ -36,27 +36,27 @@ export function useNewsApi() {
   async function fetchAllNews(category?: NewsCategory): Promise<News[]> {
     const query = category ? `?category=${category}` : ''
     const headers = getAuthHeaders()
-    const response = await $fetch<News[]>(`${apiUrl}/api/news${query}`, {
+    const response = await $fetch(`${apiUrl}/api/news${query}`, {
       headers
-    })
+    }) as News[]
     return response
   }
 
   async function fetchNewsById(id: number): Promise<News> {
     const headers = getAuthHeaders()
-    const response = await $fetch<News>(`${apiUrl}/api/news/${id}`, {
+    const response = await $fetch(`${apiUrl}/api/news/${id}`, {
       headers
-    })
+    }) as News
     return response
   }
 
   async function createNews(request: CreateNewsRequest): Promise<number> {
     const headers = getAuthHeaders()
-    const response = await $fetch<number>(`${apiUrl}/api/news`, {
+    const response = await $fetch(`${apiUrl}/api/news`, {
       method: 'POST',
       headers,
       body: request
-    })
+    }) as number
     return response
   }
 
