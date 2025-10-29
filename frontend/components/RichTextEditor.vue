@@ -72,68 +72,68 @@ function removeLink() {
 </script>
 
 <template>
-  <div class="border rounded-lg overflow-hidden">
-    <div v-if="editor" class="bg-gray-100 border-b p-2 flex flex-wrap gap-1">
+  <div class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+    <div v-if="editor" class="bg-gray-100 dark:bg-gray-700 border-b border-gray-300 dark:border-gray-600 p-2 flex flex-wrap gap-1">
       <button
         type="button"
-        :class="{ 'bg-gray-300': editor.isActive('bold') }"
-        class="px-3 py-1 rounded hover:bg-gray-200 font-bold"
+        :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('bold') }"
+        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 font-bold text-gray-700 dark:text-gray-200 transition-colors"
         @click="toggleBold"
       >
         B
       </button>
       <button
         type="button"
-        :class="{ 'bg-gray-300': editor.isActive('italic') }"
-        class="px-3 py-1 rounded hover:bg-gray-200 italic"
+        :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('italic') }"
+        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 italic text-gray-700 dark:text-gray-200 transition-colors"
         @click="toggleItalic"
       >
         I
       </button>
       <button
         type="button"
-        :class="{ 'bg-gray-300': editor.isActive('heading', { level: 1 }) }"
-        class="px-3 py-1 rounded hover:bg-gray-200"
+        :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('heading', { level: 1 }) }"
+        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         @click="toggleHeading(1)"
       >
         H1
       </button>
       <button
         type="button"
-        :class="{ 'bg-gray-300': editor.isActive('heading', { level: 2 }) }"
-        class="px-3 py-1 rounded hover:bg-gray-200"
+        :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('heading', { level: 2 }) }"
+        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         @click="toggleHeading(2)"
       >
         H2
       </button>
       <button
         type="button"
-        :class="{ 'bg-gray-300': editor.isActive('heading', { level: 3 }) }"
-        class="px-3 py-1 rounded hover:bg-gray-200"
+        :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('heading', { level: 3 }) }"
+        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         @click="toggleHeading(3)"
       >
         H3
       </button>
       <button
         type="button"
-        :class="{ 'bg-gray-300': editor.isActive('bulletList') }"
-        class="px-3 py-1 rounded hover:bg-gray-200"
+        :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('bulletList') }"
+        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         @click="toggleBulletList"
       >
         • List
       </button>
       <button
         type="button"
-        :class="{ 'bg-gray-300': editor.isActive('orderedList') }"
-        class="px-3 py-1 rounded hover:bg-gray-200"
+        :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('orderedList') }"
+        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         @click="toggleOrderedList"
       >
         1. List
       </button>
       <button
         type="button"
-        :class="{ 'bg-gray-300': editor.isActive('link') }"
-        class="px-3 py-1 rounded hover:bg-gray-200"
+        :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('link') }"
+        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         @click="addLink"
       >
         Link
@@ -141,13 +141,13 @@ function removeLink() {
       <button
         v-if="editor.isActive('link')"
         type="button"
-        class="px-3 py-1 rounded hover:bg-gray-200"
+        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         @click="removeLink"
       >
         Unlink
       </button>
     </div>
-    <EditorContent :editor="editor" class="prose max-w-none p-4 min-h-[300px] focus:outline-none" />
+    <EditorContent :editor="editor" class="prose dark:prose-invert max-w-none p-4 min-h-[300px] focus:outline-none text-gray-900 dark:text-gray-100" />
   </div>
 </template>
 
@@ -189,5 +189,9 @@ function removeLink() {
 .ProseMirror a {
   color: #3b82f6;
   text-decoration: underline;
+}
+
+.dark .ProseMirror a {
+  color: #60a5fa;
 }
 </style>

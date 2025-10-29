@@ -88,6 +88,13 @@ export interface News {
   event?: Event
   views: number
   category: NewsCategory
+  // Event-specific fields
+  isEvent: boolean
+  eventHashtag?: string
+  eventDateTime?: Date
+  eventLocation?: string
+  // Department visibility
+  departmentId?: number
 }
 
 export interface Document {

@@ -48,6 +48,11 @@ public class UpdateNewsCommandHandler : IRequestHandler<UpdateNewsCommand, Unit>
         news.ImageUrl = request.ImageUrl;
         news.Category = request.Category;
         news.EventId = request.EventId;
+        news.IsEvent = request.IsEvent;
+        news.EventHashtag = request.EventHashtag;
+        news.EventDateTime = request.EventDateTime;
+        news.EventLocation = request.EventLocation;
+        news.DepartmentId = request.DepartmentId;
         news.UpdatedAt = DateTime.UtcNow;
 
         await _unitOfWork.NewsRepository.UpdateAsync(news);

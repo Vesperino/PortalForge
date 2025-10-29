@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import type { Event } from '~/types'
+import type { Event, News } from '~/types'
 
 definePageMeta({
-  layout: 'default'
-  // middleware: ['auth'] // Disabled for testing
+  layout: 'default',
+  middleware: 'auth'
 })
 
-const { getEvents: _getEvents, getEventsByMonth } = useMockData()
+const { fetchAllNews } = useNewsApi()
 const router = useRouter()
 
 const currentDate = ref(new Date())
 const selectedEvent = ref<Event | null>(null)
+const selectedNews = ref<News | null>(null)
 const showEventModal = ref(false)
+const showNewsEventModal = ref(false)
+const allNewsEvents = ref<News[]>([])
+const isLoading = ref(false)
+const error = ref<string | null>(null)
 
 const currentMonth = computed(() => currentDate.value.getMonth())
 const currentYear = computed(() => currentDate.value.getFullYear())
@@ -42,19 +47,45 @@ const calendarDays = computed(() => {
 })
 
 const monthEvents = computed(() => {
-  return getEventsByMonth(currentYear.value, currentMonth.value)
+  return allNewsEvents.value.filter(news => {
+    if (!news.eventDateTime) return false
+    const eventDate = new Date(news.eventDateTime)
+    return eventDate.getFullYear() === currentYear.value &&
+           eventDate.getMonth() === currentMonth.value
+  })
 })
 
 const getEventsForDay = (day: number | null) => {
   if (!day) return []
 
-  return monthEvents.value.filter(event => {
-    const eventDate = new Date(event.startDate)
+  return monthEvents.value.filter(news => {
+    if (!news.eventDateTime) return false
+    const eventDate = new Date(news.eventDateTime)
     return eventDate.getDate() === day &&
            eventDate.getMonth() === currentMonth.value &&
            eventDate.getFullYear() === currentYear.value
   })
 }
+
+async function loadNewsEvents() {
+  isLoading.value = true
+  error.value = null
+
+  try {
+    // Fetch only news items that are events
+    const newsData = await fetchAllNews(undefined, undefined, true)
+    allNewsEvents.value = newsData
+  } catch (err: any) {
+    error.value = err?.message || 'Nie udało się załadować wydarzeń'
+    console.error('loadNewsEvents error:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  loadNewsEvents()
+})
 
 const isToday = (day: number | null) => {
   if (!day) return false
@@ -81,9 +112,19 @@ const openEventModal = (event: Event) => {
   showEventModal.value = true
 }
 
+const openNewsEventModal = (news: News) => {
+  selectedNews.value = news
+  showNewsEventModal.value = true
+}
+
 const closeEventModal = () => {
   showEventModal.value = false
   selectedEvent.value = null
+}
+
+const closeNewsEventModal = () => {
+  showNewsEventModal.value = false
+  selectedNews.value = null
 }
 
 const getEventTagColor = (tag: string) => {
@@ -190,16 +231,13 @@ const formatEventTime = (date: Date) => {
               <!-- Events for this day -->
               <div class="space-y-1">
                 <div
-                  v-for="event in getEventsForDay(day).slice(0, 3)"
-                  :key="event.id"
-                  :class="[
-                    getEventTagColor(event.tags[0] || ''),
-                    'text-white text-xs px-2 py-1 rounded truncate hover:opacity-80 transition'
-                  ]"
-                  :title="event.title"
-                  @click="openEventModal(event)"
+                  v-for="news in getEventsForDay(day).slice(0, 3)"
+                  :key="news.id"
+                  class="bg-blue-500 dark:bg-blue-600 text-white text-xs px-2 py-1 rounded truncate hover:opacity-80 transition cursor-pointer"
+                  :title="news.title"
+                  @click="openNewsEventModal(news)"
                 >
-                  {{ event.title }}
+                  {{ news.title }}
                 </div>
                 <div
                   v-if="getEventsForDay(day).length > 3"
@@ -220,55 +258,60 @@ const formatEventTime = (date: Date) => {
         Wydarzenia w tym miesiącu
       </h2>
 
-      <div v-if="monthEvents.length > 0" class="space-y-3">
+      <div v-if="isLoading" class="text-center py-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Ładowanie wydarzeń...</p>
+      </div>
+
+      <div v-else-if="error" class="text-center py-8 text-red-600 dark:text-red-400">
+        {{ error }}
+      </div>
+
+      <div v-else-if="monthEvents.length > 0" class="space-y-3">
         <div
-          v-for="event in monthEvents"
-          :key="event.id"
+          v-for="news in monthEvents"
+          :key="news.id"
           class="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition cursor-pointer"
-          @click="openEventModal(event)"
+          @click="openNewsEventModal(news)"
         >
           <!-- Date -->
-          <div class="flex-shrink-0 w-14 h-14 bg-blue-600 rounded-lg flex flex-col items-center justify-center text-white">
+          <div class="flex-shrink-0 w-14 h-14 bg-blue-600 dark:bg-blue-700 rounded-lg flex flex-col items-center justify-center text-white">
             <span class="text-xs font-medium">
-              {{ new Intl.DateTimeFormat('pl-PL', { month: 'short' }).format(event.startDate) }}
+              {{ news.eventDateTime ? new Intl.DateTimeFormat('pl-PL', { month: 'short' }).format(new Date(news.eventDateTime)) : '' }}
             </span>
             <span class="text-xl font-bold">
-              {{ event.startDate.getDate() }}
+              {{ news.eventDateTime ? new Date(news.eventDateTime).getDate() : '' }}
             </span>
           </div>
 
           <!-- Event Info -->
           <div class="flex-1">
             <h3 class="font-semibold text-gray-900 dark:text-white mb-1">
-              {{ event.title }}
+              {{ news.title }}
             </h3>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
-              {{ event.description }}
+              {{ news.excerpt }}
             </p>
             <div class="flex flex-wrap gap-2">
               <span
-                v-for="tag in event.tags"
-                :key="tag"
-                :class="[
-                  getEventTagColor(tag),
-                  'text-white text-xs px-2 py-1 rounded-full'
-                ]"
+                v-if="news.eventHashtag"
+                class="bg-blue-500 dark:bg-blue-600 text-white text-xs px-2 py-1 rounded-full"
               >
-                #{{ tag }}
+                {{ news.eventHashtag }}
               </span>
-              <span v-if="event.location" class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+              <span v-if="news.eventLocation" class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                {{ event.location }}
+                {{ news.eventLocation }}
               </span>
             </div>
           </div>
 
           <!-- Time -->
           <div class="flex-shrink-0 text-sm text-gray-600 dark:text-gray-400">
-            {{ formatEventTime(event.startDate) }}
+            {{ news.eventDateTime ? formatEventTime(new Date(news.eventDateTime)) : '' }}
           </div>
         </div>
       </div>
@@ -401,6 +444,96 @@ const formatEventTime = (date: Date) => {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                 </svg>
                 Zobacz powiązany news
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- News Event Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showNewsEventModal && selectedNews"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+        @click.self="closeNewsEventModal"
+      >
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <!-- Modal Header -->
+          <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  {{ selectedNews.title }}
+                </h2>
+                <div class="flex flex-wrap gap-2">
+                  <span class="bg-blue-500 dark:bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                    📅 Wydarzenie
+                  </span>
+                  <span
+                    v-if="selectedNews.eventHashtag"
+                    class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded-full"
+                  >
+                    {{ selectedNews.eventHashtag }}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="ml-4 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                @click="closeNewsEventModal"
+              >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Modal Content -->
+          <div class="p-6 space-y-4">
+            <!-- Date & Time -->
+            <div v-if="selectedNews.eventDateTime" class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">
+                  {{ new Intl.DateTimeFormat('pl-PL', { dateStyle: 'full', timeStyle: 'short' }).format(new Date(selectedNews.eventDateTime)) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Location -->
+            <div v-if="selectedNews.eventLocation" class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">Lokalizacja</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ selectedNews.eventLocation }}</p>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Opis</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                {{ selectedNews.excerpt }}
+              </p>
+            </div>
+
+            <!-- View Full News Button -->
+            <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white font-semibold rounded-lg transition-colors"
+                @click="router.push(`/dashboard/news/${selectedNews.id}`)"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                </svg>
+                Zobacz pełny news
               </button>
             </div>
           </div>

@@ -30,12 +30,16 @@ public class NewsController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<PaginatedNewsResponse>> GetAll(
         [FromQuery] string? category = null,
+        [FromQuery] int? departmentId = null,
+        [FromQuery] bool? isEvent = null,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
         var query = new GetAllNewsQuery
         {
             Category = category,
+            DepartmentId = departmentId,
+            IsEvent = isEvent,
             PageNumber = pageNumber,
             PageSize = pageSize
         };
@@ -76,7 +80,12 @@ public class NewsController : ControllerBase
             ImageUrl = request.ImageUrl,
             AuthorId = authorId,
             Category = category,
-            EventId = request.EventId
+            EventId = request.EventId,
+            IsEvent = request.IsEvent,
+            EventHashtag = request.EventHashtag,
+            EventDateTime = request.EventDateTime,
+            EventLocation = request.EventLocation,
+            DepartmentId = request.DepartmentId
         };
 
         var newsId = await _mediator.Send(command);
@@ -100,7 +109,12 @@ public class NewsController : ControllerBase
             Excerpt = request.Excerpt,
             ImageUrl = request.ImageUrl,
             Category = category,
-            EventId = request.EventId
+            EventId = request.EventId,
+            IsEvent = request.IsEvent,
+            EventHashtag = request.EventHashtag,
+            EventDateTime = request.EventDateTime,
+            EventLocation = request.EventLocation,
+            DepartmentId = request.DepartmentId
         };
 
         await _mediator.Send(command);

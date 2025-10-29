@@ -13,4 +13,13 @@ public class CreateNewsCommand : IRequest<int>, ITransactionalRequest
     public Guid AuthorId { get; set; }
     public NewsCategory Category { get; set; }
     public int? EventId { get; set; }
+
+    // Event-specific fields
+    public bool IsEvent { get; set; } = false;
+    public string? EventHashtag { get; set; }
+    public DateTime? EventDateTime { get; set; }
+    public string? EventLocation { get; set; }
+
+    // Department visibility
+    public int? DepartmentId { get; set; }
 }

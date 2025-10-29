@@ -13,4 +13,13 @@ public class UpdateNewsCommand : IRequest<Unit>, ITransactionalRequest
     public string? ImageUrl { get; set; }
     public NewsCategory Category { get; set; }
     public int? EventId { get; set; }
+
+    // Event-specific fields
+    public bool IsEvent { get; set; } = false;
+    public string? EventHashtag { get; set; }
+    public DateTime? EventDateTime { get; set; }
+    public string? EventLocation { get; set; }
+
+    // Department visibility
+    public int? DepartmentId { get; set; }
 }

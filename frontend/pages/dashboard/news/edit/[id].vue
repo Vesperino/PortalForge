@@ -19,6 +19,11 @@ const content = ref('')
 const imageUrl = ref('')
 const category = ref<NewsCategory>('announcement')
 const eventId = ref<number | undefined>(undefined)
+const isEvent = ref(false)
+const eventHashtag = ref('')
+const eventDateTime = ref('')
+const eventLocation = ref('')
+const departmentId = ref<number | undefined>(undefined)
 const isLoading = ref(false)
 const isSubmitting = ref(false)
 const error = ref<string | null>(null)
@@ -45,6 +50,11 @@ async function loadNews() {
     imageUrl.value = news.imageUrl || ''
     category.value = news.category.toLowerCase() as NewsCategory
     eventId.value = news.eventId || undefined
+    isEvent.value = news.isEvent || false
+    eventHashtag.value = news.eventHashtag || ''
+    eventDateTime.value = news.eventDateTime ? new Date(news.eventDateTime).toISOString().slice(0, 16) : ''
+    eventLocation.value = news.eventLocation || ''
+    departmentId.value = news.departmentId || undefined
   } catch (err: any) {
     error.value = err?.message || 'Nie udało się załadować newsa'
     console.error(err)
@@ -70,7 +80,12 @@ async function handleSubmit() {
       content: content.value,
       imageUrl: imageUrl.value || undefined,
       category: category.value,
-      eventId: eventId.value
+      eventId: eventId.value,
+      isEvent: isEvent.value,
+      eventHashtag: eventHashtag.value || undefined,
+      eventDateTime: eventDateTime.value || undefined,
+      eventLocation: eventLocation.value || undefined,
+      departmentId: departmentId.value
     })
 
     successMessage.value = 'News zaktualizowany pomyślnie!'
@@ -160,6 +175,88 @@ onMounted(() => {
             {{ cat.label }}
           </option>
         </select>
+      </div>
+
+      <!-- Is Event Toggle -->
+      <div class="flex items-center space-x-3">
+        <input
+          id="isEvent"
+          v-model="isEvent"
+          type="checkbox"
+          class="w-5 h-5 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+        >
+        <label for="isEvent" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+          To jest wydarzenie
+        </label>
+      </div>
+
+      <!-- Event Fields (shown only when isEvent is true) -->
+      <div v-if="isEvent" class="space-y-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <h3 class="text-lg font-semibold text-blue-700 dark:text-blue-400">Szczegóły wydarzenia</h3>
+
+        <!-- Event Hashtag -->
+        <div>
+          <label for="eventHashtag" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Hashtag wydarzenia
+          </label>
+          <input
+            id="eventHashtag"
+            v-model="eventHashtag"
+            type="text"
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="#wydarzenie2024"
+          >
+        </div>
+
+        <!-- Event Date Time -->
+        <div>
+          <label for="eventDateTime" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Data i godzina wydarzenia
+          </label>
+          <input
+            id="eventDateTime"
+            v-model="eventDateTime"
+            type="datetime-local"
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+        </div>
+
+        <!-- Event Location -->
+        <div>
+          <label for="eventLocation" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Lokalizacja wydarzenia
+          </label>
+          <input
+            id="eventLocation"
+            v-model="eventLocation"
+            type="text"
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="Sala konferencyjna A, ul. Przykładowa 123, Warszawa"
+          >
+        </div>
+      </div>
+
+      <!-- Department -->
+      <div>
+        <label for="departmentId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Dział (opcjonalnie)
+        </label>
+        <select
+          id="departmentId"
+          v-model="departmentId"
+          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+        >
+          <option :value="undefined">Wszystkie działy</option>
+          <option :value="1">Zarząd</option>
+          <option :value="2">IT</option>
+          <option :value="3">HR</option>
+          <option :value="4">Marketing</option>
+          <option :value="5">Finanse</option>
+          <option :value="6">Produkt</option>
+        </select>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Jeśli wybierzesz dział, news będzie widoczny tylko dla tego działu
+        </p>
       </div>
 
       <!-- Excerpt -->
