@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
@@ -11,13 +11,18 @@ const isLoggingOut = ref(false)
 
 const isDark = computed(() => colorMode.value === 'dark')
 
+type UnknownRecord = Record<string, unknown>
+
 const { getEmployees } = useMockData()
 const employees = getEmployees()
 const fallbackUser = employees.length > 0 ? employees[0] : null
 
-const authUser = computed(() => authStore.user)
+const toRecord = (value: unknown): UnknownRecord | null =>
+  typeof value === 'object' && value !== null ? value as UnknownRecord : null
 
-const currentUser = computed(() => authUser.value ?? fallbackUser ?? null)
+const fallbackRecord = toRecord(fallbackUser)
+
+const currentUserRecord = computed<UnknownRecord | null>(() => toRecord(authStore.user) ?? fallbackRecord)
 
 const roleLabels: Record<string, string> = {
   admin: 'Administrator',
@@ -27,6 +32,37 @@ const roleLabels: Record<string, string> = {
   employee: 'Pracownik'
 }
 
+const getStringField = (record: UnknownRecord | null, key: string): string | null => {
+  if (!record) {
+    return null
+  }
+
+  const value = record[key]
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
+  }
+
+  return null
+}
+
+const getPositionName = (record: UnknownRecord | null): string | null => {
+  if (!record) {
+    return null
+  }
+
+  const position = record.position
+  if (typeof position === 'object' && position !== null) {
+    const nameValue = (position as UnknownRecord).name
+    if (typeof nameValue === 'string') {
+      const trimmed = nameValue.trim()
+      return trimmed.length > 0 ? trimmed : null
+    }
+  }
+
+  return null
+}
+
 const formatRoleLabel = (role?: string | null) => {
   if (!role) return null
   const normalized = role.toString().toLowerCase()
@@ -34,60 +70,60 @@ const formatRoleLabel = (role?: string | null) => {
 }
 
 const userInitials = computed(() => {
-  const user: any = currentUser.value
-  if (!user) {
+  const record = currentUserRecord.value
+  if (!record) {
     return 'U'
   }
 
-  const firstInitial = user.firstName?.trim()?.charAt(0)
-  const lastInitial = user.lastName?.trim()?.charAt(0)
+  const firstInitial = getStringField(record, 'firstName')?.charAt(0)
+  const lastInitial = getStringField(record, 'lastName')?.charAt(0)
 
   const initials = `${firstInitial ?? ''}${lastInitial ?? ''}`.toUpperCase()
   if (initials) {
     return initials
   }
 
-  if (user.email) {
-    return user.email.slice(0, 2).toUpperCase()
+  const email = getStringField(record, 'email')
+  if (email) {
+    return email.slice(0, 2).toUpperCase()
   }
 
   return 'U'
 })
 
 const userDisplayName = computed(() => {
-  const user: any = currentUser.value
-  if (!user) {
-    return 'Uzytkownik'
+  const record = currentUserRecord.value
+  if (!record) {
+    return 'User'
   }
 
-  const first = user.firstName?.trim()
-  const last = user.lastName?.trim()
+  const first = getStringField(record, 'firstName')
+  const last = getStringField(record, 'lastName')
 
   if (first || last) {
     return [first, last].filter(Boolean).join(' ')
   }
 
-  return user.email ?? 'Uzytkownik'
+  return getStringField(record, 'email') ?? 'User'
 })
 
 const userDisplayEmail = computed(() => {
-  const user: any = currentUser.value
-  return user?.email ?? 'user@example.com'
+  const record = currentUserRecord.value
+  return getStringField(record, 'email') ?? 'user@example.com'
 })
 
 const userDisplayMeta = computed(() => {
-  const user: any = currentUser.value
-
-  if (!user) {
-    return 'Stanowisko'
+  const record = currentUserRecord.value
+  if (!record) {
+    return 'Role'
   }
 
-  const positionName = user.position?.name
+  const positionName = getPositionName(record)
   if (positionName) {
     return positionName
   }
 
-  return formatRoleLabel(user.role) ?? 'Stanowisko'
+  return formatRoleLabel(getStringField(record, 'role')) ?? 'Role'
 })
 
 const { logout: performLogout } = useAuth()
@@ -187,14 +223,14 @@ watch(
         </button>
 
         <div class="header-actions">
-          <button aria-label="Powiadomienia" class="header-icon-btn">
+          <button aria-label="Notifications" class="header-icon-btn">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
             <span class="notification-dot" />
           </button>
 
-          <button aria-label="Tryb ciemny" class="header-icon-btn" @click="toggleDarkMode">
+          <button aria-label="Toggle dark mode" class="header-icon-btn" @click="toggleDarkMode">
             <svg v-if="isDark" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
@@ -204,7 +240,7 @@ watch(
           </button>
 
           <div class="user-menu">
-            <button aria-label="Menu uĹĽytkownika" class="user-menu-btn" @click="toggleUserMenu">
+            <button aria-label="User menu" class="user-menu-btn" @click="toggleUserMenu">
               <div class="user-avatar">
                 {{ userInitials }}
               </div>
@@ -217,7 +253,7 @@ watch(
               <div v-if="isUserMenuOpen" class="user-dropdown">
                 <div class="user-dropdown-info">
                   <p class="user-dropdown-name">
-                    {{ currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'UĹĽytkownik' }}
+                    {{ userDisplayName }}
                   </p>
                   <p class="user-dropdown-email">{{ userDisplayEmail }}</p>
                   <p class="user-dropdown-position">{{ userDisplayMeta }}</p>
@@ -228,13 +264,13 @@ watch(
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    MĂłj profil
+                    My profile
                   </NuxtLink>
                   <button class="dropdown-action-item" @click="handleLogout">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
-                    Wyloguj
+                    Log out
                   </button>
                 </div>
               </div>
@@ -248,13 +284,24 @@ watch(
       </main>
 
       <footer class="app-footer">
-        <p>&copy; 2025 PortalForge. Wszystkie prawa zastrzeĹĽone.</p>
+        <p>&copy; 2025 PortalForge. All rights reserved.</p>
         <div class="footer-links">
-          <a href="#">Polityka prywatnoĹ›ci</a>
-          <a href="#">Kontakt</a>
+          <a href="#">Privacy policy</a>
+          <a href="#">Contact</a>
         </div>
       </footer>
     </div>
   </div>
 </template>
+
+
+
+
+
+
+
+
+
+
+
 
