@@ -210,6 +210,51 @@ public class SupabaseAuthService : ISupabaseAuthService
         }
     }
 
+    public async Task<AuthResult> SignInAsync(string email, string password)
+    {
+        try
+        {
+            _logger.LogInformation("Attempting sign in for email: {Email}", email);
+
+            var signInResponse = await _supabaseClient.Auth.SignIn(email, password);
+
+            if (signInResponse?.User == null)
+            {
+                _logger.LogWarning("Sign in failed for email: {Email}", email);
+                return new AuthResult
+                {
+                    Success = false,
+                    ErrorMessage = "Invalid email or password"
+                };
+            }
+
+            var userId = Guid.Parse(signInResponse.User!.Id);
+
+            DateTime? expiresAt = signInResponse.ExpiresAt() != default
+                ? signInResponse.ExpiresAt()
+                : null;
+
+            return new AuthResult
+            {
+                Success = true,
+                UserId = userId,
+                Email = email,
+                AccessToken = signInResponse.AccessToken,
+                RefreshToken = signInResponse.RefreshToken,
+                ExpiresAt = expiresAt
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during sign in for email: {Email}", email);
+            return new AuthResult
+            {
+                Success = false,
+                ErrorMessage = $"Sign in error: {ex.Message}"
+            };
+        }
+    }
+
     public async Task<bool> LogoutAsync(string accessToken)
     {
         try
@@ -340,6 +385,49 @@ public class SupabaseAuthService : ISupabaseAuthService
                 Success = false,
                 ErrorMessage = $"Password reset error: {ex.Message}"
             };
+        }
+    }
+
+    public async Task<bool> UpdatePasswordAsync(string accessToken, string refreshToken, string newPassword)
+    {
+        try
+        {
+            _logger.LogInformation("Attempting password update");
+
+            // Use the Supabase REST API directly to update the password
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("apikey", _supabaseKey);
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+
+            var requestBody = new
+            {
+                password = newPassword
+            };
+
+            var content = new StringContent(
+                System.Text.Json.JsonSerializer.Serialize(requestBody),
+                System.Text.Encoding.UTF8,
+                "application/json");
+
+            var response = await httpClient.PutAsync(
+                $"{_supabaseUrl}/auth/v1/user",
+                content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Password update failed: {StatusCode} - {Error}",
+                    response.StatusCode, errorContent);
+                return false;
+            }
+
+            _logger.LogInformation("Password updated successfully");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during password update");
+            return false;
         }
     }
 

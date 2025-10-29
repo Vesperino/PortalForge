@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Common.Models;
+using PortalForge.Application.UseCases.Auth.Commands.ChangePassword;
 using PortalForge.Application.UseCases.Auth.Commands.Login;
 using PortalForge.Application.UseCases.Auth.Commands.Logout;
 using PortalForge.Application.UseCases.Auth.Commands.RefreshToken;
@@ -202,6 +203,42 @@ public class AuthController : ControllerBase
         };
 
         return Ok(userDto);
+    }
+
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
+    {
+        // Get current user ID from JWT token
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { message = "User not authenticated" });
+        }
+
+        var command = new ChangePasswordCommand
+        {
+            UserId = userId,
+            CurrentPassword = request.CurrentPassword,
+            NewPassword = request.NewPassword
+        };
+
+        try
+        {
+            var result = await _mediator.Send(command);
+
+            if (!result)
+            {
+                return BadRequest(new { message = "Failed to change password" });
+            }
+
+            return Ok(new { message = "Password changed successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error changing password for user {UserId}", userId);
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     private void SetRefreshTokenCookie(string refreshToken)
