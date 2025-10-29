@@ -80,6 +80,7 @@ export interface News {
   excerpt: string
   imageUrl?: string
   authorId: number
+  authorName?: string
   author?: Employee
   createdAt: Date
   updatedAt?: Date

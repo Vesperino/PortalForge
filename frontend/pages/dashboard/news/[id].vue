@@ -3,7 +3,7 @@ import type { News } from '~/types'
 
 definePageMeta({
   layout: 'default',
-  // middleware: 'auth' // Disabled for testing
+  middleware: 'auth'
 })
 
 const route = useRoute()

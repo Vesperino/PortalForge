@@ -36,9 +36,9 @@ export function useNewsApi() {
   async function fetchAllNews(category?: NewsCategory): Promise<News[]> {
     const query = category ? `?category=${category}` : ''
     const headers = getAuthHeaders()
-    const response = await $fetch<{ items: News[] }>(`${apiUrl}/api/news${query}`, {
+    const response = await $fetch(`${apiUrl}/api/news${query}`, {
       headers
-    })
+    }) as { items: News[] }
     return response.items
   }
 

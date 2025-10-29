@@ -50,7 +50,8 @@
       "Bash(dotnet tool restore:*)",
       "Bash(timeout 8 bash:*)",
       "Bash(npm run test:e2e:*)",
-      "Bash(timeout 10 bash:*)"
+      "Bash(timeout 10 bash:*)",
+      "Bash(npm run test:*)"
     ],
     "deny": [],
     "ask": []
