@@ -1,17 +1,96 @@
-<script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+﻿<script setup lang="ts">
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
 const colorMode = useColorMode()
+const router = useRouter()
 const isUserMenuOpen = ref(false)
 const isMobileSidebarOpen = ref(false)
+const isLoggingOut = ref(false)
 
 const isDark = computed(() => colorMode.value === 'dark')
 
 const { getEmployees } = useMockData()
 const employees = getEmployees()
-const currentUser = computed(() => employees.length > 0 ? employees[0] : null)
+const fallbackUser = employees.length > 0 ? employees[0] : null
+
+const authUser = computed(() => authStore.user)
+
+const currentUser = computed(() => authUser.value ?? fallbackUser ?? null)
+
+const roleLabels: Record<string, string> = {
+  admin: 'Administrator',
+  marketing: 'Marketing',
+  manager: 'Manager',
+  hr: 'HR',
+  employee: 'Pracownik'
+}
+
+const formatRoleLabel = (role?: string | null) => {
+  if (!role) return null
+  const normalized = role.toString().toLowerCase()
+  return roleLabels[normalized] ?? normalized.charAt(0).toUpperCase() + normalized.slice(1)
+}
+
+const userInitials = computed(() => {
+  const user: any = currentUser.value
+  if (!user) {
+    return 'U'
+  }
+
+  const firstInitial = user.firstName?.trim()?.charAt(0)
+  const lastInitial = user.lastName?.trim()?.charAt(0)
+
+  const initials = `${firstInitial ?? ''}${lastInitial ?? ''}`.toUpperCase()
+  if (initials) {
+    return initials
+  }
+
+  if (user.email) {
+    return user.email.slice(0, 2).toUpperCase()
+  }
+
+  return 'U'
+})
+
+const userDisplayName = computed(() => {
+  const user: any = currentUser.value
+  if (!user) {
+    return 'Uzytkownik'
+  }
+
+  const first = user.firstName?.trim()
+  const last = user.lastName?.trim()
+
+  if (first || last) {
+    return [first, last].filter(Boolean).join(' ')
+  }
+
+  return user.email ?? 'Uzytkownik'
+})
+
+const userDisplayEmail = computed(() => {
+  const user: any = currentUser.value
+  return user?.email ?? 'user@example.com'
+})
+
+const userDisplayMeta = computed(() => {
+  const user: any = currentUser.value
+
+  if (!user) {
+    return 'Stanowisko'
+  }
+
+  const positionName = user.position?.name
+  if (positionName) {
+    return positionName
+  }
+
+  return formatRoleLabel(user.role) ?? 'Stanowisko'
+})
+
+const { logout: performLogout } = useAuth()
 
 function forceTextColorUpdate() {
   if (import.meta.client) {
@@ -47,26 +126,52 @@ const closeMobileSidebar = () => {
 }
 
 const handleLogout = async () => {
-  await authStore.logout()
-  navigateTo('/auth/login')
+  if (isLoggingOut.value) {
+    return
+  }
+
+  isLoggingOut.value = true
+  closeUserMenu()
+
+  try {
+    await performLogout()
+  } catch (error) {
+    console.error('Logout error:', error)
+  } finally {
+    isLoggingOut.value = false
+  }
 }
+
+let documentClickHandler: ((event: MouseEvent) => void) | null = null
 
 onMounted(() => {
   if (import.meta.client) {
-    document.addEventListener('click', (e) => {
+    documentClickHandler = (e: MouseEvent) => {
       const target = e.target as HTMLElement
       // Check if click is outside both the dropdown and the button that opens it
       if (!target.closest('.user-menu') && isUserMenuOpen.value) {
         isUserMenuOpen.value = false
       }
-    })
+    }
 
-    const router = useRouter()
-    router.afterEach(() => {
-      closeMobileSidebar()
-    })
+    document.addEventListener('click', documentClickHandler)
   }
 })
+
+onBeforeUnmount(() => {
+  if (documentClickHandler) {
+    document.removeEventListener('click', documentClickHandler)
+    documentClickHandler = null
+  }
+})
+
+watch(
+  () => router.currentRoute.value.fullPath,
+  () => {
+    closeUserMenu()
+    closeMobileSidebar()
+  }
+)
 </script>
 
 <template>
@@ -99,9 +204,9 @@ onMounted(() => {
           </button>
 
           <div class="user-menu">
-            <button aria-label="Menu użytkownika" class="user-menu-btn" @click="toggleUserMenu">
+            <button aria-label="Menu uĹĽytkownika" class="user-menu-btn" @click="toggleUserMenu">
               <div class="user-avatar">
-                {{ currentUser ? ((currentUser.firstName?.[0] || '') + (currentUser.lastName?.[0] || '')) : 'U' }}
+                {{ userInitials }}
               </div>
               <svg class="chevron-icon" :class="{ 'is-open': isUserMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -112,10 +217,10 @@ onMounted(() => {
               <div v-if="isUserMenuOpen" class="user-dropdown">
                 <div class="user-dropdown-info">
                   <p class="user-dropdown-name">
-                    {{ currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Użytkownik' }}
+                    {{ currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'UĹĽytkownik' }}
                   </p>
-                  <p class="user-dropdown-email">{{ currentUser?.email || 'user@example.com' }}</p>
-                  <p class="user-dropdown-position">{{ currentUser?.position?.name || 'Stanowisko' }}</p>
+                  <p class="user-dropdown-email">{{ userDisplayEmail }}</p>
+                  <p class="user-dropdown-position">{{ userDisplayMeta }}</p>
                 </div>
 
                 <div class="user-dropdown-actions">
@@ -123,7 +228,7 @@ onMounted(() => {
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    Mój profil
+                    MĂłj profil
                   </NuxtLink>
                   <button class="dropdown-action-item" @click="handleLogout">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,12 +248,13 @@ onMounted(() => {
       </main>
 
       <footer class="app-footer">
-        <p>&copy; 2025 PortalForge. Wszystkie prawa zastrzeżone.</p>
+        <p>&copy; 2025 PortalForge. Wszystkie prawa zastrzeĹĽone.</p>
         <div class="footer-links">
-          <a href="#">Polityka prywatności</a>
+          <a href="#">Polityka prywatnoĹ›ci</a>
           <a href="#">Kontakt</a>
         </div>
       </footer>
     </div>
   </div>
 </template>
+

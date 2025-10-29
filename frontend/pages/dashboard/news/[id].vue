@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { News } from '~/types'
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
   layout: 'default',
@@ -8,6 +9,7 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const { fetchNewsById, deleteNews } = useNewsApi()
 
 const newsId = computed(() => parseInt(route.params.id as string))
@@ -17,6 +19,16 @@ const isDeleting = ref(false)
 const error = ref<string | null>(null)
 const showDeleteModal = ref(false)
 
+const canManageNews = computed(() => {
+  const role = authStore.user?.role
+  if (!role) {
+    return false
+  }
+
+  const normalized = role.toString().toLowerCase()
+  return normalized === 'admin' || normalized === 'marketing'
+})
+
 async function loadNews() {
   isLoading.value = true
   error.value = null
@@ -24,7 +36,7 @@ async function loadNews() {
   try {
     news.value = await fetchNewsById(newsId.value)
   } catch (err: any) {
-    error.value = err?.message || 'Nie udało się załadować newsa'
+    error.value = err?.message || 'Nie udaÄąâ€šo siĂ„â„˘ zaÄąâ€šadowaĂ„â€ˇ newsa'
     console.error(err)
   } finally {
     isLoading.value = false
@@ -32,7 +44,10 @@ async function loadNews() {
 }
 
 async function handleDelete() {
-  if (!news.value) return
+  if (!news.value || !canManageNews.value) {
+    showDeleteModal.value = false
+    return
+  }
 
   isDeleting.value = true
 
@@ -40,7 +55,14 @@ async function handleDelete() {
     await deleteNews(news.value.id)
     router.push('/dashboard/news')
   } catch (err: any) {
-    error.value = err?.message || 'Nie udało się usunąć newsa'
+    error.value = err?.message || 'Nie udalo sie usunac newsa'
+    console.error(err)
+  } finally {
+    isDeleting.value = false
+    showDeleteModal.value = false
+  }
+} catch (err: any) {
+    error.value = err?.message || 'Nie udaÄąâ€šo siĂ„â„˘ usunĂ„â€¦Ă„â€ˇ newsa'
     console.error(err)
   } finally {
     isDeleting.value = false
@@ -49,7 +71,11 @@ async function handleDelete() {
 }
 
 function handleEdit() {
+  if (!canManageNews.value) {
+    return
+  }
   router.push(`/dashboard/news/edit/${newsId.value}`)
+}`)
 }
 
 function handleBack() {
@@ -85,8 +111,8 @@ const getCategoryColor = (category: string) => {
 
 const getCategoryLabel = (category: string) => {
   const labels: Record<string, string> = {
-    'announcement': 'Ogłoszenie',
-    'Announcement': 'Ogłoszenie',
+    'announcement': 'OgÄąâ€šoszenie',
+    'Announcement': 'OgÄąâ€šoszenie',
     'product': 'Produkt',
     'Product': 'Produkt',
     'hr': 'HR',
@@ -119,7 +145,7 @@ onMounted(() => {
     <!-- Loading State -->
     <div v-if="isLoading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"/>
-      <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie aktualności...</p>
+      <p class="mt-4 text-gray-600 dark:text-gray-400">ÄąÂadowanie aktualnoÄąâ€şci...</p>
     </div>
 
     <!-- Error State -->
@@ -127,10 +153,10 @@ onMounted(() => {
       <p class="text-red-800 dark:text-red-200">{{ error }}</p>
       <div class="mt-4 flex gap-2">
         <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" @click="loadNews">
-          Spróbuj ponownie
+          SprÄ‚Ĺ‚buj ponownie
         </button>
         <button class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" @click="handleBack">
-          Powrót do listy
+          PowrÄ‚Ĺ‚t do listy
         </button>
       </div>
     </div>
@@ -143,9 +169,9 @@ onMounted(() => {
           class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
           @click="handleBack"
         >
-          ← Powrót do listy
+          Ă˘â€ Â PowrÄ‚Ĺ‚t do listy
         </button>
-        <div class="flex gap-2">
+        <div v-if="canManageNews" class="flex gap-2">
           <button
             class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
             @click="handleEdit"
@@ -156,7 +182,7 @@ onMounted(() => {
             class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium"
             @click="showDeleteModal = true"
           >
-            Usuń
+            UsuÄąâ€ž
           </button>
         </div>
       </div>
@@ -216,7 +242,7 @@ onMounted(() => {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
-              {{ news.views }} wyświetleń
+              {{ news.views }} wyÄąâ€şwietleÄąâ€ž
             </span>
           </div>
 
@@ -240,7 +266,7 @@ onMounted(() => {
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              Zobacz powiązane wydarzenie w kalendarzu
+              Zobacz powiĂ„â€¦zane wydarzenie w kalendarzu
             </button>
           </div>
         </div>
@@ -250,16 +276,16 @@ onMounted(() => {
     <!-- Delete Confirmation Modal -->
     <Teleport to="body">
       <div
-        v-if="showDeleteModal"
+        v-if="canManageNews && showDeleteModal"
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
         @click.self="showDeleteModal = false"
       >
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
           <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Potwierdź usunięcie
+            PotwierdÄąĹź usuniĂ„â„˘cie
           </h3>
           <p class="text-gray-600 dark:text-gray-400 mb-6">
-            Czy na pewno chcesz usunąć tę aktualność? Tej operacji nie można cofnąć.
+            Czy na pewno chcesz usunĂ„â€¦Ă„â€ˇ tĂ„â„˘ aktualnoÄąâ€şĂ„â€ˇ? Tej operacji nie moÄąÄ˝na cofnĂ„â€¦Ă„â€ˇ.
           </p>
           <div class="flex gap-4 justify-end">
             <button
@@ -274,7 +300,7 @@ onMounted(() => {
               :disabled="isDeleting"
               @click="handleDelete"
             >
-              {{ isDeleting ? 'Usuwanie...' : 'Usuń' }}
+              {{ isDeleting ? 'Usuwanie...' : 'UsuÄąâ€ž' }}
             </button>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import type { NewsCategory } from '~/types'
 
 definePageMeta({
-  // middleware: 'auth', // Disabled for testing
+  middleware: ['auth', 'news-admin'],
   layout: 'default'
 })
 
