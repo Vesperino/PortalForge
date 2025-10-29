@@ -1,13 +1,14 @@
-<script setup lang="ts">
+ <script setup lang="ts">
 import type { News, NewsCategory } from '~/types'
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
   layout: 'default',
   middleware: 'auth'
 })
 
-const { fetchAllNews } = useNewsApi()
-// const router = useRouter() // removed unused
+const authStore = useAuthStore()
+const { fetchAllNews, deleteNews } = useNewsApi()
 
 const selectedCategory = ref<string>('all')
 const searchQuery = ref<string>('')
@@ -16,27 +17,43 @@ const itemsPerPage = 3
 const allNews = ref<News[]>([])
 const isLoading = ref(false)
 const error = ref<string | null>(null)
+const deleteError = ref<string | null>(null)
+const showDeleteModal = ref(false)
+const isDeleting = ref(false)
+const newsPendingDeletion = ref<News | null>(null)
 
 const categories = [
-  { value: 'all', label: 'Wszystkie' },
-  { value: 'announcement', label: 'Ogłoszenia' },
+  { value: 'all', label: 'All' },
+  { value: 'announcement', label: 'Announcements' },
   { value: 'hr', label: 'HR' },
-  { value: 'product', label: 'Produkt' },
-  { value: 'tech', label: 'Technologia' },
-  { value: 'event', label: 'Wydarzenia' }
+  { value: 'product', label: 'Product' },
+  { value: 'tech', label: 'Technology' },
+  { value: 'event', label: 'Events' }
 ]
+
+const resolveErrorMessage = (input: unknown, fallback: string) => {
+  if (input && typeof input === 'object' && 'message' in input) {
+    const message = (input as { message?: unknown }).message
+    if (typeof message === 'string' && message.trim().length > 0) {
+      return message
+    }
+  }
+
+  return fallback
+}
 
 async function loadNews() {
   isLoading.value = true
   error.value = null
+  deleteError.value = null
 
   try {
     const category = selectedCategory.value !== 'all' ? selectedCategory.value as NewsCategory : undefined
     const newsData = await fetchAllNews(category)
     allNews.value = newsData
-  } catch (err) {
-    error.value = 'Failed to load news'
-    console.error(err)
+  } catch (err: unknown) {
+    error.value = resolveErrorMessage(err, 'Unable to load news.')
+    console.error('fetchAllNews error:', err)
   } finally {
     isLoading.value = false
   }
@@ -61,6 +78,16 @@ const filteredNews = computed(() => {
     news.excerpt?.toLowerCase().includes(query) ||
     news.content.toLowerCase().includes(query)
   )
+})
+
+const canManageNews = computed(() => {
+  const role = authStore.user?.role
+  if (!role) {
+    return false
+  }
+
+  const normalized = role.toString().toLowerCase()
+  return normalized === 'admin' || normalized === 'marketing'
 })
 
 const totalPages = computed(() => Math.ceil(filteredNews.value.length / itemsPerPage))
@@ -109,10 +136,10 @@ const getCategoryColor = (category: string) => {
 
 const getCategoryLabel = (category: string) => {
   const labels: Record<string, string> = {
-    'announcement': 'Ogłoszenie',
-    'Announcement': 'Ogłoszenie',
-    'product': 'Produkt',
-    'Product': 'Produkt',
+    'announcement': 'Announcement',
+    'Announcement': 'Announcement',
+    'product': 'Product',
+    'Product': 'Product',
     'hr': 'HR',
     'Hr': 'HR',
     'tech': 'Tech',
@@ -137,6 +164,44 @@ const getAuthorName = (news: News) => {
   }
   return 'Unknown'
 }
+
+const confirmDelete = (news: News) => {
+  deleteError.value = null
+  newsPendingDeletion.value = news
+  showDeleteModal.value = true
+}
+
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+  newsPendingDeletion.value = null
+}
+
+const handleDelete = async () => {
+  if (!newsPendingDeletion.value || !canManageNews.value) {
+    closeDeleteModal()
+    return
+  }
+
+  isDeleting.value = true
+  deleteError.value = null
+
+  try {
+    await deleteNews(newsPendingDeletion.value.id)
+    const deletedId = newsPendingDeletion.value.id
+    allNews.value = allNews.value.filter(n => n.id !== deletedId)
+
+    if (filteredNews.value.length === 0 && currentPage.value > 1) {
+      currentPage.value = Math.max(1, currentPage.value - 1)
+    }
+
+    closeDeleteModal()
+  } catch (err: unknown) {
+    deleteError.value = resolveErrorMessage(err, 'Unable to delete the news item.')
+    console.error('deleteNews error:', err)
+  } finally {
+    isDeleting.value = false
+  }
+}
 </script>
 
 <template>
@@ -144,38 +209,46 @@ const getAuthorName = (news: News) => {
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-        Aktualności
+        News
       </h1>
       <NuxtLink
+        v-if="canManageNews"
         to="/dashboard/news/create"
         class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-center"
       >
-        Dodaj aktualność
+        Add news
       </NuxtLink>
     </div>
 
     <!-- Loading State -->
     <div v-if="isLoading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"/>
-      <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie aktualności...</p>
+      <p class="mt-4 text-gray-600 dark:text-gray-400">Loading news...</p>
     </div>
 
     <!-- Error State -->
     <div v-else-if="error" class="bg-red-100 dark:bg-red-900 rounded-lg shadow-md p-6">
       <p class="text-red-800 dark:text-red-200">{{ error }}</p>
       <button class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" @click="loadNews">
-        Spróbuj ponownie
+        Try again
       </button>
     </div>
 
-    <template v-else>
+    <div v-else>
+      <div
+        v-if="deleteError"
+        class="mb-4 bg-red-100 dark:bg-red-900 rounded-lg shadow-md p-4 text-red-800 dark:text-red-200"
+      >
+        {{ deleteError }}
+      </div>
+
       <!-- Filters -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- Search -->
           <div>
             <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Szukaj
+              Search
             </label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -187,7 +260,7 @@ const getAuthorName = (news: News) => {
                 id="search"
                 v-model="searchQuery"
                 type="text"
-                placeholder="Szukaj aktualności..."
+                placeholder="Search news..."
                 class="pl-10 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
             </div>
@@ -196,7 +269,7 @@ const getAuthorName = (news: News) => {
           <!-- Category Filter -->
           <div>
             <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Kategoria
+              Category
             </label>
             <select
               id="category"
@@ -214,15 +287,15 @@ const getAuthorName = (news: News) => {
       <!-- News Stats -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-          <p class="text-sm text-gray-600 dark:text-gray-400">Wszystkie aktualności</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">All news</p>
           <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ allNews.length }}</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-          <p class="text-sm text-gray-600 dark:text-gray-400">Wyświetlane</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Filtered</p>
           <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ filteredNews.length }}</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-          <p class="text-sm text-gray-600 dark:text-gray-400">Ten miesiąc</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">This month</p>
           <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ thisMonthCount }}</p>
         </div>
       </div>
@@ -235,10 +308,10 @@ const getAuthorName = (news: News) => {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
           </svg>
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Brak aktualności
+            No news available
           </h3>
           <p class="text-gray-600 dark:text-gray-400">
-            Nie znaleziono aktualności spełniających wybrane kryteria.
+            No news match the selected filters.
           </p>
         </div>
 
@@ -269,7 +342,7 @@ const getAuthorName = (news: News) => {
                     {{ getCategoryLabel(news.category) }}
                   </span>
                   <span v-if="news.eventId" class="px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                    Wydarzenie
+                    Event
                   </span>
                 </div>
                 <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -304,14 +377,31 @@ const getAuthorName = (news: News) => {
               {{ news.excerpt }}
             </p>
 
-            <!-- News Actions -->
+                        <!-- News Actions -->
             <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
               <NuxtLink
                 :to="`/dashboard/news/${news.id}`"
                 class="text-sm text-blue-600 dark:text-blue-400 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+                @click.stop
               >
-                Czytaj więcej →
+                Read more
               </NuxtLink>
+              <div v-if="canManageNews" class="flex items-center gap-2">
+                <NuxtLink
+                  :to="`/dashboard/news/edit/${news.id}`"
+                  class="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors px-2 py-1 rounded"
+                  @click.stop
+                >
+                  Edit
+                </NuxtLink>
+                <button
+                  type="button"
+                  class="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors px-2 py-1 rounded"
+                  @click.stop="confirmDelete(news)"
+                >
+                  Usu "
+                </button>
+              </div>
             </div>
           </div>
         </article>
@@ -324,7 +414,7 @@ const getAuthorName = (news: News) => {
           <div class="text-sm text-gray-700 dark:text-gray-300">
             Strona <span class="font-medium">{{ currentPage }}</span> z <span class="font-medium">{{ totalPages }}</span>
             <span class="text-gray-500 dark:text-gray-400 ml-2">
-              ({{ paginatedNews.length }} z {{ filteredNews.length }} aktualności)
+              ({{ paginatedNews.length }} z {{ filteredNews.length }} aktualnosci)
             </span>
           </div>
 
@@ -371,6 +461,59 @@ const getAuthorName = (news: News) => {
           </div>
         </div>
       </div>
-    </template>
+    </div>
+
+    <Teleport to="body">
+      <div
+        v-if="showDeleteModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+        @click.self="closeDeleteModal"
+      >
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            Potwierdz usuniecie
+          </h3>
+          <p class="text-gray-600 dark:text-gray-400 mb-6">
+            Are you sure you want to delete the news "{{ newsPendingDeletion?.title }}"? This action cannot be undone.
+          </p>
+          <div class="flex gap-4 justify-end">
+            <button
+              type="button"
+              class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
+              :disabled="isDeleting"
+              @click="closeDeleteModal"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition font-medium"
+              :disabled="isDeleting"
+              @click="handleDelete"
+            >
+              {{ isDeleting ? 'Deleting...' : 'Delete' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

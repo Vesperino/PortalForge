@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import type { NewsCategory } from '~/types'
 
 definePageMeta({
-  // middleware: 'auth', // Disabled for testing
+  middleware: ['auth', 'news-admin'],
   layout: 'default'
 })
 
@@ -11,7 +11,7 @@ const route = useRoute()
 const router = useRouter()
 const { fetchNewsById, updateNews } = useNewsApi()
 
-const newsId = computed(() => parseInt(route.params.id as string))
+const newsId = computed(() => Number.parseInt(route.params.id as string, 10))
 
 const title = ref('')
 const excerpt = ref('')
@@ -240,3 +240,4 @@ onMounted(() => {
     </form>
   </div>
 </template>
+
