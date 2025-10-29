@@ -87,10 +87,9 @@ export const useAuth = () => {
 
       authStore.setError('Wystąpił nieoczekiwany błąd')
       return { success: false, error: 'Wystąpił nieoczekiwany błąd' }
-    } catch (err) {
+    } catch {
       const errorMessage = 'Wystąpił błąd podczas rejestracji'
       authStore.setError(errorMessage)
-      console.error('Registration error:', err)
       return { success: false, error: errorMessage }
     } finally {
       authStore.setLoading(false)
@@ -163,7 +162,7 @@ export const useAuth = () => {
       authStore.setTokens(data.value.accessToken, data.value.refreshToken)
 
       return { success: true, error: null }
-    } catch (err) {
+    } catch {
       authStore.clearUser()
       await router.push('/auth/login')
       return { success: false, error: 'Token refresh failed' }

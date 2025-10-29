@@ -1,4 +1,4 @@
-import type { Employee, Department, Position, Event, News, Document } from '~/types'
+import type { Employee, News, Document } from '~/types'
 import { mockEmployees } from '~/data/mockEmployees'
 import { mockDepartments } from '~/data/mockDepartments'
 import { mockPositions } from '~/data/mockPositions'

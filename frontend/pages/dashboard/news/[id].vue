@@ -11,7 +11,7 @@ const router = useRouter()
 const { fetchNewsById, deleteNews } = useNewsApi()
 const { data: authData } = useAuth()
 
-const newsId = parseInt(route.params.id as string)
+const newsId = Number.parseInt(route.params.id as string)
 const news = ref<News | null>(null)
 const isLoading = ref(false)
 const error = ref<string | null>(null)
@@ -136,14 +136,14 @@ function getAuthorInitials(authorName: string) {
 
     <!-- Loading State -->
     <div v-if="isLoading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"/>
       <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie aktualności...</p>
     </div>
 
     <!-- Error State -->
     <div v-else-if="error" class="bg-red-100 dark:bg-red-900 rounded-lg shadow-md p-6">
       <p class="text-red-800 dark:text-red-200">{{ error }}</p>
-      <button @click="loadNews" class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+      <button class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" @click="loadNews">
         Spróbuj ponownie
       </button>
     </div>
@@ -213,7 +213,7 @@ function getAuthorInitials(authorName: string) {
           <p class="text-xl text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
             {{ news.excerpt }}
           </p>
-          <div class="text-gray-700 dark:text-gray-300 leading-relaxed" v-html="news.content"></div>
+          <div class="text-gray-700 dark:text-gray-300 leading-relaxed" v-html="news.content"/>
         </div>
       </div>
     </article>

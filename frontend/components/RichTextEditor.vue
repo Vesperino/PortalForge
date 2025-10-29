@@ -76,73 +76,73 @@ function removeLink() {
     <div v-if="editor" class="bg-gray-100 border-b p-2 flex flex-wrap gap-1">
       <button
         type="button"
-        @click="toggleBold"
         :class="{ 'bg-gray-300': editor.isActive('bold') }"
         class="px-3 py-1 rounded hover:bg-gray-200 font-bold"
+        @click="toggleBold"
       >
         B
       </button>
       <button
         type="button"
-        @click="toggleItalic"
         :class="{ 'bg-gray-300': editor.isActive('italic') }"
         class="px-3 py-1 rounded hover:bg-gray-200 italic"
+        @click="toggleItalic"
       >
         I
       </button>
       <button
         type="button"
-        @click="toggleHeading(1)"
         :class="{ 'bg-gray-300': editor.isActive('heading', { level: 1 }) }"
         class="px-3 py-1 rounded hover:bg-gray-200"
+        @click="toggleHeading(1)"
       >
         H1
       </button>
       <button
         type="button"
-        @click="toggleHeading(2)"
         :class="{ 'bg-gray-300': editor.isActive('heading', { level: 2 }) }"
         class="px-3 py-1 rounded hover:bg-gray-200"
+        @click="toggleHeading(2)"
       >
         H2
       </button>
       <button
         type="button"
-        @click="toggleHeading(3)"
         :class="{ 'bg-gray-300': editor.isActive('heading', { level: 3 }) }"
         class="px-3 py-1 rounded hover:bg-gray-200"
+        @click="toggleHeading(3)"
       >
         H3
       </button>
       <button
         type="button"
-        @click="toggleBulletList"
         :class="{ 'bg-gray-300': editor.isActive('bulletList') }"
         class="px-3 py-1 rounded hover:bg-gray-200"
+        @click="toggleBulletList"
       >
         • List
       </button>
       <button
         type="button"
-        @click="toggleOrderedList"
         :class="{ 'bg-gray-300': editor.isActive('orderedList') }"
         class="px-3 py-1 rounded hover:bg-gray-200"
+        @click="toggleOrderedList"
       >
         1. List
       </button>
       <button
         type="button"
-        @click="addLink"
         :class="{ 'bg-gray-300': editor.isActive('link') }"
         class="px-3 py-1 rounded hover:bg-gray-200"
+        @click="addLink"
       >
         Link
       </button>
       <button
         v-if="editor.isActive('link')"
         type="button"
-        @click="removeLink"
         class="px-3 py-1 rounded hover:bg-gray-200"
+        @click="removeLink"
       >
         Unlink
       </button>

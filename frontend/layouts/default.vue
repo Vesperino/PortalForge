@@ -14,7 +14,7 @@ const employees = getEmployees()
 const currentUser = computed(() => employees.length > 0 ? employees[0] : null)
 
 function forceTextColorUpdate() {
-  if (process.client) {
+  if (import.meta.client) {
     document.documentElement.classList.add('force-color-refresh')
     setTimeout(() => {
       document.documentElement.classList.remove('force-color-refresh')
@@ -52,7 +52,7 @@ const handleLogout = async () => {
 }
 
 onMounted(() => {
-  if (process.client) {
+  if (import.meta.client) {
     document.addEventListener('click', (e) => {
       const target = e.target as HTMLElement
       // Check if click is outside both the dropdown and the button that opens it

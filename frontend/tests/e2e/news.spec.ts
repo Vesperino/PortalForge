@@ -63,9 +63,6 @@ test.describe('News System', () => {
   })
 
   test('should navigate to single news article and display full content', async ({ page }) => {
-    // First, fetch news from API to get a valid news ID
-    const apiUrl = 'http://localhost:5155/api/news'
-
     try {
       // Try to navigate directly to a news detail page (news ID 1 from seed data)
       await page.goto('/dashboard/news/1')
@@ -83,7 +80,7 @@ test.describe('News System', () => {
       const hasContent = await page.locator('article, .news-content, p').first().isVisible().catch(() => false)
 
       expect(hasTitle || hasContent).toBe(true)
-    } catch (error) {
+    } catch {
       // If direct navigation fails, skip this test
       test.skip()
     }
@@ -102,7 +99,7 @@ test.describe('News System', () => {
 
       if (hasViewCount) {
         const viewCountText = await viewCountElement.textContent()
-        const initialViews = parseInt(viewCountText?.match(/\d+/)?.[0] || '0')
+        const initialViews = Number.parseInt(viewCountText?.match(/\d+/)?.[0] || '0')
 
         // Navigate away and back to increment views
         await page.goto('/dashboard/news')
@@ -114,14 +111,14 @@ test.describe('News System', () => {
 
         // Check if view count increased
         const newViewCountText = await viewCountElement.textContent()
-        const newViews = parseInt(newViewCountText?.match(/\d+/)?.[0] || '0')
+        const newViews = Number.parseInt(newViewCountText?.match(/\d+/)?.[0] || '0')
 
         expect(newViews).toBeGreaterThanOrEqual(initialViews)
       } else {
         // View count not visible, test passes
         expect(true).toBe(true)
       }
-    } catch (error) {
+    } catch {
       // If test fails, skip it
       test.skip()
     }

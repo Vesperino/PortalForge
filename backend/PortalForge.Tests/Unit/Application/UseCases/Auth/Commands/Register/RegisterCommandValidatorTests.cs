@@ -122,7 +122,8 @@ public class RegisterCommandValidatorTests
             FirstName = "Jane",
             LastName = "Smith",
             Department = "HR",
-            Position = "Manager"
+            Position = "Manager",
+            IsEmailVerified = true  // User with verified email should block registration
         };
 
         _userRepositoryMock

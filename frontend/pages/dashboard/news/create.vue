@@ -58,7 +58,7 @@ async function handleSubmit() {
   <div class="max-w-4xl mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Create News</h1>
 
-    <form @submit.prevent="handleSubmit" class="space-y-6">
+    <form class="space-y-6" @submit.prevent="handleSubmit">
       <div v-if="error" class="p-4 bg-red-100 text-red-700 rounded">
         {{ error }}
       </div>
@@ -70,7 +70,7 @@ async function handleSubmit() {
           type="text"
           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
           required
-        />
+        >
       </div>
 
       <div>
@@ -107,7 +107,7 @@ async function handleSubmit() {
           v-model="imageUrl"
           type="url"
           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-        />
+        >
       </div>
 
       <div class="flex gap-4">
@@ -120,8 +120,8 @@ async function handleSubmit() {
         </button>
         <button
           type="button"
-          @click="router.back()"
           class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+          @click="router.back()"
         >
           Cancel
         </button>
