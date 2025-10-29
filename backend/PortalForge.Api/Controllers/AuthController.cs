@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Common.Models;
 using PortalForge.Application.UseCases.Auth.Commands.Login;
 using PortalForge.Application.UseCases.Auth.Commands.Logout;
@@ -20,11 +21,13 @@ public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<AuthController> _logger;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public AuthController(IMediator mediator, ILogger<AuthController> logger)
+    public AuthController(IMediator mediator, ILogger<AuthController> logger, IUnitOfWork unitOfWork)
     {
         _mediator = mediator;
         _logger = logger;
+        _unitOfWork = unitOfWork;
     }
 
     [HttpPost("register")]
@@ -58,16 +61,29 @@ public class AuthController : ControllerBase
 
         var result = await _mediator.Send(command);
 
+        // Get full user data from database
+        var user = await _unitOfWork.UserRepository.GetByIdAsync(result.UserId ?? Guid.Empty);
+
+        if (user == null)
+        {
+            return BadRequest("User not found");
+        }
+
         var response = new AuthResponseDto
         {
             User = new UserDto
             {
-                Id = result.UserId ?? Guid.Empty,
-                Email = result.Email ?? string.Empty,
-                FirstName = string.Empty,
-                LastName = string.Empty,
-                IsEmailVerified = !result.RequiresEmailVerification,
-                CreatedAt = DateTime.UtcNow
+                Id = user.Id,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                PhoneNumber = user.PhoneNumber,
+                Department = user.Department,
+                Position = user.Position,
+                Role = user.Role.ToString().ToLower(),
+                IsEmailVerified = user.IsEmailVerified,
+                MustChangePassword = user.MustChangePassword,
+                CreatedAt = user.CreatedAt
             },
             AccessToken = result.AccessToken ?? string.Empty,
             RefreshToken = result.RefreshToken ?? string.Empty
@@ -177,7 +193,11 @@ public class AuthController : ControllerBase
             FirstName = user.FirstName,
             LastName = user.LastName,
             PhoneNumber = user.PhoneNumber,
+            Department = user.Department,
+            Position = user.Position,
+            Role = user.Role.ToString().ToLower(),
             IsEmailVerified = user.IsEmailVerified,
+            MustChangePassword = user.MustChangePassword,
             CreatedAt = user.CreatedAt
         };
 

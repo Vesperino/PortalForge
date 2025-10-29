@@ -5,7 +5,10 @@ export interface User {
   firstName?: string
   lastName?: string
   phoneNumber?: string
+  department?: string
+  position?: string
   isEmailVerified: boolean
+  mustChangePassword?: boolean
   role?: UserRole
   createdAt?: string
 }
