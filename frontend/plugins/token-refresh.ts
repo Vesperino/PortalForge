@@ -15,12 +15,12 @@ export default defineNuxtPlugin(() => {
     const intervalId = setInterval(async () => {
       // Check if still authenticated before refreshing
       if (authStore.isAuthenticated) {
-        console.log('[Token Refresh] Refreshing access token...')
-        const result = await refreshToken()
-        if (result.success) {
+        try {
+          console.log('[Token Refresh] Refreshing access token...')
+          await refreshToken()
           console.log('[Token Refresh] Token refreshed successfully')
-        } else {
-          console.error('[Token Refresh] Failed to refresh token')
+        } catch (error) {
+          console.error('[Token Refresh] Failed to refresh token', error)
           clearInterval(intervalId)
         }
       } else {
