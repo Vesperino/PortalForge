@@ -41,7 +41,7 @@ describe('useNewsApi', () => {
         }
       ]
 
-      global.$fetch = vi.fn().mockResolvedValue(mockNews)
+      global.$fetch = vi.fn().mockResolvedValue({ items: mockNews })
 
       const { fetchAllNews } = useNewsApi()
       const result = await fetchAllNews()
@@ -72,7 +72,7 @@ describe('useNewsApi', () => {
         }
       ]
 
-      global.$fetch = vi.fn().mockResolvedValue(mockNews)
+      global.$fetch = vi.fn().mockResolvedValue({ items: mockNews })
 
       const { fetchAllNews } = useNewsApi()
       const result = await fetchAllNews('hr')
