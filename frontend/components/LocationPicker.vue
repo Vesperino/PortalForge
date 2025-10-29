@@ -35,7 +35,7 @@ onMounted(() => {
     // Try to extract coordinates from location string
     // Format: "Address (lat: XX.XXXX, lng: YY.YYYY)"
     const coordsMatch = props.modelValue.match(/lat:\s*([-\d.]+),\s*lng:\s*([-\d.]+)/)
-    if (coordsMatch) {
+    if (coordsMatch && coordsMatch[1] && coordsMatch[2]) {
       const lat = parseFloat(coordsMatch[1])
       const lng = parseFloat(coordsMatch[2])
       center.value = { lat, lng }
