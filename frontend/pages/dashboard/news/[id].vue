@@ -9,29 +9,22 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 const { fetchNewsById, deleteNews } = useNewsApi()
-const authStore = useAuthStore()
 
-const newsId = Number.parseInt(route.params.id as string)
+const newsId = computed(() => parseInt(route.params.id as string))
 const news = ref<News | null>(null)
 const isLoading = ref(false)
-const error = ref<string | null>(null)
-const showDeleteConfirm = ref(false)
 const isDeleting = ref(false)
-
-// Check if user can edit/delete (Admin, HR, Marketing)
-const canEdit = computed(() => {
-  const userRole = authStore.user?.role
-  return ['Admin', 'Hr', 'Marketing'].includes(userRole || '')
-})
+const error = ref<string | null>(null)
+const showDeleteModal = ref(false)
 
 async function loadNews() {
   isLoading.value = true
   error.value = null
 
   try {
-    news.value = await fetchNewsById(newsId)
-  } catch (err) {
-    error.value = 'Failed to load news article'
+    news.value = await fetchNewsById(newsId.value)
+  } catch (err: any) {
+    error.value = err?.message || 'Nie udało się załadować newsa'
     console.error(err)
   } finally {
     isLoading.value = false
@@ -42,25 +35,26 @@ async function handleDelete() {
   if (!news.value) return
 
   isDeleting.value = true
+
   try {
     await deleteNews(news.value.id)
-    await router.push('/dashboard/news')
-  } catch (err) {
-    error.value = 'Nie udało się usunąć aktualności'
+    router.push('/dashboard/news')
+  } catch (err: any) {
+    error.value = err?.message || 'Nie udało się usunąć newsa'
     console.error(err)
   } finally {
     isDeleting.value = false
-    showDeleteConfirm.value = false
+    showDeleteModal.value = false
   }
 }
 
-function goToEdit() {
-  router.push(`/dashboard/news/edit/${newsId}`)
+function handleEdit() {
+  router.push(`/dashboard/news/edit/${newsId.value}`)
 }
 
-onMounted(() => {
-  loadNews()
-})
+function handleBack() {
+  router.push('/dashboard/news')
+}
 
 const formatDate = (dateString: string | Date) => {
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString
@@ -105,50 +99,23 @@ const getCategoryLabel = (category: string) => {
   return labels[category] || category
 }
 
-const goBack = () => {
-  router.push('/dashboard/news')
+const getAuthorName = (news: News) => {
+  if (news.authorName) {
+    return news.authorName
+  }
+  if (news.author) {
+    return `${news.author.firstName} ${news.author.lastName}`
+  }
+  return 'Nieznany autor'
 }
 
-const authorName = computed(() => {
-  if (news.value?.author) {
-    return `${news.value.author.firstName} ${news.value.author.lastName}`
-  }
-  return 'Unknown'
+onMounted(() => {
+  loadNews()
 })
-
-function getAuthorInitials(authorName: string) {
-  const parts = authorName.split(' ')
-  if (parts.length >= 2) {
-    const firstInitial = parts[0]?.charAt(0) || ''
-    const lastInitial = parts[parts.length - 1]?.charAt(0) || ''
-    return (firstInitial + lastInitial).toUpperCase()
-  }
-  return authorName.substring(0, Math.min(2, authorName.length)).toUpperCase()
-}
-
-function copyToClipboard() {
-  if (typeof window !== 'undefined' && window.navigator?.clipboard) {
-    window.navigator.clipboard.writeText(window.location.href)
-  }
-}
 </script>
 
 <template>
-  <div class="space-y-6">
-    <!-- Back Button -->
-    <div>
-      <button
-        type="button"
-        class="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-        @click="goBack"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Powrót do aktualności
-      </button>
-    </div>
-
+  <div class="max-w-4xl mx-auto space-y-6">
     <!-- Loading State -->
     <div v-if="isLoading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"/>
@@ -158,182 +125,160 @@ function copyToClipboard() {
     <!-- Error State -->
     <div v-else-if="error" class="bg-red-100 dark:bg-red-900 rounded-lg shadow-md p-6">
       <p class="text-red-800 dark:text-red-200">{{ error }}</p>
-      <button class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" @click="loadNews">
-        Spróbuj ponownie
-      </button>
+      <div class="mt-4 flex gap-2">
+        <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" @click="loadNews">
+          Spróbuj ponownie
+        </button>
+        <button class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" @click="handleBack">
+          Powrót do listy
+        </button>
+      </div>
     </div>
 
-    <!-- News Article -->
-    <article v-else-if="news" class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-      <!-- Featured Image -->
-      <div v-if="news.imageUrl" class="h-96 overflow-hidden">
-        <img
-          :src="news.imageUrl"
-          :alt="news.title"
-          class="w-full h-full object-cover"
-        >
-      </div>
-
-      <!-- Article Content -->
-      <div class="p-8">
-        <!-- Meta Information -->
-        <div class="flex items-center gap-3 mb-6">
-          <span
-            :class="getCategoryColor(news.category)"
-            class="px-3 py-1 text-sm font-medium rounded-full"
-          >
-            {{ getCategoryLabel(news.category) }}
-          </span>
-          <span v-if="news.eventId" class="px-3 py-1 text-sm font-medium rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-            Wydarzenie
-          </span>
-        </div>
-
-        <!-- Title -->
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          {{ news.title }}
-        </h1>
-
-        <!-- Author and Date -->
-        <div class="flex items-center gap-6 mb-8 pb-8 border-t border-gray-200 dark:border-gray-700">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-              {{ getAuthorInitials(authorName) }}
-            </div>
-            <div>
-              <p class="font-medium text-gray-900 dark:text-white">
-                {{ authorName }}
-              </p>
-            </div>
-          </div>
-          <div class="flex items-center gap-4 text-gray-600 dark:text-gray-400">
-            <div class="flex items-center gap-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span class="text-sm">{{ formatDate(news.createdAt) }}</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              <span class="text-sm">{{ news.views }} wyświetleń</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Article Content -->
-        <div class="prose prose-lg dark:prose-invert max-w-none">
-          <p class="text-xl text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
-            {{ news.excerpt }}
-          </p>
-          <div class="text-gray-700 dark:text-gray-300 leading-relaxed" v-html="news.content"/>
-        </div>
-      </div>
-    </article>
-
-    <!-- Share & Actions -->
-    <div v-if="news" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+    <!-- News Content -->
+    <template v-else-if="news">
+      <!-- Header with Actions -->
       <div class="flex items-center justify-between">
-        <div>
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Udostępnij
-          </h3>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            Podziel się tą aktualnością z zespołem
-          </p>
-        </div>
+        <button
+          class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+          @click="handleBack"
+        >
+          ← Powrót do listy
+        </button>
         <div class="flex gap-2">
           <button
-            type="button"
-            class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            @click="copyToClipboard"
+            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
+            @click="handleEdit"
           >
-            Kopiuj link
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Admin Actions -->
-    <div v-if="news && canEdit" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Zarządzanie
-          </h3>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            Edytuj lub usuń tę aktualność
-          </p>
-        </div>
-        <div class="flex gap-3">
-          <button
-            type="button"
-            class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            @click="goToEdit"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
             Edytuj
           </button>
           <button
-            type="button"
-            class="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            @click="showDeleteConfirm = true"
+            class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium"
+            @click="showDeleteModal = true"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
             Usuń
           </button>
         </div>
       </div>
-    </div>
+
+      <!-- Main Article -->
+      <article class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <!-- Image -->
+        <div v-if="news.imageUrl" class="h-96 overflow-hidden">
+          <img
+            :src="news.imageUrl"
+            :alt="news.title"
+            class="w-full h-full object-cover"
+          >
+        </div>
+
+        <div class="p-8 space-y-6">
+          <!-- Categories and Tags -->
+          <div class="flex flex-wrap items-center gap-2">
+            <span
+              :class="getCategoryColor(news.category)"
+              class="px-3 py-1 text-xs font-medium rounded-full"
+            >
+              {{ getCategoryLabel(news.category) }}
+            </span>
+            <span v-if="news.eventId" class="px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+              Wydarzenie
+            </span>
+          </div>
+
+          <!-- Title -->
+          <h1 class="text-4xl font-bold text-gray-900 dark:text-white">
+            {{ news.title }}
+          </h1>
+
+          <!-- Meta Information -->
+          <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 pb-6 border-b border-gray-200 dark:border-gray-700">
+            <span class="flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              {{ getAuthorName(news) }}
+            </span>
+            <span class="flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {{ formatDate(news.createdAt) }}
+            </span>
+            <span v-if="news.updatedAt" class="flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Zaktualizowano: {{ formatDate(news.updatedAt) }}
+            </span>
+            <span class="flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              {{ news.views }} wyświetleń
+            </span>
+          </div>
+
+          <!-- Excerpt -->
+          <div v-if="news.excerpt" class="text-xl text-gray-700 dark:text-gray-300 leading-relaxed italic">
+            {{ news.excerpt }}
+          </div>
+
+          <!-- Content (Rich Text) -->
+          <div
+            class="prose dark:prose-invert max-w-none text-gray-900 dark:text-gray-100"
+            v-html="news.content"
+          />
+
+          <!-- Event Link -->
+          <div v-if="news.eventId" class="pt-6 border-t border-gray-200 dark:border-gray-700">
+            <button
+              class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors"
+              @click="router.push(`/dashboard/calendar?eventId=${news.eventId}`)"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Zobacz powiązane wydarzenie w kalendarzu
+            </button>
+          </div>
+        </div>
+      </article>
+    </template>
 
     <!-- Delete Confirmation Modal -->
-    <div
-      v-if="showDeleteConfirm"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      @click.self="showDeleteConfirm = false"
-    >
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-        <div class="flex items-start gap-4">
-          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
-            <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <div class="flex-1">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Usuń aktualność
-            </h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
-              Czy na pewno chcesz usunąć tę aktualność? Ta akcja jest nieodwracalna.
-            </p>
-            <div class="flex gap-3 justify-end">
-              <button
-                type="button"
-                class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                :disabled="isDeleting"
-                @click="showDeleteConfirm = false"
-              >
-                Anuluj
-              </button>
-              <button
-                type="button"
-                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="isDeleting"
-                @click="handleDelete"
-              >
-                <span v-if="isDeleting">Usuwanie...</span>
-                <span v-else>Usuń</span>
-              </button>
-            </div>
+    <Teleport to="body">
+      <div
+        v-if="showDeleteModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+        @click.self="showDeleteModal = false"
+      >
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            Potwierdź usunięcie
+          </h3>
+          <p class="text-gray-600 dark:text-gray-400 mb-6">
+            Czy na pewno chcesz usunąć tę aktualność? Tej operacji nie można cofnąć.
+          </p>
+          <div class="flex gap-4 justify-end">
+            <button
+              class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
+              :disabled="isDeleting"
+              @click="showDeleteModal = false"
+            >
+              Anuluj
+            </button>
+            <button
+              class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition font-medium"
+              :disabled="isDeleting"
+              @click="handleDelete"
+            >
+              {{ isDeleting ? 'Usuwanie...' : 'Usuń' }}
+            </button>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
