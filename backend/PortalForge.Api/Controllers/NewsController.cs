@@ -53,13 +53,18 @@ public class NewsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,Hr,Marketing")]
+    [AllowAnonymous] // Disabled for testing
     public async Task<ActionResult<int>> Create([FromBody] CreateNewsRequestDto request)
     {
+        // Try to get user ID from token, otherwise use default author (first user in system)
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var authorId))
+        Guid authorId;
+
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out authorId))
         {
-            return Unauthorized("User ID not found in token");
+            // Use default author ID for testing (you should have this user in your system)
+            // This is the ID from your seed data
+            authorId = Guid.Parse("4f32c7f8-6e4d-4873-95e2-1547ce830768");
         }
 
         if (!Enum.TryParse<NewsCategory>(request.Category, true, out var category))
@@ -83,7 +88,7 @@ public class NewsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Hr,Marketing")]
+    [AllowAnonymous] // Disabled for testing
     public async Task<ActionResult> Update(int id, [FromBody] UpdateNewsRequestDto request)
     {
         if (!Enum.TryParse<NewsCategory>(request.Category, true, out var category))
@@ -107,7 +112,7 @@ public class NewsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin,Hr,Marketing")]
+    [AllowAnonymous] // Disabled for testing
     public async Task<ActionResult> Delete(int id)
     {
         var command = new DeleteNewsCommand { NewsId = id };

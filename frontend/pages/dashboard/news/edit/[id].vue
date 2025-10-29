@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { NewsCategory, News } from '~/types'
+import type { NewsCategory } from '~/types'
 
 definePageMeta({
   // middleware: 'auth', // Disabled for testing
@@ -11,23 +11,25 @@ const route = useRoute()
 const router = useRouter()
 const { fetchNewsById, updateNews } = useNewsApi()
 
-const newsId = Number.parseInt(route.params.id as string)
-const news = ref<News | null>(null)
-const isLoading = ref(false)
+const newsId = computed(() => parseInt(route.params.id as string))
+
 const title = ref('')
 const excerpt = ref('')
 const content = ref('')
 const imageUrl = ref('')
 const category = ref<NewsCategory>('announcement')
+const eventId = ref<number | undefined>(undefined)
+const isLoading = ref(false)
 const isSubmitting = ref(false)
 const error = ref<string | null>(null)
+const successMessage = ref<string | null>(null)
 
 const categories: { value: NewsCategory; label: string }[] = [
   { value: 'announcement', label: 'Ogłoszenie' },
   { value: 'product', label: 'Produkt' },
   { value: 'hr', label: 'HR' },
-  { value: 'tech', label: 'Tech' },
-  { value: 'event', label: 'Event' }
+  { value: 'tech', label: 'Technologia' },
+  { value: 'event', label: 'Wydarzenie' }
 ]
 
 async function loadNews() {
@@ -35,16 +37,16 @@ async function loadNews() {
   error.value = null
 
   try {
-    news.value = await fetchNewsById(newsId)
+    const news = await fetchNewsById(newsId.value)
 
-    // Populate form with existing data
-    title.value = news.value.title
-    excerpt.value = news.value.excerpt
-    content.value = news.value.content
-    imageUrl.value = news.value.imageUrl || ''
-    category.value = news.value.category.toLowerCase() as NewsCategory
-  } catch (err) {
-    error.value = 'Nie udało się załadować aktualności'
+    title.value = news.title
+    excerpt.value = news.excerpt || ''
+    content.value = news.content
+    imageUrl.value = news.imageUrl || ''
+    category.value = news.category.toLowerCase() as NewsCategory
+    eventId.value = news.eventId || undefined
+  } catch (err: any) {
+    error.value = err?.message || 'Nie udało się załadować newsa'
     console.error(err)
   } finally {
     isLoading.value = false
@@ -59,23 +61,34 @@ async function handleSubmit() {
 
   isSubmitting.value = true
   error.value = null
+  successMessage.value = null
 
   try {
-    await updateNews(newsId, {
+    await updateNews(newsId.value, {
       title: title.value,
       excerpt: excerpt.value,
       content: content.value,
       imageUrl: imageUrl.value || undefined,
-      category: category.value
+      category: category.value,
+      eventId: eventId.value
     })
 
-    await router.push(`/dashboard/news/${newsId}`)
-  } catch (err) {
-    error.value = 'Nie udało się zaktualizować aktualności. Spróbuj ponownie.'
+    successMessage.value = 'News zaktualizowany pomyślnie!'
+
+    // Redirect after short delay
+    setTimeout(() => {
+      router.push(`/dashboard/news/${newsId.value}`)
+    }, 1000)
+  } catch (err: any) {
+    error.value = err?.message || 'Nie udało się zaktualizować newsa. Spróbuj ponownie.'
     console.error(err)
   } finally {
     isSubmitting.value = false
   }
+}
+
+function handleCancel() {
+  router.push(`/dashboard/news/${newsId.value}`)
 }
 
 onMounted(() => {
@@ -84,54 +97,63 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto p-6">
-    <!-- Back Button -->
-    <div class="mb-6">
+  <div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+        Edytuj aktualność
+      </h1>
       <button
         type="button"
-        class="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-        @click="router.back()"
+        class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+        @click="handleCancel"
       >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Wróć
+        ← Powrót
       </button>
     </div>
-
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Edytuj aktualność</h1>
 
     <!-- Loading State -->
     <div v-if="isLoading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"/>
-      <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie...</p>
+      <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie aktualności...</p>
     </div>
 
-    <!-- Edit Form -->
-    <form v-else class="space-y-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-8" @submit.prevent="handleSubmit">
-      <div v-if="error" class="p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-lg">
+    <!-- Form -->
+    <form v-else class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 space-y-6" @submit.prevent="handleSubmit">
+      <!-- Success Message -->
+      <div v-if="successMessage" class="p-4 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg">
+        {{ successMessage }}
+      </div>
+
+      <!-- Error Message -->
+      <div v-if="error" class="p-4 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-lg">
         {{ error }}
       </div>
 
+      <!-- Title -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Tytuł *
         </label>
         <input
+          id="title"
           v-model="title"
           type="text"
-          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          placeholder="Wprowadź tytuł aktualności"
           required
         >
       </div>
 
+      <!-- Category -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Kategoria *
         </label>
         <select
+          id="category"
           v-model="category"
-          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           required
         >
           <option v-for="cat in categories" :key="cat.value" :value="cat.value">
@@ -140,18 +162,22 @@ onMounted(() => {
         </select>
       </div>
 
+      <!-- Excerpt -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label for="excerpt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Skrót *
         </label>
         <textarea
+          id="excerpt"
           v-model="excerpt"
           rows="3"
-          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          placeholder="Krótki opis aktualności (wyświetlany na liście)"
           required
         />
       </div>
 
+      <!-- Content (Rich Text Editor) -->
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Treść *
@@ -159,40 +185,54 @@ onMounted(() => {
         <RichTextEditor v-model="content" />
       </div>
 
+      <!-- Image URL -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          URL obrazu
+        <label for="imageUrl" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          URL obrazka
         </label>
         <input
+          id="imageUrl"
           v-model="imageUrl"
           type="url"
-          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           placeholder="https://example.com/image.jpg"
         >
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Opcjonalne - dodaj link do obrazu nagłówkowego
+          Opcjonalnie: Link do obrazka który będzie wyświetlany jako miniatura
         </p>
       </div>
 
-      <div class="flex gap-4 pt-4">
+      <!-- Event ID (optional) -->
+      <div>
+        <label for="eventId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          ID Wydarzenia (opcjonalne)
+        </label>
+        <input
+          id="eventId"
+          v-model.number="eventId"
+          type="number"
+          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          placeholder="Zostaw puste jeśli nie jest powiązane z wydarzeniem"
+        >
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Jeśli news jest związany z wydarzeniem, podaj jego ID
+        </p>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
           type="submit"
-          :disabled="isSubmitting"
-          class="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          :disabled="isSubmitting || isLoading"
+          class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition font-medium"
         >
-          <svg v-if="!isSubmitting" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-          <svg v-else class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-          </svg>
           {{ isSubmitting ? 'Zapisywanie...' : 'Zapisz zmiany' }}
         </button>
         <button
           type="button"
-          class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-          @click="router.back()"
+          class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
+          :disabled="isSubmitting || isLoading"
+          @click="handleCancel"
         >
           Anuluj
         </button>
