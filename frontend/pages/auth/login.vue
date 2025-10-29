@@ -26,8 +26,13 @@ async function handleLogin() {
   error.value = null
 
   try {
-    await login(email.value, password.value)
-    await router.push('/dashboard')
+    const response = await login(email.value, password.value)
+
+    // Jeśli użytkownik musi zmienić hasło, login() już przekieruje do /auth/change-password
+    // W przeciwnym razie przekieruj do dashboard
+    if (!response.user.mustChangePassword) {
+      await router.push('/dashboard')
+    }
   } catch (err: any) {
     error.value = err.message || 'Wystąpił błąd podczas logowania'
     console.error('Login error:', err)
