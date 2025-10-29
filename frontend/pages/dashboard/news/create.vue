@@ -18,7 +18,7 @@ const category = ref<NewsCategory>('announcement')
 const eventId = ref<number | undefined>(undefined)
 const isEvent = ref(false)
 const eventHashtag = ref('')
-const eventDateTime = ref('')
+const eventDateTime = ref<Date | null>(null)
 const eventLocation = ref('')
 const departmentId = ref<number | undefined>(undefined)
 const isSubmitting = ref(false)
@@ -53,7 +53,7 @@ async function handleSubmit() {
       eventId: eventId.value,
       isEvent: isEvent.value,
       eventHashtag: eventHashtag.value || undefined,
-      eventDateTime: eventDateTime.value || undefined,
+      eventDateTime: eventDateTime.value?.toISOString() || undefined,
       eventLocation: eventLocation.value || undefined,
       departmentId: departmentId.value
     })
@@ -169,31 +169,16 @@ function handleCancel() {
         </div>
 
         <!-- Event Date Time -->
-        <div>
-          <label for="eventDateTime" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Data i godzina wydarzenia
-          </label>
-          <input
-            id="eventDateTime"
-            v-model="eventDateTime"
-            type="datetime-local"
-            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-        </div>
+        <DateTimePicker
+          v-model="eventDateTime"
+          label="Data i godzina wydarzenia"
+        />
 
         <!-- Event Location -->
-        <div>
-          <label for="eventLocation" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Lokalizacja wydarzenia
-          </label>
-          <input
-            id="eventLocation"
-            v-model="eventLocation"
-            type="text"
-            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="Sala konferencyjna A, ul. Przykładowa 123, Warszawa"
-          >
-        </div>
+        <LocationPicker
+          v-model="eventLocation"
+          label="Lokalizacja wydarzenia"
+        />
       </div>
 
       <!-- Department -->
@@ -242,22 +227,12 @@ function handleCancel() {
         <RichTextEditor v-model="content" />
       </div>
 
-      <!-- Image URL -->
-      <div>
-        <label for="imageUrl" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          URL obrazka
-        </label>
-        <input
-          id="imageUrl"
-          v-model="imageUrl"
-          type="url"
-          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          placeholder="https://example.com/image.jpg"
-        >
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Opcjonalnie: Link do obrazka który będzie wyświetlany jako miniatura
-        </p>
-      </div>
+      <!-- Image Upload -->
+      <ImageUpload
+        v-model="imageUrl"
+        label="Obrazek aktualności"
+        :max-size-m-b="5"
+      />
 
       <!-- Event ID (optional) -->
       <div>
