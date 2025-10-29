@@ -31,6 +31,7 @@ describe('useAuthStore', () => {
     }
 
     authStore.setUser(mockUser)
+    authStore.setTokens('mock-access-token', 'mock-refresh-token')
 
     expect(authStore.user).toEqual(mockUser)
     expect(authStore.isAuthenticated).toBe(true)
