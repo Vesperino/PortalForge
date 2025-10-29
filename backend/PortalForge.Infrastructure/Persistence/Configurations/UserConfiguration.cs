@@ -32,6 +32,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasDefaultValue(false);
 
+        builder.Property(u => u.IsActive)
+            .IsRequired()
+            .HasDefaultValue(true);
+
+        builder.Property(u => u.MustChangePassword)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         // Employee personal information (required)
         builder.Property(u => u.FirstName)
             .IsRequired()

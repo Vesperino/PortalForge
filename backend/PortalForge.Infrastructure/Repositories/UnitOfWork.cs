@@ -11,6 +11,11 @@ public class UnitOfWork : IUnitOfWork
     private IUserRepository? _userRepository;
     private INewsRepository? _newsRepository;
     private IEventRepository? _eventRepository;
+    private IPermissionRepository? _permissionRepository;
+    private IRoleGroupRepository? _roleGroupRepository;
+    private IRoleGroupPermissionRepository? _roleGroupPermissionRepository;
+    private IUserRoleGroupRepository? _userRoleGroupRepository;
+    private IAuditLogRepository? _auditLogRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -25,6 +30,21 @@ public class UnitOfWork : IUnitOfWork
 
     public IEventRepository EventRepository =>
         _eventRepository ??= new EventRepository(_context);
+
+    public IPermissionRepository PermissionRepository =>
+        _permissionRepository ??= new PermissionRepository(_context);
+
+    public IRoleGroupRepository RoleGroupRepository =>
+        _roleGroupRepository ??= new RoleGroupRepository(_context);
+
+    public IRoleGroupPermissionRepository RoleGroupPermissionRepository =>
+        _roleGroupPermissionRepository ??= new RoleGroupPermissionRepository(_context);
+
+    public IUserRoleGroupRepository UserRoleGroupRepository =>
+        _userRoleGroupRepository ??= new UserRoleGroupRepository(_context);
+
+    public IAuditLogRepository AuditLogRepository =>
+        _auditLogRepository ??= new AuditLogRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {
