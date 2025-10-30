@@ -23,6 +23,7 @@ const isEvent = ref(false)
 const eventHashtag = ref('')
 const eventDateTime = ref('')
 const eventLocation = ref('')
+const eventPlaceId = ref('')
 const departmentId = ref<number | undefined>(undefined)
 const isLoading = ref(false)
 const isSubmitting = ref(false)
@@ -54,6 +55,7 @@ async function loadNews() {
     eventHashtag.value = news.eventHashtag || ''
     eventDateTime.value = news.eventDateTime ? new Date(news.eventDateTime).toISOString().slice(0, 16) : ''
     eventLocation.value = news.eventLocation || ''
+    eventPlaceId.value = news.eventPlaceId || ''
     departmentId.value = news.departmentId || undefined
   } catch (err: any) {
     error.value = err?.message || 'Nie udało się załadować newsa'
@@ -85,6 +87,7 @@ async function handleSubmit() {
       eventHashtag: eventHashtag.value || undefined,
       eventDateTime: eventDateTime.value || undefined,
       eventLocation: eventLocation.value || undefined,
+      eventPlaceId: eventPlaceId.value || undefined,
       departmentId: departmentId.value
     })
 

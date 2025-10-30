@@ -19,6 +19,7 @@ public class CreateNewsCommand : IRequest<int>, ITransactionalRequest
     public string? EventHashtag { get; set; }
     public DateTime? EventDateTime { get; set; }
     public string? EventLocation { get; set; }
+    public string? EventPlaceId { get; set; }
 
     // Department visibility
     public int? DepartmentId { get; set; }

@@ -20,6 +20,7 @@ const isEvent = ref(false)
 const eventHashtag = ref('')
 const eventDateTime = ref<Date | null>(null)
 const eventLocation = ref('')
+const eventPlaceId = ref('')
 const departmentId = ref<number | undefined>(undefined)
 const isSubmitting = ref(false)
 const error = ref<string | null>(null)
@@ -55,6 +56,7 @@ async function handleSubmit() {
       eventHashtag: eventHashtag.value || undefined,
       eventDateTime: eventDateTime.value?.toISOString() || undefined,
       eventLocation: eventLocation.value || undefined,
+      eventPlaceId: eventPlaceId.value || undefined,
       departmentId: departmentId.value
     })
 
@@ -177,6 +179,7 @@ function handleCancel() {
         <!-- Event Location -->
         <LocationPicker
           v-model="eventLocation"
+          v-model:place-id="eventPlaceId"
           label="Lokalizacja wydarzenia"
         />
       </div>

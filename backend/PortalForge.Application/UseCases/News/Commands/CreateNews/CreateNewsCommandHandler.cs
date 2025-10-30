@@ -59,6 +59,7 @@ public class CreateNewsCommandHandler : IRequestHandler<CreateNewsCommand, int>
             EventHashtag = request.EventHashtag,
             EventDateTime = request.EventDateTime,
             EventLocation = request.EventLocation,
+            EventPlaceId = request.EventPlaceId,
             DepartmentId = request.DepartmentId
         };
 

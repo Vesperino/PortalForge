@@ -52,6 +52,7 @@ public class UpdateNewsCommandHandler : IRequestHandler<UpdateNewsCommand, Unit>
         news.EventHashtag = request.EventHashtag;
         news.EventDateTime = request.EventDateTime;
         news.EventLocation = request.EventLocation;
+        news.EventPlaceId = request.EventPlaceId;
         news.DepartmentId = request.DepartmentId;
         news.UpdatedAt = DateTime.UtcNow;
 

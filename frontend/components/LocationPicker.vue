@@ -3,6 +3,7 @@ import { GoogleMap, Marker } from 'vue3-google-map'
 
 interface Props {
   modelValue: string
+  placeId?: string
   label?: string
   required?: boolean
   error?: string
@@ -10,6 +11,7 @@ interface Props {
 
 interface Emits {
   (e: 'update:modelValue', value: string): void
+  (e: 'update:placeId', value: string): void
 }
 
 const props = defineProps<Props>()
@@ -65,40 +67,48 @@ async function reverseGeocode(lat: number, lng: number) {
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
     )
     const data = await response.json()
-    
+
     if (data.results && data.results[0]) {
-      const address = data.results[0].formatted_address
+      const result = data.results[0]
+      const address = result.formatted_address
+      const placeId = result.place_id
+
       location.value = `${address} (lat: ${lat.toFixed(6)}, lng: ${lng.toFixed(6)})`
+      emit('update:placeId', placeId)
     } else {
       location.value = `lat: ${lat.toFixed(6)}, lng: ${lng.toFixed(6)}`
+      emit('update:placeId', '')
     }
   } catch (error) {
     console.error('Reverse geocoding error:', error)
     location.value = `lat: ${lat.toFixed(6)}, lng: ${lng.toFixed(6)}`
+    emit('update:placeId', '')
   }
 }
 
 async function searchLocation() {
   const query = location.value
   if (!query) return
-  
+
   try {
     const response = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`
     )
     const data = await response.json()
-    
+
     if (data.results && data.results[0]) {
       const result = data.results[0]
       const lat = result.geometry.location.lat
       const lng = result.geometry.location.lng
-      
+      const placeId = result.place_id
+
       center.value = { lat, lng }
       markerPosition.value = { lat, lng }
       zoom.value = 15
       showMap.value = true
-      
+
       location.value = `${result.formatted_address} (lat: ${lat.toFixed(6)}, lng: ${lng.toFixed(6)})`
+      emit('update:placeId', placeId)
     }
   } catch (error) {
     console.error('Geocoding error:', error)

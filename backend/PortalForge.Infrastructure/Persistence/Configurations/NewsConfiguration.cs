@@ -56,6 +56,9 @@ public class NewsConfiguration : IEntityTypeConfiguration<News>
         builder.Property(n => n.EventLocation)
             .HasMaxLength(500);
 
+        builder.Property(n => n.EventPlaceId)
+            .HasMaxLength(200);
+
         // Department visibility
         builder.Property(n => n.DepartmentId);
 

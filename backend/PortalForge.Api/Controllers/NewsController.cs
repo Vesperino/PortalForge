@@ -85,6 +85,7 @@ public class NewsController : ControllerBase
             EventHashtag = request.EventHashtag,
             EventDateTime = request.EventDateTime,
             EventLocation = request.EventLocation,
+            EventPlaceId = request.EventPlaceId,
             DepartmentId = request.DepartmentId
         };
 
@@ -114,6 +115,7 @@ public class NewsController : ControllerBase
             EventHashtag = request.EventHashtag,
             EventDateTime = request.EventDateTime,
             EventLocation = request.EventLocation,
+            EventPlaceId = request.EventPlaceId,
             DepartmentId = request.DepartmentId
         };
 

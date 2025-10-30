@@ -11,6 +11,7 @@ export interface CreateNewsRequest {
   eventHashtag?: string
   eventDateTime?: string
   eventLocation?: string
+  eventPlaceId?: string
   departmentId?: number
 }
 
@@ -25,6 +26,7 @@ export interface UpdateNewsRequest {
   eventHashtag?: string
   eventDateTime?: string
   eventLocation?: string
+  eventPlaceId?: string
   departmentId?: number
 }
 
