@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -118,13 +119,15 @@ public static class DependencyInjection
                             return;
                         }
 
-                        // Add role claim to the principal
+                        // Create a new ClaimsIdentity with the user's role from database
                         var claims = new List<System.Security.Claims.Claim>
                         {
                             new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, user.Role.ToString())
                         };
 
-                        var appIdentity = new System.Security.Claims.ClaimsIdentity(claims);
+                        // Add the new identity to the principal
+                        // This will add the role claim while keeping existing claims from the JWT
+                        var appIdentity = new System.Security.Claims.ClaimsIdentity(claims, "Application");
                         context.Principal?.AddIdentity(appIdentity);
                     }
                     catch (Exception)
@@ -136,6 +139,32 @@ public static class DependencyInjection
             };
         });
 
-        services.AddAuthorization();
+        // Register authorization handler
+        services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+
+        // Configure authorization policies
+        services.AddAuthorization(options =>
+        {
+            // Define all permission-based policies
+            var permissions = new[]
+            {
+                "requests.view",
+                "requests.create",
+                "requests.approve",
+                "requests.manage_templates",
+                "admin.users.view",
+                "admin.users.manage",
+                "admin.roles.view",
+                "admin.roles.manage",
+                "admin.settings.view",
+                "admin.settings.manage"
+            };
+
+            foreach (var permission in permissions)
+            {
+                options.AddPolicy($"RequirePermission:{permission}", policy =>
+                    policy.Requirements.Add(new PermissionRequirement(permission)));
+            }
+        });
     }
 }

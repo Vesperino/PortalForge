@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Application.UseCases.RequestTemplates.Commands.CreateRequestTemplate;
 using PortalForge.Application.UseCases.RequestTemplates.Commands.SeedRequestTemplates;
+using PortalForge.Application.UseCases.RequestTemplates.Commands.UpdateRequestTemplate;
 using PortalForge.Application.UseCases.RequestTemplates.Queries.GetAvailableRequestTemplates;
 using PortalForge.Application.UseCases.RequestTemplates.Queries.GetRequestTemplateById;
 using PortalForge.Application.UseCases.RequestTemplates.Queries.GetRequestTemplates;
@@ -11,7 +12,7 @@ using System.Security.Claims;
 namespace PortalForge.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/request-templates")]
 [Authorize]
 public class RequestTemplatesController : ControllerBase
 {
@@ -85,8 +86,26 @@ public class RequestTemplatesController : ControllerBase
 
         command.CreatedById = creatorId;
         var result = await _mediator.Send(command);
-        
+
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
+
+    /// <summary>
+    /// Update request template
+    /// </summary>
+    [HttpPut("{id}")]
+    [Authorize(Policy = "RequirePermission:requests.manage_templates")]
+    public async Task<ActionResult> Update(Guid id, [FromBody] UpdateRequestTemplateCommand command)
+    {
+        command.Id = id;
+        var result = await _mediator.Send(command);
+
+        if (!result.Success)
+        {
+            return NotFound(result);
+        }
+
+        return Ok(result);
     }
 
     /// <summary>

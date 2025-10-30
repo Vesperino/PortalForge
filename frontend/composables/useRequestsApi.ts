@@ -1,7 +1,8 @@
-import type { 
-  RequestTemplate, 
-  Request, 
-  CreateRequestTemplateDto, 
+import type {
+  RequestTemplate,
+  Request,
+  CreateRequestTemplateDto,
+  UpdateRequestTemplateDto,
   SubmitRequestDto,
   ApproveStepDto
 } from '~/types/requests'
@@ -69,6 +70,39 @@ export const useRequestsApi = () => {
       return response
     } catch (error) {
       console.error('Error creating template:', error)
+      throw error
+    }
+  }
+
+  const updateTemplate = async (id: string, data: UpdateRequestTemplateDto) => {
+    try {
+      const response = await $fetch(
+        `${config.public.apiUrl}/api/request-templates/${id}`,
+        {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: data
+        }
+      ) as { success: boolean; message: string }
+      return response
+    } catch (error) {
+      console.error('Error updating template:', error)
+      throw error
+    }
+  }
+
+  const seedTemplates = async () => {
+    try {
+      const response = await $fetch(
+        `${config.public.apiUrl}/api/request-templates/seed`,
+        {
+          method: 'POST',
+          headers: getAuthHeaders()
+        }
+      ) as { message: string; count: number }
+      return response
+    } catch (error) {
+      console.error('Error seeding templates:', error)
       throw error
     }
   }
@@ -147,7 +181,9 @@ export const useRequestsApi = () => {
     getAllTemplates,
     getTemplateById,
     createTemplate,
-    
+    updateTemplate,
+    seedTemplates,
+
     // Requests
     getMyRequests,
     getRequestsToApprove,

@@ -10,7 +10,7 @@ using System.Security.Claims;
 namespace PortalForge.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/requests")]
 [Authorize]
 public class RequestsController : ControllerBase
 {

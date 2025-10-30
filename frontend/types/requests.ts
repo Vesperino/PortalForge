@@ -105,6 +105,15 @@ export interface CreateRequestTemplateDto {
   quizQuestions: QuizQuestion[]
 }
 
+export interface UpdateRequestTemplateDto {
+  name?: string
+  description?: string
+  icon?: string
+  category?: string
+  estimatedProcessingDays?: number
+  isActive?: boolean
+}
+
 export interface SubmitRequestDto {
   requestTemplateId: string
   priority: RequestPriority

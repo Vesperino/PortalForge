@@ -157,22 +157,54 @@
         </div>
       </div>
 
-      <!-- Empty State -->
+      <!-- Empty State - No templates at all -->
+      <div v-else-if="templates.length === 0" class="text-center py-12">
+        <FileText class="w-16 h-16 mx-auto text-gray-400 mb-4" />
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          Nie ma jeszcze żadnych szablonów wniosków
+        </h3>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">
+          Rozpocznij od utworzenia pierwszego szablonu wniosku dla swojej organizacji lub załaduj przykładowe szablony
+        </p>
+        <div class="flex gap-3 justify-center">
+          <NuxtLink
+            to="/admin/request-templates/create"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+          >
+            <Plus class="w-5 h-5 mr-2" />
+            Utwórz pierwszy szablon
+          </NuxtLink>
+          <button
+            @click="seedTemplates"
+            :disabled="seeding"
+            class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors"
+          >
+            <template v-if="seeding">
+              <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              Ładowanie...
+            </template>
+            <template v-else>
+              Załaduj przykładowe szablony
+            </template>
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State - No results after filtering -->
       <div v-else class="text-center py-12">
         <FileText class="w-16 h-16 mx-auto text-gray-400 mb-4" />
         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
-          Brak szablonów
+          Brak wyników wyszukiwania
         </h3>
         <p class="text-gray-600 dark:text-gray-400 mb-6">
           Nie znaleziono żadnych szablonów spełniających kryteria wyszukiwania
         </p>
-        <NuxtLink
-          to="/admin/request-templates/create"
-          class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+        <button
+          @click="clearFilters"
+          class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors"
         >
-          <Plus class="w-5 h-5 mr-2" />
-          Utwórz pierwszy szablon
-        </NuxtLink>
+          Wyczyść filtry
+        </button>
       </div>
     </div>
   </div>
@@ -196,6 +228,7 @@ const loading = ref(true)
 const error = ref('')
 const searchQuery = ref('')
 const filterCategory = ref('')
+const seeding = ref(false)
 
 const uniqueCategories = computed(() => {
   const categories = templates.value.map(t => t.category)
@@ -244,6 +277,37 @@ const loadTemplates = async () => {
 const viewTemplate = (template: RequestTemplate) => {
   // Could open a modal or navigate to detail view
   navigateTo(`/admin/request-templates/edit/${template.id}`)
+}
+
+const clearFilters = () => {
+  searchQuery.value = ''
+  filterCategory.value = ''
+}
+
+const seedTemplates = async () => {
+  try {
+    seeding.value = true
+    error.value = ''
+
+    const config = useRuntimeConfig()
+    const { getAuthHeaders } = useAuth()
+
+    await $fetch(`${config.public.apiUrl}/api/request-templates/seed`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    })
+
+    // Reload templates after seeding
+    await loadTemplates()
+
+    // Show success message (you could use a toast notification here)
+    console.log('Przykładowe szablony zostały załadowane pomyślnie')
+  } catch (err: any) {
+    console.error('Error seeding templates:', err)
+    error.value = 'Nie udało się załadować przykładowych szablonów. Spróbuj ponownie później.'
+  } finally {
+    seeding.value = false
+  }
 }
 
 onMounted(() => {

@@ -43,3 +43,4 @@ public class CachedLocationConfiguration : IEntityTypeConfiguration<CachedLocati
     }
 }
 
+
