@@ -42,6 +42,9 @@ public static class DependencyInjection
         services.Configure<SupabaseSettings>(configuration.GetSection("Supabase"));
         services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
 
+        // Register File Storage Service
+        services.AddScoped<IFileStorageService, PortalForge.Infrastructure.Storage.LocalFileStorageService>();
+
         // Register Unit of Work and Repositories
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 

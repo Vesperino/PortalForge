@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PortalForge.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using PortalForge.Infrastructure.Persistence;
 namespace PortalForge.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251030091736_AddHashtagsSystem")]
+    partial class AddHashtagsSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,50 +85,6 @@ namespace PortalForge.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("AuditLogs", "public");
-                });
-
-            modelBuilder.Entity("PortalForge.Domain.Entities.CachedLocation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("Latitude")
-                        .HasPrecision(10, 7)
-                        .HasColumnType("numeric(10,7)");
-
-                    b.Property<decimal>("Longitude")
-                        .HasPrecision(10, 7)
-                        .HasColumnType("numeric(10,7)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedBy");
-
-                    b.ToTable("CachedLocations", "public");
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.Event", b =>
@@ -256,17 +215,9 @@ namespace PortalForge.Infrastructure.Migrations
                     b.Property<int?>("EventId")
                         .HasColumnType("integer");
 
-                    b.Property<decimal?>("EventLatitude")
-                        .HasPrecision(10, 7)
-                        .HasColumnType("numeric(10,7)");
-
                     b.Property<string>("EventLocation")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
-
-                    b.Property<decimal?>("EventLongitude")
-                        .HasPrecision(10, 7)
-                        .HasColumnType("numeric(10,7)");
 
                     b.Property<string>("EventPlaceId")
                         .HasMaxLength(200)
@@ -401,87 +352,6 @@ namespace PortalForge.Infrastructure.Migrations
                     b.ToTable("RoleGroupPermissions", "public");
                 });
 
-            modelBuilder.Entity("PortalForge.Domain.Entities.SystemSetting", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Key")
-                        .IsUnique();
-
-                    b.HasIndex("UpdatedBy");
-
-                    b.ToTable("SystemSettings", "public");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Category = "Storage",
-                            Description = "Base directory path for file storage",
-                            Key = "Storage:BasePath",
-                            UpdatedAt = new DateTime(2025, 10, 30, 9, 0, 0, 0, DateTimeKind.Utc),
-                            Value = "C:\\PortalForge\\Storage"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Category = "Storage",
-                            Description = "Subdirectory for news images (relative to BasePath)",
-                            Key = "Storage:NewsImagesPath",
-                            UpdatedAt = new DateTime(2025, 10, 30, 9, 0, 0, 0, DateTimeKind.Utc),
-                            Value = "news-images"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Category = "Storage",
-                            Description = "Subdirectory for documents (relative to BasePath)",
-                            Key = "Storage:DocumentsPath",
-                            UpdatedAt = new DateTime(2025, 10, 30, 9, 0, 0, 0, DateTimeKind.Utc),
-                            Value = "documents"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Category = "Storage",
-                            Description = "Maximum file size in megabytes",
-                            Key = "Storage:MaxFileSizeMB",
-                            UpdatedAt = new DateTime(2025, 10, 30, 9, 0, 0, 0, DateTimeKind.Utc),
-                            Value = "10"
-                        });
-                });
-
             modelBuilder.Entity("PortalForge.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -610,17 +480,6 @@ namespace PortalForge.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("PortalForge.Domain.Entities.CachedLocation", b =>
-                {
-                    b.HasOne("PortalForge.Domain.Entities.User", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CreatedByUser");
-                });
-
             modelBuilder.Entity("PortalForge.Domain.Entities.Event", b =>
                 {
                     b.HasOne("PortalForge.Domain.Entities.User", "Creator")
@@ -667,16 +526,6 @@ namespace PortalForge.Infrastructure.Migrations
                     b.Navigation("Permission");
 
                     b.Navigation("RoleGroup");
-                });
-
-            modelBuilder.Entity("PortalForge.Domain.Entities.SystemSetting", b =>
-                {
-                    b.HasOne("PortalForge.Domain.Entities.User", "UpdatedByUser")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("UpdatedByUser");
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.User", b =>

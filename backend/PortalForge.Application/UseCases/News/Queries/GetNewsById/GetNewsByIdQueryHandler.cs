@@ -50,7 +50,10 @@ public class GetNewsByIdQueryHandler : IRequestHandler<GetNewsByIdQuery, NewsDto
             EventHashtag = news.EventHashtag,
             EventDateTime = news.EventDateTime,
             EventLocation = news.EventLocation,
-            DepartmentId = news.DepartmentId
+            EventLatitude = news.EventLatitude,
+            EventLongitude = news.EventLongitude,
+            DepartmentId = news.DepartmentId,
+            Hashtags = news.Hashtags.Select(h => h.Name).ToList()
         };
 
         _logger.LogInformation("News fetched successfully: {NewsId}", request.NewsId);

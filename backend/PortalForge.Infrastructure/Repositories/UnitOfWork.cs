@@ -16,6 +16,7 @@ public class UnitOfWork : IUnitOfWork
     private IRoleGroupPermissionRepository? _roleGroupPermissionRepository;
     private IUserRoleGroupRepository? _userRoleGroupRepository;
     private IAuditLogRepository? _auditLogRepository;
+    private IHashtagRepository? _hashtagRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -45,6 +46,9 @@ public class UnitOfWork : IUnitOfWork
 
     public IAuditLogRepository AuditLogRepository =>
         _auditLogRepository ??= new AuditLogRepository(_context);
+
+    public IHashtagRepository HashtagRepository =>
+        _hashtagRepository ??= new HashtagRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {

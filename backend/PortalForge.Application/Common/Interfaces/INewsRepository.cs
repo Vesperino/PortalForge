@@ -14,6 +14,7 @@ public interface INewsRepository
     Task<IEnumerable<News>> GetByDepartmentAsync(int departmentId);
     Task<IEnumerable<News>> GetEventsAsync();
     Task<IEnumerable<News>> GetUpcomingEventsAsync(DateTime fromDate);
+    Task<IEnumerable<News>> GetByHashtagsAsync(List<string> hashtags);
     Task<int> CreateAsync(News news);
     Task UpdateAsync(News news);
     Task DeleteAsync(int id);

@@ -19,6 +19,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<RoleGroupPermission> RoleGroupPermissions { get; set; }
     public DbSet<UserRoleGroup> UserRoleGroups { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<Hashtag> Hashtags { get; set; }
+    public DbSet<SystemSetting> SystemSettings { get; set; }
+    public DbSet<CachedLocation> CachedLocations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,6 +33,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new RoleGroupPermissionConfiguration());
         modelBuilder.ApplyConfiguration(new UserRoleGroupConfiguration());
         modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
+        modelBuilder.ApplyConfiguration(new HashtagConfiguration());
+        modelBuilder.ApplyConfiguration(new SystemSettingConfiguration());
+        modelBuilder.ApplyConfiguration(new CachedLocationConfiguration());
         base.OnModelCreating(modelBuilder);
     }
 }

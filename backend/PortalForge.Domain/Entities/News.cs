@@ -29,7 +29,12 @@ public class News
     public DateTime? EventDateTime { get; set; }
     public string? EventLocation { get; set; }
     public string? EventPlaceId { get; set; }
+    public decimal? EventLatitude { get; set; }
+    public decimal? EventLongitude { get; set; }
 
     // Department visibility
     public int? DepartmentId { get; set; }
+    
+    // Hashtags
+    public ICollection<Hashtag> Hashtags { get; set; } = new List<Hashtag>();
 }
