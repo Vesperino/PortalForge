@@ -297,6 +297,9 @@ watch(
         </div>
       </footer>
     </div>
+
+    <!-- Toast Container -->
+    <ToastContainer />
   </div>
 </template>
 

@@ -63,7 +63,12 @@ public class CreateRequestTemplateCommandHandler
                 Id = Guid.NewGuid(),
                 RequestTemplateId = template.Id,
                 StepOrder = stepDto.StepOrder,
-                ApproverRole = Enum.Parse<DepartmentRole>(stepDto.ApproverRole),
+                ApproverType = Enum.Parse<ApproverType>(stepDto.ApproverType),
+                ApproverRole = !string.IsNullOrEmpty(stepDto.ApproverRole)
+                    ? Enum.Parse<DepartmentRole>(stepDto.ApproverRole)
+                    : null,
+                SpecificUserId = stepDto.SpecificUserId,
+                ApproverGroupId = stepDto.ApproverGroupId,
                 RequiresQuiz = stepDto.RequiresQuiz,
                 CreatedAt = DateTime.UtcNow
             };

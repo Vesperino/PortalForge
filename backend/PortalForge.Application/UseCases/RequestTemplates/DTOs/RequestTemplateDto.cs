@@ -42,7 +42,10 @@ public class RequestApprovalStepTemplateDto
 {
     public Guid Id { get; set; }
     public int StepOrder { get; set; }
-    public string ApproverRole { get; set; } = string.Empty;
+    public string ApproverType { get; set; } = "Role"; // Role, SpecificUser, UserGroup, Submitter
+    public string? ApproverRole { get; set; } // For ApproverType = Role
+    public Guid? SpecificUserId { get; set; } // For ApproverType = SpecificUser
+    public Guid? ApproverGroupId { get; set; } // For ApproverType = UserGroup
     public bool RequiresQuiz { get; set; }
 }
 

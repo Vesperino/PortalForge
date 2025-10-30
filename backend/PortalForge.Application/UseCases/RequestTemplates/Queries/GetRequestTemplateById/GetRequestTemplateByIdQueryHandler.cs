@@ -58,7 +58,10 @@ public class GetRequestTemplateByIdQueryHandler
             {
                 Id = ast.Id,
                 StepOrder = ast.StepOrder,
-                ApproverRole = ast.ApproverRole.ToString(),
+                ApproverType = ast.ApproverType.ToString(),
+                ApproverRole = ast.ApproverRole?.ToString(),
+                SpecificUserId = ast.SpecificUserId,
+                ApproverGroupId = ast.ApproverGroupId,
                 RequiresQuiz = ast.RequiresQuiz
             }).ToList(),
             QuizQuestions = template.QuizQuestions.Select(qq => new QuizQuestionDto

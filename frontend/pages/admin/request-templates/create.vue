@@ -522,9 +522,35 @@ const removeQuizOption = (questionIndex: number, optionIndex: number) => {
   question.options.splice(optionIndex, 1)
 }
 
+const validateApprovalSteps = (): string | null => {
+  for (const step of form.value.approvalStepTemplates) {
+    if (step.approverType === 'Role' && !step.approverRole) {
+      return `Krok ${step.stepOrder}: Wybierz rolę zatwierdzającego`
+    }
+    if (step.approverType === 'SpecificUser' && !step.specificUserId) {
+      return `Krok ${step.stepOrder}: Wybierz konkretnego użytkownika`
+    }
+    if (step.approverType === 'UserGroup' && !step.approverGroupId) {
+      return `Krok ${step.stepOrder}: Wybierz grupę użytkowników`
+    }
+  }
+  return null
+}
+
 const saveTemplate = async () => {
+  const toast = useNotificationToast()
+
   try {
     saving.value = true
+
+    // Validate approval steps
+    if (form.value.requiresApproval && form.value.approvalStepTemplates.length > 0) {
+      const validationError = validateApprovalSteps()
+      if (validationError) {
+        toast.error('Błąd walidacji', validationError)
+        return
+      }
+    }
 
     // Prepare quiz questions
     const quizQuestionsFormatted = quizQuestions.value.map(q => ({
@@ -547,11 +573,14 @@ const saveTemplate = async () => {
       quizQuestions: quizQuestionsFormatted
     })
 
-    alert('Szablon utworzony pomyślnie!')
-    navigateTo('/admin/request-templates')
-  } catch (error) {
+    toast.success('Sukces!', 'Szablon utworzony pomyślnie')
+    setTimeout(() => {
+      navigateTo('/admin/request-templates')
+    }, 1000)
+  } catch (error: any) {
     console.error('Error creating template:', error)
-    alert('Błąd podczas tworzenia szablonu')
+    const errorMessage = error?.response?.data?.message || error?.message || 'Nieznany błąd'
+    toast.error('Błąd podczas tworzenia szablonu', errorMessage)
   } finally {
     saving.value = false
   }
