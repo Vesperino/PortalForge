@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const supabase = useSupabaseClient()
+const config = useRuntimeConfig()
+const authStore = useAuthStore()
 
 interface Props {
   modelValue: string
@@ -61,38 +62,29 @@ async function handleFileChange(event: Event) {
   uploadError.value = null
   isUploading.value = true
   uploadProgress.value = 0
-  
+
   try {
-    // Generate unique filename
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-    const filePath = `news-images/${fileName}`
-    
-    // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
-      .from('news-images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      })
-    
-    if (error) {
-      throw error
-    }
-    
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('news-images')
-      .getPublicUrl(filePath)
-    
-    if (urlData?.publicUrl) {
-      previewUrl.value = urlData.publicUrl
-      emit('update:modelValue', urlData.publicUrl)
+    // Create FormData
+    const formData = new FormData()
+    formData.append('file', file)
+
+    // Upload to backend
+    const response = await $fetch(`${config.public.apiUrl}/api/storage/upload/news-image`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${authStore.accessToken}`
+      },
+      body: formData
+    }) as { url: string }
+
+    if (response.url) {
+      previewUrl.value = response.url
+      emit('update:modelValue', response.url)
       uploadProgress.value = 100
     }
   } catch (error: any) {
     console.error('Upload error:', error)
-    uploadError.value = error.message || 'Nie udało się przesłać pliku'
+    uploadError.value = error?.data?.message || 'Nie udało się przesłać pliku'
   } finally {
     isUploading.value = false
     // Reset file input
