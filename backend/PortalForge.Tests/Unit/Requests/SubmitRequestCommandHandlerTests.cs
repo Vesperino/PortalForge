@@ -1,6 +1,7 @@
 using Moq;
 using Xunit;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Services;
 using PortalForge.Application.UseCases.Requests.Commands.SubmitRequest;
 using PortalForge.Domain.Entities;
 using PortalForge.Domain.Enums;
@@ -13,6 +14,7 @@ public class SubmitRequestCommandHandlerTests
     private readonly Mock<IRequestTemplateRepository> _mockTemplateRepo;
     private readonly Mock<IRequestRepository> _mockRequestRepo;
     private readonly Mock<IUserRepository> _mockUserRepo;
+    private readonly Mock<INotificationService> _mockNotificationService;
     private readonly SubmitRequestCommandHandler _handler;
 
     public SubmitRequestCommandHandlerTests()
@@ -21,12 +23,13 @@ public class SubmitRequestCommandHandlerTests
         _mockTemplateRepo = new Mock<IRequestTemplateRepository>();
         _mockRequestRepo = new Mock<IRequestRepository>();
         _mockUserRepo = new Mock<IUserRepository>();
+        _mockNotificationService = new Mock<INotificationService>();
 
         _mockUnitOfWork.Setup(u => u.RequestTemplateRepository).Returns(_mockTemplateRepo.Object);
         _mockUnitOfWork.Setup(u => u.RequestRepository).Returns(_mockRequestRepo.Object);
         _mockUnitOfWork.Setup(u => u.UserRepository).Returns(_mockUserRepo.Object);
 
-        _handler = new SubmitRequestCommandHandler(_mockUnitOfWork.Object);
+        _handler = new SubmitRequestCommandHandler(_mockUnitOfWork.Object, _mockNotificationService.Object);
     }
 
     [Fact]

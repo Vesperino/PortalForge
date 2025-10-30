@@ -1,6 +1,7 @@
 using Moq;
 using Xunit;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Services;
 using PortalForge.Application.UseCases.Requests.Commands.ApproveRequestStep;
 using PortalForge.Domain.Entities;
 using PortalForge.Domain.Enums;
@@ -11,14 +12,16 @@ public class ApproveRequestStepCommandHandlerTests
 {
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
     private readonly Mock<IRequestRepository> _mockRequestRepo;
+    private readonly Mock<INotificationService> _mockNotificationService;
     private readonly ApproveRequestStepCommandHandler _handler;
 
     public ApproveRequestStepCommandHandlerTests()
     {
         _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockRequestRepo = new Mock<IRequestRepository>();
+        _mockNotificationService = new Mock<INotificationService>();
         _mockUnitOfWork.Setup(u => u.RequestRepository).Returns(_mockRequestRepo.Object);
-        _handler = new ApproveRequestStepCommandHandler(_mockUnitOfWork.Object);
+        _handler = new ApproveRequestStepCommandHandler(_mockUnitOfWork.Object, _mockNotificationService.Object);
     }
 
     [Fact]
