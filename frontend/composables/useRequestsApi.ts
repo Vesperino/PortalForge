@@ -93,6 +93,22 @@ export const useRequestsApi = () => {
     }
   }
 
+  const deleteTemplate = async (id: string) => {
+    try {
+      const response = await $fetch(
+        `${config.public.apiUrl}/api/request-templates/${id}`,
+        {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        }
+      ) as { success: boolean; message: string }
+      return response
+    } catch (error) {
+      console.error('Error deleting template:', error)
+      throw error
+    }
+  }
+
   const seedTemplates = async () => {
     try {
       const response = await $fetch(
@@ -277,6 +293,7 @@ export const useRequestsApi = () => {
     getTemplateById,
     createTemplate,
     updateTemplate,
+    deleteTemplate,
     seedTemplates,
 
     // Requests

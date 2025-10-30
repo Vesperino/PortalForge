@@ -73,6 +73,17 @@ public class RequestRepository : IRequestRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Request>> GetByTemplateIdAsync(Guid templateId)
+    {
+        return await _context.Requests
+            .Include(r => r.RequestTemplate)
+            .Include(r => r.SubmittedBy)
+            .Where(r => r.RequestTemplateId == templateId)
+            .OrderByDescending(r => r.SubmittedAt)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public async Task<Request?> GetByRequestNumberAsync(string requestNumber)
     {
         return await _context.Requests

@@ -13,6 +13,7 @@ public interface IRequestRepository
     Task<IEnumerable<Request>> GetBySubmitterAsync(Guid submitterId);
     Task<IEnumerable<Request>> GetByApproverAsync(Guid approverId);
     Task<IEnumerable<Request>> GetByStatusAsync(RequestStatus status);
+    Task<IEnumerable<Request>> GetByTemplateIdAsync(Guid templateId);
     Task<Request?> GetByRequestNumberAsync(string requestNumber);
     Task<Guid> CreateAsync(Request request);
     Task UpdateAsync(Request request);

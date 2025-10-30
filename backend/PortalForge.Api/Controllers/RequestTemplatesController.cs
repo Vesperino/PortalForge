@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Application.UseCases.RequestTemplates.Commands.CreateRequestTemplate;
+using PortalForge.Application.UseCases.RequestTemplates.Commands.DeleteRequestTemplate;
 using PortalForge.Application.UseCases.RequestTemplates.Commands.SeedRequestTemplates;
 using PortalForge.Application.UseCases.RequestTemplates.Commands.UpdateRequestTemplate;
 using PortalForge.Application.UseCases.RequestTemplates.Queries.GetAvailableRequestTemplates;
@@ -98,6 +99,35 @@ public class RequestTemplatesController : ControllerBase
     public async Task<ActionResult> Update(Guid id, [FromBody] UpdateRequestTemplateCommand command)
     {
         command.Id = id;
+        var result = await _mediator.Send(command);
+
+        if (!result.Success)
+        {
+            return NotFound(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Delete request template
+    /// </summary>
+    [HttpDelete("{id}")]
+    [Authorize(Policy = "RequirePermission:requests.manage_templates")]
+    public async Task<ActionResult> Delete(Guid id)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var deletedBy))
+        {
+            return Unauthorized("User ID not found in token");
+        }
+
+        var command = new DeleteRequestTemplateCommand
+        {
+            Id = id,
+            DeletedBy = deletedBy
+        };
+
         var result = await _mediator.Send(command);
 
         if (!result.Success)

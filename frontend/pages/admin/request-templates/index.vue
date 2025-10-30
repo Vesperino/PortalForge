@@ -140,18 +140,29 @@
 
           <!-- Card Footer -->
           <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex items-center justify-between">
-            <NuxtLink
-              :to="`/admin/request-templates/edit/${template.id}`"
-              class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm"
-            >
-              Edytuj
-            </NuxtLink>
-            
+            <div class="flex gap-3">
+              <NuxtLink
+                :to="`/admin/request-templates/edit/${template.id}`"
+                class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm"
+              >
+                Edytuj
+              </NuxtLink>
+
+              <button
+                @click="viewTemplate(template)"
+                class="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm"
+              >
+                Szczegóły
+              </button>
+            </div>
+
             <button
-              @click="viewTemplate(template)"
-              class="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm"
+              @click="confirmDelete(template)"
+              class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium text-sm flex items-center gap-1"
+              :disabled="deleting === template.id"
             >
-              Szczegóły
+              <Trash2 class="w-4 h-4" />
+              {{ deleting === template.id ? 'Usuwanie...' : 'Usuń' }}
             </button>
           </div>
         </div>
@@ -212,7 +223,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Plus, Tag, Building, Globe, Clock, FileText, Users } from 'lucide-vue-next'
+import { Plus, Tag, Building, Globe, Clock, FileText, Users, Trash2 } from 'lucide-vue-next'
 import * as LucideIcons from 'lucide-vue-next'
 import type { RequestTemplate } from '~/types/requests'
 
@@ -221,7 +232,8 @@ definePageMeta({
   middleware: ['auth', 'admin', 'request-templates-admin']
 })
 
-const { getAllTemplates } = useRequestsApi()
+const { getAllTemplates, deleteTemplate } = useRequestsApi()
+const toast = useNotificationToast()
 
 const templates = ref<RequestTemplate[]>([])
 const loading = ref(true)
@@ -229,6 +241,7 @@ const error = ref('')
 const searchQuery = ref('')
 const filterCategory = ref('')
 const seeding = ref(false)
+const deleting = ref<string | null>(null)
 
 const uniqueCategories = computed(() => {
   const categories = templates.value.map(t => t.category)
@@ -284,6 +297,40 @@ const clearFilters = () => {
   filterCategory.value = ''
 }
 
+const confirmDelete = async (template: RequestTemplate) => {
+  if (!confirm(`Czy na pewno chcesz usunąć szablon "${template.name}"?\n\nTa operacja jest nieodwracalna.`)) {
+    return
+  }
+
+  await handleDelete(template.id)
+}
+
+const handleDelete = async (templateId: string) => {
+  try {
+    deleting.value = templateId
+    error.value = ''
+
+    await deleteTemplate(templateId)
+
+    // Remove from local array
+    templates.value = templates.value.filter(t => t.id !== templateId)
+
+    toast.success('Sukces!', 'Szablon został usunięty pomyślnie')
+  } catch (err: any) {
+    console.error('Error deleting template:', err)
+
+    // Check if error is due to template being used
+    if (err.data?.errors && Array.isArray(err.data.errors)) {
+      const errorMessage = err.data.errors.join(', ')
+      toast.error('Nie można usunąć szablonu', errorMessage)
+    } else {
+      toast.error('Błąd', 'Nie udało się usunąć szablonu. Spróbuj ponownie później.')
+    }
+  } finally {
+    deleting.value = null
+  }
+}
+
 const seedTemplates = async () => {
   try {
     seeding.value = true
@@ -300,11 +347,10 @@ const seedTemplates = async () => {
     // Reload templates after seeding
     await loadTemplates()
 
-    // Show success message (you could use a toast notification here)
-    console.log('Przykładowe szablony zostały załadowane pomyślnie')
+    toast.success('Sukces!', 'Przykładowe szablony zostały załadowane pomyślnie')
   } catch (err: any) {
     console.error('Error seeding templates:', err)
-    error.value = 'Nie udało się załadować przykładowych szablonów. Spróbuj ponownie później.'
+    toast.error('Błąd', 'Nie udało się załadować przykładowych szablonów. Spróbuj ponownie później.')
   } finally {
     seeding.value = false
   }
