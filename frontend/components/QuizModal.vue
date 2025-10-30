@@ -26,7 +26,7 @@
         <!-- Before submission -->
         <div v-if="!submitted" class="space-y-6">
           <div
-            v-for="(question, index) in questions"
+            v-for="(question, index) in extendedQuestions"
             :key="question.id"
             class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6"
           >
@@ -45,10 +45,11 @@
                 :key="option.value"
                 class="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 cursor-pointer transition-colors"
                 :class="{
-                  'bg-blue-50 dark:bg-blue-900/30 border-blue-500': answers[question.id] === option.value
+                  'bg-blue-50 dark:bg-blue-900/30 border-blue-500': question.id && answers[question.id] === option.value
                 }"
               >
                 <input
+                  v-if="question.id"
                   v-model="answers[question.id]"
                   type="radio"
                   :name="`question-${question.id}`"
@@ -66,16 +67,16 @@
           <div class="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4">
             <div class="flex items-center justify-between text-sm">
               <span class="text-blue-900 dark:text-blue-300">
-                Odpowiedziano: {{ answeredCount }} / {{ questions.length }}
+                Odpowiedziano: {{ answeredCount }} / {{ extendedQuestions.length }}
               </span>
               <span class="text-blue-600 dark:text-blue-400 font-medium">
-                {{ Math.round((answeredCount / questions.length) * 100) }}%
+                {{ Math.round((answeredCount / extendedQuestions.length) * 100) }}%
               </span>
             </div>
             <div class="mt-2 w-full bg-blue-200 dark:bg-blue-900 rounded-full h-2">
               <div
                 class="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all"
-                :style="{ width: `${(answeredCount / questions.length) * 100}%` }"
+                :style="{ width: `${(answeredCount / extendedQuestions.length) * 100}%` }"
               />
             </div>
           </div>
@@ -132,7 +133,7 @@
             </h4>
 
             <div
-              v-for="(question, index) in questions"
+              v-for="(question, index) in extendedQuestions"
               :key="question.id"
               class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6"
             >
@@ -195,7 +196,7 @@
           <button
             v-if="!submitted"
             @click="submitQuiz"
-            :disabled="answeredCount < questions.length"
+            :disabled="answeredCount < extendedQuestions.length"
             class="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
           >
             Prześlij odpowiedzi
@@ -260,7 +261,7 @@ const submitQuiz = () => {
     }
   })
   
-  const calculatedScore = Math.round((correctCount / props.questions.length) * 100)
+  const calculatedScore = Math.round((correctCount / extendedQuestions.value.length) * 100)
   const passed = calculatedScore >= props.passingScore
   
   score.value = calculatedScore
