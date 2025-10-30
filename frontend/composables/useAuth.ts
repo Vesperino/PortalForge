@@ -1,4 +1,5 @@
 import type { User } from '~/types/auth'
+import { UserRole } from '~/types/auth'
 
 interface LoginResponse {
   user: User
@@ -91,9 +92,10 @@ export function useAuth() {
   }
 
   async function hasPermission(permissionName: string): Promise<boolean> {
-    // For now, return true for admins, false for others
+    // For now, return true for admins and HR, false for others
     // In production, this should check user's actual permissions
-    return authStore.user?.role === 'Admin'
+    const userRole = authStore.user?.role
+    return userRole === UserRole.Admin || userRole === UserRole.HR
   }
 
   return {

@@ -154,7 +154,7 @@
                         'p-3 rounded-lg border',
                         option.isCorrect
                           ? 'bg-green-50 dark:bg-green-900/30 border-green-500'
-                          : answers[question.id] === option.value
+                          : question.id && answers[question.id] === option.value
                           ? 'bg-red-50 dark:bg-red-900/30 border-red-500'
                           : 'border-gray-200 dark:border-gray-600'
                       ]"
@@ -163,13 +163,13 @@
                         <span :class="[
                           'text-gray-700 dark:text-gray-300',
                           option.isCorrect && 'font-medium text-green-900 dark:text-green-100',
-                          !option.isCorrect && answers[question.id] === option.value && 'font-medium text-red-900 dark:text-red-100'
+                          !option.isCorrect && question.id && answers[question.id] === option.value && 'font-medium text-red-900 dark:text-red-100'
                         ]">
                           {{ option.label }}
                         </span>
                         <span>
                           <CheckCircle v-if="option.isCorrect" class="w-5 h-5 text-green-600 dark:text-green-400" />
-                          <XCircle v-else-if="answers[question.id] === option.value" class="w-5 h-5 text-red-600 dark:text-red-400" />
+                          <XCircle v-else-if="question.id && answers[question.id] === option.value" class="w-5 h-5 text-red-600 dark:text-red-400" />
                         </span>
                       </div>
                     </div>

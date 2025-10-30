@@ -511,16 +511,22 @@ const removeQuizQuestion = (index: number) => {
 }
 
 const addQuizOption = (questionIndex: number) => {
+  const question = quizQuestions.value[questionIndex]
+  if (!question) return
+  
   const option: QuizOption = {
     value: `option_${Date.now()}`,
     label: '',
     isCorrect: false
   }
-  quizQuestions.value[questionIndex].options.push(option)
+  question.options.push(option)
 }
 
 const removeQuizOption = (questionIndex: number, optionIndex: number) => {
-  quizQuestions.value[questionIndex].options.splice(optionIndex, 1)
+  const question = quizQuestions.value[questionIndex]
+  if (!question) return
+  
+  question.options.splice(optionIndex, 1)
 }
 
 const saveTemplate = async () => {

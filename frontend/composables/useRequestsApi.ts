@@ -13,12 +13,12 @@ export const useRequestsApi = () => {
   // Request Templates
   const getAvailableTemplates = async () => {
     try {
-      const response = await $fetch<{ templates: RequestTemplate[] }>(
+      const response = await $fetch(
         `${config.public.apiUrl}/request-templates/available`,
         {
           headers: getAuthHeaders()
         }
-      )
+      ) as { templates: RequestTemplate[] }
       return response.templates
     } catch (error) {
       console.error('Error fetching available templates:', error)
@@ -28,12 +28,12 @@ export const useRequestsApi = () => {
 
   const getAllTemplates = async () => {
     try {
-      const response = await $fetch<{ templates: RequestTemplate[] }>(
+      const response = await $fetch(
         `${config.public.apiUrl}/request-templates`,
         {
           headers: getAuthHeaders()
         }
-      )
+      ) as { templates: RequestTemplate[] }
       return response.templates
     } catch (error) {
       console.error('Error fetching all templates:', error)
@@ -43,12 +43,12 @@ export const useRequestsApi = () => {
 
   const getTemplateById = async (id: string) => {
     try {
-      const response = await $fetch<{ template: RequestTemplate }>(
+      const response = await $fetch(
         `${config.public.apiUrl}/request-templates/${id}`,
         {
           headers: getAuthHeaders()
         }
-      )
+      ) as { template: RequestTemplate }
       return response.template
     } catch (error) {
       console.error('Error fetching template:', error)
@@ -58,14 +58,14 @@ export const useRequestsApi = () => {
 
   const createTemplate = async (data: CreateRequestTemplateDto) => {
     try {
-      const response = await $fetch<{ id: string; message: string }>(
+      const response = await $fetch(
         `${config.public.apiUrl}/request-templates`,
         {
           method: 'POST',
           headers: getAuthHeaders(),
           body: data
         }
-      )
+      ) as { id: string; message: string }
       return response
     } catch (error) {
       console.error('Error creating template:', error)
@@ -76,12 +76,12 @@ export const useRequestsApi = () => {
   // Requests
   const getMyRequests = async () => {
     try {
-      const response = await $fetch<{ requests: Request[] }>(
+      const response = await $fetch(
         `${config.public.apiUrl}/requests/my-requests`,
         {
           headers: getAuthHeaders()
         }
-      )
+      ) as { requests: Request[] }
       return response.requests
     } catch (error) {
       console.error('Error fetching my requests:', error)
@@ -91,12 +91,12 @@ export const useRequestsApi = () => {
 
   const getRequestsToApprove = async () => {
     try {
-      const response = await $fetch<{ requests: Request[] }>(
+      const response = await $fetch(
         `${config.public.apiUrl}/requests/to-approve`,
         {
           headers: getAuthHeaders()
         }
-      )
+      ) as { requests: Request[] }
       return response.requests
     } catch (error) {
       console.error('Error fetching requests to approve:', error)
@@ -106,7 +106,7 @@ export const useRequestsApi = () => {
 
   const submitRequest = async (data: SubmitRequestDto) => {
     try {
-      const response = await $fetch<{ id: string; requestNumber: string; message: string }>(
+      const response = await $fetch(
         `${config.public.apiUrl}/requests`,
         {
           method: 'POST',
@@ -116,7 +116,7 @@ export const useRequestsApi = () => {
             formData: JSON.stringify(data.formData)
           }
         }
-      )
+      ) as { id: string; requestNumber: string; message: string }
       return response
     } catch (error) {
       console.error('Error submitting request:', error)
@@ -126,14 +126,14 @@ export const useRequestsApi = () => {
 
   const approveRequestStep = async (requestId: string, stepId: string, data: ApproveStepDto) => {
     try {
-      const response = await $fetch<{ success: boolean; message: string }>(
+      const response = await $fetch(
         `${config.public.apiUrl}/requests/${requestId}/steps/${stepId}/approve`,
         {
           method: 'POST',
           headers: getAuthHeaders(),
           body: data
         }
-      )
+      ) as { success: boolean; message: string }
       return response
     } catch (error) {
       console.error('Error approving request step:', error)

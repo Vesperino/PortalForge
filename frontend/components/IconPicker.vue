@@ -84,7 +84,6 @@ import {
   Camera,
   Image,
   Settings,
-  Tool,
   Wrench,
   Package,
   ShoppingCart,
@@ -182,8 +181,7 @@ const icons = [
   
   // Tools & Settings
   { name: 'Settings', label: 'Ustawienia', component: Settings },
-  { name: 'Tool', label: 'Narzędzie', component: Tool },
-  { name: 'Wrench', label: 'Klucz', component: Wrench },
+  { name: 'Wrench', label: 'Narzędzie', component: Wrench },
   { name: 'Package', label: 'Paczka', component: Package },
   
   // Business
