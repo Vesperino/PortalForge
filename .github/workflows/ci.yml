@@ -32,6 +32,8 @@ jobs:
   frontend-test:
     name: Frontend - Build & Test
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
 
     steps:
       - name: Checkout code

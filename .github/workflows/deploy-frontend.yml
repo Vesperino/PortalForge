@@ -12,6 +12,8 @@ jobs:
   deploy:
     name: Deploy Frontend to VPS
     runs-on: [self-hosted, vps, production]
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
 
     steps:
       - name: Checkout code
