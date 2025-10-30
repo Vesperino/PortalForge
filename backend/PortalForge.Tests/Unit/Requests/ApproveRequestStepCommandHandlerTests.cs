@@ -123,9 +123,9 @@ public class ApproveRequestStepCommandHandlerTests
         // Assert
         Assert.True(result.Success);
         Assert.Equal("Step approved, moved to next approver", result.Message);
-        Assert.Equal(ApprovalStepStatus.Approved, request.ApprovalSteps[0].Status);
-        Assert.Equal(ApprovalStepStatus.InReview, request.ApprovalSteps[1].Status);
-        Assert.NotNull(request.ApprovalSteps[1].StartedAt);
+        Assert.Equal(ApprovalStepStatus.Approved, request.ApprovalSteps.ElementAt(0).Status);
+        Assert.Equal(ApprovalStepStatus.InReview, request.ApprovalSteps.ElementAt(1).Status);
+        Assert.NotNull(request.ApprovalSteps.ElementAt(1).StartedAt);
         Assert.Equal(RequestStatus.InReview, request.Status);
     }
 

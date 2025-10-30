@@ -79,7 +79,7 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, GetUsersResul
             .ToList();
 
         // Get role groups for each user
-        var userDtos = new List<UserDto>();
+        var userDtos = new List<AdminUserDto>();
         foreach (var user in users)
         {
             var userRoleGroups = await _unitOfWork.UserRoleGroupRepository.GetByUserIdAsync(user.Id);
@@ -89,7 +89,7 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, GetUsersResul
                 .Select(rg => rg.Name)
                 .ToList();
 
-            userDtos.Add(new UserDto
+            userDtos.Add(new AdminUserDto
             {
                 Id = user.Id,
                 Email = user.Email,

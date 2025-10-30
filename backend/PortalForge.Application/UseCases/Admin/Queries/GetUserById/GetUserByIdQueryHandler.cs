@@ -6,7 +6,7 @@ using PortalForge.Application.UseCases.Admin.Queries.GetUsers;
 
 namespace PortalForge.Application.UseCases.Admin.Queries.GetUserById;
 
-public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto>
+public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, AdminUserDto>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<GetUserByIdQueryHandler> _logger;
@@ -19,7 +19,7 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
         _logger = logger;
     }
 
-    public async Task<UserDto> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
+    public async Task<AdminUserDto> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Getting user by ID: {UserId}", request.UserId);
 
@@ -37,7 +37,7 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
             .Select(rg => rg.Name)
             .ToList();
 
-        return new UserDto
+        return new AdminUserDto
         {
             Id = user.Id,
             Email = user.Email,
