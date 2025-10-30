@@ -49,7 +49,7 @@ async function loadNews() {
   try {
     news.value = await fetchNewsById(newsId.value)
   } catch (err: unknown) {
-    error.value = resolveErrorMessage(err, 'Unable to load the news item.')
+    error.value = resolveErrorMessage(err, 'Nie udało się załadować aktualności.')
     console.error('fetchNewsById error:', err)
   } finally {
     isLoading.value = false
@@ -68,7 +68,7 @@ async function handleDelete() {
     await deleteNews(news.value.id)
     router.push('/dashboard/news')
   } catch (err: unknown) {
-    error.value = resolveErrorMessage(err, 'Unable to delete the news item.')
+    error.value = resolveErrorMessage(err, 'Nie udało się usunąć aktualności.')
     console.error('deleteNews error:', err)
   } finally {
     isDeleting.value = false
@@ -155,7 +155,7 @@ onMounted(() => {
     <div v-if="isLoading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto" />
       <p class="mt-4 text-gray-600 dark:text-gray-400">
-        Loading news details...
+        Ładowanie szczegółów aktualności...
       </p>
     </div>
 
@@ -164,10 +164,10 @@ onMounted(() => {
       <p class="text-red-800 dark:text-red-200">{{ error }}</p>
       <div class="mt-4 flex gap-2">
         <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" @click="loadNews">
-          Try again
+          Spróbuj ponownie
         </button>
         <button class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" @click="handleBack">
-          Back to list
+          Powrót do listy
         </button>
       </div>
     </div>
@@ -180,20 +180,20 @@ onMounted(() => {
           class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
           @click="handleBack"
         >
-          Back to list
+          Powrót do listy
         </button>
         <div v-if="canManageNews" class="flex gap-2">
           <button
             class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
             @click="handleEdit"
           >
-            Edit
+            Edytuj
           </button>
           <button
             class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium"
             @click="showDeleteModal = true"
           >
-            Delete
+            Usuń
           </button>
         </div>
       </div>
@@ -359,10 +359,10 @@ onMounted(() => {
       >
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
           <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Confirm delete
+            Potwierdź usunięcie
           </h3>
           <p class="text-gray-600 dark:text-gray-400 mb-6">
-            Are you sure you want to delete this news item? This action cannot be undone.
+            Czy na pewno chcesz usunąć tę aktualność? Ta operacja nie może być cofnięta.
           </p>
           <div class="flex gap-4 justify-end">
             <button
@@ -370,14 +370,14 @@ onMounted(() => {
               :disabled="isDeleting"
               @click="showDeleteModal = false"
             >
-              Cancel
+              Anuluj
             </button>
             <button
               class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition font-medium"
               :disabled="isDeleting"
               @click="handleDelete"
             >
-              {{ isDeleting ? 'Deleting...' : 'Delete' }}
+              {{ isDeleting ? 'Usuwanie...' : 'Usuń' }}
             </button>
           </div>
         </div>

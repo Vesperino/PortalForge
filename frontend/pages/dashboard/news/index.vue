@@ -25,12 +25,12 @@ const isDeleting = ref(false)
 const newsPendingDeletion = ref<News | null>(null)
 
 const categories = [
-  { value: 'all', label: 'All' },
-  { value: 'announcement', label: 'Announcements' },
+  { value: 'all', label: 'Wszystkie' },
+  { value: 'announcement', label: 'Ogłoszenia' },
   { value: 'hr', label: 'HR' },
-  { value: 'product', label: 'Product' },
-  { value: 'tech', label: 'Technology' },
-  { value: 'event', label: 'Events' }
+  { value: 'product', label: 'Produkt' },
+  { value: 'tech', label: 'Technologia' },
+  { value: 'event', label: 'Wydarzenia' }
 ]
 
 const resolveErrorMessage = (input: unknown, fallback: string) => {
@@ -54,7 +54,7 @@ async function loadNews() {
     const newsData = await fetchAllNews(category, selectedDepartment.value, showOnlyEvents.value ? true : undefined)
     allNews.value = newsData
   } catch (err: unknown) {
-    error.value = resolveErrorMessage(err, 'Unable to load news.')
+    error.value = resolveErrorMessage(err, 'Nie udało się załadować aktualności.')
     console.error('fetchAllNews error:', err)
   } finally {
     isLoading.value = false
@@ -198,7 +198,7 @@ const handleDelete = async () => {
 
     closeDeleteModal()
   } catch (err: unknown) {
-    deleteError.value = resolveErrorMessage(err, 'Unable to delete the news item.')
+    deleteError.value = resolveErrorMessage(err, 'Nie udało się usunąć aktualności.')
     console.error('deleteNews error:', err)
   } finally {
     isDeleting.value = false
@@ -218,21 +218,21 @@ const handleDelete = async () => {
         to="/dashboard/news/create"
         class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-center"
       >
-        Add news
+        Dodaj aktualność
       </NuxtLink>
     </div>
 
     <!-- Loading State -->
     <div v-if="isLoading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"/>
-      <p class="mt-4 text-gray-600 dark:text-gray-400">Loading news...</p>
+      <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie aktualności...</p>
     </div>
 
     <!-- Error State -->
     <div v-else-if="error" class="bg-red-100 dark:bg-red-900 rounded-lg shadow-md p-6">
       <p class="text-red-800 dark:text-red-200">{{ error }}</p>
       <button class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" @click="loadNews">
-        Try again
+        Spróbuj ponownie
       </button>
     </div>
 
@@ -445,7 +445,7 @@ const handleDelete = async () => {
                 class="text-sm text-blue-600 dark:text-blue-400 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
                 @click.stop
               >
-                Read more
+                Czytaj więcej
               </NuxtLink>
               <div v-if="canManageNews" class="flex items-center gap-2">
                 <NuxtLink
@@ -453,14 +453,14 @@ const handleDelete = async () => {
                   class="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors px-2 py-1 rounded"
                   @click.stop
                 >
-                  Edit
+                  Edytuj
                 </NuxtLink>
                 <button
                   type="button"
                   class="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors px-2 py-1 rounded"
                   @click.stop="confirmDelete(news)"
                 >
-                  Usu "
+                  Usuń
                 </button>
               </div>
             </div>
@@ -532,10 +532,10 @@ const handleDelete = async () => {
       >
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
           <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Potwierdz usuniecie
+            Potwierdź usunięcie
           </h3>
           <p class="text-gray-600 dark:text-gray-400 mb-6">
-            Are you sure you want to delete the news "{{ newsPendingDeletion?.title }}"? This action cannot be undone.
+            Czy na pewno chcesz usunąć aktualność "{{ newsPendingDeletion?.title }}"? Ta operacja nie może być cofnięta.
           </p>
           <div class="flex gap-4 justify-end">
             <button
@@ -544,7 +544,7 @@ const handleDelete = async () => {
               :disabled="isDeleting"
               @click="closeDeleteModal"
             >
-              Cancel
+              Anuluj
             </button>
             <button
               type="button"
@@ -552,7 +552,7 @@ const handleDelete = async () => {
               :disabled="isDeleting"
               @click="handleDelete"
             >
-              {{ isDeleting ? 'Deleting...' : 'Delete' }}
+              {{ isDeleting ? 'Usuwanie...' : 'Usuń' }}
             </button>
           </div>
         </div>
