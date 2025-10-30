@@ -93,6 +93,7 @@ export interface News {
   eventHashtag?: string
   eventDateTime?: Date
   eventLocation?: string
+  eventPlaceId?: string
   // Department visibility
   departmentId?: number
 }
