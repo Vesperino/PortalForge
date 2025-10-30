@@ -1,3 +1,5 @@
+import type { FetchContext } from 'ofetch'
+
 export default defineNuxtPlugin(() => {
   const authStore = useAuthStore()
   const router = useRouter()
@@ -9,7 +11,7 @@ export default defineNuxtPlugin(() => {
 
   // Add global fetch interceptor
   globalThis.$fetch = $fetch.create({
-    async onRequest({ options }) {
+    async onRequest({ options }: FetchContext) {
       // Add auth token to all requests if available
       if (authStore.accessToken) {
         options.headers = options.headers || {}
@@ -17,7 +19,7 @@ export default defineNuxtPlugin(() => {
       }
     },
 
-    async onResponseError({ response }) {
+    async onResponseError({ response }: FetchContext) {
       // Handle 401 Unauthorized errors
       if (response && response.status === 401) {
         // If we have a refresh token, try to refresh
