@@ -67,15 +67,25 @@ Organizacje 200+ pracowników borykają się z:
 - Raport aktywnych użytkowników (logowania w ostatnim tygodniu)
 - Śledzenie autorstwa newsów i wydarzeń
 
+#### 3.1.6 System wniosków ✅ ZREALIZOWANE
+- Tworzenie własnych szablonów wniosków przez administratorów
+- Definiowanie pól formularza (6 typów: Text, Textarea, Number, Select, Date, Checkbox)
+- Konfigurowalny przepływ zatwierdzeń (Kierownik → Dyrektor)
+- Opcjonalne quizy z progiem zdawalności
+- Widoczność działowa (szablony per dział lub ogólnodostępne)
+- Ikony Lucide dla profesjonalnego wyglądu
+- Sekcja "Moje wnioski" z śledzeniem statusu
+- Wizualna timeline zatwierdzania
+
 ### 3.2 Funkcjonalności poza zakresem MVP (przyszłe iteracje)
-- System wniosków z konfigurowalnymi workflow
 - Zarządzanie i wersjonowanie dokumentów
 - Integracja z Active Directory/LDAP
-- Dedykowany panel administratora
-- Powiadomienia email/push
+- Powiadomienia email/push dla wniosków
 - Wyszukiwarka pełnotekstowa
 - Moduł komunikatora wewnętrznego
 - API dla integracji zewnętrznych
+- Załączniki do wniosków
+- Komentarze i dyskusje w wnioskach
 
 ## 4. Wymagania funkcjonalne
 
@@ -206,6 +216,52 @@ Organizacje 200+ pracowników borykają się z:
 - Format PDF z wizualizacją graficzną
 - Format Excel z danymi tabelarycznymi
 - Zawiera wszystkie dane pracowników
+
+#### US-010: System wniosków z konfigurowalnymi szablonami ✅ ZREALIZOWANE
+**Jako** administrator
+**Chcę** tworzyć własne szablony wniosków z definiowalnymi polami i przepływem zatwierdzeń
+**Aby** umożliwić pracownikom składanie różnego rodzaju wniosków (IT, HR, szkolenia, itp.)
+
+**Kryteria akceptacji:**
+- ✅ Administrator może tworzyć szablony wniosków przez panel admin
+- ✅ Szablon zawiera: nazwę, opis, ikonę (Lucide), kategorię
+- ✅ Możliwość ustawienia widoczności per dział lub dla wszystkich
+- ✅ Kreator pól formularza z 6 typami (Text, Textarea, Number, Select, Date, Checkbox)
+- ✅ Drag & drop do zmiany kolejności pól
+- ✅ Konfiguracja przepływu zatwierdzeń (Kierownik → Dyrektor)
+- ✅ Opcjonalny quiz na każdym etapie z progiem zdawalności (np. 80%)
+- ✅ Kreator pytań quizowych z wielokrotnym wyborem i oznaczaniem poprawnych odpowiedzi
+
+#### US-011: Składanie i śledzenie wniosków ✅ ZREALIZOWANE
+**Jako** pracownik
+**Chcę** składać wnioski i śledzić ich status
+**Aby** uzyskać zatwierdzenie na różne działania (sprzęt, szkolenia, urlopy, itp.)
+
+**Kryteria akceptacji:**
+- ✅ Pracownik widzi tylko szablony dostępne dla swojego działu
+- ✅ Intuicyjny wybór szablonu z kartami z ikonami
+- ✅ Dynamiczny formularz generowany na podstawie szablonu
+- ✅ Wybór priorytetu (Standard/Pilne)
+- ✅ Automatyczne generowanie numeru wniosku (REQ-YYYY-NNNN)
+- ✅ Sekcja "Moje wnioski" z filtrowaniem i wyszukiwaniem
+- ✅ Wizualna timeline pokazująca przebieg zatwierdzania
+- ✅ Statusy: W trakcie, Zatwierdzony, Odrzucony, Wymaga quizu
+
+#### US-012: Zatwierdzanie wniosków przez przełożonych ✅ ZREALIZOWANE
+**Jako** kierownik/dyrektor
+**Chcę** przeglądać i zatwierdzać wnioski podległych pracowników
+**Aby** kontrolować wydatki i decyzje w dziale
+
+**Kryteria akceptacji:**
+- ✅ Automatyczne przypisanie wniosków na podstawie hierarchii organizacyjnej
+- ✅ Lista wniosków oczekujących na zatwierdzenie
+- ✅ Przegląd szczegółów wniosku i wypełnionego formularza
+- ✅ Możliwość dodania komentarza przy zatwierdzaniu/odrzucaniu
+- ✅ Jeśli wymagany quiz - musi być rozwiązany przed zatwierdzeniem
+- ✅ Quiz z pytaniami wielokrotnego wyboru
+- ✅ Automatyczne obliczanie wyniku i sprawdzanie progu zdawalności
+- ✅ Automatyczne przekazanie do kolejnego szczebla po zatwierdzeniu
+- ✅ Wizualna informacja o postępie zatwierdzania
 
 ## 5. Wymagania niefunkcjonalne
 

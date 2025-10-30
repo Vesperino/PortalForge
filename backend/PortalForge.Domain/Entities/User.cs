@@ -1,3 +1,5 @@
+using PortalForge.Domain.Enums;
+
 namespace PortalForge.Domain.Entities;
 
 public class User
@@ -17,6 +19,7 @@ public class User
 
     public string Department { get; set; } = string.Empty;
     public string Position { get; set; } = string.Empty;
+    public DepartmentRole DepartmentRole { get; set; } = DepartmentRole.Employee;
 
     public string? PhoneNumber { get; set; }
     public string? ProfilePhotoUrl { get; set; }

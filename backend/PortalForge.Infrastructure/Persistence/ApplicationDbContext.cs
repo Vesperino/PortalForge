@@ -22,6 +22,15 @@ public class ApplicationDbContext : DbContext
     public DbSet<Hashtag> Hashtags { get; set; }
     public DbSet<SystemSetting> SystemSettings { get; set; }
     public DbSet<CachedLocation> CachedLocations { get; set; }
+    
+    // Requests System
+    public DbSet<RequestTemplate> RequestTemplates { get; set; }
+    public DbSet<RequestTemplateField> RequestTemplateFields { get; set; }
+    public DbSet<RequestApprovalStepTemplate> RequestApprovalStepTemplates { get; set; }
+    public DbSet<Request> Requests { get; set; }
+    public DbSet<RequestApprovalStep> RequestApprovalSteps { get; set; }
+    public DbSet<QuizQuestion> QuizQuestions { get; set; }
+    public DbSet<QuizAnswer> QuizAnswers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,6 +45,16 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new HashtagConfiguration());
         modelBuilder.ApplyConfiguration(new SystemSettingConfiguration());
         modelBuilder.ApplyConfiguration(new CachedLocationConfiguration());
+        
+        // Requests System
+        modelBuilder.ApplyConfiguration(new RequestTemplateConfiguration());
+        modelBuilder.ApplyConfiguration(new RequestTemplateFieldConfiguration());
+        modelBuilder.ApplyConfiguration(new RequestApprovalStepTemplateConfiguration());
+        modelBuilder.ApplyConfiguration(new RequestConfiguration());
+        modelBuilder.ApplyConfiguration(new RequestApprovalStepConfiguration());
+        modelBuilder.ApplyConfiguration(new QuizQuestionConfiguration());
+        modelBuilder.ApplyConfiguration(new QuizAnswerConfiguration());
+        
         base.OnModelCreating(modelBuilder);
     }
 }

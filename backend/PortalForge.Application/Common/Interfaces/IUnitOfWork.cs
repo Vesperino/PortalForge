@@ -11,6 +11,8 @@ public interface IUnitOfWork : IDisposable
     IUserRoleGroupRepository UserRoleGroupRepository { get; }
     IAuditLogRepository AuditLogRepository { get; }
     IHashtagRepository HashtagRepository { get; }
+    IRequestTemplateRepository RequestTemplateRepository { get; }
+    IRequestRepository RequestRepository { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

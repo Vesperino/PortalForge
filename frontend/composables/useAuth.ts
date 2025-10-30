@@ -84,9 +84,23 @@ export function useAuth() {
     }
   }
 
+  function getAuthHeaders() {
+    return {
+      Authorization: `Bearer ${authStore.accessToken}`
+    }
+  }
+
+  async function hasPermission(permissionName: string): Promise<boolean> {
+    // For now, return true for admins, false for others
+    // In production, this should check user's actual permissions
+    return authStore.user?.role === 'Admin'
+  }
+
   return {
     login,
     logout,
-    refreshToken
+    refreshToken,
+    getAuthHeaders,
+    hasPermission
   }
 }
