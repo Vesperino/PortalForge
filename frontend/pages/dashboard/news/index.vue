@@ -4,7 +4,7 @@ import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
   layout: 'default',
-  middleware: 'auth'
+  middleware: ['auth', 'verified']
 })
 
 const authStore = useAuthStore()

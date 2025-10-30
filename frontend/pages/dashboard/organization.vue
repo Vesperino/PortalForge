@@ -3,7 +3,7 @@ import type { Employee } from '~/types'
 
 definePageMeta({
   layout: 'default',
-  // middleware: ['auth'] // Disabled for testing
+  middleware: ['auth', 'verified']
 })
 
 const { getOrganizationTree, getDepartments, getEmployees } = useMockData()
