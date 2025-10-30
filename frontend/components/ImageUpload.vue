@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+const supabase = useSupabaseClient()
+
 interface Props {
   modelValue: string
   label?: string
@@ -21,7 +23,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
-const supabase = useSupabaseClient()
 const fileInput = ref<HTMLInputElement | null>(null)
 const isUploading = ref(false)
 const uploadError = ref<string | null>(null)
