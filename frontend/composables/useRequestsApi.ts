@@ -4,7 +4,9 @@ import type {
   CreateRequestTemplateDto,
   UpdateRequestTemplateDto,
   SubmitRequestDto,
-  ApproveStepDto
+  ApproveStepDto,
+  RejectStepDto,
+  Notification
 } from '~/types/requests'
 
 export const useRequestsApi = () => {
@@ -175,6 +177,99 @@ export const useRequestsApi = () => {
     }
   }
 
+  const rejectRequestStep = async (requestId: string, stepId: string, data: RejectStepDto) => {
+    try {
+      const response = await $fetch(
+        `${config.public.apiUrl}/api/requests/${requestId}/steps/${stepId}/reject`,
+        {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: data
+        }
+      ) as { success: boolean; message: string }
+      return response
+    } catch (error) {
+      console.error('Error rejecting request step:', error)
+      throw error
+    }
+  }
+
+  const getPendingApprovals = async () => {
+    try {
+      const response = await $fetch(
+        `${config.public.apiUrl}/api/requests/pending-approvals`,
+        {
+          headers: getAuthHeaders()
+        }
+      ) as { requests: Request[] }
+      return response.requests
+    } catch (error) {
+      console.error('Error fetching pending approvals:', error)
+      throw error
+    }
+  }
+
+  // Notifications
+  const getNotifications = async (unreadOnly = false, pageNumber = 1, pageSize = 20) => {
+    try {
+      const response = await $fetch(
+        `${config.public.apiUrl}/api/notifications?unreadOnly=${unreadOnly}&pageNumber=${pageNumber}&pageSize=${pageSize}`,
+        {
+          headers: getAuthHeaders()
+        }
+      ) as { notifications: Notification[] }
+      return response.notifications
+    } catch (error) {
+      console.error('Error fetching notifications:', error)
+      throw error
+    }
+  }
+
+  const getUnreadCount = async () => {
+    try {
+      const response = await $fetch(
+        `${config.public.apiUrl}/api/notifications/unread-count`,
+        {
+          headers: getAuthHeaders()
+        }
+      ) as { count: number }
+      return response.count
+    } catch (error) {
+      console.error('Error fetching unread count:', error)
+      throw error
+    }
+  }
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      await $fetch(
+        `${config.public.apiUrl}/api/notifications/${notificationId}/mark-read`,
+        {
+          method: 'PATCH',
+          headers: getAuthHeaders()
+        }
+      )
+    } catch (error) {
+      console.error('Error marking notification as read:', error)
+      throw error
+    }
+  }
+
+  const markAllAsRead = async () => {
+    try {
+      await $fetch(
+        `${config.public.apiUrl}/api/notifications/mark-all-read`,
+        {
+          method: 'PATCH',
+          headers: getAuthHeaders()
+        }
+      )
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error)
+      throw error
+    }
+  }
+
   return {
     // Templates
     getAvailableTemplates,
@@ -187,8 +282,16 @@ export const useRequestsApi = () => {
     // Requests
     getMyRequests,
     getRequestsToApprove,
+    getPendingApprovals,
     submitRequest,
-    approveRequestStep
+    approveRequestStep,
+    rejectRequestStep,
+
+    // Notifications
+    getNotifications,
+    getUnreadCount,
+    markAsRead,
+    markAllAsRead
   }
 }
 

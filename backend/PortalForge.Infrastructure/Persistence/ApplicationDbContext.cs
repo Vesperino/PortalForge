@@ -32,6 +32,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<QuizQuestion> QuizQuestions { get; set; }
     public DbSet<QuizAnswer> QuizAnswers { get; set; }
 
+    // Notifications
+    public DbSet<Notification> Notifications { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());
@@ -54,7 +57,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new RequestApprovalStepConfiguration());
         modelBuilder.ApplyConfiguration(new QuizQuestionConfiguration());
         modelBuilder.ApplyConfiguration(new QuizAnswerConfiguration());
-        
+        modelBuilder.ApplyConfiguration(new NotificationConfiguration());
+
         base.OnModelCreating(modelBuilder);
     }
 }

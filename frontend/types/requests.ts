@@ -8,6 +8,17 @@ export type RequestPriority = 'Standard' | 'Urgent'
 
 export type FieldType = 'Text' | 'Textarea' | 'Number' | 'Select' | 'Date' | 'Checkbox'
 
+export type ApproverType = 'Role' | 'SpecificUser' | 'UserGroup' | 'Submitter'
+
+export type NotificationType =
+  | 'RequestPendingApproval'
+  | 'RequestApproved'
+  | 'RequestRejected'
+  | 'RequestCompleted'
+  | 'RequestCommented'
+  | 'System'
+  | 'Announcement'
+
 export interface RequestTemplateField {
   id?: string
   label: string
@@ -24,7 +35,10 @@ export interface RequestTemplateField {
 export interface RequestApprovalStepTemplate {
   id?: string
   stepOrder: number
-  approverRole: DepartmentRole
+  approverType: ApproverType
+  approverRole?: DepartmentRole
+  specificUserId?: string
+  approverGroupId?: string
   requiresQuiz: boolean
 }
 
@@ -100,6 +114,7 @@ export interface CreateRequestTemplateDto {
   requiresApproval: boolean
   estimatedProcessingDays?: number
   passingScore?: number
+  isActive?: boolean
   fields: RequestTemplateField[]
   approvalStepTemplates: RequestApprovalStepTemplate[]
   quizQuestions: QuizQuestion[]
@@ -124,3 +139,19 @@ export interface ApproveStepDto {
   comment?: string
 }
 
+export interface RejectStepDto {
+  reason: string
+}
+
+export interface Notification {
+  id: string
+  type: NotificationType
+  title: string
+  message: string
+  relatedEntityType?: string
+  relatedEntityId?: string
+  actionUrl?: string
+  isRead: boolean
+  createdAt: string
+  readAt?: string
+}

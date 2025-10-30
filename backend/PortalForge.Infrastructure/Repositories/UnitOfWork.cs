@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore.Storage;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Interfaces;
 using PortalForge.Infrastructure.Persistence;
+using PortalForge.Infrastructure.Persistence.Repositories;
 
 namespace PortalForge.Infrastructure.Repositories;
 
@@ -19,6 +21,7 @@ public class UnitOfWork : IUnitOfWork
     private IHashtagRepository? _hashtagRepository;
     private IRequestTemplateRepository? _requestTemplateRepository;
     private IRequestRepository? _requestRepository;
+    private INotificationRepository? _notificationRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -57,6 +60,9 @@ public class UnitOfWork : IUnitOfWork
 
     public IRequestRepository RequestRepository =>
         _requestRepository ??= new RequestRepository(_context);
+
+    public INotificationRepository NotificationRepository =>
+        _notificationRepository ??= new NotificationRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {

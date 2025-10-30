@@ -46,6 +46,9 @@ public static class DependencyInjection
         // Register File Storage Service
         services.AddScoped<IFileStorageService, PortalForge.Infrastructure.Storage.LocalFileStorageService>();
 
+        // Register Notification Service
+        services.AddScoped<PortalForge.Application.Services.INotificationService, PortalForge.Infrastructure.Services.NotificationService>();
+
         // Register Unit of Work and Repositories
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 

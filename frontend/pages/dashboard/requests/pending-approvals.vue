@@ -1,0 +1,340 @@
+<template>
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+          Wnioski do zatwierdzenia
+        </h1>
+        <p class="mt-2 text-gray-600 dark:text-gray-300">
+          Wnioski oczekujące na Twoją decyzję
+        </p>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <Icon name="svg-spinners:ring-resize" class="w-12 h-12 text-blue-600" />
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+      <div class="flex items-center gap-3">
+        <Icon name="heroicons:exclamation-circle" class="w-6 h-6 text-red-600 dark:text-red-400" />
+        <div>
+          <h3 class="font-semibold text-red-900 dark:text-red-100">Błąd</h3>
+          <p class="text-sm text-red-700 dark:text-red-300">{{ error }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else-if="requests.length === 0" class="text-center py-12">
+      <Icon name="heroicons:check-circle" class="w-16 h-16 mx-auto text-green-500 mb-4" />
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        Brak wniosków do zatwierdzenia
+      </h3>
+      <p class="text-gray-600 dark:text-gray-300">
+        Wszystkie wnioski zostały przetworzone
+      </p>
+    </div>
+
+    <!-- Requests List -->
+    <div v-else class="space-y-4">
+      <div
+        v-for="request in requests"
+        :key="request.id"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
+      >
+        <div class="flex items-start justify-between gap-4">
+          <!-- Request Info -->
+          <div class="flex-1">
+            <div class="flex items-center gap-3 mb-2">
+              <Icon :name="request.requestTemplateIcon" class="w-6 h-6 text-blue-600" />
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                {{ request.requestTemplateName }}
+              </h3>
+              <span
+                class="px-2 py-1 text-xs font-medium rounded-full"
+                :class="getPriorityClass(request.priority)"
+              >
+                {{ request.priority === 'Urgent' ? 'Pilne' : 'Standardowy' }}
+              </span>
+            </div>
+
+            <div class="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+              <p>
+                <span class="font-medium">Numer:</span> {{ request.requestNumber }}
+              </p>
+              <p>
+                <span class="font-medium">Wnioskodawca:</span> {{ request.submittedByName }}
+              </p>
+              <p>
+                <span class="font-medium">Data złożenia:</span> {{ formatDate(request.submittedAt) }}
+              </p>
+            </div>
+
+            <!-- Current Step Info -->
+            <div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              <p class="text-sm font-medium text-yellow-900 dark:text-yellow-100">
+                Oczekuje na Twoją decyzję
+              </p>
+              <p class="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                Krok {{ getCurrentStep(request)?.stepOrder }} z {{ request.approvalSteps.length }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-col gap-2">
+            <button
+              @click="openApproveModal(request)"
+              class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+            >
+              <Icon name="heroicons:check" class="w-5 h-5" />
+              Zatwierdź
+            </button>
+            <button
+              @click="openRejectModal(request)"
+              class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+            >
+              <Icon name="heroicons:x-mark" class="w-5 h-5" />
+              Odrzuć
+            </button>
+            <NuxtLink
+              :to="`/dashboard/requests/${request.id}`"
+              class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors text-center"
+            >
+              Szczegóły
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Approve Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showApproveModal"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+        @click.self="closeApproveModal"
+      >
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            Zatwierdź wniosek
+          </h3>
+          <p class="text-gray-600 dark:text-gray-300 mb-4">
+            Czy na pewno chcesz zatwierdzić wniosek <strong>{{ selectedRequest?.requestNumber }}</strong>?
+          </p>
+          
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Komentarz (opcjonalny)
+            </label>
+            <textarea
+              v-model="approveComment"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              placeholder="Dodaj komentarz..."
+            ></textarea>
+          </div>
+
+          <div class="flex gap-3">
+            <button
+              @click="handleApprove"
+              :disabled="approving"
+              class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors"
+            >
+              {{ approving ? 'Zatwierdzanie...' : 'Zatwierdź' }}
+            </button>
+            <button
+              @click="closeApproveModal"
+              :disabled="approving"
+              class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+            >
+              Anuluj
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Reject Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showRejectModal"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+        @click.self="closeRejectModal"
+      >
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            Odrzuć wniosek
+          </h3>
+          <p class="text-gray-600 dark:text-gray-300 mb-4">
+            Podaj powód odrzucenia wniosku <strong>{{ selectedRequest?.requestNumber }}</strong>:
+          </p>
+          
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Powód odrzucenia *
+            </label>
+            <textarea
+              v-model="rejectReason"
+              rows="4"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-white"
+              placeholder="Opisz powód odrzucenia..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="flex gap-3">
+            <button
+              @click="handleReject"
+              :disabled="rejecting || !rejectReason.trim()"
+              class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors"
+            >
+              {{ rejecting ? 'Odrzucanie...' : 'Odrzuć' }}
+            </button>
+            <button
+              @click="closeRejectModal"
+              :disabled="rejecting"
+              class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+            >
+              Anuluj
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { Request, RequestApprovalStep } from '~/types/requests'
+
+definePageMeta({
+  layout: 'default',
+  middleware: 'auth'
+})
+
+const { getPendingApprovals, approveRequestStep, rejectRequestStep } = useRequestsApi()
+
+const requests = ref<Request[]>([])
+const loading = ref(true)
+const error = ref<string | null>(null)
+
+const showApproveModal = ref(false)
+const showRejectModal = ref(false)
+const selectedRequest = ref<Request | null>(null)
+const approveComment = ref('')
+const rejectReason = ref('')
+const approving = ref(false)
+const rejecting = ref(false)
+
+const fetchRequests = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    requests.value = await getPendingApprovals()
+  } catch (err: any) {
+    error.value = err.message || 'Nie udało się pobrać wniosków'
+  } finally {
+    loading.value = false
+  }
+}
+
+const getCurrentStep = (request: Request): RequestApprovalStep | undefined => {
+  return request.approvalSteps.find(step => step.status === 'InReview')
+}
+
+const getPriorityClass = (priority: string) => {
+  return priority === 'Urgent'
+    ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+    : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+}
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('pl-PL', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const openApproveModal = (request: Request) => {
+  selectedRequest.value = request
+  approveComment.value = ''
+  showApproveModal.value = true
+}
+
+const closeApproveModal = () => {
+  showApproveModal.value = false
+  selectedRequest.value = null
+  approveComment.value = ''
+}
+
+const openRejectModal = (request: Request) => {
+  selectedRequest.value = request
+  rejectReason.value = ''
+  showRejectModal.value = true
+}
+
+const closeRejectModal = () => {
+  showRejectModal.value = false
+  selectedRequest.value = null
+  rejectReason.value = ''
+}
+
+const handleApprove = async () => {
+  if (!selectedRequest.value) return
+  
+  const currentStep = getCurrentStep(selectedRequest.value)
+  if (!currentStep) return
+
+  approving.value = true
+  try {
+    await approveRequestStep(
+      selectedRequest.value.id,
+      currentStep.id,
+      { comment: approveComment.value || undefined }
+    )
+    
+    closeApproveModal()
+    await fetchRequests()
+  } catch (err: any) {
+    error.value = err.message || 'Nie udało się zatwierdzić wniosku'
+  } finally {
+    approving.value = false
+  }
+}
+
+const handleReject = async () => {
+  if (!selectedRequest.value || !rejectReason.value.trim()) return
+  
+  const currentStep = getCurrentStep(selectedRequest.value)
+  if (!currentStep) return
+
+  rejecting.value = true
+  try {
+    await rejectRequestStep(
+      selectedRequest.value.id,
+      currentStep.id,
+      { reason: rejectReason.value }
+    )
+    
+    closeRejectModal()
+    await fetchRequests()
+  } catch (err: any) {
+    error.value = err.message || 'Nie udało się odrzucić wniosku'
+  } finally {
+    rejecting.value = false
+  }
+}
+
+onMounted(() => {
+  fetchRequests()
+})
+</script>
+

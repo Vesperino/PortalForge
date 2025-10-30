@@ -248,52 +248,20 @@
             Brak etapów. Dodaj etapy zatwierdzania.
           </div>
 
-          <div class="space-y-4">
-            <div
+          <div v-if="loadingData" class="text-center py-8">
+            <Icon name="svg-spinners:ring-resize" class="w-8 h-8 mx-auto text-blue-600" />
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Ładowanie danych...</p>
+          </div>
+
+          <div v-else class="space-y-4">
+            <ApprovalStepEditor
               v-for="(step, index) in form.approvalStepTemplates"
               :key="index"
-              class="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-4"
-            >
-              <div class="flex items-center gap-4">
-                <div class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
-                  {{ step.stepOrder }}
-                </div>
-                
-                <div class="flex-1 grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Rola zatwierdzającego
-                    </label>
-                    <select
-                      v-model="step.approverRole"
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                    >
-                      <option value="Manager">Kierownik</option>
-                      <option value="Director">Dyrektor</option>
-                    </select>
-                  </div>
-                  <div class="flex items-end">
-                    <label class="flex items-center">
-                      <input
-                        v-model="step.requiresQuiz"
-                        type="checkbox"
-                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      >
-                      <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                        Wymaga quizu
-                      </span>
-                    </label>
-                  </div>
-                </div>
-
-                <button
-                  @click="removeApprovalStep(index)"
-                  class="text-red-600 hover:text-red-700 p-2"
-                >
-                  <Trash2 class="w-5 h-5" />
-                </button>
-              </div>
-            </div>
+              :step="step"
+              :users="users"
+              :role-groups="roleGroups"
+              @remove="removeApprovalStep(index)"
+            />
           </div>
         </div>
 
@@ -434,6 +402,8 @@ import { ref, computed } from 'vue'
 import { ArrowLeft, ArrowRight, Plus, Trash2, X, Save, GripVertical } from 'lucide-vue-next'
 import draggable from 'vuedraggable'
 import type { RequestTemplateField, RequestApprovalStepTemplate, QuizOption } from '~/types/requests'
+import type { UserDto } from '~/stores/admin'
+import type { RoleGroupDto } from '~/stores/roleGroups'
 
 definePageMeta({
   layout: 'default',
@@ -441,6 +411,28 @@ definePageMeta({
 })
 
 const { createTemplate } = useRequestsApi()
+const { getUsers } = useUsersApi()
+const { getAllRoleGroups } = useRoleGroupApi()
+
+// Load users and role groups
+const users = ref<UserDto[]>([])
+const roleGroups = ref<RoleGroupDto[]>([])
+const loadingData = ref(true)
+
+onMounted(async () => {
+  try {
+    const [usersResult, groupsResult] = await Promise.all([
+      getUsers({ isActive: true, pageSize: 1000 }),
+      getAllRoleGroups(false)
+    ])
+    users.value = usersResult.users
+    roleGroups.value = groupsResult
+  } catch (error) {
+    console.error('Error loading users and groups:', error)
+  } finally {
+    loadingData.value = false
+  }
+})
 
 const steps = ['Podstawowe info', 'Pola formularza', 'Przepływ zatwierdzeń', 'Quiz']
 const currentStep = ref(0)
@@ -486,6 +478,7 @@ const removeField = (index: number) => {
 const addApprovalStep = () => {
   form.value.approvalStepTemplates.push({
     stepOrder: form.value.approvalStepTemplates.length + 1,
+    approverType: 'Role',
     approverRole: 'Manager',
     requiresQuiz: false
   })

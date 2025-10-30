@@ -2,8 +2,10 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Application.UseCases.Requests.Commands.ApproveRequestStep;
+using PortalForge.Application.UseCases.Requests.Commands.RejectRequestStep;
 using PortalForge.Application.UseCases.Requests.Commands.SubmitRequest;
 using PortalForge.Application.UseCases.Requests.Queries.GetMyRequests;
+using PortalForge.Application.UseCases.Requests.Queries.GetPendingApprovals;
 using PortalForge.Application.UseCases.Requests.Queries.GetRequestsToApprove;
 using System.Security.Claims;
 
@@ -60,6 +62,24 @@ public class RequestsController : ControllerBase
     }
 
     /// <summary>
+    /// Get pending approvals (requests awaiting current user's approval)
+    /// </summary>
+    [HttpGet("pending-approvals")]
+    [Authorize(Policy = "RequirePermission:requests.approve")]
+    public async Task<ActionResult> GetPendingApprovals()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        {
+            return Unauthorized("User ID not found in token");
+        }
+
+        var query = new GetPendingApprovalsQuery { UserId = userGuid };
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Submit a new request
     /// </summary>
     [HttpPost]
@@ -108,10 +128,46 @@ public class RequestsController : ControllerBase
 
         return Ok(result);
     }
+
+    /// <summary>
+    /// Reject a request step
+    /// </summary>
+    [HttpPost("{requestId}/steps/{stepId}/reject")]
+    [Authorize(Policy = "RequirePermission:requests.approve")]
+    public async Task<ActionResult> RejectStep(Guid requestId, Guid stepId, [FromBody] RejectStepDto dto)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        {
+            return Unauthorized("User ID not found in token");
+        }
+
+        var command = new RejectRequestStepCommand
+        {
+            RequestId = requestId,
+            StepId = stepId,
+            ApproverId = userGuid,
+            Reason = dto.Reason
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result.Success)
+        {
+            return BadRequest(result.Message);
+        }
+
+        return Ok(result);
+    }
 }
 
 public class ApproveStepDto
 {
     public string? Comment { get; set; }
+}
+
+public class RejectStepDto
+{
+    public string Reason { get; set; } = string.Empty;
 }
 
