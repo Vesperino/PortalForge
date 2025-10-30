@@ -14,6 +14,7 @@ export default defineNuxtConfig({
     '@nuxtjs/color-mode',
     '@primevue/nuxt-module',
     '@nuxtjs/supabase',
+    'nuxt-icon',
   ],
 
   supabase: {

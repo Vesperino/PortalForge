@@ -79,14 +79,14 @@
           <!-- Card Header -->
           <div class="p-6 border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-start justify-between mb-3">
-              <component
-                :is="getIconComponent(template.icon)"
-                class="w-10 h-10 text-blue-600 dark:text-blue-400"
+              <Icon
+                :name="getIconifyName(template.icon)"
+                class="w-10 h-10"
               />
               <span
                 :class="[
                   'px-2 py-1 text-xs font-medium rounded-full',
-                  template.isActive 
+                  template.isActive
                     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                     : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                 ]"
@@ -224,7 +224,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Plus, Tag, Building, Globe, Clock, FileText, Users, Trash2 } from 'lucide-vue-next'
-import * as LucideIcons from 'lucide-vue-next'
 import type { RequestTemplate } from '~/types/requests'
 
 definePageMeta({
@@ -269,9 +268,111 @@ const filteredTemplates = computed(() => {
   return result
 })
 
-const getIconComponent = (iconName: string) => {
-  const IconComponent = (LucideIcons as any)[iconName]
-  return IconComponent || LucideIcons.FileText
+// Icon mapping - same as in requests.vue
+const iconMapping: Record<string, string> = {
+  'beach-umbrella': 'fluent-emoji-flat:beach-with-umbrella',
+  'palm-tree': 'fluent-emoji-flat:palm-tree',
+  'sun': 'fluent-emoji-flat:sun',
+  'airplane': 'fluent-emoji-flat:airplane',
+  'luggage': 'fluent-emoji-flat:luggage',
+  'island': 'fluent-emoji-flat:desert-island',
+  'camping': 'fluent-emoji-flat:camping',
+  'mountain': 'fluent-emoji-flat:mountain',
+  'briefcase': 'fluent-emoji-flat:briefcase',
+  'office-building': 'fluent-emoji-flat:office-building',
+  'chart-increasing': 'fluent-emoji-flat:chart-increasing',
+  'clipboard': 'fluent-emoji-flat:clipboard',
+  'calendar': 'fluent-emoji-flat:calendar',
+  'pushpin': 'fluent-emoji-flat:pushpin',
+  'memo': 'fluent-emoji-flat:memo',
+  'laptop': 'fluent-emoji-flat:laptop',
+  'desktop-computer': 'fluent-emoji-flat:desktop-computer',
+  'keyboard': 'fluent-emoji-flat:keyboard',
+  'computer-mouse': 'fluent-emoji-flat:computer-mouse',
+  'printer': 'fluent-emoji-flat:printer',
+  'mobile-phone': 'fluent-emoji-flat:mobile-phone',
+  'battery': 'fluent-emoji-flat:battery',
+  'electric-plug': 'fluent-emoji-flat:electric-plug',
+  'page-facing-up': 'fluent-emoji-flat:page-facing-up',
+  'page-with-curl': 'fluent-emoji-flat:page-with-curl',
+  'bookmark-tabs': 'fluent-emoji-flat:bookmark-tabs',
+  'file-folder': 'fluent-emoji-flat:file-folder',
+  'open-file-folder': 'fluent-emoji-flat:open-file-folder',
+  'card-index-dividers': 'fluent-emoji-flat:card-index-dividers',
+  'spiral-notepad': 'fluent-emoji-flat:spiral-notepad',
+  'bust-in-silhouette': 'fluent-emoji-flat:bust-in-silhouette',
+  'busts-in-silhouette': 'fluent-emoji-flat:busts-in-silhouette',
+  'man-office-worker': 'fluent-emoji-flat:man-office-worker',
+  'woman-office-worker': 'fluent-emoji-flat:woman-office-worker',
+  'technologist': 'fluent-emoji-flat:technologist',
+  'man-teacher': 'fluent-emoji-flat:man-teacher',
+  'alarm-clock': 'fluent-emoji-flat:alarm-clock',
+  'hourglass': 'fluent-emoji-flat:hourglass-done',
+  'stopwatch': 'fluent-emoji-flat:stopwatch',
+  'envelope': 'fluent-emoji-flat:envelope',
+  'incoming-envelope': 'fluent-emoji-flat:incoming-envelope',
+  'outbox-tray': 'fluent-emoji-flat:outbox-tray',
+  'inbox-tray': 'fluent-emoji-flat:inbox-tray',
+  'telephone': 'fluent-emoji-flat:telephone',
+  'speech-balloon': 'fluent-emoji-flat:speech-balloon',
+  'megaphone': 'fluent-emoji-flat:megaphone',
+  'money-bag': 'fluent-emoji-flat:money-bag',
+  'dollar-banknote': 'fluent-emoji-flat:dollar-banknote',
+  'credit-card': 'fluent-emoji-flat:credit-card',
+  'receipt': 'fluent-emoji-flat:receipt',
+  'chart-increasing-with-yen': 'fluent-emoji-flat:chart-increasing-with-yen',
+  'hospital': 'fluent-emoji-flat:hospital',
+  'pill': 'fluent-emoji-flat:pill',
+  'syringe': 'fluent-emoji-flat:syringe',
+  'stethoscope': 'fluent-emoji-flat:stethoscope',
+  'thermometer': 'fluent-emoji-flat:thermometer',
+  'adhesive-bandage': 'fluent-emoji-flat:adhesive-bandage',
+  'automobile': 'fluent-emoji-flat:automobile',
+  'bus': 'fluent-emoji-flat:bus',
+  'train': 'fluent-emoji-flat:train',
+  'bicycle': 'fluent-emoji-flat:bicycle',
+  'fuel-pump': 'fluent-emoji-flat:fuel-pump',
+  'parking': 'fluent-emoji-flat:p-button',
+  'hamburger': 'fluent-emoji-flat:hamburger',
+  'pizza': 'fluent-emoji-flat:pizza',
+  'coffee': 'fluent-emoji-flat:hot-beverage',
+  'birthday-cake': 'fluent-emoji-flat:birthday-cake',
+  'fork-and-knife': 'fluent-emoji-flat:fork-and-knife',
+  'clinking-beer-mugs': 'fluent-emoji-flat:clinking-beer-mugs',
+  'party-popper': 'fluent-emoji-flat:party-popper',
+  'wrapped-gift': 'fluent-emoji-flat:wrapped-gift',
+  'balloon': 'fluent-emoji-flat:balloon',
+  'christmas-tree': 'fluent-emoji-flat:christmas-tree',
+  'fireworks': 'fluent-emoji-flat:fireworks',
+  'trophy': 'fluent-emoji-flat:trophy',
+  'medal': 'fluent-emoji-flat:1st-place-medal',
+  'hammer': 'fluent-emoji-flat:hammer',
+  'wrench': 'fluent-emoji-flat:wrench',
+  'hammer-and-wrench': 'fluent-emoji-flat:hammer-and-wrench',
+  'gear': 'fluent-emoji-flat:gear',
+  'toolbox': 'fluent-emoji-flat:toolbox',
+  'magnet': 'fluent-emoji-flat:magnet',
+  'key': 'fluent-emoji-flat:key',
+  'locked': 'fluent-emoji-flat:locked',
+  'unlocked': 'fluent-emoji-flat:unlocked',
+  'deciduous-tree': 'fluent-emoji-flat:deciduous-tree',
+  'evergreen-tree': 'fluent-emoji-flat:evergreen-tree',
+  'four-leaf-clover': 'fluent-emoji-flat:four-leaf-clover',
+  'seedling': 'fluent-emoji-flat:seedling',
+  'herb': 'fluent-emoji-flat:herb',
+  'globe-showing-europe-africa': 'fluent-emoji-flat:globe-showing-europe-africa',
+  'recycling-symbol': 'fluent-emoji-flat:recycling-symbol',
+  'soccer-ball': 'fluent-emoji-flat:soccer-ball',
+  'basketball': 'fluent-emoji-flat:basketball',
+  'tennis': 'fluent-emoji-flat:tennis',
+  'running-shoe': 'fluent-emoji-flat:running-shoe',
+  'trophy-sports': 'fluent-emoji-flat:trophy',
+  'medal-sports': 'fluent-emoji-flat:sports-medal',
+  'person-biking': 'fluent-emoji-flat:person-biking'
+}
+
+const getIconifyName = (iconName: string) => {
+  return iconMapping[iconName] || 'fluent-emoji-flat:question-mark'
 }
 
 const loadTemplates = async () => {

@@ -81,19 +81,19 @@
             class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-blue-500 transition-all text-left p-6 group"
           >
             <div class="flex items-start justify-between mb-4">
-              <component
-                :is="getIconComponent(template.icon)"
-                class="w-12 h-12 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform"
+              <Icon
+                :name="getIconifyName(template.icon)"
+                class="w-12 h-12 group-hover:scale-110 transition-transform"
               />
               <span class="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
                 {{ template.category }}
               </span>
             </div>
-            
+
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               {{ template.name }}
             </h3>
-            
+
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
               {{ template.description }}
             </p>
@@ -151,19 +151,22 @@
         </div>
 
         <div v-else class="space-y-4">
-          <div
+          <button
             v-for="request in filteredRequests"
             :key="request.id"
-            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
+            @click="viewRequestDetails(request)"
+            class="w-full bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-blue-500 dark:hover:border-blue-400 transition-all text-left group cursor-pointer"
           >
             <div class="flex items-start justify-between mb-4">
               <div class="flex items-start gap-4">
-                <component
-                  :is="getIconComponent(request.requestTemplateIcon)"
-                  class="w-10 h-10 text-blue-600 dark:text-blue-400 flex-shrink-0"
-                />
+                <div class="relative">
+                  <Icon
+                    :name="getIconifyName(request.requestTemplateIcon)"
+                    class="w-12 h-12 flex-shrink-0 transition-transform group-hover:scale-110"
+                  />
+                </div>
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     {{ request.requestTemplateName }}
                   </h3>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -171,7 +174,7 @@
                   </p>
                 </div>
               </div>
-              
+
               <span
                 :class="[
                   'px-3 py-1 text-sm font-medium rounded-full',
@@ -192,7 +195,9 @@
               <div>
                 <p class="text-gray-500 dark:text-gray-400">Priorytet</p>
                 <p class="font-medium text-gray-900 dark:text-white">
-                  {{ request.priority === 'Urgent' ? 'Pilne' : 'Standard' }}
+                  <span :class="request.priority === 'Urgent' ? 'text-red-600 dark:text-red-400' : ''">
+                    {{ request.priority === 'Urgent' ? '🔴 Pilne' : '🔵 Standard' }}
+                  </span>
                 </p>
               </div>
               <div>
@@ -209,13 +214,13 @@
               </div>
             </div>
 
-            <button
-              @click="viewRequestDetails(request)"
-              class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm"
-            >
-              Zobacz szczegóły →
-            </button>
-          </div>
+            <div class="flex items-center text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 font-medium text-sm">
+              <span>Zobacz szczegóły</span>
+              <svg class="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
         </div>
       </div>
     </div>
@@ -281,7 +286,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Plus, List, Clock, FileText, ClipboardList, X } from 'lucide-vue-next'
-import * as LucideIcons from 'lucide-vue-next'
 import type { RequestTemplate, Request } from '~/types/requests'
 
 definePageMeta({
@@ -334,9 +338,111 @@ const filteredRequests = computed(() => {
   return result
 })
 
-const getIconComponent = (iconName: string) => {
-  const IconComponent = (LucideIcons as any)[iconName]
-  return IconComponent || LucideIcons.FileText
+// Icon mapping - maps icon names to Iconify icon names
+const iconMapping: Record<string, string> = {
+  'beach-umbrella': 'fluent-emoji-flat:beach-with-umbrella',
+  'palm-tree': 'fluent-emoji-flat:palm-tree',
+  'sun': 'fluent-emoji-flat:sun',
+  'airplane': 'fluent-emoji-flat:airplane',
+  'luggage': 'fluent-emoji-flat:luggage',
+  'island': 'fluent-emoji-flat:desert-island',
+  'camping': 'fluent-emoji-flat:camping',
+  'mountain': 'fluent-emoji-flat:mountain',
+  'briefcase': 'fluent-emoji-flat:briefcase',
+  'office-building': 'fluent-emoji-flat:office-building',
+  'chart-increasing': 'fluent-emoji-flat:chart-increasing',
+  'clipboard': 'fluent-emoji-flat:clipboard',
+  'calendar': 'fluent-emoji-flat:calendar',
+  'pushpin': 'fluent-emoji-flat:pushpin',
+  'memo': 'fluent-emoji-flat:memo',
+  'laptop': 'fluent-emoji-flat:laptop',
+  'desktop-computer': 'fluent-emoji-flat:desktop-computer',
+  'keyboard': 'fluent-emoji-flat:keyboard',
+  'computer-mouse': 'fluent-emoji-flat:computer-mouse',
+  'printer': 'fluent-emoji-flat:printer',
+  'mobile-phone': 'fluent-emoji-flat:mobile-phone',
+  'battery': 'fluent-emoji-flat:battery',
+  'electric-plug': 'fluent-emoji-flat:electric-plug',
+  'page-facing-up': 'fluent-emoji-flat:page-facing-up',
+  'page-with-curl': 'fluent-emoji-flat:page-with-curl',
+  'bookmark-tabs': 'fluent-emoji-flat:bookmark-tabs',
+  'file-folder': 'fluent-emoji-flat:file-folder',
+  'open-file-folder': 'fluent-emoji-flat:open-file-folder',
+  'card-index-dividers': 'fluent-emoji-flat:card-index-dividers',
+  'spiral-notepad': 'fluent-emoji-flat:spiral-notepad',
+  'bust-in-silhouette': 'fluent-emoji-flat:bust-in-silhouette',
+  'busts-in-silhouette': 'fluent-emoji-flat:busts-in-silhouette',
+  'man-office-worker': 'fluent-emoji-flat:man-office-worker',
+  'woman-office-worker': 'fluent-emoji-flat:woman-office-worker',
+  'technologist': 'fluent-emoji-flat:technologist',
+  'man-teacher': 'fluent-emoji-flat:man-teacher',
+  'alarm-clock': 'fluent-emoji-flat:alarm-clock',
+  'hourglass': 'fluent-emoji-flat:hourglass-done',
+  'stopwatch': 'fluent-emoji-flat:stopwatch',
+  'envelope': 'fluent-emoji-flat:envelope',
+  'incoming-envelope': 'fluent-emoji-flat:incoming-envelope',
+  'outbox-tray': 'fluent-emoji-flat:outbox-tray',
+  'inbox-tray': 'fluent-emoji-flat:inbox-tray',
+  'telephone': 'fluent-emoji-flat:telephone',
+  'speech-balloon': 'fluent-emoji-flat:speech-balloon',
+  'megaphone': 'fluent-emoji-flat:megaphone',
+  'money-bag': 'fluent-emoji-flat:money-bag',
+  'dollar-banknote': 'fluent-emoji-flat:dollar-banknote',
+  'credit-card': 'fluent-emoji-flat:credit-card',
+  'receipt': 'fluent-emoji-flat:receipt',
+  'chart-increasing-with-yen': 'fluent-emoji-flat:chart-increasing-with-yen',
+  'hospital': 'fluent-emoji-flat:hospital',
+  'pill': 'fluent-emoji-flat:pill',
+  'syringe': 'fluent-emoji-flat:syringe',
+  'stethoscope': 'fluent-emoji-flat:stethoscope',
+  'thermometer': 'fluent-emoji-flat:thermometer',
+  'adhesive-bandage': 'fluent-emoji-flat:adhesive-bandage',
+  'automobile': 'fluent-emoji-flat:automobile',
+  'bus': 'fluent-emoji-flat:bus',
+  'train': 'fluent-emoji-flat:train',
+  'bicycle': 'fluent-emoji-flat:bicycle',
+  'fuel-pump': 'fluent-emoji-flat:fuel-pump',
+  'parking': 'fluent-emoji-flat:p-button',
+  'hamburger': 'fluent-emoji-flat:hamburger',
+  'pizza': 'fluent-emoji-flat:pizza',
+  'coffee': 'fluent-emoji-flat:hot-beverage',
+  'birthday-cake': 'fluent-emoji-flat:birthday-cake',
+  'fork-and-knife': 'fluent-emoji-flat:fork-and-knife',
+  'clinking-beer-mugs': 'fluent-emoji-flat:clinking-beer-mugs',
+  'party-popper': 'fluent-emoji-flat:party-popper',
+  'wrapped-gift': 'fluent-emoji-flat:wrapped-gift',
+  'balloon': 'fluent-emoji-flat:balloon',
+  'christmas-tree': 'fluent-emoji-flat:christmas-tree',
+  'fireworks': 'fluent-emoji-flat:fireworks',
+  'trophy': 'fluent-emoji-flat:trophy',
+  'medal': 'fluent-emoji-flat:1st-place-medal',
+  'hammer': 'fluent-emoji-flat:hammer',
+  'wrench': 'fluent-emoji-flat:wrench',
+  'hammer-and-wrench': 'fluent-emoji-flat:hammer-and-wrench',
+  'gear': 'fluent-emoji-flat:gear',
+  'toolbox': 'fluent-emoji-flat:toolbox',
+  'magnet': 'fluent-emoji-flat:magnet',
+  'key': 'fluent-emoji-flat:key',
+  'locked': 'fluent-emoji-flat:locked',
+  'unlocked': 'fluent-emoji-flat:unlocked',
+  'deciduous-tree': 'fluent-emoji-flat:deciduous-tree',
+  'evergreen-tree': 'fluent-emoji-flat:evergreen-tree',
+  'four-leaf-clover': 'fluent-emoji-flat:four-leaf-clover',
+  'seedling': 'fluent-emoji-flat:seedling',
+  'herb': 'fluent-emoji-flat:herb',
+  'globe-showing-europe-africa': 'fluent-emoji-flat:globe-showing-europe-africa',
+  'recycling-symbol': 'fluent-emoji-flat:recycling-symbol',
+  'soccer-ball': 'fluent-emoji-flat:soccer-ball',
+  'basketball': 'fluent-emoji-flat:basketball',
+  'tennis': 'fluent-emoji-flat:tennis',
+  'running-shoe': 'fluent-emoji-flat:running-shoe',
+  'trophy-sports': 'fluent-emoji-flat:trophy',
+  'medal-sports': 'fluent-emoji-flat:sports-medal',
+  'person-biking': 'fluent-emoji-flat:person-biking'
+}
+
+const getIconifyName = (iconName: string) => {
+  return iconMapping[iconName] || 'fluent-emoji-flat:question-mark'
 }
 
 const getStatusBadgeClass = (status: string) => {

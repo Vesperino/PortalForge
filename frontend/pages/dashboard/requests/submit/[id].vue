@@ -27,9 +27,9 @@
           </NuxtLink>
           
           <div class="flex items-center gap-4 mb-4">
-            <component
-              :is="getIconComponent(template.icon)"
-              class="w-12 h-12 text-blue-600 dark:text-blue-400"
+            <Icon
+              :name="getIconifyName(template.icon)"
+              class="w-12 h-12"
             />
             <div>
               <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
@@ -219,7 +219,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { ArrowLeft, Clock } from 'lucide-vue-next'
-import * as LucideIcons from 'lucide-vue-next'
 import type { RequestTemplate, RequestPriority } from '~/types/requests'
 
 definePageMeta({
@@ -243,9 +242,113 @@ const sortedFields = computed(() => {
   return [...template.value.fields].sort((a, b) => a.order - b.order)
 })
 
-const getIconComponent = (iconName: string) => {
-  const IconComponent = (LucideIcons as any)[iconName]
-  return IconComponent || LucideIcons.FileText
+// Icon mapping for Fluent Emoji Flat icons
+const iconMapping: Record<string, string> = {
+  'beach-umbrella': 'fluent-emoji-flat:beach-with-umbrella',
+  'palm-tree': 'fluent-emoji-flat:palm-tree',
+  'laptop': 'fluent-emoji-flat:laptop',
+  'desktop': 'fluent-emoji-flat:desktop-computer',
+  'phone': 'fluent-emoji-flat:mobile-phone',
+  'briefcase': 'fluent-emoji-flat:briefcase',
+  'calendar': 'fluent-emoji-flat:calendar',
+  'clock': 'fluent-emoji-flat:alarm-clock',
+  'document': 'fluent-emoji-flat:page-facing-up',
+  'folder': 'fluent-emoji-flat:file-folder',
+  'email': 'fluent-emoji-flat:e-mail',
+  'user': 'fluent-emoji-flat:bust-in-silhouette',
+  'users': 'fluent-emoji-flat:busts-in-silhouette',
+  'settings': 'fluent-emoji-flat:gear',
+  'chart': 'fluent-emoji-flat:chart-increasing',
+  'money': 'fluent-emoji-flat:money-bag',
+  'gift': 'fluent-emoji-flat:wrapped-gift',
+  'star': 'fluent-emoji-flat:star',
+  'heart': 'fluent-emoji-flat:red-heart',
+  'home': 'fluent-emoji-flat:house',
+  'car': 'fluent-emoji-flat:automobile',
+  'plane': 'fluent-emoji-flat:airplane',
+  'train': 'fluent-emoji-flat:locomotive',
+  'bus': 'fluent-emoji-flat:bus',
+  'bicycle': 'fluent-emoji-flat:bicycle',
+  'camera': 'fluent-emoji-flat:camera',
+  'video': 'fluent-emoji-flat:video-camera',
+  'music': 'fluent-emoji-flat:musical-note',
+  'book': 'fluent-emoji-flat:books',
+  'graduation': 'fluent-emoji-flat:graduation-cap',
+  'trophy': 'fluent-emoji-flat:trophy',
+  'medal': 'fluent-emoji-flat:sports-medal',
+  'flag': 'fluent-emoji-flat:triangular-flag',
+  'bell': 'fluent-emoji-flat:bell',
+  'lock': 'fluent-emoji-flat:locked',
+  'key': 'fluent-emoji-flat:key',
+  'shield': 'fluent-emoji-flat:shield',
+  'warning': 'fluent-emoji-flat:warning',
+  'info': 'fluent-emoji-flat:information',
+  'check': 'fluent-emoji-flat:check-mark-button',
+  'cross': 'fluent-emoji-flat:cross-mark',
+  'plus': 'fluent-emoji-flat:plus',
+  'minus': 'fluent-emoji-flat:minus',
+  'search': 'fluent-emoji-flat:magnifying-glass-tilted-left',
+  'filter': 'fluent-emoji-flat:funnel',
+  'download': 'fluent-emoji-flat:down-arrow',
+  'upload': 'fluent-emoji-flat:up-arrow',
+  'refresh': 'fluent-emoji-flat:counterclockwise-arrows-button',
+  'trash': 'fluent-emoji-flat:wastebasket',
+  'edit': 'fluent-emoji-flat:pencil',
+  'copy': 'fluent-emoji-flat:clipboard',
+  'paste': 'fluent-emoji-flat:page-with-curl',
+  'cut': 'fluent-emoji-flat:scissors',
+  'link': 'fluent-emoji-flat:link',
+  'unlink': 'fluent-emoji-flat:broken-chain',
+  'image': 'fluent-emoji-flat:framed-picture',
+  'file': 'fluent-emoji-flat:page-facing-up',
+  'archive': 'fluent-emoji-flat:card-file-box',
+  'database': 'fluent-emoji-flat:floppy-disk',
+  'server': 'fluent-emoji-flat:desktop-computer',
+  'cloud': 'fluent-emoji-flat:cloud',
+  'sun': 'fluent-emoji-flat:sun',
+  'moon': 'fluent-emoji-flat:crescent-moon',
+  'umbrella': 'fluent-emoji-flat:umbrella',
+  'snowflake': 'fluent-emoji-flat:snowflake',
+  'fire': 'fluent-emoji-flat:fire',
+  'water': 'fluent-emoji-flat:droplet',
+  'leaf': 'fluent-emoji-flat:leaf-fluttering-in-wind',
+  'tree': 'fluent-emoji-flat:deciduous-tree',
+  'flower': 'fluent-emoji-flat:blossom',
+  'pizza': 'fluent-emoji-flat:pizza',
+  'coffee': 'fluent-emoji-flat:hot-beverage',
+  'cake': 'fluent-emoji-flat:birthday-cake',
+  'apple': 'fluent-emoji-flat:red-apple',
+  'banana': 'fluent-emoji-flat:banana',
+  'hamburger': 'fluent-emoji-flat:hamburger',
+  'popcorn': 'fluent-emoji-flat:popcorn',
+  'icecream': 'fluent-emoji-flat:ice-cream',
+  'donut': 'fluent-emoji-flat:doughnut',
+  'cookie': 'fluent-emoji-flat:cookie',
+  'chocolate': 'fluent-emoji-flat:chocolate-bar',
+  'candy': 'fluent-emoji-flat:candy',
+  'lollipop': 'fluent-emoji-flat:lollipop',
+  'honey': 'fluent-emoji-flat:honey-pot',
+  'milk': 'fluent-emoji-flat:glass-of-milk',
+  'beer': 'fluent-emoji-flat:beer-mug',
+  'wine': 'fluent-emoji-flat:wine-glass',
+  'cocktail': 'fluent-emoji-flat:cocktail-glass',
+  'soccer': 'fluent-emoji-flat:soccer-ball',
+  'basketball': 'fluent-emoji-flat:basketball',
+  'football': 'fluent-emoji-flat:american-football',
+  'baseball': 'fluent-emoji-flat:baseball',
+  'tennis': 'fluent-emoji-flat:tennis',
+  'volleyball': 'fluent-emoji-flat:volleyball',
+  'bowling': 'fluent-emoji-flat:bowling',
+  'golf': 'fluent-emoji-flat:flag-in-hole',
+  'fishing': 'fluent-emoji-flat:fishing-pole',
+  'running': 'fluent-emoji-flat:person-running',
+  'swimming': 'fluent-emoji-flat:person-swimming',
+  'cycling': 'fluent-emoji-flat:person-biking',
+  'hiking': 'fluent-emoji-flat:person-climbing'
+}
+
+const getIconifyName = (iconName: string) => {
+  return iconMapping[iconName] || 'fluent-emoji-flat:question-mark'
 }
 
 const parseOptions = (optionsJson: string | undefined) => {
