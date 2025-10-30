@@ -3,6 +3,15 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Header -->
       <div class="mb-8">
+        <NuxtLink
+          to="/admin"
+          class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-4"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Powrót do panelu administracyjnego
+        </NuxtLink>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Zarządzanie Grupami Ról</h1>
         <p class="mt-2 text-gray-600 dark:text-gray-400">Przeglądaj grupy ról i przypisane uprawnienia</p>
       </div>
