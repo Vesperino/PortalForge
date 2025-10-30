@@ -14,7 +14,7 @@ export const useRequestsApi = () => {
   const getAvailableTemplates = async () => {
     try {
       const response = await $fetch(
-        `${config.public.apiUrl}/request-templates/available`,
+        `${config.public.apiUrl}/api/request-templates/available`,
         {
           headers: getAuthHeaders()
         }
@@ -29,7 +29,7 @@ export const useRequestsApi = () => {
   const getAllTemplates = async () => {
     try {
       const response = await $fetch(
-        `${config.public.apiUrl}/request-templates`,
+        `${config.public.apiUrl}/api/request-templates`,
         {
           headers: getAuthHeaders()
         }
@@ -44,7 +44,7 @@ export const useRequestsApi = () => {
   const getTemplateById = async (id: string) => {
     try {
       const response = await $fetch(
-        `${config.public.apiUrl}/request-templates/${id}`,
+        `${config.public.apiUrl}/api/request-templates/${id}`,
         {
           headers: getAuthHeaders()
         }
@@ -59,7 +59,7 @@ export const useRequestsApi = () => {
   const createTemplate = async (data: CreateRequestTemplateDto) => {
     try {
       const response = await $fetch(
-        `${config.public.apiUrl}/request-templates`,
+        `${config.public.apiUrl}/api/request-templates`,
         {
           method: 'POST',
           headers: getAuthHeaders(),
@@ -77,7 +77,7 @@ export const useRequestsApi = () => {
   const getMyRequests = async () => {
     try {
       const response = await $fetch(
-        `${config.public.apiUrl}/requests/my-requests`,
+        `${config.public.apiUrl}/api/requests/my-requests`,
         {
           headers: getAuthHeaders()
         }
@@ -92,7 +92,7 @@ export const useRequestsApi = () => {
   const getRequestsToApprove = async () => {
     try {
       const response = await $fetch(
-        `${config.public.apiUrl}/requests/to-approve`,
+        `${config.public.apiUrl}/api/requests/to-approve`,
         {
           headers: getAuthHeaders()
         }
@@ -107,7 +107,7 @@ export const useRequestsApi = () => {
   const submitRequest = async (data: SubmitRequestDto) => {
     try {
       const response = await $fetch(
-        `${config.public.apiUrl}/requests`,
+        `${config.public.apiUrl}/api/requests`,
         {
           method: 'POST',
           headers: getAuthHeaders(),
@@ -127,7 +127,7 @@ export const useRequestsApi = () => {
   const approveRequestStep = async (requestId: string, stepId: string, data: ApproveStepDto) => {
     try {
       const response = await $fetch(
-        `${config.public.apiUrl}/requests/${requestId}/steps/${stepId}/approve`,
+        `${config.public.apiUrl}/api/requests/${requestId}/steps/${stepId}/approve`,
         {
           method: 'POST',
           headers: getAuthHeaders(),
