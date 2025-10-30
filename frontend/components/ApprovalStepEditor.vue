@@ -12,8 +12,8 @@
             Typ zatwierdzającego
           </label>
           <select
-            v-model="step.approverType"
-            @change="onApproverTypeChange"
+            :value="step.approverType"
+            @change="(e) => { updateStep({ approverType: (e.target as HTMLSelectElement).value as any }); onApproverTypeChange(); }"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
           >
             <option value="Role">Rola hierarchiczna</option>
@@ -29,7 +29,8 @@
             Rola zatwierdzającego
           </label>
           <select
-            v-model="step.approverRole"
+            :value="step.approverRole"
+            @change="(e) => updateStep({ approverRole: (e.target as HTMLSelectElement).value as any })"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
           >
             <option value="Manager">Kierownik (bezpośredni przełożony)</option>
@@ -108,7 +109,8 @@
             Wybierz grupę użytkowników
           </label>
           <select
-            v-model="step.approverGroupId"
+            :value="step.approverGroupId"
+            @change="(e) => updateStep({ approverGroupId: (e.target as HTMLSelectElement).value })"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
           >
             <option value="">-- Wybierz grupę --</option>
@@ -130,7 +132,8 @@
         <div class="flex items-center">
           <label class="flex items-center">
             <input
-              v-model="step.requiresQuiz"
+              :checked="step.requiresQuiz"
+              @change="(e) => updateStep({ requiresQuiz: (e.target as HTMLInputElement).checked })"
               type="checkbox"
               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             >
@@ -164,6 +167,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   remove: []
+  'update:step': [value: RequestApprovalStepTemplate]
 }>()
 
 const userSearchTerm = ref('')
@@ -184,17 +188,25 @@ const filteredUsers = computed(() => {
   ).slice(0, 10)
 })
 
+const updateStep = (updates: Partial<RequestApprovalStepTemplate>) => {
+  emit('update:step', { ...props.step, ...updates })
+}
+
 const onApproverTypeChange = () => {
   // Clear selections when type changes
+  const updates: Partial<RequestApprovalStepTemplate> = {}
   if (props.step.approverType !== 'Role') {
-    props.step.approverRole = undefined
+    updates.approverRole = undefined
   }
   if (props.step.approverType !== 'SpecificUser') {
-    props.step.specificUserId = undefined
+    updates.specificUserId = undefined
     selectedUser.value = null
   }
   if (props.step.approverType !== 'UserGroup') {
-    props.step.approverGroupId = undefined
+    updates.approverGroupId = undefined
+  }
+  if (Object.keys(updates).length > 0) {
+    updateStep(updates)
   }
 }
 
@@ -204,14 +216,14 @@ const searchUsers = () => {
 
 const selectUser = (user: UserDto) => {
   selectedUser.value = user
-  props.step.specificUserId = user.id
+  updateStep({ specificUserId: user.id })
   userSearchTerm.value = `${user.firstName} ${user.lastName}`
   showUserDropdown.value = false
 }
 
 const clearUserSelection = () => {
   selectedUser.value = null
-  props.step.specificUserId = undefined
+  updateStep({ specificUserId: undefined })
   userSearchTerm.value = ''
 }
 

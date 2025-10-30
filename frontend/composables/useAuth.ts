@@ -124,7 +124,7 @@ export function useAuth() {
     return isTokenExpired(authStore.accessToken)
   }
 
-  async function hasPermission(permissionName: string): Promise<boolean> {
+  async function hasPermission(_permissionName: string): Promise<boolean> {
     // For now, return true for admins and HR, false for others
     // In production, this should check user's actual permissions
     const userRole = authStore.user?.role

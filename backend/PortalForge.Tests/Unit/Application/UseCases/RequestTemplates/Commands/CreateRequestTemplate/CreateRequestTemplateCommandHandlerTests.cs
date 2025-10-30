@@ -160,8 +160,8 @@ public class CreateRequestTemplateCommandHandlerTests
             Icon = "FileText",
             Category = "Testing",
             CreatedById = createdById,
-            Fields = new List<RequestTemplateField>(),
-            ApprovalStepTemplates = new List<RequestApprovalStepTemplate>()
+            Fields = new List<RequestTemplateFieldDto>(),
+            ApprovalStepTemplates = new List<RequestApprovalStepTemplateDto>()
         };
 
         RequestTemplate? capturedTemplate = null;

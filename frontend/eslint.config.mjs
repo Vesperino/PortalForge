@@ -31,4 +31,26 @@ export default createConfigForNuxt({
         'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
       },
     },
+    // Disable specific rules for specific files
+    {
+      files: ['components/LocationPickerOSM.vue'],
+      rules: {
+        '@typescript-eslint/unified-signatures': 'off',
+        'prefer-const': 'off',
+        'unicorn/prefer-number-properties': 'off',
+      },
+    },
+    {
+      files: ['components/RichTextEditor.vue'],
+      rules: {
+        'regexp/prefer-w': 'off',
+        'regexp/no-useless-character-class': 'off',
+      },
+    },
+    {
+      files: ['pages/admin/settings/system.vue'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off',
+      },
+    },
   )

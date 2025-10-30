@@ -496,13 +496,6 @@ const closeRequestDetails = () => {
   selectedRequest.value = null
 }
 
-const openQuizModal = (step: any, questions: any[], passingScore: number) => {
-  selectedQuizStep.value = step
-  quizQuestions.value = questions
-  quizPassingScore.value = passingScore
-  showQuizModal.value = true
-}
-
 const closeQuizModal = () => {
   showQuizModal.value = false
   selectedQuizStep.value = null

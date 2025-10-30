@@ -107,11 +107,6 @@ const goToToday = () => {
   currentDate.value = new Date()
 }
 
-const openEventModal = (event: Event) => {
-  selectedEvent.value = event
-  showEventModal.value = true
-}
-
 const openNewsEventModal = (news: News) => {
   selectedNews.value = news
   showNewsEventModal.value = true

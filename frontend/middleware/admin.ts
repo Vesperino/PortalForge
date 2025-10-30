@@ -1,6 +1,6 @@
 import { UserRole } from '~/types/auth'
 
-export default defineNuxtRouteMiddleware(async (to, from) => {
+export default defineNuxtRouteMiddleware(async () => {
   const authStore = useAuthStore()
 
   // Check if user is authenticated

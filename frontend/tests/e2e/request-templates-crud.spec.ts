@@ -42,7 +42,6 @@ test.describe('Request Templates CRUD Operations', () => {
     await page.waitForTimeout(300)
 
     // Fill first field
-    const firstFieldLabel = page.locator('input').filter({ hasText: '' }).first()
     await page.locator('.bg-gray-50').first().locator('input').first().fill('Test Field 1')
     
     await page.screenshot({ path: 'test-results/template-create-step2.png', fullPage: true })
@@ -113,9 +112,6 @@ test.describe('Request Templates CRUD Operations', () => {
     await page.screenshot({ path: 'test-results/template-edit-modified.png', fullPage: true })
 
     // Navigate through steps to save button
-    const nextButtons = page.getByRole('button', { name: /dalej/i })
-    const nextCount = await nextButtons.count()
-    
     // Click next buttons to get to the last step
     for (let i = 0; i < 3; i++) {
       const nextBtn = page.getByRole('button', { name: /dalej/i })
@@ -201,7 +197,6 @@ test.describe('Request Templates CRUD Operations', () => {
 
     // Get all templates initially
     const allTemplates = page.locator('article, [class*="template-card"]')
-    const totalCount = await allTemplates.count()
 
     // Click on a category filter button
     const categoryButton = page.locator('button').filter({ hasText: /hardware|software|hr/i }).first()

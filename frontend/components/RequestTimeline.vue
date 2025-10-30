@@ -11,7 +11,7 @@
       <!-- Timeline items -->
       <div class="space-y-6">
         <div
-          v-for="(step, index) in steps"
+          v-for="step in steps"
           :key="step.id"
           class="relative flex items-start gap-4"
         >
@@ -95,7 +95,7 @@
 import { CheckCircle, XCircle, Clock, Circle, FileQuestion, AlertCircle } from 'lucide-vue-next'
 import type { RequestApprovalStep } from '~/types/requests'
 
-const props = defineProps<{
+defineProps<{
   steps: RequestApprovalStep[]
 }>()
 

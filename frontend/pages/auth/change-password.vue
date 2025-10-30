@@ -49,9 +49,9 @@ async function handleChangePassword() {
   }
   
   isLoading.value = true
-  
+
   try {
-    const response = await $fetch(`${apiUrl}/api/auth/change-password`, {
+    await $fetch(`${apiUrl}/api/auth/change-password`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${authStore.accessToken}`,

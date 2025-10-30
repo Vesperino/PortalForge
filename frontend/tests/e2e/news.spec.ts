@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAsAdmin, testUsers } from './helpers/auth'
+import { loginAsAdmin } from './helpers/auth'
 import { seedNewsData } from './helpers/seed'
 
 test.describe('News System', () => {

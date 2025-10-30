@@ -398,7 +398,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { ArrowLeft, ArrowRight, Plus, Trash2, X, Save, GripVertical } from 'lucide-vue-next'
 import draggable from 'vuedraggable'
 import type { RequestTemplateField, RequestApprovalStepTemplate, QuizOption } from '~/types/requests'

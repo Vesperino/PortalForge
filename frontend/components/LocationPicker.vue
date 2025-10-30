@@ -9,13 +9,11 @@ interface Props {
   error?: string
 }
 
-interface Emits {
-  (e: 'update:modelValue', value: string): void
-  (e: 'update:placeId', value: string): void
-}
-
 const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{
+  'update:modelValue': [value: string]
+  'update:placeId': [value: string]
+}>()
 
 const config = useRuntimeConfig()
 const apiKey = config.public.googleMapsApiKey || ''
@@ -38,8 +36,8 @@ onMounted(() => {
     // Format: "Address (lat: XX.XXXX, lng: YY.YYYY)"
     const coordsMatch = props.modelValue.match(/lat:\s*([-\d.]+),\s*lng:\s*([-\d.]+)/)
     if (coordsMatch && coordsMatch[1] && coordsMatch[2]) {
-      const lat = parseFloat(coordsMatch[1])
-      const lng = parseFloat(coordsMatch[2])
+      const lat = Number.parseFloat(coordsMatch[1])
+      const lng = Number.parseFloat(coordsMatch[2])
       center.value = { lat, lng }
       markerPosition.value = { lat, lng }
     }

@@ -106,7 +106,7 @@ function handlePaste(event: ClipboardEvent) {
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i]
-    if (item && item.type.indexOf('image') !== -1) {
+    if (item && item.type.includes('image')) {
       const file = item.getAsFile()
       if (file) {
         // Create a fake event to reuse handleFileChange

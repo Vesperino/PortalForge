@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
 const API_URL = process.env.NUXT_PUBLIC_API_URL || 'http://localhost:5155'
 
@@ -85,7 +85,7 @@ export async function seedAllTestData(page: Page) {
  * Clear all test data (if needed for cleanup)
  * Note: This would need corresponding backend endpoints
  */
-export async function clearTestData(page: Page) {
+export async function clearTestData(_page: Page) {
   // Implementation would depend on backend cleanup endpoints
   console.log('Clear test data not implemented yet')
 }
