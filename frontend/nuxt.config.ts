@@ -73,4 +73,12 @@ export default defineNuxtConfig({
       target: 'esnext',
     },
   },
+
+  // Nitro configuration - disable prerendering since SSR is disabled
+  nitro: {
+    prerender: {
+      crawlLinks: false,
+      routes: [],
+    },
+  },
 })

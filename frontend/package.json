@@ -4,7 +4,7 @@
   "description": "PortalForge Frontend - Nuxt 3 Application",
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -63,6 +63,7 @@
     "@vue/test-utils": "^2.4.6",
     "@vueuse/core": "^11.3.0",
     "@vueuse/nuxt": "^11.3.0",
+    "cross-env": "^10.1.0",
     "happy-dom": "^20.0.2",
     "jsdom": "^27.0.0",
     "pinia": "^2.2.8",
