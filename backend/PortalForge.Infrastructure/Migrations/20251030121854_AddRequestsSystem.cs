@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,7 +11,6 @@ namespace PortalForge.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Add Department Role to Users table
             migrationBuilder.AddColumn<string>(
                 name: "DepartmentRole",
                 schema: "public",
@@ -21,7 +20,6 @@ namespace PortalForge.Infrastructure.Migrations
                 nullable: false,
                 defaultValue: "Employee");
 
-            // Create RequestTemplates table
             migrationBuilder.CreateTable(
                 name: "RequestTemplates",
                 schema: "public",
@@ -53,62 +51,6 @@ namespace PortalForge.Infrastructure.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
-            // Create RequestTemplateFields table
-            migrationBuilder.CreateTable(
-                name: "RequestTemplateFields",
-                schema: "public",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    RequestTemplateId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Label = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    FieldType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Placeholder = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    IsRequired = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    Options = table.Column<string>(type: "jsonb", nullable: true),
-                    MinValue = table.Column<int>(type: "integer", nullable: true),
-                    MaxValue = table.Column<int>(type: "integer", nullable: true),
-                    HelpText = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    Order = table.Column<int>(type: "integer", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RequestTemplateFields", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_RequestTemplateFields_RequestTemplates_RequestTemplateId",
-                        column: x => x.RequestTemplateId,
-                        principalSchema: "public",
-                        principalTable: "RequestTemplates",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            // Create RequestApprovalStepTemplates table
-            migrationBuilder.CreateTable(
-                name: "RequestApprovalStepTemplates",
-                schema: "public",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    RequestTemplateId = table.Column<Guid>(type: "uuid", nullable: false),
-                    StepOrder = table.Column<int>(type: "integer", nullable: false),
-                    ApproverRole = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    RequiresQuiz = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RequestApprovalStepTemplates", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_RequestApprovalStepTemplates_RequestTemplates_RequestTempl~",
-                        column: x => x.RequestTemplateId,
-                        principalSchema: "public",
-                        principalTable: "RequestTemplates",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            // Create QuizQuestions table
             migrationBuilder.CreateTable(
                 name: "QuizQuestions",
                 schema: "public",
@@ -132,7 +74,30 @@ namespace PortalForge.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            // Create Requests table
+            migrationBuilder.CreateTable(
+                name: "RequestApprovalStepTemplates",
+                schema: "public",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    RequestTemplateId = table.Column<Guid>(type: "uuid", nullable: false),
+                    StepOrder = table.Column<int>(type: "integer", nullable: false),
+                    ApproverRole = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    RequiresQuiz = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RequestApprovalStepTemplates", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RequestApprovalStepTemplates_RequestTemplates_RequestTempla~",
+                        column: x => x.RequestTemplateId,
+                        principalSchema: "public",
+                        principalTable: "RequestTemplates",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Requests",
                 schema: "public",
@@ -167,7 +132,35 @@ namespace PortalForge.Infrastructure.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
-            // Create RequestApprovalSteps table
+            migrationBuilder.CreateTable(
+                name: "RequestTemplateFields",
+                schema: "public",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    RequestTemplateId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Label = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    FieldType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Placeholder = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    IsRequired = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    Options = table.Column<string>(type: "jsonb", nullable: true),
+                    MinValue = table.Column<int>(type: "integer", nullable: true),
+                    MaxValue = table.Column<int>(type: "integer", nullable: true),
+                    HelpText = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    Order = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RequestTemplateFields", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RequestTemplateFields_RequestTemplates_RequestTemplateId",
+                        column: x => x.RequestTemplateId,
+                        principalSchema: "public",
+                        principalTable: "RequestTemplates",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateTable(
                 name: "RequestApprovalSteps",
                 schema: "public",
@@ -204,7 +197,6 @@ namespace PortalForge.Infrastructure.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
-            // Create QuizAnswers table
             migrationBuilder.CreateTable(
                 name: "QuizAnswers",
                 schema: "public",
@@ -236,48 +228,47 @@ namespace PortalForge.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            // Create indexes
             migrationBuilder.CreateIndex(
-                name: "IX_RequestTemplates_Category",
+                name: "IX_QuizAnswers_QuizQuestionId",
                 schema: "public",
-                table: "RequestTemplates",
-                column: "Category");
+                table: "QuizAnswers",
+                column: "QuizQuestionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RequestTemplates_CreatedById",
+                name: "IX_QuizAnswers_RequestApprovalStepId",
                 schema: "public",
-                table: "RequestTemplates",
-                column: "CreatedById");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RequestTemplates_DepartmentId",
-                schema: "public",
-                table: "RequestTemplates",
-                column: "DepartmentId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RequestTemplates_IsActive",
-                schema: "public",
-                table: "RequestTemplates",
-                column: "IsActive");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RequestTemplateFields_RequestTemplateId_Order",
-                schema: "public",
-                table: "RequestTemplateFields",
-                columns: new[] { "RequestTemplateId", "Order" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RequestApprovalStepTemplates_RequestTemplateId_StepOrder",
-                schema: "public",
-                table: "RequestApprovalStepTemplates",
-                columns: new[] { "RequestTemplateId", "StepOrder" });
+                table: "QuizAnswers",
+                column: "RequestApprovalStepId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_QuizQuestions_RequestTemplateId_Order",
                 schema: "public",
                 table: "QuizQuestions",
                 columns: new[] { "RequestTemplateId", "Order" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RequestApprovalSteps_ApproverId",
+                schema: "public",
+                table: "RequestApprovalSteps",
+                column: "ApproverId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RequestApprovalSteps_RequestId_StepOrder",
+                schema: "public",
+                table: "RequestApprovalSteps",
+                columns: new[] { "RequestId", "StepOrder" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RequestApprovalSteps_Status",
+                schema: "public",
+                table: "RequestApprovalSteps",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RequestApprovalStepTemplates_RequestTemplateId_StepOrder",
+                schema: "public",
+                table: "RequestApprovalStepTemplates",
+                columns: new[] { "RequestTemplateId", "StepOrder" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Requests_RequestNumber",
@@ -311,34 +302,34 @@ namespace PortalForge.Infrastructure.Migrations
                 column: "SubmittedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RequestApprovalSteps_ApproverId",
+                name: "IX_RequestTemplateFields_RequestTemplateId_Order",
                 schema: "public",
-                table: "RequestApprovalSteps",
-                column: "ApproverId");
+                table: "RequestTemplateFields",
+                columns: new[] { "RequestTemplateId", "Order" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_RequestApprovalSteps_RequestId_StepOrder",
+                name: "IX_RequestTemplates_Category",
                 schema: "public",
-                table: "RequestApprovalSteps",
-                columns: new[] { "RequestId", "StepOrder" });
+                table: "RequestTemplates",
+                column: "Category");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RequestApprovalSteps_Status",
+                name: "IX_RequestTemplates_CreatedById",
                 schema: "public",
-                table: "RequestApprovalSteps",
-                column: "Status");
+                table: "RequestTemplates",
+                column: "CreatedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_QuizAnswers_QuizQuestionId",
+                name: "IX_RequestTemplates_DepartmentId",
                 schema: "public",
-                table: "QuizAnswers",
-                column: "QuizQuestionId");
+                table: "RequestTemplates",
+                column: "DepartmentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_QuizAnswers_RequestApprovalStepId",
+                name: "IX_RequestTemplates_IsActive",
                 schema: "public",
-                table: "QuizAnswers",
-                column: "RequestApprovalStepId");
+                table: "RequestTemplates",
+                column: "IsActive");
         }
 
         /// <inheritdoc />
@@ -349,19 +340,19 @@ namespace PortalForge.Infrastructure.Migrations
                 schema: "public");
 
             migrationBuilder.DropTable(
-                name: "RequestTemplateFields",
-                schema: "public");
-
-            migrationBuilder.DropTable(
                 name: "RequestApprovalStepTemplates",
                 schema: "public");
 
             migrationBuilder.DropTable(
-                name: "RequestApprovalSteps",
+                name: "RequestTemplateFields",
                 schema: "public");
 
             migrationBuilder.DropTable(
                 name: "QuizQuestions",
+                schema: "public");
+
+            migrationBuilder.DropTable(
+                name: "RequestApprovalSteps",
                 schema: "public");
 
             migrationBuilder.DropTable(
@@ -379,4 +370,3 @@ namespace PortalForge.Infrastructure.Migrations
         }
     }
 }
-
