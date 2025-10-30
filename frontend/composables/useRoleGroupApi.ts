@@ -29,6 +29,10 @@ export interface GetRoleGroupByIdResult {
   roleGroup: RoleGroupDto
 }
 
+export interface GetRoleGroupsResult {
+  roleGroups: RoleGroupDto[]
+}
+
 export function useRoleGroupApi() {
   const config = useRuntimeConfig()
   const apiUrl = config.public.apiUrl || 'http://localhost:5155'
@@ -42,6 +46,14 @@ export function useRoleGroupApi() {
       return { Authorization: `Bearer ${token}` }
     }
     return undefined
+  }
+
+  async function getAllRoleGroups(includePermissions: boolean = true): Promise<RoleGroupDto[]> {
+    const headers = getAuthHeaders()
+    const response = await $fetch(`${apiUrl}/api/admin/rolegroups?includePermissions=${includePermissions}`, {
+      headers
+    }) as GetRoleGroupsResult
+    return response.roleGroups
   }
 
   async function fetchRoleGroupById(id: string): Promise<RoleGroupDto> {
@@ -82,6 +94,7 @@ export function useRoleGroupApi() {
   }
 
   return {
+    getAllRoleGroups,
     fetchRoleGroupById,
     createRoleGroup,
     updateRoleGroup,

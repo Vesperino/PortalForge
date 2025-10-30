@@ -19,6 +19,7 @@ public class NewsRepository : INewsRepository
         return await _context.News
             .Include(n => n.Author)
             .Include(n => n.Event)
+            .Include(n => n.Hashtags)
             .FirstOrDefaultAsync(n => n.Id == id);
     }
 
@@ -83,6 +84,23 @@ public class NewsRepository : INewsRepository
             .Include(n => n.Event)
             .Where(n => n.IsEvent && n.EventDateTime >= fromDate)
             .OrderBy(n => n.EventDateTime)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<News>> GetByHashtagsAsync(List<string> hashtags)
+    {
+        // Normalize hashtags for case-insensitive search
+        var normalizedHashtags = hashtags
+            .Select(h => h.StartsWith("#") ? h.ToLower() : $"#{h}".ToLower())
+            .ToList();
+
+        return await _context.News
+            .Include(n => n.Author)
+            .Include(n => n.Event)
+            .Include(n => n.Hashtags)
+            .Where(n => n.Hashtags.Any(h => normalizedHashtags.Contains(h.NormalizedName)))
+            .OrderByDescending(n => n.CreatedAt)
             .AsNoTracking()
             .ToListAsync();
     }

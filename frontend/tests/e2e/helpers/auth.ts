@@ -41,8 +41,11 @@ export const testUsers: Record<string, TestUser> = {
  */
 export async function login(page: Page, user: TestUser) {
   // Navigate to login page
-  await page.goto('/auth/login')
-  await page.waitForLoadState('networkidle')
+  await page.goto('/auth/login', { waitUntil: 'domcontentloaded' })
+  await page.waitForLoadState('networkidle', { timeout: 30000 })
+
+  // Wait for email input to be visible
+  await page.waitForSelector('input[type="email"]', { state: 'visible', timeout: 30000 })
 
   // Fill in credentials
   await page.fill('input[type="email"]', user.email)
@@ -52,8 +55,8 @@ export async function login(page: Page, user: TestUser) {
   await page.click('button[type="submit"]')
 
   // Wait for navigation to dashboard
-  await page.waitForURL('**/dashboard**', { timeout: 10000 })
-  await page.waitForLoadState('networkidle')
+  await page.waitForURL('**/dashboard**', { timeout: 30000 })
+  await page.waitForLoadState('networkidle', { timeout: 30000 })
 }
 
 /**

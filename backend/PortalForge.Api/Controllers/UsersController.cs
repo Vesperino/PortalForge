@@ -62,7 +62,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<UserDto>> GetUserById(Guid id)
+    public async Task<ActionResult<AdminUserDto>> GetUserById(Guid id)
     {
         _logger.LogInformation("Getting user by ID: {UserId}", id);
 

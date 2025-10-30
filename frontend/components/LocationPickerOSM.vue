@@ -1,0 +1,331 @@
+<script setup lang="ts">
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+
+interface Props {
+  modelValue: string // address
+  latitude?: number
+  longitude?: number
+  label?: string
+}
+
+interface Emits {
+  (e: 'update:modelValue', value: string): void
+  (e: 'update:latitude', value: number | undefined): void
+  (e: 'update:longitude', value: number | undefined): void
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  label: 'Lokalizacja wydarzenia'
+})
+
+const emit = defineEmits<Emits>()
+
+const locationsStore = useLocationsStore()
+const { isOnline } = useOnlineStatus()
+
+const mapContainer = ref<HTMLDivElement | null>(null)
+const selectedCachedLocation = ref<number | null>(null)
+const coordinatesInput = ref('')
+const coordinatesError = ref<string | null>(null)
+
+let map: L.Map | null = null
+let marker: L.Marker | null = null
+
+const isDark = computed(() => {
+  if (import.meta.client) {
+    return document.documentElement.classList.contains('dark')
+  }
+  return false
+})
+
+onMounted(async () => {
+  if (!import.meta.client || !mapContainer.value) return
+
+  // Load cached locations
+  await locationsStore.fetchCachedLocations()
+
+  // Initialize map
+  const defaultLat = props.latitude || 52.2297 // Warsaw
+  const defaultLng = props.longitude || 21.0122
+  
+  map = L.map(mapContainer.value).setView([defaultLat, defaultLng], 13)
+
+  // Add tile layer with dark mode support
+  const tileUrl = isDark.value
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+
+  L.tileLayer(tileUrl, {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(map)
+
+  // Add marker if coordinates are provided
+  if (props.latitude && props.longitude) {
+    addMarker(props.latitude, props.longitude)
+  }
+
+  // Handle map clicks
+  map.on('click', async (e: L.LeafletMouseEvent) => {
+    const lat = e.latlng.lat
+    const lng = e.latlng.lng
+    
+    addMarker(lat, lng)
+    emit('update:latitude', lat)
+    emit('update:longitude', lng)
+
+    // Reverse geocode if online
+    if (isOnline.value) {
+      await reverseGeocode(lat, lng)
+    } else {
+      emit('update:modelValue', `${lat.toFixed(6)}, ${lng.toFixed(6)}`)
+    }
+  })
+})
+
+onBeforeUnmount(() => {
+  if (map) {
+    map.remove()
+    map = null
+  }
+})
+
+function addMarker(lat: number, lng: number) {
+  if (!map) return
+
+  // Remove existing marker
+  if (marker) {
+    map.removeLayer(marker)
+  }
+
+  // Add new marker
+  marker = L.marker([lat, lng]).addTo(map)
+  map.setView([lat, lng], 15)
+}
+
+async function reverseGeocode(lat: number, lng: number) {
+  try {
+    const result = await locationsStore.geocodeAddress(`${lat},${lng}`)
+    if (result) {
+      emit('update:modelValue', result.address)
+    }
+  } catch (error) {
+    console.error('Reverse geocode error:', error)
+  }
+}
+
+function parseCoordinates(input: string): { lat: number; lng: number } | null {
+  coordinatesError.value = null
+  
+  // Try different formats:
+  // 52.403204, 16.892712
+  // 52.403204 16.892712
+  // lat: 52.403204, lng: 16.892712
+  
+  // Remove common prefixes
+  let cleaned = input.toLowerCase()
+    .replace(/lat(itude)?:/g, '')
+    .replace(/lng|lon(gitude)?:/g, '')
+    .trim()
+  
+  // Split by comma or space
+  const parts = cleaned.split(/[,\s]+/).filter(p => p.length > 0)
+  
+  if (parts.length !== 2) {
+    coordinatesError.value = 'Nieprawidłowy format. Użyj: "52.403204, 16.892712"'
+    return null
+  }
+  
+  const lat = parseFloat(parts[0] || '0')
+  const lng = parseFloat(parts[1] || '0')
+  
+  if (isNaN(lat) || isNaN(lng)) {
+    coordinatesError.value = 'Nieprawidłowe współrzędne'
+    return null
+  }
+  
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    coordinatesError.value = 'Współrzędne poza zakresem'
+    return null
+  }
+  
+  return { lat, lng }
+}
+
+function handleCoordinatesInput() {
+  if (!coordinatesInput.value.trim()) return
+  
+  const coords = parseCoordinates(coordinatesInput.value)
+  
+  if (coords) {
+    emit('update:latitude', coords.lat)
+    emit('update:longitude', coords.lng)
+    emit('update:modelValue', `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`)
+    
+    addMarker(coords.lat, coords.lng)
+    coordinatesInput.value = ''
+  }
+}
+
+function selectCachedLocation(locationId: number) {
+  const location = locationsStore.cachedLocations.find(l => l.id === locationId)
+  
+  if (location) {
+    emit('update:modelValue', location.address)
+    emit('update:latitude', location.latitude)
+    emit('update:longitude', location.longitude)
+    
+    addMarker(location.latitude, location.longitude)
+    selectedCachedLocation.value = locationId
+  }
+}
+
+// Watch dark mode changes and update map tiles
+watch(isDark, (newDark) => {
+  if (!map) return
+
+  // Remove all tile layers
+  map.eachLayer((layer) => {
+    if (layer instanceof L.TileLayer) {
+      map?.removeLayer(layer)
+    }
+  })
+
+  // Add new tile layer
+  const tileUrl = newDark
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+
+  L.tileLayer(tileUrl, {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(map)
+})
+</script>
+
+<template>
+  <div class="space-y-4">
+    <label v-if="label" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {{ label }}
+    </label>
+
+    <!-- Online/Offline Status -->
+    <div
+      v-if="!isOnline"
+      class="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-800 dark:text-yellow-200 text-sm"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      Tryb offline - dostępne tylko zapisane lokalizacje
+    </div>
+
+    <!-- Cached Locations Dropdown -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Wybierz z zapisanych lokalizacji
+      </label>
+      <select
+        v-model="selectedCachedLocation"
+        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+        @change="selectedCachedLocation && selectCachedLocation(selectedCachedLocation)"
+      >
+        <option :value="null">-- Wybierz lokalizację --</option>
+        <optgroup v-if="locationsStore.officeLocations.length > 0" label="Biura">
+          <option v-for="loc in locationsStore.officeLocations" :key="loc.id" :value="loc.id">
+            {{ loc.name }} - {{ loc.address }}
+          </option>
+        </optgroup>
+        <optgroup v-if="locationsStore.conferenceRoomLocations.length > 0" label="Sale konferencyjne">
+          <option v-for="loc in locationsStore.conferenceRoomLocations" :key="loc.id" :value="loc.id">
+            {{ loc.name }} - {{ loc.address }}
+          </option>
+        </optgroup>
+        <optgroup v-if="locationsStore.popularLocations.length > 0" label="Popularne">
+          <option v-for="loc in locationsStore.popularLocations" :key="loc.id" :value="loc.id">
+            {{ loc.name }} - {{ loc.address }}
+          </option>
+        </optgroup>
+      </select>
+    </div>
+
+    <!-- Coordinates Input -->
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Wklej współrzędne GPS
+        </label>
+        <a
+          href="https://www.latlong.net/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+          </svg>
+          Znajdź współrzędne
+        </a>
+      </div>
+      <div class="flex gap-2">
+        <input
+          v-model="coordinatesInput"
+          type="text"
+          class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+          placeholder="52.403204, 16.892712"
+          @keyup.enter="handleCoordinatesInput"
+        >
+        <button
+          type="button"
+          class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+          :disabled="!coordinatesInput.trim()"
+          @click="handleCoordinatesInput"
+        >
+          Ustaw
+        </button>
+      </div>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        Akceptowane formaty: "52.403204, 16.892712" lub "52.403204 16.892712" lub "lat: 52.403204, lng: 16.892712"
+      </p>
+      <p v-if="coordinatesError" class="mt-1 text-xs text-red-600 dark:text-red-400">
+        {{ coordinatesError }}
+      </p>
+    </div>
+
+
+    <!-- Map -->
+    <div class="relative">
+      <div
+        ref="mapContainer"
+        class="h-80 rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden"
+      />
+      
+      <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        Kliknij na mapie aby oznaczyć lokalizację
+      </div>
+    </div>
+
+    <!-- Current Coordinates -->
+    <div
+      v-if="latitude && longitude"
+      class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm"
+    >
+      <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+      <span class="text-gray-700 dark:text-gray-300">
+        Współrzędne: {{ latitude.toFixed(6) }}, {{ longitude.toFixed(6) }}
+      </span>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* Fix Leaflet marker icons (they don't load correctly with bundlers) */
+:deep(.leaflet-marker-icon) {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+}
+</style>
+

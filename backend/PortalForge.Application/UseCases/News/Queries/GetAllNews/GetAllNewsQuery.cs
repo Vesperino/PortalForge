@@ -8,6 +8,7 @@ public class GetAllNewsQuery : IRequest<PaginatedNewsResponse>
     public string? Category { get; set; }
     public int? DepartmentId { get; set; }
     public bool? IsEvent { get; set; }
+    public string? Hashtags { get; set; }
     public int PageNumber { get; set; } = 1;
     public int PageSize { get; set; } = 10;
 }

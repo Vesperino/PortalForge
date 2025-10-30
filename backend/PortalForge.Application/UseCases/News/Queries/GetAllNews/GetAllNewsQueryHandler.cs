@@ -22,16 +22,23 @@ public class GetAllNewsQueryHandler : IRequestHandler<GetAllNewsQuery, Paginated
     public async Task<PaginatedNewsResponse> Handle(GetAllNewsQuery request, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
-            "Fetching news - Category: {Category}, DepartmentId: {DepartmentId}, IsEvent: {IsEvent}, Page: {PageNumber}, Size: {PageSize}",
+            "Fetching news - Category: {Category}, DepartmentId: {DepartmentId}, IsEvent: {IsEvent}, Hashtags: {Hashtags}, Page: {PageNumber}, Size: {PageSize}",
             request.Category ?? "None",
             request.DepartmentId?.ToString() ?? "None",
             request.IsEvent?.ToString() ?? "None",
+            request.Hashtags ?? "None",
             request.PageNumber,
             request.PageSize);
 
         IEnumerable<Domain.Entities.News> allNews;
 
-        if (!string.IsNullOrEmpty(request.Category) && Enum.TryParse<NewsCategory>(request.Category, true, out var category))
+        // If hashtags filter is provided, use it
+        if (!string.IsNullOrEmpty(request.Hashtags))
+        {
+            var hashtagsList = request.Hashtags.Split(',').Select(h => h.Trim()).ToList();
+            allNews = await _unitOfWork.NewsRepository.GetByHashtagsAsync(hashtagsList);
+        }
+        else if (!string.IsNullOrEmpty(request.Category) && Enum.TryParse<NewsCategory>(request.Category, true, out var category))
         {
             allNews = await _unitOfWork.NewsRepository.GetByCategoryAsync(category);
         }
@@ -76,7 +83,10 @@ public class GetAllNewsQueryHandler : IRequestHandler<GetAllNewsQuery, Paginated
                 EventHashtag = n.EventHashtag,
                 EventDateTime = n.EventDateTime,
                 EventLocation = n.EventLocation,
-                DepartmentId = n.DepartmentId
+                EventLatitude = n.EventLatitude,
+                EventLongitude = n.EventLongitude,
+                DepartmentId = n.DepartmentId,
+                Hashtags = n.Hashtags.Select(h => h.Name).ToList()
             })
             .ToList();
 

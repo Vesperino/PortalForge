@@ -22,6 +22,21 @@ namespace PortalForge.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("NewsHashtags", b =>
+                {
+                    b.Property<int>("NewsId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HashtagId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("NewsId", "HashtagId");
+
+                    b.HasIndex("HashtagId");
+
+                    b.ToTable("NewsHashtags", "public");
+                });
+
             modelBuilder.Entity("PortalForge.Domain.Entities.AuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -67,6 +82,50 @@ namespace PortalForge.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("AuditLogs", "public");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.CachedLocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Latitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("numeric(10,7)");
+
+                    b.Property<decimal>("Longitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("numeric(10,7)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.ToTable("CachedLocations", "public");
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.Event", b =>
@@ -132,6 +191,35 @@ namespace PortalForge.Infrastructure.Migrations
                     b.ToTable("Events", "public");
                 });
 
+            modelBuilder.Entity("PortalForge.Domain.Entities.Hashtag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique();
+
+                    b.ToTable("Hashtags", "public");
+                });
+
             modelBuilder.Entity("PortalForge.Domain.Entities.News", b =>
                 {
                     b.Property<int>("Id")
@@ -168,9 +256,17 @@ namespace PortalForge.Infrastructure.Migrations
                     b.Property<int?>("EventId")
                         .HasColumnType("integer");
 
+                    b.Property<decimal?>("EventLatitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("numeric(10,7)");
+
                     b.Property<string>("EventLocation")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<decimal?>("EventLongitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("numeric(10,7)");
 
                     b.Property<string>("EventPlaceId")
                         .HasMaxLength(200)
@@ -223,6 +319,65 @@ namespace PortalForge.Infrastructure.Migrations
                     b.ToTable("News", "public");
                 });
 
+            modelBuilder.Entity("PortalForge.Domain.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActionUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RelatedEntityId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("RelatedEntityType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .IsDescending()
+                        .HasDatabaseName("IX_Notifications_CreatedAt");
+
+                    b.HasIndex("UserId", "IsRead")
+                        .HasDatabaseName("IX_Notifications_UserId_IsRead");
+
+                    b.ToTable("Notifications", "public");
+                });
+
             modelBuilder.Entity("PortalForge.Domain.Entities.Permission", b =>
                 {
                     b.Property<Guid>("Id")
@@ -253,6 +408,344 @@ namespace PortalForge.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Permissions", "public");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.QuizAnswer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AnsweredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("QuizQuestionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RequestApprovalStepId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SelectedAnswer")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuizQuestionId");
+
+                    b.HasIndex("RequestApprovalStepId");
+
+                    b.ToTable("QuizAnswers", "public");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.QuizQuestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Options")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("RequestTemplateId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestTemplateId", "Order");
+
+                    b.ToTable("QuizQuestions", "public");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.Request", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FormData")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Standard");
+
+                    b.Property<string>("RequestNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("RequestTemplateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Draft");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SubmittedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestNumber")
+                        .IsUnique();
+
+                    b.HasIndex("RequestTemplateId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SubmittedAt");
+
+                    b.HasIndex("SubmittedById");
+
+                    b.ToTable("Requests", "public");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.RequestApprovalStep", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ApproverId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool?>("QuizPassed")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("QuizScore")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("RequiresQuiz")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Pending");
+
+                    b.Property<int>("StepOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApproverId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("RequestId", "StepOrder");
+
+                    b.ToTable("RequestApprovalSteps", "public");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.RequestApprovalStepTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ApproverGroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ApproverRole")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ApproverType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Role");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RequestTemplateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("RequiresQuiz")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid?>("SpecificUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("StepOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApproverGroupId");
+
+                    b.HasIndex("SpecificUserId");
+
+                    b.HasIndex("RequestTemplateId", "StepOrder");
+
+                    b.ToTable("RequestApprovalStepTemplates", "public");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.RequestTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DepartmentId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int?>("EstimatedProcessingDays")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("PassingScore")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("RequiresApproval")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("IsActive");
+
+                    b.ToTable("RequestTemplates", "public");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.RequestTemplateField", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FieldType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("HelpText")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsRequired")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("MaxValue")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MinValue")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Options")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Placeholder")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("RequestTemplateId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestTemplateId", "Order");
+
+                    b.ToTable("RequestTemplateFields", "public");
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.RoleGroup", b =>
@@ -305,6 +798,87 @@ namespace PortalForge.Infrastructure.Migrations
                     b.ToTable("RoleGroupPermissions", "public");
                 });
 
+            modelBuilder.Entity("PortalForge.Domain.Entities.SystemSetting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.ToTable("SystemSettings", "public");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Category = "Storage",
+                            Description = "Base directory path for file storage",
+                            Key = "Storage:BasePath",
+                            UpdatedAt = new DateTime(2025, 10, 30, 9, 0, 0, 0, DateTimeKind.Utc),
+                            Value = "C:\\PortalForge\\Storage"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Category = "Storage",
+                            Description = "Subdirectory for news images (relative to BasePath)",
+                            Key = "Storage:NewsImagesPath",
+                            UpdatedAt = new DateTime(2025, 10, 30, 9, 0, 0, 0, DateTimeKind.Utc),
+                            Value = "news-images"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Category = "Storage",
+                            Description = "Subdirectory for documents (relative to BasePath)",
+                            Key = "Storage:DocumentsPath",
+                            UpdatedAt = new DateTime(2025, 10, 30, 9, 0, 0, 0, DateTimeKind.Utc),
+                            Value = "documents"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Category = "Storage",
+                            Description = "Maximum file size in megabytes",
+                            Key = "Storage:MaxFileSizeMB",
+                            UpdatedAt = new DateTime(2025, 10, 30, 9, 0, 0, 0, DateTimeKind.Utc),
+                            Value = "10"
+                        });
+                });
+
             modelBuilder.Entity("PortalForge.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -318,6 +892,13 @@ namespace PortalForge.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("DepartmentRole")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Employee");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -408,6 +989,21 @@ namespace PortalForge.Infrastructure.Migrations
                     b.ToTable("UserRoleGroups", "public");
                 });
 
+            modelBuilder.Entity("NewsHashtags", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.Hashtag", null)
+                        .WithMany()
+                        .HasForeignKey("HashtagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalForge.Domain.Entities.News", null)
+                        .WithMany()
+                        .HasForeignKey("NewsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PortalForge.Domain.Entities.AuditLog", b =>
                 {
                     b.HasOne("PortalForge.Domain.Entities.User", "User")
@@ -416,6 +1012,17 @@ namespace PortalForge.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.CachedLocation", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.Event", b =>
@@ -447,6 +1054,132 @@ namespace PortalForge.Infrastructure.Migrations
                     b.Navigation("Event");
                 });
 
+            modelBuilder.Entity("PortalForge.Domain.Entities.Notification", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.QuizAnswer", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.QuizQuestion", "QuizQuestion")
+                        .WithMany("QuizAnswers")
+                        .HasForeignKey("QuizQuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PortalForge.Domain.Entities.RequestApprovalStep", "RequestApprovalStep")
+                        .WithMany("QuizAnswers")
+                        .HasForeignKey("RequestApprovalStepId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("QuizQuestion");
+
+                    b.Navigation("RequestApprovalStep");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.QuizQuestion", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.RequestTemplate", "RequestTemplate")
+                        .WithMany("QuizQuestions")
+                        .HasForeignKey("RequestTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RequestTemplate");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.Request", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.RequestTemplate", "RequestTemplate")
+                        .WithMany("Requests")
+                        .HasForeignKey("RequestTemplateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PortalForge.Domain.Entities.User", "SubmittedBy")
+                        .WithMany()
+                        .HasForeignKey("SubmittedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("RequestTemplate");
+
+                    b.Navigation("SubmittedBy");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.RequestApprovalStep", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.User", "Approver")
+                        .WithMany()
+                        .HasForeignKey("ApproverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PortalForge.Domain.Entities.Request", "Request")
+                        .WithMany("ApprovalSteps")
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Approver");
+
+                    b.Navigation("Request");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.RequestApprovalStepTemplate", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.RoleGroup", "ApproverGroup")
+                        .WithMany()
+                        .HasForeignKey("ApproverGroupId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("PortalForge.Domain.Entities.RequestTemplate", "RequestTemplate")
+                        .WithMany("ApprovalStepTemplates")
+                        .HasForeignKey("RequestTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalForge.Domain.Entities.User", "SpecificUser")
+                        .WithMany()
+                        .HasForeignKey("SpecificUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ApproverGroup");
+
+                    b.Navigation("RequestTemplate");
+
+                    b.Navigation("SpecificUser");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.RequestTemplate", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.RequestTemplateField", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.RequestTemplate", "RequestTemplate")
+                        .WithMany("Fields")
+                        .HasForeignKey("RequestTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RequestTemplate");
+                });
+
             modelBuilder.Entity("PortalForge.Domain.Entities.RoleGroupPermission", b =>
                 {
                     b.HasOne("PortalForge.Domain.Entities.Permission", "Permission")
@@ -464,6 +1197,16 @@ namespace PortalForge.Infrastructure.Migrations
                     b.Navigation("Permission");
 
                     b.Navigation("RoleGroup");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.SystemSetting", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.User", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("UpdatedByUser");
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.User", b =>
@@ -510,6 +1253,32 @@ namespace PortalForge.Infrastructure.Migrations
             modelBuilder.Entity("PortalForge.Domain.Entities.Permission", b =>
                 {
                     b.Navigation("RoleGroupPermissions");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.QuizQuestion", b =>
+                {
+                    b.Navigation("QuizAnswers");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.Request", b =>
+                {
+                    b.Navigation("ApprovalSteps");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.RequestApprovalStep", b =>
+                {
+                    b.Navigation("QuizAnswers");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.RequestTemplate", b =>
+                {
+                    b.Navigation("ApprovalStepTemplates");
+
+                    b.Navigation("Fields");
+
+                    b.Navigation("QuizQuestions");
+
+                    b.Navigation("Requests");
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.RoleGroup", b =>

@@ -12,7 +12,10 @@ export interface CreateNewsRequest {
   eventDateTime?: string
   eventLocation?: string
   eventPlaceId?: string
+  eventLatitude?: number
+  eventLongitude?: number
   departmentId?: number
+  hashtags?: string[]
 }
 
 export interface UpdateNewsRequest {
@@ -27,7 +30,10 @@ export interface UpdateNewsRequest {
   eventDateTime?: string
   eventLocation?: string
   eventPlaceId?: string
+  eventLatitude?: number
+  eventLongitude?: number
   departmentId?: number
+  hashtags?: string[]
 }
 
 export function useNewsApi() {
@@ -48,12 +54,16 @@ export function useNewsApi() {
   async function fetchAllNews(
     category?: NewsCategory,
     departmentId?: number,
-    isEvent?: boolean
+    isEvent?: boolean,
+    hashtags?: string[]
   ): Promise<News[]> {
     const params = new URLSearchParams()
     if (category) params.append('category', category)
     if (departmentId !== undefined) params.append('departmentId', departmentId.toString())
     if (isEvent !== undefined) params.append('isEvent', isEvent.toString())
+    if (hashtags && hashtags.length > 0) {
+      params.append('hashtags', hashtags.join(','))
+    }
 
     const query = params.toString() ? `?${params.toString()}` : ''
     const headers = getAuthHeaders()

@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using PortalForge.Infrastructure.Auth;
-using Supabase;
+using Microsoft.AspNetCore.StaticFiles;
+using PortalForge.Application.Common.Interfaces;
 
 namespace PortalForge.Api.Controllers;
 
@@ -12,24 +11,14 @@ namespace PortalForge.Api.Controllers;
 public class StorageController : ControllerBase
 {
     private readonly ILogger<StorageController> _logger;
-    private readonly Client _supabaseClient;
+    private readonly IFileStorageService _fileStorageService;
 
     public StorageController(
         ILogger<StorageController> logger,
-        IOptions<SupabaseSettings> supabaseSettings)
+        IFileStorageService fileStorageService)
     {
         _logger = logger;
-
-        // Initialize Supabase client with service role key (bypasses RLS)
-        var settings = supabaseSettings.Value;
-        var options = new SupabaseOptions
-        {
-            AutoRefreshToken = false,
-            AutoConnectRealtime = false
-        };
-
-        _supabaseClient = new Client(settings.Url, settings.ServiceRoleKey, options);
-        _supabaseClient.InitializeAsync().Wait();
+        _fileStorageService = fileStorageService;
     }
 
     [HttpPost("upload/news-image")]
@@ -42,11 +31,14 @@ public class StorageController : ControllerBase
                 return BadRequest(new { message = "No file provided" });
             }
 
-            // Validate file size (max 5MB)
-            const long maxFileSize = 5 * 1024 * 1024;
+            // Get storage settings for max file size
+            var settings = await _fileStorageService.GetStorageSettingsAsync();
+            var maxFileSizeMB = int.Parse(settings.GetValueOrDefault("Storage:MaxFileSizeMB", "10"));
+            var maxFileSize = maxFileSizeMB * 1024 * 1024;
+
             if (file.Length > maxFileSize)
             {
-                return BadRequest(new { message = "File size exceeds 5MB limit" });
+                return BadRequest(new { message = $"File size exceeds {maxFileSizeMB}MB limit" });
             }
 
             // Validate file type
@@ -57,44 +49,23 @@ public class StorageController : ControllerBase
                 return BadRequest(new { message = "Invalid file type. Allowed: JPG, PNG, GIF, WebP" });
             }
 
-            // Generate unique filename
-            var fileName = $"{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}-{Guid.NewGuid():N}{fileExtension}";
-            var filePath = $"news-images/{fileName}";
+            _logger.LogInformation("Uploading file: {FileName}", file.FileName);
 
-            _logger.LogInformation("Uploading file: {FileName} to {FilePath}", file.FileName, filePath);
+            // Save file using storage service
+            using var fileStream = file.OpenReadStream();
+            var relativePath = await _fileStorageService.SaveFileAsync(fileStream, file.FileName, "news-images");
 
-            // Read file content
-            using var memoryStream = new MemoryStream();
-            await file.CopyToAsync(memoryStream);
-            var fileBytes = memoryStream.ToArray();
-
-            // Upload to Supabase Storage
-            var uploadResult = await _supabaseClient.Storage
-                .From("news-images")
-                .Upload(fileBytes, filePath, new Supabase.Storage.FileOptions
-                {
-                    CacheControl = "3600",
-                    Upsert = false
-                });
-
-            if (uploadResult == null)
-            {
-                _logger.LogError("Upload failed: No result returned from Supabase");
-                return StatusCode(500, new { message = "Upload failed" });
-            }
-
-            // Get public URL
-            var publicUrl = _supabaseClient.Storage
-                .From("news-images")
-                .GetPublicUrl(filePath);
+            // Build URL for frontend to access the file
+            var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+            var publicUrl = $"{baseUrl}/api/storage/files/{relativePath}";
 
             _logger.LogInformation("File uploaded successfully: {PublicUrl}", publicUrl);
 
             return Ok(new UploadImageResponse
             {
                 Url = publicUrl,
-                FileName = fileName,
-                FilePath = filePath
+                FileName = Path.GetFileName(relativePath),
+                FilePath = relativePath
             });
         }
         catch (Exception ex)
@@ -116,10 +87,7 @@ public class StorageController : ControllerBase
 
             _logger.LogInformation("Deleting file: {FilePath}", filePath);
 
-            // Delete from Supabase Storage
-            await _supabaseClient.Storage
-                .From("news-images")
-                .Remove(new List<string> { filePath });
+            await _fileStorageService.DeleteFileAsync(filePath);
 
             _logger.LogInformation("File deleted successfully: {FilePath}", filePath);
 
@@ -129,6 +97,58 @@ public class StorageController : ControllerBase
         {
             _logger.LogError(ex, "Error deleting file");
             return StatusCode(500, new { message = "Error deleting file", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Serves files from local storage with authorization
+    /// </summary>
+    [HttpGet("files/{category}/{fileName}")]
+    [AllowAnonymous] // Allow anonymous for now - can be restricted based on category
+    public async Task<IActionResult> GetFile(string category, string fileName)
+    {
+        try
+        {
+            // Validate inputs to prevent path traversal attacks
+            if (string.IsNullOrWhiteSpace(category) || string.IsNullOrWhiteSpace(fileName))
+            {
+                return BadRequest(new { message = "Invalid file path" });
+            }
+
+            if (category.Contains("..") || fileName.Contains("..") || 
+                category.Contains("/") || category.Contains("\\") ||
+                fileName.Contains("/") || fileName.Contains("\\"))
+            {
+                _logger.LogWarning("Path traversal attempt detected: {Category}/{FileName}", category, fileName);
+                return BadRequest(new { message = "Invalid file path" });
+            }
+
+            var relativePath = $"{category}/{fileName}";
+            
+            // Check if file exists
+            if (!await _fileStorageService.FileExistsAsync(relativePath))
+            {
+                return NotFound(new { message = "File not found" });
+            }
+
+            var fullPath = _fileStorageService.GetFullPath(relativePath);
+
+            // Determine content type
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(fileName, out var contentType))
+            {
+                contentType = "application/octet-stream";
+            }
+
+            // Return file with proper headers
+            var fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            
+            return File(fileStream, contentType, fileName, enableRangeProcessing: true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error serving file: {Category}/{FileName}", category, fileName);
+            return StatusCode(500, new { message = "Error serving file" });
         }
     }
 }

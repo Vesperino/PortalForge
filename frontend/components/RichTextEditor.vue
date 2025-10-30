@@ -19,6 +19,7 @@ interface Props {
 
 interface Emits {
   (e: 'update:modelValue', value: string): void
+  (e: 'hashtagsDetected', hashtags: string[]): void
 }
 
 const props = defineProps<Props>()
@@ -53,7 +54,16 @@ const editor = useEditor({
     }),
   ],
   onUpdate: ({ editor }) => {
-    emit('update:modelValue', editor.getHTML())
+    const html = editor.getHTML()
+    emit('update:modelValue', html)
+    
+    // Detect hashtags
+    const hashtagPattern = /#[\w]+/g
+    const matches = html.match(hashtagPattern)
+    if (matches && matches.length > 0) {
+      const uniqueHashtags = [...new Set(matches)]
+      emit('hashtagsDetected', uniqueHashtags)
+    }
   },
 })
 

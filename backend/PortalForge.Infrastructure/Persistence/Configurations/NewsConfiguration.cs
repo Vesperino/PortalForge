@@ -59,6 +59,12 @@ public class NewsConfiguration : IEntityTypeConfiguration<News>
         builder.Property(n => n.EventPlaceId)
             .HasMaxLength(200);
 
+        builder.Property(n => n.EventLatitude)
+            .HasPrecision(10, 7);
+
+        builder.Property(n => n.EventLongitude)
+            .HasPrecision(10, 7);
+
         // Department visibility
         builder.Property(n => n.DepartmentId);
 

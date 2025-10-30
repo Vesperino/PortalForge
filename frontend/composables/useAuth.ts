@@ -1,4 +1,5 @@
 import type { User } from '~/types/auth'
+import { UserRole } from '~/types/auth'
 
 interface LoginResponse {
   user: User
@@ -84,9 +85,59 @@ export function useAuth() {
     }
   }
 
+  function getAuthHeaders() {
+    return {
+      Authorization: `Bearer ${authStore.accessToken}`
+    }
+  }
+
+  function isTokenExpired(token: string): boolean {
+    try {
+      // Decode JWT token (format: header.payload.signature)
+      const parts = token.split('.')
+      if (parts.length !== 3 || !parts[1]) {
+        return true
+      }
+
+      // Decode payload (base64url)
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+
+      // Check if token has exp claim
+      if (!payload.exp) {
+        return false // No expiration claim, assume valid
+      }
+
+      // Compare with current time (exp is in seconds, Date.now() is in milliseconds)
+      const currentTime = Math.floor(Date.now() / 1000)
+      return payload.exp < currentTime
+    } catch (error) {
+      console.error('Error decoding token:', error)
+      return true // If we can't decode, assume expired
+    }
+  }
+
+  function checkTokenExpiration(): boolean {
+    if (!authStore.accessToken) {
+      return false // No token, not expired (will be handled by auth check)
+    }
+
+    return isTokenExpired(authStore.accessToken)
+  }
+
+  async function hasPermission(permissionName: string): Promise<boolean> {
+    // For now, return true for admins and HR, false for others
+    // In production, this should check user's actual permissions
+    const userRole = authStore.user?.role
+    return userRole === UserRole.Admin || userRole === UserRole.HR
+  }
+
   return {
     login,
     logout,
-    refreshToken
+    refreshToken,
+    getAuthHeaders,
+    hasPermission,
+    isTokenExpired,
+    checkTokenExpiration
   }
 }

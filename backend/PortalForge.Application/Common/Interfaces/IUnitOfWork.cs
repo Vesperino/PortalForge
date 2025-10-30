@@ -1,3 +1,5 @@
+using PortalForge.Application.Interfaces;
+
 namespace PortalForge.Application.Common.Interfaces;
 
 public interface IUnitOfWork : IDisposable
@@ -10,6 +12,10 @@ public interface IUnitOfWork : IDisposable
     IRoleGroupPermissionRepository RoleGroupPermissionRepository { get; }
     IUserRoleGroupRepository UserRoleGroupRepository { get; }
     IAuditLogRepository AuditLogRepository { get; }
+    IHashtagRepository HashtagRepository { get; }
+    IRequestTemplateRepository RequestTemplateRepository { get; }
+    IRequestRepository RequestRepository { get; }
+    INotificationRepository NotificationRepository { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

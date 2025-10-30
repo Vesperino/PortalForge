@@ -32,6 +32,7 @@ public class NewsController : ControllerBase
         [FromQuery] string? category = null,
         [FromQuery] int? departmentId = null,
         [FromQuery] bool? isEvent = null,
+        [FromQuery] string? hashtags = null,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
@@ -40,6 +41,7 @@ public class NewsController : ControllerBase
             Category = category,
             DepartmentId = departmentId,
             IsEvent = isEvent,
+            Hashtags = hashtags,
             PageNumber = pageNumber,
             PageSize = pageSize
         };

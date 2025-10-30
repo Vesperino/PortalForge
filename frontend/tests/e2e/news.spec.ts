@@ -1,8 +1,15 @@
 import { test, expect } from '@playwright/test'
 import { loginAsAdmin, testUsers } from './helpers/auth'
+import { seedNewsData } from './helpers/seed'
 
 test.describe('News System', () => {
+  test.beforeAll(async () => {
+    await seedNewsData()
+  })
   test('should display news list with seeded data', async ({ page }) => {
+    // Login as admin first
+    await loginAsAdmin(page)
+    
     // Navigate to news page
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
@@ -13,12 +20,18 @@ test.describe('News System', () => {
     // Take screenshot for debugging
     await page.screenshot({ path: 'test-results/news-page-loaded.png', fullPage: true })
 
-    // Check if page loaded (either main heading or news content should be visible)
-    const hasContent = await page.locator('h1, h2, article, .news-card').first().isVisible().catch(() => false)
-    expect(hasContent).toBe(true)
+    // Check if page loaded - look for h1 with "News" or article elements in grid
+    const h1News = page.getByRole('heading', { name: /news/i, level: 1 })
+    const hasHeader = await h1News.isVisible().catch(() => false)
+    
+    // Also check for article elements in grid
+    const articles = page.locator('article')
+    const articleCount = await articles.count()
+    
+    expect(hasHeader || articleCount > 0).toBe(true)
 
-    // Look for news content - try multiple selectors
-    const newsContent = await page.locator('article, .news-card, [class*="news-item"]').count()
+    // Look for news content - articles should be in grid layout
+    const newsContent = await page.locator('article').count()
 
     // Take another screenshot after waiting
     await page.screenshot({ path: 'test-results/news-content-check.png', fullPage: true })
@@ -28,13 +41,19 @@ test.describe('News System', () => {
       // Verify at least one seeded news title is present (use partial match to be more flexible)
       const hasNewsTitle = await page.getByText(/nowym systemie|funkcje w aplikacji/i).first().isVisible().catch(() => false)
       expect(hasNewsTitle).toBe(true)
+    } else {
+      // Even if no news, page should still load
+      expect(hasHeader).toBe(true)
     }
   })
 
   test('should filter news by category', async ({ page }) => {
+    // Login as admin first
+    await loginAsAdmin(page)
+    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(2000)
 
     // Take initial screenshot
     await page.screenshot({ path: 'test-results/news-before-filter.png', fullPage: true })
@@ -64,71 +83,62 @@ test.describe('News System', () => {
   })
 
   test('should navigate to single news article and display full content', async ({ page }) => {
-    try {
-      // Try to navigate directly to a news detail page (news ID 1 from seed data)
-      await page.goto('/dashboard/news/1')
-      await page.waitForLoadState('networkidle')
-      await page.waitForTimeout(2000)
+    // Login as admin first
+    await loginAsAdmin(page)
+    
+    // Navigate directly to a seeded news detail page (ID 1 assumed from seed)
+    await page.goto('/dashboard/news/1')
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(2000)
 
-      // Take screenshot of detail page
-      await page.screenshot({ path: 'test-results/news-detail.png', fullPage: true })
+    await page.screenshot({ path: 'test-results/news-detail.png', fullPage: true })
 
-      // Verify we're on the detail page
-      expect(page.url()).toContain('/dashboard/news/')
+    expect(page.url()).toContain('/dashboard/news/')
 
-      // Check if article content is displayed (use flexible selectors)
-      const hasTitle = await page.locator('h1, h2').first().isVisible().catch(() => false)
-      const hasContent = await page.locator('article, .news-content, p').first().isVisible().catch(() => false)
+    const hasTitle = await page.locator('h1, h2').first().isVisible().catch(() => false)
+    const hasContent = await page.locator('article, .news-content, p').first().isVisible().catch(() => false)
 
-      expect(hasTitle || hasContent).toBe(true)
-    } catch {
-      // If direct navigation fails, skip this test
-      test.skip()
-    }
+    expect(hasTitle || hasContent).toBe(true)
   })
 
   test('should increment view count when viewing news article', async ({ page }) => {
-    try {
-      // Navigate directly to news detail page
+    // Login as admin first
+    await loginAsAdmin(page)
+    
+    await page.goto('/dashboard/news/1')
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(2000)
+
+    const viewCountElement = page.locator('text=/\\d+ wyświetleń/').first()
+    const hasViewCount = await viewCountElement.isVisible().catch(() => false)
+
+    if (hasViewCount) {
+      const viewCountText = await viewCountElement.textContent()
+      const initialViews = Number.parseInt(viewCountText?.match(/\d+/)?.[0] || '0')
+
+      await page.goto('/dashboard/news')
+      await page.waitForTimeout(500)
+
       await page.goto('/dashboard/news/1')
       await page.waitForLoadState('networkidle')
       await page.waitForTimeout(2000)
 
-      // Try to find view count element
-      const viewCountElement = page.locator('text=/\\d+ wyświetleń/').first()
-      const hasViewCount = await viewCountElement.isVisible().catch(() => false)
+      const newViewCountText = await viewCountElement.textContent()
+      const newViews = Number.parseInt(newViewCountText?.match(/\d+/)?.[0] || '0')
 
-      if (hasViewCount) {
-        const viewCountText = await viewCountElement.textContent()
-        const initialViews = Number.parseInt(viewCountText?.match(/\d+/)?.[0] || '0')
-
-        // Navigate away and back to increment views
-        await page.goto('/dashboard/news')
-        await page.waitForTimeout(500)
-
-        await page.goto('/dashboard/news/1')
-        await page.waitForLoadState('networkidle')
-        await page.waitForTimeout(2000)
-
-        // Check if view count increased
-        const newViewCountText = await viewCountElement.textContent()
-        const newViews = Number.parseInt(newViewCountText?.match(/\d+/)?.[0] || '0')
-
-        expect(newViews).toBeGreaterThanOrEqual(initialViews)
-      } else {
-        // View count not visible, test passes
-        expect(true).toBe(true)
-      }
-    } catch {
-      // If test fails, skip it
-      test.skip()
+      expect(newViews).toBeGreaterThanOrEqual(initialViews)
+    } else {
+      expect(true).toBe(true)
     }
   })
 
   test('should display create news button for authorized users', async ({ page }) => {
+    // Login as admin first
+    await loginAsAdmin(page)
+    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(2000)
 
     // Check if create/add button exists
     const createButton = page.getByRole('button', { name: /dodaj/i }).or(
@@ -153,9 +163,12 @@ test.describe('News System', () => {
   })
 
   test('should validate required fields in create news form', async ({ page }) => {
+    // Login as admin first
+    await loginAsAdmin(page)
+    
     await page.goto('/dashboard/news/create')
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(2000)
 
     // Take screenshot
     await page.screenshot({ path: 'test-results/news-create-form.png', fullPage: true })
@@ -178,9 +191,12 @@ test.describe('News System', () => {
   })
 
   test('should navigate between news articles in pagination', async ({ page }) => {
+    // Login as admin first
+    await loginAsAdmin(page)
+    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(2000)
 
     // Check if pagination exists
     const paginationNext = page.getByRole('button', { name: /następna|next/i })
@@ -206,6 +222,9 @@ test.describe('News System', () => {
   })
 
   test('should display different news categories', async ({ page }) => {
+    // Login as admin first
+    await loginAsAdmin(page)
+    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)
@@ -240,11 +259,12 @@ test.describe('News System', () => {
     // Login as admin first
     await loginAsAdmin(page)
 
-    // Wait a bit for auth state to be fully loaded
-    await page.waitForTimeout(2000)
+    // Wait for auth to settle
+    await page.waitForTimeout(3000)
 
     await page.goto('/dashboard/news/create')
     await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(2000)
 
     // Wait for the form to be visible
     await page.waitForSelector('input[id="title"]', { timeout: 10000 })
@@ -283,12 +303,16 @@ test.describe('News System', () => {
   })
 
   test('should filter news by events only', async ({ page }) => {
+    // Login as admin first
+    await loginAsAdmin(page)
+    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(2000)
 
-    // Check "Tylko wydarzenia" checkbox
-    const eventsOnlyCheckbox = page.locator('input[type="checkbox"]').filter({ hasText: /tylko wydarzenia/i })
+    // Check "Tylko wydarzenia" checkbox - it's in a label with text
+    const eventsOnlyLabel = page.locator('label').filter({ hasText: /tylko wydarzenia/i })
+    const eventsOnlyCheckbox = eventsOnlyLabel.locator('input[type="checkbox"]')
     if (await eventsOnlyCheckbox.isVisible()) {
       await eventsOnlyCheckbox.check()
       await page.waitForTimeout(1000)
@@ -304,9 +328,12 @@ test.describe('News System', () => {
   })
 
   test('should filter news by department', async ({ page }) => {
+    // Login as admin first
+    await loginAsAdmin(page)
+    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(2000)
 
     // Select IT department
     const departmentSelect = page.locator('select[id="department"]')
@@ -319,6 +346,9 @@ test.describe('News System', () => {
   })
 
   test('should display event details on news detail page', async ({ page }) => {
+    // Login as admin first
+    await loginAsAdmin(page)
+    
     // This test assumes there's an event news with ID 1
     await page.goto('/dashboard/news/1')
     await page.waitForLoadState('networkidle')
@@ -349,9 +379,12 @@ test.describe('News System', () => {
     // Login as admin first
     await loginAsAdmin(page)
 
+    // Wait for auth to settle
+    await page.waitForTimeout(2000)
+
     await page.goto('/dashboard/calendar')
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(2000)
+    await page.waitForTimeout(3000)
 
     await page.screenshot({ path: 'test-results/calendar-with-events.png', fullPage: true })
 
@@ -379,6 +412,9 @@ test.describe('News System', () => {
   })
 
   test('should display Google Maps for event location', async ({ page }) => {
+    // Login as admin first
+    await loginAsAdmin(page)
+    
     await page.goto('/dashboard/news/1')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)
@@ -393,9 +429,12 @@ test.describe('News System', () => {
   })
 
   test('should work in dark mode', async ({ page }) => {
+    // Login as admin first
+    await loginAsAdmin(page)
+    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(2000)
 
     // Toggle dark mode (assuming there's a dark mode toggle)
     const darkModeToggle = page.locator('button[aria-label*="dark"], button[aria-label*="theme"]')

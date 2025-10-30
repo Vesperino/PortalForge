@@ -1,7 +1,11 @@
 import { test } from '@playwright/test'
+import { loginAsAdmin } from './helpers/auth'
 
 test.describe('Debug Organization Page', () => {
   test('inspect page structure', async ({ page }) => {
+    // Login first
+    await loginAsAdmin(page)
+    
     // Navigate to organization page
     await page.goto('/dashboard/organization')
     await page.waitForLoadState('networkidle')

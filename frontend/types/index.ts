@@ -94,8 +94,12 @@ export interface News {
   eventDateTime?: Date
   eventLocation?: string
   eventPlaceId?: string
+  eventLatitude?: number
+  eventLongitude?: number
   // Department visibility
   departmentId?: number
+  // Hashtags
+  hashtags?: string[]
 }
 
 export interface Document {
@@ -189,4 +193,22 @@ export interface Announcement {
   expiresAt?: Date
   targetDepartments?: number[]
   isActive: boolean
+}
+
+export interface CachedLocation {
+  id: number
+  name: string
+  address: string
+  latitude: number
+  longitude: number
+  type: 'Office' | 'ConferenceRoom' | 'Popular'
+}
+
+export interface SystemSetting {
+  id: number
+  key: string
+  value: string
+  category: string
+  description?: string
+  updatedAt: Date
 }

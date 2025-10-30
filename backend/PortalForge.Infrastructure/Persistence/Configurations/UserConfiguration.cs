@@ -58,6 +58,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(200);
 
+        builder.Property(u => u.DepartmentRole)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(50)
+            .HasDefaultValue(Domain.Enums.DepartmentRole.Employee);
+
         // Optional fields
         builder.Property(u => u.PhoneNumber)
             .HasMaxLength(50);

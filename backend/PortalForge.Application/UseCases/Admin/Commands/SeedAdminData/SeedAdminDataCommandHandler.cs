@@ -84,7 +84,13 @@ public class SeedAdminDataCommandHandler : IRequestHandler<SeedAdminDataCommand,
 
             // Reports
             new { Name = "reports.view", Description = "View reports", Category = "Reports" },
-            new { Name = "reports.export", Description = "Export reports", Category = "Reports" }
+            new { Name = "reports.export", Description = "Export reports", Category = "Reports" },
+
+            // Requests Management
+            new { Name = "requests.view", Description = "View requests", Category = "Requests Management" },
+            new { Name = "requests.create", Description = "Create requests", Category = "Requests Management" },
+            new { Name = "requests.approve", Description = "Approve requests", Category = "Requests Management" },
+            new { Name = "requests.manage_templates", Description = "Manage request templates", Category = "Requests Management" }
         };
 
         var count = 0;
@@ -140,7 +146,8 @@ public class SeedAdminDataCommandHandler : IRequestHandler<SeedAdminDataCommand,
                     "departments.view", "departments.manage", "positions.view", "positions.manage",
                     "news.view", "news.create", "news.edit",
                     "events.view", "events.create", "events.edit",
-                    "reports.view"
+                    "reports.view",
+                    "requests.view", "requests.create", "requests.approve"
                 }
             },
             new
@@ -152,7 +159,8 @@ public class SeedAdminDataCommandHandler : IRequestHandler<SeedAdminDataCommand,
                 {
                     "news.view", "news.create", "news.edit", "news.delete",
                     "events.view", "events.create", "events.edit", "events.delete",
-                    "users.view", "departments.view", "positions.view"
+                    "users.view", "departments.view", "positions.view",
+                    "requests.view", "requests.create"
                 }
             },
             new
@@ -164,7 +172,8 @@ public class SeedAdminDataCommandHandler : IRequestHandler<SeedAdminDataCommand,
                 {
                     "users.view", "departments.view", "departments.manage",
                     "positions.view", "news.view", "events.view",
-                    "reports.view"
+                    "reports.view",
+                    "requests.view", "requests.create", "requests.approve"
                 }
             },
             new
@@ -175,7 +184,8 @@ public class SeedAdminDataCommandHandler : IRequestHandler<SeedAdminDataCommand,
                 PermissionNames = new[]
                 {
                     "news.view", "events.view", "users.view",
-                    "departments.view", "positions.view"
+                    "departments.view", "positions.view",
+                    "requests.view", "requests.create"
                 }
             }
         };
