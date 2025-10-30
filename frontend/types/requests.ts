@@ -125,8 +125,14 @@ export interface UpdateRequestTemplateDto {
   description?: string
   icon?: string
   category?: string
+  departmentId?: string
+  requiresApproval?: boolean
   estimatedProcessingDays?: number
+  passingScore?: number
   isActive?: boolean
+  fields?: RequestTemplateField[]
+  approvalStepTemplates?: RequestApprovalStepTemplate[]
+  quizQuestions?: QuizQuestion[]
 }
 
 export interface SubmitRequestDto {

@@ -1,7 +1,11 @@
 import { test, expect } from '@playwright/test'
 import { loginAsAdmin, testUsers } from './helpers/auth'
+import { seedNewsData } from './helpers/seed'
 
 test.describe('News System', () => {
+  test.beforeAll(async () => {
+    await seedNewsData()
+  })
   test('should display news list with seeded data', async ({ page }) => {
     // Login as admin first
     await loginAsAdmin(page)
@@ -79,70 +83,52 @@ test.describe('News System', () => {
   })
 
   test('should navigate to single news article and display full content', async ({ page }) => {
-    try {
-      // Login as admin first
-      await loginAsAdmin(page)
-      
-      // Try to navigate directly to a news detail page (news ID 1 from seed data)
-      await page.goto('/dashboard/news/1')
-      await page.waitForLoadState('networkidle')
-      await page.waitForTimeout(2000)
+    // Login as admin first
+    await loginAsAdmin(page)
+    
+    // Navigate directly to a seeded news detail page (ID 1 assumed from seed)
+    await page.goto('/dashboard/news/1')
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(2000)
 
-      // Take screenshot of detail page
-      await page.screenshot({ path: 'test-results/news-detail.png', fullPage: true })
+    await page.screenshot({ path: 'test-results/news-detail.png', fullPage: true })
 
-      // Verify we're on the detail page
-      expect(page.url()).toContain('/dashboard/news/')
+    expect(page.url()).toContain('/dashboard/news/')
 
-      // Check if article content is displayed (use flexible selectors)
-      const hasTitle = await page.locator('h1, h2').first().isVisible().catch(() => false)
-      const hasContent = await page.locator('article, .news-content, p').first().isVisible().catch(() => false)
+    const hasTitle = await page.locator('h1, h2').first().isVisible().catch(() => false)
+    const hasContent = await page.locator('article, .news-content, p').first().isVisible().catch(() => false)
 
-      expect(hasTitle || hasContent).toBe(true)
-    } catch {
-      // If direct navigation fails, skip this test
-      test.skip()
-    }
+    expect(hasTitle || hasContent).toBe(true)
   })
 
   test('should increment view count when viewing news article', async ({ page }) => {
-    try {
-      // Login as admin first
-      await loginAsAdmin(page)
-      
-      // Navigate directly to news detail page
+    // Login as admin first
+    await loginAsAdmin(page)
+    
+    await page.goto('/dashboard/news/1')
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(2000)
+
+    const viewCountElement = page.locator('text=/\\d+ wyświetleń/').first()
+    const hasViewCount = await viewCountElement.isVisible().catch(() => false)
+
+    if (hasViewCount) {
+      const viewCountText = await viewCountElement.textContent()
+      const initialViews = Number.parseInt(viewCountText?.match(/\d+/)?.[0] || '0')
+
+      await page.goto('/dashboard/news')
+      await page.waitForTimeout(500)
+
       await page.goto('/dashboard/news/1')
       await page.waitForLoadState('networkidle')
       await page.waitForTimeout(2000)
 
-      // Try to find view count element
-      const viewCountElement = page.locator('text=/\\d+ wyświetleń/').first()
-      const hasViewCount = await viewCountElement.isVisible().catch(() => false)
+      const newViewCountText = await viewCountElement.textContent()
+      const newViews = Number.parseInt(newViewCountText?.match(/\d+/)?.[0] || '0')
 
-      if (hasViewCount) {
-        const viewCountText = await viewCountElement.textContent()
-        const initialViews = Number.parseInt(viewCountText?.match(/\d+/)?.[0] || '0')
-
-        // Navigate away and back to increment views
-        await page.goto('/dashboard/news')
-        await page.waitForTimeout(500)
-
-        await page.goto('/dashboard/news/1')
-        await page.waitForLoadState('networkidle')
-        await page.waitForTimeout(2000)
-
-        // Check if view count increased
-        const newViewCountText = await viewCountElement.textContent()
-        const newViews = Number.parseInt(newViewCountText?.match(/\d+/)?.[0] || '0')
-
-        expect(newViews).toBeGreaterThanOrEqual(initialViews)
-      } else {
-        // View count not visible, test passes
-        expect(true).toBe(true)
-      }
-    } catch {
-      // If test fails, skip it
-      test.skip()
+      expect(newViews).toBeGreaterThanOrEqual(initialViews)
+    } else {
+      expect(true).toBe(true)
     }
   })
 

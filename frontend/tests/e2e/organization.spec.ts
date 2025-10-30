@@ -1,7 +1,11 @@
 import { test, expect } from '@playwright/test'
+import { loginAsAdmin } from './helpers/auth'
 
 test.describe('Organization Structure Page', () => {
   test('should display organization tree view', async ({ page }) => {
+    // Login first
+    await loginAsAdmin(page)
+    
     // Navigate to organization page
     await page.goto('/dashboard/organization')
 
@@ -41,8 +45,8 @@ test.describe('Organization Structure Page', () => {
     // Check if CEO info is displayed
     await expect(page.getByText(/CEO: Anna Nowak/)).toBeVisible()
 
-    // Check if organization chart is visible
-    await expect(page.locator('.org-tree-chart-container')).toBeVisible({ timeout: 10000 })
+    // Check if organization chart is visible - using actual rendered table structure
+    await expect(page.locator('table').first()).toBeVisible({ timeout: 10000 })
 
     // Check if custom nodes are visible (tree structure)
     const orgNodes = page.locator('.custom-node')
@@ -60,6 +64,9 @@ test.describe('Organization Structure Page', () => {
   })
 
   test('should switch between different views', async ({ page }) => {
+    // Login first
+    await loginAsAdmin(page)
+    
     await page.goto('/dashboard/organization')
     await page.waitForLoadState('networkidle')
 
@@ -80,14 +87,17 @@ test.describe('Organization Structure Page', () => {
   })
 
   test('should display employee details on node click', async ({ page }) => {
+    // Login first
+    await loginAsAdmin(page)
+    
     await page.goto('/dashboard/organization')
     await page.waitForLoadState('networkidle')
 
     // Wait for tree to render
     await page.waitForTimeout(2000)
 
-    // Wait for organization chart to be visible
-    await expect(page.locator('.org-tree-chart-container')).toBeVisible({ timeout: 10000 })
+    // Wait for organization chart to be visible - using actual table structure
+    await expect(page.locator('table').first()).toBeVisible({ timeout: 10000 })
 
     // Click on first employee node
     const firstNode = page.locator('.custom-node').first()
