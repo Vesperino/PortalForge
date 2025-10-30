@@ -39,6 +39,7 @@
     "lucide-vue-next": "^0.460.0",
     "nominatim-browser": "^2.1.0",
     "nuxt": "^3.14.159",
+    "nuxt-icon": "^1.0.0-beta.7",
     "primevue": "^4.4.1",
     "v-calendar": "^3.1.2",
     "vue": "^3.5.13",
@@ -48,6 +49,9 @@
     "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
+    "@iconify-json/fluent-emoji-flat": "^1.2.5",
+    "@iconify-json/heroicons": "^1.2.3",
+    "@iconify-json/noto": "^1.2.7",
     "@nuxt/eslint": "^0.7.4",
     "@nuxtjs/tailwindcss": "^6.12.2",
     "@pinia/nuxt": "^0.5.5",
