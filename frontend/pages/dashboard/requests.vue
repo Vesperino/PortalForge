@@ -311,8 +311,8 @@ const requestTypes: RequestType[] = [
 const getRequestTypeById = (id: string) => requestTypes.find(type => type.id === id)
 
 definePageMeta({
-  layout: 'default'
-  // middleware: ['auth'] // Disabled for testing
+  layout: 'default',
+  middleware: ['auth', 'verified']
 })
 
 type RequestPriority = 'standard' | 'pilne'

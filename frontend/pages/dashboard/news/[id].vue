@@ -4,13 +4,15 @@ import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
   layout: 'default',
-  middleware: 'auth'
+  middleware: ['auth', 'verified']
 })
 
+const config = useRuntimeConfig()
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const { fetchNewsById, deleteNews } = useNewsApi()
+const googleMapsApiKey = config.public.googleMapsApiKey || ''
 
 const newsId = computed(() => Number.parseInt(route.params.id as string, 10))
 const news = ref<News | null>(null)
@@ -47,7 +49,7 @@ async function loadNews() {
   try {
     news.value = await fetchNewsById(newsId.value)
   } catch (err: unknown) {
-    error.value = resolveErrorMessage(err, 'Unable to load the news item.')
+    error.value = resolveErrorMessage(err, 'Nie udało się załadować aktualności.')
     console.error('fetchNewsById error:', err)
   } finally {
     isLoading.value = false
@@ -66,7 +68,7 @@ async function handleDelete() {
     await deleteNews(news.value.id)
     router.push('/dashboard/news')
   } catch (err: unknown) {
-    error.value = resolveErrorMessage(err, 'Unable to delete the news item.')
+    error.value = resolveErrorMessage(err, 'Nie udało się usunąć aktualności.')
     console.error('deleteNews error:', err)
   } finally {
     isDeleting.value = false
@@ -153,7 +155,7 @@ onMounted(() => {
     <div v-if="isLoading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto" />
       <p class="mt-4 text-gray-600 dark:text-gray-400">
-        Loading news details...
+        Ładowanie szczegółów aktualności...
       </p>
     </div>
 
@@ -162,10 +164,10 @@ onMounted(() => {
       <p class="text-red-800 dark:text-red-200">{{ error }}</p>
       <div class="mt-4 flex gap-2">
         <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" @click="loadNews">
-          Try again
+          Spróbuj ponownie
         </button>
         <button class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" @click="handleBack">
-          Back to list
+          Powrót do listy
         </button>
       </div>
     </div>
@@ -178,20 +180,20 @@ onMounted(() => {
           class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
           @click="handleBack"
         >
-          Back to list
+          Powrót do listy
         </button>
         <div v-if="canManageNews" class="flex gap-2">
           <button
             class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
             @click="handleEdit"
           >
-            Edit
+            Edytuj
           </button>
           <button
             class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium"
             @click="showDeleteModal = true"
           >
-            Delete
+            Usuń
           </button>
         </div>
       </div>
@@ -215,10 +217,16 @@ onMounted(() => {
               {{ getCategoryLabel(news.category) }}
             </span>
             <span
-              v-if="news.eventId"
-              class="px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+              v-if="news.isEvent"
+              class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
             >
-              Event
+              📅 Wydarzenie
+            </span>
+            <span
+              v-if="news.departmentId"
+              class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+            >
+              🏢 Dział {{ news.departmentId }}
             </span>
           </div>
 
@@ -263,6 +271,70 @@ onMounted(() => {
             v-html="news.content"
           />
 
+          <!-- Event Details Section -->
+          <div v-if="news.isEvent" class="pt-6 border-t border-gray-200 dark:border-gray-700">
+            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 space-y-4">
+              <div class="flex items-center gap-2 mb-4">
+                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <h2 class="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                  Szczegóły wydarzenia
+                </h2>
+              </div>
+
+              <div v-if="news.eventHashtag" class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                </svg>
+                <div>
+                  <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Hashtag</p>
+                  <p class="text-lg text-blue-600 dark:text-blue-400 font-semibold">{{ news.eventHashtag }}</p>
+                </div>
+              </div>
+
+              <div v-if="news.eventDateTime" class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Data i godzina</p>
+                  <p class="text-lg text-gray-900 dark:text-gray-100">{{ formatDate(news.eventDateTime) }}</p>
+                </div>
+              </div>
+
+              <div v-if="news.eventLocation" class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Lokalizacja</p>
+                  <p class="text-lg text-gray-900 dark:text-gray-100">{{ news.eventLocation }}</p>
+
+                  <!-- Google Maps Embed -->
+                  <div v-if="googleMapsApiKey" class="mt-4 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                    <iframe
+                      :src="`https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=${encodeURIComponent(news.eventLocation)}`"
+                      width="100%"
+                      height="300"
+                      style="border:0;"
+                      allowfullscreen
+                      loading="lazy"
+                      referrerpolicy="no-referrer-when-downgrade"
+                      class="w-full"
+                    />
+                  </div>
+                  <div v-else class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                      <span class="font-semibold">Uwaga:</span> Aby wyświetlić mapę, skonfiguruj Google Maps API key w zmiennych środowiskowych.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div v-if="news.eventId" class="pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors"
@@ -271,7 +343,7 @@ onMounted(() => {
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              View related event
+              Zobacz powiązane wydarzenie
             </button>
           </div>
         </div>
@@ -287,10 +359,10 @@ onMounted(() => {
       >
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
           <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Confirm delete
+            Potwierdź usunięcie
           </h3>
           <p class="text-gray-600 dark:text-gray-400 mb-6">
-            Are you sure you want to delete this news item? This action cannot be undone.
+            Czy na pewno chcesz usunąć tę aktualność? Ta operacja nie może być cofnięta.
           </p>
           <div class="flex gap-4 justify-end">
             <button
@@ -298,14 +370,14 @@ onMounted(() => {
               :disabled="isDeleting"
               @click="showDeleteModal = false"
             >
-              Cancel
+              Anuluj
             </button>
             <button
               class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition font-medium"
               :disabled="isDeleting"
               @click="handleDelete"
             >
-              {{ isDeleting ? 'Deleting...' : 'Delete' }}
+              {{ isDeleting ? 'Usuwanie...' : 'Usuń' }}
             </button>
           </div>
         </div>

@@ -7,6 +7,12 @@ export interface CreateNewsRequest {
   imageUrl?: string
   category: string
   eventId?: number
+  isEvent: boolean
+  eventHashtag?: string
+  eventDateTime?: string
+  eventLocation?: string
+  eventPlaceId?: string
+  departmentId?: number
 }
 
 export interface UpdateNewsRequest {
@@ -16,6 +22,12 @@ export interface UpdateNewsRequest {
   imageUrl?: string
   category: string
   eventId?: number
+  isEvent: boolean
+  eventHashtag?: string
+  eventDateTime?: string
+  eventLocation?: string
+  eventPlaceId?: string
+  departmentId?: number
 }
 
 export function useNewsApi() {
@@ -33,8 +45,17 @@ export function useNewsApi() {
     return undefined
   }
 
-  async function fetchAllNews(category?: NewsCategory): Promise<News[]> {
-    const query = category ? `?category=${category}` : ''
+  async function fetchAllNews(
+    category?: NewsCategory,
+    departmentId?: number,
+    isEvent?: boolean
+  ): Promise<News[]> {
+    const params = new URLSearchParams()
+    if (category) params.append('category', category)
+    if (departmentId !== undefined) params.append('departmentId', departmentId.toString())
+    if (isEvent !== undefined) params.append('isEvent', isEvent.toString())
+
+    const query = params.toString() ? `?${params.toString()}` : ''
     const headers = getAuthHeaders()
     const response = await $fetch(`${apiUrl}/api/news${query}`, {
       headers

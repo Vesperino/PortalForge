@@ -54,9 +54,44 @@ public class NewsRepository : INewsRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<News>> GetByDepartmentAsync(int departmentId)
+    {
+        return await _context.News
+            .Include(n => n.Author)
+            .Include(n => n.Event)
+            .Where(n => n.DepartmentId == null || n.DepartmentId == departmentId)
+            .OrderByDescending(n => n.CreatedAt)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<News>> GetEventsAsync()
+    {
+        return await _context.News
+            .Include(n => n.Author)
+            .Include(n => n.Event)
+            .Where(n => n.IsEvent)
+            .OrderByDescending(n => n.EventDateTime ?? n.CreatedAt)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<News>> GetUpcomingEventsAsync(DateTime fromDate)
+    {
+        return await _context.News
+            .Include(n => n.Author)
+            .Include(n => n.Event)
+            .Where(n => n.IsEvent && n.EventDateTime >= fromDate)
+            .OrderBy(n => n.EventDateTime)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public async Task<int> CreateAsync(News news)
     {
-        await _context.News.AddAsync(news);
+        var entry = await _context.News.AddAsync(news);
+        // Note: ID will be 0 until SaveChangesAsync() is called
+        // The caller must call SaveChangesAsync() and then access news.Id
         return news.Id;
     }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePageMeta({
   layout: 'default',
-  // middleware: ['auth'] // Disabled for testing
+  middleware: ['auth', 'verified']
 })
 
 const { getLatestNews, getUpcomingEvents } = useMockData()

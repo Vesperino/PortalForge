@@ -4,13 +4,15 @@ import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
   layout: 'default',
-  middleware: 'auth'
+  middleware: ['auth', 'verified']
 })
 
 const authStore = useAuthStore()
 const { fetchAllNews, deleteNews } = useNewsApi()
 
 const selectedCategory = ref<string>('all')
+const selectedDepartment = ref<number | undefined>(undefined)
+const showOnlyEvents = ref<boolean>(false)
 const searchQuery = ref<string>('')
 const currentPage = ref(1)
 const itemsPerPage = 3
@@ -23,12 +25,12 @@ const isDeleting = ref(false)
 const newsPendingDeletion = ref<News | null>(null)
 
 const categories = [
-  { value: 'all', label: 'All' },
-  { value: 'announcement', label: 'Announcements' },
+  { value: 'all', label: 'Wszystkie' },
+  { value: 'announcement', label: 'Ogłoszenia' },
   { value: 'hr', label: 'HR' },
-  { value: 'product', label: 'Product' },
-  { value: 'tech', label: 'Technology' },
-  { value: 'event', label: 'Events' }
+  { value: 'product', label: 'Produkt' },
+  { value: 'tech', label: 'Technologia' },
+  { value: 'event', label: 'Wydarzenia' }
 ]
 
 const resolveErrorMessage = (input: unknown, fallback: string) => {
@@ -49,10 +51,10 @@ async function loadNews() {
 
   try {
     const category = selectedCategory.value !== 'all' ? selectedCategory.value as NewsCategory : undefined
-    const newsData = await fetchAllNews(category)
+    const newsData = await fetchAllNews(category, selectedDepartment.value, showOnlyEvents.value ? true : undefined)
     allNews.value = newsData
   } catch (err: unknown) {
-    error.value = resolveErrorMessage(err, 'Unable to load news.')
+    error.value = resolveErrorMessage(err, 'Nie udało się załadować aktualności.')
     console.error('fetchAllNews error:', err)
   } finally {
     isLoading.value = false
@@ -63,7 +65,7 @@ onMounted(() => {
   loadNews()
 })
 
-watch(selectedCategory, () => {
+watch([selectedCategory, selectedDepartment, showOnlyEvents], () => {
   loadNews()
 })
 
@@ -196,7 +198,7 @@ const handleDelete = async () => {
 
     closeDeleteModal()
   } catch (err: unknown) {
-    deleteError.value = resolveErrorMessage(err, 'Unable to delete the news item.')
+    deleteError.value = resolveErrorMessage(err, 'Nie udało się usunąć aktualności.')
     console.error('deleteNews error:', err)
   } finally {
     isDeleting.value = false
@@ -216,21 +218,21 @@ const handleDelete = async () => {
         to="/dashboard/news/create"
         class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-center"
       >
-        Add news
+        Dodaj aktualność
       </NuxtLink>
     </div>
 
     <!-- Loading State -->
     <div v-if="isLoading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"/>
-      <p class="mt-4 text-gray-600 dark:text-gray-400">Loading news...</p>
+      <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie aktualności...</p>
     </div>
 
     <!-- Error State -->
     <div v-else-if="error" class="bg-red-100 dark:bg-red-900 rounded-lg shadow-md p-6">
       <p class="text-red-800 dark:text-red-200">{{ error }}</p>
       <button class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" @click="loadNews">
-        Try again
+        Spróbuj ponownie
       </button>
     </div>
 
@@ -244,11 +246,11 @@ const handleDelete = async () => {
 
       <!-- Filters -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- Search -->
           <div>
             <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Search
+              Szukaj
             </label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -260,7 +262,7 @@ const handleDelete = async () => {
                 id="search"
                 v-model="searchQuery"
                 type="text"
-                placeholder="Search news..."
+                placeholder="Szukaj newsów..."
                 class="pl-10 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
             </div>
@@ -269,7 +271,7 @@ const handleDelete = async () => {
           <!-- Category Filter -->
           <div>
             <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Category
+              Kategoria
             </label>
             <select
               id="category"
@@ -280,6 +282,40 @@ const handleDelete = async () => {
                 {{ cat.label }}
               </option>
             </select>
+          </div>
+
+          <!-- Department Filter -->
+          <div>
+            <label for="department" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Dział
+            </label>
+            <select
+              id="department"
+              v-model="selectedDepartment"
+              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option :value="undefined">Wszystkie działy</option>
+              <option :value="1">Zarząd</option>
+              <option :value="2">IT</option>
+              <option :value="3">HR</option>
+              <option :value="4">Marketing</option>
+              <option :value="5">Finanse</option>
+              <option :value="6">Produkt</option>
+            </select>
+          </div>
+
+          <!-- Events Only Toggle -->
+          <div class="flex items-end">
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input
+                v-model="showOnlyEvents"
+                type="checkbox"
+                class="w-5 h-5 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+              >
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                📅 Tylko wydarzenia
+              </span>
+            </label>
           </div>
         </div>
       </div>
@@ -334,15 +370,21 @@ const handleDelete = async () => {
             <!-- News Header -->
             <div class="flex items-start justify-between mb-4">
               <div class="flex-1">
-                <div class="flex items-center gap-2 mb-2">
+                <div class="flex items-center gap-2 mb-2 flex-wrap">
                   <span
                     :class="getCategoryColor(news.category)"
                     class="px-3 py-1 text-xs font-medium rounded-full"
                   >
                     {{ getCategoryLabel(news.category) }}
                   </span>
-                  <span v-if="news.eventId" class="px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                    Event
+                  <span v-if="news.isEvent" class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                    📅 Wydarzenie
+                  </span>
+                  <span v-if="news.departmentId" class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                    🏢 Dział
+                  </span>
+                  <span v-if="news.eventHashtag" class="px-3 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                    {{ news.eventHashtag }}
                   </span>
                 </div>
                 <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -377,6 +419,25 @@ const handleDelete = async () => {
               {{ news.excerpt }}
             </p>
 
+            <!-- Event Details Preview -->
+            <div v-if="news.isEvent && (news.eventDateTime || news.eventLocation)" class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div class="space-y-2 text-sm">
+                <div v-if="news.eventDateTime" class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                  <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{{ formatDate(news.eventDateTime) }}</span>
+                </div>
+                <div v-if="news.eventLocation" class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                  <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{{ news.eventLocation }}</span>
+                </div>
+              </div>
+            </div>
+
                         <!-- News Actions -->
             <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
               <NuxtLink
@@ -384,7 +445,7 @@ const handleDelete = async () => {
                 class="text-sm text-blue-600 dark:text-blue-400 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
                 @click.stop
               >
-                Read more
+                Czytaj więcej
               </NuxtLink>
               <div v-if="canManageNews" class="flex items-center gap-2">
                 <NuxtLink
@@ -392,14 +453,14 @@ const handleDelete = async () => {
                   class="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors px-2 py-1 rounded"
                   @click.stop
                 >
-                  Edit
+                  Edytuj
                 </NuxtLink>
                 <button
                   type="button"
                   class="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors px-2 py-1 rounded"
                   @click.stop="confirmDelete(news)"
                 >
-                  Usu "
+                  Usuń
                 </button>
               </div>
             </div>
@@ -471,10 +532,10 @@ const handleDelete = async () => {
       >
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
           <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Potwierdz usuniecie
+            Potwierdź usunięcie
           </h3>
           <p class="text-gray-600 dark:text-gray-400 mb-6">
-            Are you sure you want to delete the news "{{ newsPendingDeletion?.title }}"? This action cannot be undone.
+            Czy na pewno chcesz usunąć aktualność "{{ newsPendingDeletion?.title }}"? Ta operacja nie może być cofnięta.
           </p>
           <div class="flex gap-4 justify-end">
             <button
@@ -483,7 +544,7 @@ const handleDelete = async () => {
               :disabled="isDeleting"
               @click="closeDeleteModal"
             >
-              Cancel
+              Anuluj
             </button>
             <button
               type="button"
@@ -491,7 +552,7 @@ const handleDelete = async () => {
               :disabled="isDeleting"
               @click="handleDelete"
             >
-              {{ isDeleting ? 'Deleting...' : 'Delete' }}
+              {{ isDeleting ? 'Usuwanie...' : 'Usuń' }}
             </button>
           </div>
         </div>

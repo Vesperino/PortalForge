@@ -43,6 +43,25 @@ public class NewsConfiguration : IEntityTypeConfiguration<News>
             .HasConversion<string>()
             .HasMaxLength(50);
 
+        // Event-specific fields
+        builder.Property(n => n.IsEvent)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(n => n.EventHashtag)
+            .HasMaxLength(100);
+
+        builder.Property(n => n.EventDateTime);
+
+        builder.Property(n => n.EventLocation)
+            .HasMaxLength(500);
+
+        builder.Property(n => n.EventPlaceId)
+            .HasMaxLength(200);
+
+        // Department visibility
+        builder.Property(n => n.DepartmentId);
+
         builder.HasOne(n => n.Author)
             .WithMany()
             .HasForeignKey(n => n.AuthorId)
@@ -55,5 +74,8 @@ public class NewsConfiguration : IEntityTypeConfiguration<News>
 
         builder.HasIndex(n => n.CreatedAt);
         builder.HasIndex(n => n.Category);
+        builder.HasIndex(n => n.IsEvent);
+        builder.HasIndex(n => n.DepartmentId);
+        builder.HasIndex(n => n.EventDateTime);
     }
 }

@@ -44,6 +44,7 @@ Następne 5 lat zapowiada się jeszcze lepiej! Planujemy dalszą rozbudowę zesp
     createdAt: addDays(-5),
     views: 245,
     category: 'announcement',
+    isEvent: false,
     eventId: 6
   },
   {
@@ -86,7 +87,8 @@ Wszyscy nowi pracownicy przechodzą 2-tygodniowy program onboardingowy, podczas 
     authorId: 26,
     createdAt: addDays(-3),
     views: 178,
-    category: 'hr'
+    category: 'hr',
+    isEvent: false
   },
   {
     id: 5,
@@ -164,6 +166,7 @@ Nie możemy się doczekać wspólnej zabawy! To będzie dzień pełen adrenaliny
     createdAt: addDays(-20),
     views: 289,
     category: 'event',
+    isEvent: true,
     eventId: 3
   },
   {
@@ -212,7 +215,8 @@ Czekamy na wasze opinie! Jeśli znajdziecie bugi lub macie sugestie - piszcie na
     authorId: 17,
     createdAt: addDays(-7),
     views: 312,
-    category: 'product'
+    category: 'product',
+    isEvent: false
   },
   {
     id: 6,
@@ -306,6 +310,7 @@ Po warsztacie będziesz w stanie:
     createdAt: addDays(-25),
     views: 156,
     category: 'tech',
+    isEvent: true,
     eventId: 2
   },
   {
@@ -360,7 +365,8 @@ W Q4 zatrudniliśmy 5 nowych osób:
     authorId: 1,
     createdAt: addDays(-10),
     views: 289,
-    category: 'announcement'
+    category: 'announcement',
+    isEvent: false
   },
   {
     id: 5,
@@ -423,6 +429,7 @@ Dziękujemy Beacie i zespołowi HR za organizację! Czekamy na kolejne wyjazdy i
     createdAt: addDays(-2),
     views: 198,
     category: 'event',
+    isEvent: true,
     eventId: 3
   },
   {
@@ -511,7 +518,8 @@ Masz pytania o naszą architekturę? Napisz na piotr.kowalski@portalforge.pl
     authorId: 2,
     createdAt: addDays(-14),
     views: 267,
-    category: 'tech'
+    category: 'tech',
+    isEvent: false
   },
   {
     id: 7,
@@ -579,7 +587,8 @@ Policy będzie podlegać przeglądowi co 6 miesięcy. Wasze opinie są ważne - 
     authorId: 26,
     createdAt: addDays(-6),
     views: 421,
-    category: 'hr'
+    category: 'hr',
+    isEvent: false
   },
   {
     id: 8,
@@ -653,7 +662,8 @@ Ogromne dzięki dla:
     authorId: 17,
     createdAt: addDays(-12),
     views: 156,
-    category: 'product'
+    category: 'product',
+    isEvent: false
   },
   {
     id: 9,
@@ -759,7 +769,8 @@ Pytania? Piszcie do benefits@portalforge.pl
     authorId: 26,
     createdAt: addDays(-8),
     views: 389,
-    category: 'hr'
+    category: 'hr',
+    isEvent: false
   },
   {
     id: 10,
@@ -840,7 +851,8 @@ Security to priorytet nr 1. Jeśli zauważysz coś podejrzanego - zgłoś na sec
     authorId: 15,
     createdAt: addDays(-4),
     views: 203,
-    category: 'tech'
+    category: 'tech',
+    isEvent: false
   },
   {
     id: 11,
@@ -903,7 +915,8 @@ Nominacje na Q1 2025 już otwarte - zgłaszajcie kolegów i koleżanki!
     authorId: 1,
     createdAt: addDays(-15),
     views: 234,
-    category: 'hr'
+    category: 'hr',
+    isEvent: false
   },
   {
     id: 12,
@@ -992,7 +1005,8 @@ Pytania? Piszcie do natalia.krawczyk@portalforge.pl
     authorId: 1,
     createdAt: addDays(-1),
     views: 412,
-    category: 'announcement'
+    category: 'announcement',
+    isEvent: false
   },
   {
     id: 13,
@@ -1094,7 +1108,8 @@ Format:
     authorId: 2,
     createdAt: addDays(-9),
     views: 167,
-    category: 'tech'
+    category: 'tech',
+    isEvent: false
   },
   {
     id: 14,
@@ -1195,7 +1210,8 @@ Bądźmy allies dla siebie nawzajem. 💜
     authorId: 26,
     createdAt: addDays(-11),
     views: 298,
-    category: 'hr'
+    category: 'hr',
+    isEvent: false
   },
   {
     id: 15,
@@ -1321,6 +1337,7 @@ Razem osiągniemy jeszcze więcej w 2025! 🚀
     authorId: 1,
     createdAt: addDays(-20),
     views: 456,
-    category: 'announcement'
+    category: 'announcement',
+    isEvent: false
   }
 ]

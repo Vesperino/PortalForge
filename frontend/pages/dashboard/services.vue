@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: 'default'
-  // middleware: 'auth' // Disabled for testing
+  layout: 'default',
+  middleware: ['auth', 'verified']
 })
 
 interface InternalService {

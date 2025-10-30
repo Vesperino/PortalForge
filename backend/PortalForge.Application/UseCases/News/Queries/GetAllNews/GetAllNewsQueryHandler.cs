@@ -22,8 +22,10 @@ public class GetAllNewsQueryHandler : IRequestHandler<GetAllNewsQuery, Paginated
     public async Task<PaginatedNewsResponse> Handle(GetAllNewsQuery request, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
-            "Fetching news - Category: {Category}, Page: {PageNumber}, Size: {PageSize}",
+            "Fetching news - Category: {Category}, DepartmentId: {DepartmentId}, IsEvent: {IsEvent}, Page: {PageNumber}, Size: {PageSize}",
             request.Category ?? "None",
+            request.DepartmentId?.ToString() ?? "None",
+            request.IsEvent?.ToString() ?? "None",
             request.PageNumber,
             request.PageSize);
 
@@ -36,6 +38,18 @@ public class GetAllNewsQueryHandler : IRequestHandler<GetAllNewsQuery, Paginated
         else
         {
             allNews = await _unitOfWork.NewsRepository.GetAllAsync();
+        }
+
+        // Apply department filter
+        if (request.DepartmentId.HasValue)
+        {
+            allNews = allNews.Where(n => n.DepartmentId == null || n.DepartmentId == request.DepartmentId.Value);
+        }
+
+        // Apply event filter
+        if (request.IsEvent.HasValue)
+        {
+            allNews = allNews.Where(n => n.IsEvent == request.IsEvent.Value);
         }
 
         var totalCount = allNews.Count();
@@ -57,7 +71,12 @@ public class GetAllNewsQueryHandler : IRequestHandler<GetAllNewsQuery, Paginated
                 UpdatedAt = n.UpdatedAt,
                 Views = n.Views,
                 Category = n.Category.ToString(),
-                EventId = n.EventId
+                EventId = n.EventId,
+                IsEvent = n.IsEvent,
+                EventHashtag = n.EventHashtag,
+                EventDateTime = n.EventDateTime,
+                EventLocation = n.EventLocation,
+                DepartmentId = n.DepartmentId
             })
             .ToList();
 

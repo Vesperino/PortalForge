@@ -45,7 +45,12 @@ public class GetNewsByIdQueryHandler : IRequestHandler<GetNewsByIdQuery, NewsDto
             UpdatedAt = news.UpdatedAt,
             Views = news.Views + 1,
             Category = news.Category.ToString(),
-            EventId = news.EventId
+            EventId = news.EventId,
+            IsEvent = news.IsEvent,
+            EventHashtag = news.EventHashtag,
+            EventDateTime = news.EventDateTime,
+            EventLocation = news.EventLocation,
+            DepartmentId = news.DepartmentId
         };
 
         _logger.LogInformation("News fetched successfully: {NewsId}", request.NewsId);

@@ -28,6 +28,11 @@ export function useAuth() {
       // Zapisz użytkownika
       authStore.setUser(response.user)
 
+      // Sprawdź czy użytkownik musi zmienić hasło
+      if (response.user.mustChangePassword) {
+        await router.push('/auth/change-password')
+      }
+
       return response
     } catch (error: any) {
       console.error('Login error:', error)

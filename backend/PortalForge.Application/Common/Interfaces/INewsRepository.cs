@@ -11,6 +11,9 @@ public interface INewsRepository
     Task<IEnumerable<News>> GetAllAsync();
     Task<IEnumerable<News>> GetByCategoryAsync(NewsCategory category);
     Task<IEnumerable<News>> GetLatestAsync(int count);
+    Task<IEnumerable<News>> GetByDepartmentAsync(int departmentId);
+    Task<IEnumerable<News>> GetEventsAsync();
+    Task<IEnumerable<News>> GetUpcomingEventsAsync(DateTime fromDate);
     Task<int> CreateAsync(News news);
     Task UpdateAsync(News news);
     Task DeleteAsync(int id);
