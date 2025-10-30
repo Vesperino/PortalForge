@@ -13,7 +13,14 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     '@nuxtjs/color-mode',
     '@primevue/nuxt-module',
+    '@nuxtjs/supabase',
   ],
+
+  supabase: {
+    url: process.env.NUXT_PUBLIC_SUPABASE_URL,
+    key: process.env.NUXT_PUBLIC_SUPABASE_KEY,
+    redirect: false,
+  },
 
   colorMode: {
     classSuffix: '',
