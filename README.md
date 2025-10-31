@@ -24,6 +24,47 @@
 - 📊 **Monitoring aktywności** - Śledzenie i raportowanie aktywności użytkowników
 - 📤 **Import/Export** - Import użytkowników z CSV/Excel, eksport struktury org do PDF/Excel
 
+## ✨ Nowe funkcje (v2.0)
+
+### Hierarchiczna struktura organizacyjna
+- **Nielimitowana hierarchia działów** - Dowolna głębokość drzewa organizacyjnego
+- **Szefowie działów i przypisania pracowników** - Automatyczne zarządzanie hierarchią
+- **Uprawnienia widoczności** - Kontrola, kto może przeglądać które działy
+- **Automatyczne routowanie wniosków** - Inteligentne przekierowanie do odpowiedniego przełożonego na podstawie hierarchii
+- **Multi-level hierarchy support** - Employee → Team Lead → Manager → Director → VP → President
+- **Auto-approval** - Automatyczne zatwierdzanie gdy brak wyższego przełożonego
+
+### System zarządzania urlopami
+- **Automatyczne zastępstwa** - Przekierowanie do zastępcy gdy zatwierdzający jest na urlopie
+- **Kalendarz urlopów zespołu** - 3 widoki: Timeline, Grid, List
+- **Wykrywanie konfliktów** - Alerty gdy >30% zespołu jest na urlopie (krytyczne przy >50%)
+- **Eksport do PDF/Excel** - Raporty urlopowe dla działów
+- **Email powiadomienia** - Przypomnienia o nadchodzących urlopach (7 dni, 1 dzień przed, rozpoczęcie, zakończenie)
+- **Background service** - Automatyczna aktualizacja statusów urlopów co 6 godzin
+- **Statystyki zespołu** - Wykorzystanie urlopów, średnie dni wolne
+
+### Ulepszenia systemu wniosków
+- **Request Templates** - Szablony wniosków z dynamicznymi polami
+- **Multi-step approval flow** - Wieloetapowy proces zatwierdzania
+- **6 typów zatwierdzających**:
+  - Direct Supervisor (bezpośredni przełożony)
+  - Role (rola w hierarchii - Manager, Director, VP, President)
+  - Specific User (konkretny użytkownik)
+  - Specific Department (szef działu)
+  - User Group (grupa użytkowników, round-robin)
+  - Submitter (samoobsługa)
+- **Auto-routing** - Inteligentne wyszukiwanie w hierarchii
+- **Vacation substitution** - Automatyczne przekierowanie do zastępcy
+- **History tracking** - Pełna historia zmian statusów
+- **Comments system** - Komentarze do wniosków
+
+### System powiadomień
+- **Real-time notifications** - Powiadomienia w czasie rzeczywistym
+- **Grupowanie po kategoriach** - Wnioski, Urlopy, System
+- **Email integration** - Automatyczne emaile dla krytycznych powiadomień
+- **Unread badge** - Wizualna sygnalizacja nieprzeczytanych
+- **Click-to-navigate** - Bezpośrednie przejście do akcji
+
 ## Stos technologiczny
 
 ### Backend
@@ -360,11 +401,15 @@ docker-compose up
 - [x] Frontend: strony callback i verify-email z timerem
 - [x] Middleware sprawdzające weryfikację emaila
 
-### Faza 2: Struktura organizacyjna
-- [ ] Operacje CRUD pracowników
-- [ ] Wizualizacja struktury hierarchicznej
-- [ ] Funkcjonalność importu CSV/Excel
-- [ ] Funkcjonalność eksportu PDF/Excel
+### Faza 2: Struktura organizacyjna & Urlopy - ✅ Zakończona (v2.0)
+- [x] Nielimitowana hierarchia działów
+- [x] System zarządzania urlopami
+- [x] Automatyczne routowanie wniosków
+- [x] Zastępstwa podczas nieobecności
+- [x] Kalendarz urlopów zespołu (3 widoki)
+- [x] Wykrywanie konfliktów urlopowych
+- [x] Email powiadomienia
+- [x] Background services
 
 ### Faza 3: Kalendarz i newsy
 - [ ] System zarządzania wydarzeniami
@@ -396,7 +441,7 @@ All Rights Reserved - Projekt wewnętrzny
 
 ---
 
-**Aktualna wersja**: 1.1.0-alpha
-**Ostatnia aktualizacja**: 2025-10-17
-**Status**: Faza 1 (Fundament) zakończona, rozpoczęcie Fazy 2
+**Aktualna wersja**: 2.0.0-beta
+**Ostatnia aktualizacja**: 2025-10-31
+**Status**: Faza 2 (Struktura organizacyjna & Urlopy) zakończona, rozpoczęcie Fazy 3
 **Utrzymywany przez**: Zespół deweloperski
