@@ -26,6 +26,7 @@ public static class DependencyInjection
 
         // Register application services
         services.AddScoped<IRequestRoutingService, RequestRoutingService>();
+        services.AddScoped<IVacationScheduleService, VacationScheduleService>();
 
         return services;
     }
