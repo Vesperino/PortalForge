@@ -151,11 +151,11 @@
         </div>
 
         <div v-else class="space-y-4">
-          <button
+          <NuxtLink
             v-for="request in filteredRequests"
             :key="request.id"
-            @click="viewRequestDetails(request)"
-            class="w-full bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-blue-500 dark:hover:border-blue-400 transition-all text-left group cursor-pointer"
+            :to="`/dashboard/requests/${request.id}`"
+            class="block w-full bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-blue-500 dark:hover:border-blue-400 transition-all group"
           >
             <div class="flex items-start justify-between mb-4">
               <div class="flex items-start gap-4">
@@ -220,7 +220,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
             </div>
-          </button>
+          </NuxtLink>
         </div>
       </div>
     </div>
