@@ -53,7 +53,8 @@
       "Bash(timeout 10 bash:*)",
       "Bash(npm run test:*)",
       "Bash(dotnet user-secrets:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(/dev/null)"
     ],
     "deny": [],
     "ask": []
