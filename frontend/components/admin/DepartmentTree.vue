@@ -5,16 +5,19 @@ import type { DepartmentTreeDto } from '~/types/department'
 interface Props {
   department: DepartmentTreeDto
   level?: number
+  selectable?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  level: 0
+  level: 0,
+  selectable: false
 })
 
 interface Emits {
   (e: 'add-child', departmentId: string): void
   (e: 'edit', departmentId: string): void
   (e: 'delete', departmentId: string): void
+  (e: 'select', departmentId: string): void
 }
 
 const emit = defineEmits<Emits>()
@@ -86,6 +89,10 @@ const handleEdit = () => {
 const handleDelete = () => {
   showActions.value = false
   emit('delete', props.department.id)
+}
+
+const handleSelect = () => {
+  emit('select', props.department.id)
 }
 
 // Close actions menu when clicking outside
@@ -210,8 +217,18 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Actions Dropdown -->
+      <!-- Select Button (when selectable) -->
+      <button
+        v-if="selectable"
+        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+        @click="handleSelect"
+      >
+        Wybierz
+      </button>
+
+      <!-- Actions Dropdown (when not selectable) -->
       <div
+        v-else
         ref="actionsRef"
         class="relative opacity-0 group-hover:opacity-100 transition-opacity"
       >
@@ -295,9 +312,11 @@ onUnmounted(() => {
         :key="child.id"
         :department="child"
         :level="level + 1"
+        :selectable="selectable"
         @add-child="emit('add-child', $event)"
         @edit="emit('edit', $event)"
         @delete="emit('delete', $event)"
+        @select="emit('select', $event)"
       />
     </div>
   </div>

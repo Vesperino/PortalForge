@@ -23,6 +23,22 @@
           <p class="text-gray-600 dark:text-gray-400">Zarządzaj kontami użytkowników</p>
         </NuxtLink>
 
+        <!-- Organizational Structure Card -->
+        <NuxtLink
+          to="/admin/structure"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <div class="p-3 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+              <svg class="w-8 h-8 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+          </div>
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Struktura organizacyjna</h2>
+          <p class="text-gray-600 dark:text-gray-400">Zarządzaj działami i hierarchią firmy</p>
+        </NuxtLink>
+
         <!-- Role Groups Card -->
         <NuxtLink
           to="/admin/roles"
@@ -37,6 +53,23 @@
           </div>
           <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Grupy Ról</h2>
           <p class="text-gray-600 dark:text-gray-400">Zarządzaj grupami ról i uprawnieniami</p>
+        </NuxtLink>
+
+        <!-- Organizational Permissions Card -->
+        <NuxtLink
+          to="/admin/permissions/organizational"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <div class="p-3 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
+              <svg class="w-8 h-8 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+          </div>
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Uprawnienia widoczności</h2>
+          <p class="text-gray-600 dark:text-gray-400">Zarządzaj dostępem do działów organizacyjnych</p>
         </NuxtLink>
 
         <!-- Audit Logs Card -->

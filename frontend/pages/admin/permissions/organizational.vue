@@ -75,7 +75,7 @@
       </div>
 
       <!-- Users List -->
-      <div v-else class="space-y-4">
+      <div v-else-if="users.length > 0" class="space-y-4">
         <div
           v-for="user in filteredUsers"
           :key="user.id"
@@ -246,7 +246,7 @@
 
 <script setup lang="ts">
 import type { User } from '~/types/auth'
-import type { DepartmentDto } from '~/types/department'
+import type { DepartmentDto, DepartmentTreeDto } from '~/types/department'
 import type { OrganizationalPermissionDto, UpdateOrganizationalPermissionRequest } from '~/types/permission'
 
 definePageMeta({
@@ -261,6 +261,7 @@ useHead({
 const config = useRuntimeConfig()
 const authStore = useAuthStore()
 const { getAuthHeaders } = useAuth()
+const apiUrl = config.public.apiUrl
 
 // State
 const users = ref<User[]>([])
@@ -315,11 +316,22 @@ const fetchUsers = async () => {
   error.value = null
 
   try {
-    const response = await $fetch(`${config.public.apiBase}/api/admin/users`, {
+    const response = await $fetch(`${apiUrl}/api/admin/users`, {
       headers: getAuthHeaders(),
-    }) as User[]
+    }) as any
 
-    users.value = response
+    // API returns paginated response with 'users' field
+    if (response && response.users && Array.isArray(response.users)) {
+      users.value = response.users as User[]
+    } else if (Array.isArray(response)) {
+      // Fallback: handle direct array response
+      users.value = response as User[]
+    } else {
+      console.error('Response is not in expected format:', response)
+      users.value = []
+      error.value = 'Nieprawidłowy format danych z serwera'
+      return
+    }
 
     // Initialize permissions for each user
     for (const user of users.value) {
@@ -328,6 +340,7 @@ const fetchUsers = async () => {
   } catch (err: any) {
     console.error('Error fetching users:', err)
     error.value = err.message || 'Nie udało się załadować użytkowników'
+    users.value = []
   } finally {
     loading.value = false
   }
@@ -337,11 +350,34 @@ const fetchDepartments = async () => {
   departmentsLoading.value = true
 
   try {
-    const response = await $fetch(`${config.public.apiBase}/api/admin/departments`, {
+    const response = await $fetch(`${apiUrl}/api/departments/tree`, {
       headers: getAuthHeaders(),
-    }) as DepartmentDto[]
+    }) as DepartmentTreeDto[]
 
-    departments.value = response
+    // Flatten tree structure to simple list for checkboxes
+    const flattenDepartments = (depts: DepartmentTreeDto[]): DepartmentDto[] => {
+      const result: DepartmentDto[] = []
+      for (const dept of depts) {
+        result.push({
+          id: dept.id,
+          name: dept.name,
+          description: dept.description,
+          parentDepartmentId: dept.parentDepartmentId,
+          departmentHeadId: dept.departmentHeadId,
+          departmentHeadName: dept.departmentHeadName,
+          isActive: dept.isActive,
+          level: dept.level,
+          employeeCount: dept.employeeCount,
+          createdAt: new Date().toISOString()
+        })
+        if (dept.children && dept.children.length > 0) {
+          result.push(...flattenDepartments(dept.children))
+        }
+      }
+      return result
+    }
+
+    departments.value = flattenDepartments(response)
   } catch (err) {
     console.error('Error fetching departments:', err)
   } finally {
@@ -352,7 +388,7 @@ const fetchDepartments = async () => {
 const loadUserPermissions = async (userId: string) => {
   try {
     const response = await $fetch(
-      `${config.public.apiBase}/api/admin/permissions/organizational/${userId}`,
+      `${apiUrl}/api/admin/permissions/organizational/${userId}`,
       {
         headers: getAuthHeaders(),
       }
@@ -377,7 +413,7 @@ const savePermissions = async (userId: string) => {
 
   try {
     await $fetch(
-      `${config.public.apiBase}/api/admin/permissions/organizational/${userId}`,
+      `${apiUrl}/api/admin/permissions/organizational/${userId}`,
       {
         method: 'PUT',
         headers: {
