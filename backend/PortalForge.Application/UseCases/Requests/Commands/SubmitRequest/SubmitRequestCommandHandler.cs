@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Services;
 using PortalForge.Domain.Entities;
@@ -11,13 +12,19 @@ public class SubmitRequestCommandHandler
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notificationService;
+    private readonly IRequestRoutingService _routingService;
+    private readonly ILogger<SubmitRequestCommandHandler> _logger;
 
     public SubmitRequestCommandHandler(
         IUnitOfWork unitOfWork,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IRequestRoutingService routingService,
+        ILogger<SubmitRequestCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _notificationService = notificationService;
+        _routingService = routingService;
+        _logger = logger;
     }
 
     public async Task<SubmitRequestResult> Handle(
@@ -61,27 +68,57 @@ public class SubmitRequestCommandHandler
         if (template.RequiresApproval && template.ApprovalStepTemplates.Any())
         {
             var orderedSteps = template.ApprovalStepTemplates.OrderBy(ast => ast.StepOrder).ToList();
+            var lastCompletedStepOrder = 0;
 
             foreach (var stepTemplate in orderedSteps)
             {
-                // Resolve approver based on ApproverType
-                var approverIds = await ResolveApproversAsync(stepTemplate, submitter);
+                // Resolve approver using routing service
+                var approver = await _routingService.ResolveApproverAsync(stepTemplate, submitter);
 
-                foreach (var approverId in approverIds)
+                if (approver == null)
                 {
+                    // No approver found - AUTO-APPROVE this step
+                    var autoApprovedStep = new RequestApprovalStep
+                    {
+                        Id = Guid.NewGuid(),
+                        RequestId = request.Id,
+                        StepOrder = stepTemplate.StepOrder,
+                        ApproverId = submitter.Id,
+                        Status = ApprovalStepStatus.Approved,
+                        RequiresQuiz = false,
+                        Comment = "Auto-approved - submitter has no higher supervisor for this approval level",
+                        StartedAt = DateTime.UtcNow,
+                        FinishedAt = DateTime.UtcNow
+                    };
+                    request.ApprovalSteps.Add(autoApprovedStep);
+                    lastCompletedStepOrder = stepTemplate.StepOrder;
+
+                    _logger.LogInformation(
+                        "Auto-approved step {StepOrder} for request {RequestId} - user {UserId} has no higher supervisor",
+                        stepTemplate.StepOrder, request.Id, submitter.Id);
+                }
+                else
+                {
+                    // Normal approval step
+                    var isFirstPendingStep = stepTemplate.StepOrder == lastCompletedStepOrder + 1;
+
                     var approvalStep = new RequestApprovalStep
                     {
                         Id = Guid.NewGuid(),
                         RequestId = request.Id,
                         StepOrder = stepTemplate.StepOrder,
-                        ApproverId = approverId,
-                        Status = stepTemplate.StepOrder == 1
+                        ApproverId = approver.Id,
+                        Status = isFirstPendingStep
                             ? ApprovalStepStatus.InReview
                             : ApprovalStepStatus.Pending,
                         RequiresQuiz = stepTemplate.RequiresQuiz,
-                        StartedAt = stepTemplate.StepOrder == 1 ? DateTime.UtcNow : null
+                        StartedAt = isFirstPendingStep ? DateTime.UtcNow : null
                     };
                     request.ApprovalSteps.Add(approvalStep);
+
+                    _logger.LogDebug(
+                        "Created approval step {StepOrder} for request {RequestId}, approver {ApproverId}, status {Status}",
+                        stepTemplate.StepOrder, request.Id, approver.Id, approvalStep.Status);
                 }
             }
         }
@@ -106,71 +143,6 @@ public class SubmitRequestCommandHandler
             RequestNumber = request.RequestNumber,
             Message = "Request submitted successfully"
         };
-    }
-
-    /// <summary>
-    /// Resolve approver user IDs based on the approval step template configuration.
-    /// </summary>
-    private async Task<List<Guid>> ResolveApproversAsync(
-        RequestApprovalStepTemplate stepTemplate,
-        User submitter)
-    {
-        var approverIds = new List<Guid>();
-
-        switch (stepTemplate.ApproverType)
-        {
-            case ApproverType.Role:
-                // Hierarchical role-based approval
-                if (stepTemplate.ApproverRole == DepartmentRole.Manager)
-                {
-                    if (submitter.Supervisor != null)
-                    {
-                        approverIds.Add(submitter.Supervisor.Id);
-                    }
-                }
-                else if (stepTemplate.ApproverRole == DepartmentRole.Director)
-                {
-                    if (submitter.Supervisor?.Supervisor != null)
-                    {
-                        approverIds.Add(submitter.Supervisor.Supervisor.Id);
-                    }
-                }
-                break;
-
-            case ApproverType.SpecificUser:
-                // Specific user approval
-                if (stepTemplate.SpecificUserId.HasValue)
-                {
-                    approverIds.Add(stepTemplate.SpecificUserId.Value);
-                }
-                break;
-
-            case ApproverType.UserGroup:
-                // Group-based approval - for now, add all users from the group
-                // In future, this could be "any one from group" or "all from group"
-                if (stepTemplate.ApproverGroupId.HasValue)
-                {
-                    var group = await _unitOfWork.RoleGroupRepository.GetByIdAsync(
-                        stepTemplate.ApproverGroupId.Value
-                    );
-
-                    if (group != null)
-                    {
-                        var userIds = group.UserRoleGroups
-                            .Select(urg => urg.UserId)
-                            .ToList();
-                        approverIds.AddRange(userIds);
-                    }
-                }
-                break;
-
-            case ApproverType.Submitter:
-                // Self-approval (e.g., for acknowledgment)
-                approverIds.Add(submitter.Id);
-                break;
-        }
-
-        return approverIds;
     }
 }
 
