@@ -18,6 +18,7 @@ public interface IUnitOfWork : IDisposable
     INotificationRepository NotificationRepository { get; }
     IDepartmentRepository DepartmentRepository { get; }
     IVacationScheduleRepository VacationScheduleRepository { get; }
+    IOrganizationalPermissionRepository OrganizationalPermissionRepository { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

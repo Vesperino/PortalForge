@@ -24,6 +24,7 @@ public class UnitOfWork : IUnitOfWork
     private INotificationRepository? _notificationRepository;
     private IDepartmentRepository? _departmentRepository;
     private IVacationScheduleRepository? _vacationScheduleRepository;
+    private IOrganizationalPermissionRepository? _organizationalPermissionRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -71,6 +72,9 @@ public class UnitOfWork : IUnitOfWork
 
     public IVacationScheduleRepository VacationScheduleRepository =>
         _vacationScheduleRepository ??= new VacationScheduleRepository(_context);
+
+    public IOrganizationalPermissionRepository OrganizationalPermissionRepository =>
+        _organizationalPermissionRepository ??= new OrganizationalPermissionRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {
