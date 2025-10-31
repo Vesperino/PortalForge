@@ -54,7 +54,9 @@
       "Bash(npm run test:*)",
       "Bash(dotnet user-secrets:*)",
       "Bash(rm:*)",
-      "Bash(/dev/null)"
+      "Bash(/dev/null)",
+      "Bash(findstr:*)",
+      "Bash(Select-String -Pattern \"niepowodzenie|powodzenie|łącznie\" -CaseSensitive)"
     ],
     "deny": [],
     "ask": []
