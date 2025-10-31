@@ -716,7 +716,7 @@ if (substitute != null)
 
 ### Day 7: Background Jobs & Endpoints
 
-#### [ ] Task 2.5: Daily Job - Update Vacation Statuses
+#### [x] Task 2.5: Daily Job - Update Vacation Statuses
 
 **File**: `backend/PortalForge.Infrastructure/BackgroundJobs/UpdateVacationStatusesJob.cs`
 

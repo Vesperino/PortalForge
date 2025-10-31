@@ -1,6 +1,7 @@
 using PortalForge.Api.Middleware;
 using PortalForge.Application;
 using PortalForge.Infrastructure;
+using PortalForge.Infrastructure.BackgroundJobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add Application and Infrastructure layers
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Register background jobs
+builder.Services.AddHostedService<UpdateVacationStatusesJob>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
