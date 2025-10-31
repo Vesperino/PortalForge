@@ -39,6 +39,10 @@ public class RequestTemplateConfiguration : IEntityTypeConfiguration<RequestTemp
             .IsRequired()
             .HasDefaultValue(true);
 
+        builder.Property(rt => rt.RequiresSubstituteSelection)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(rt => rt.CreatedAt)
             .IsRequired();
 
