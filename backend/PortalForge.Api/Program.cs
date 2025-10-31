@@ -13,6 +13,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 // Register background jobs
 builder.Services.AddHostedService<UpdateVacationStatusesJob>();
+builder.Services.AddHostedService<PortalForge.Infrastructure.Services.VacationReminderBackgroundService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
