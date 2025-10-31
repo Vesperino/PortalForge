@@ -128,6 +128,24 @@
               Wymaga zatwierdzenia
             </label>
           </div>
+
+          <div class="flex items-center">
+            <input
+              v-model="form.requiresSubstituteSelection"
+              type="checkbox"
+              id="requiresSubstituteSelection"
+              class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            >
+            <label for="requiresSubstituteSelection" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+              Wymaga wyboru zastępcy (np. dla wniosków urlopowych)
+            </label>
+          </div>
+
+          <div v-if="form.requiresSubstituteSelection" class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <p class="text-sm text-blue-800 dark:text-blue-300">
+              <strong>Info:</strong> Pole "Wybierz zastępcę" zostanie automatycznie dodane do formularza.
+            </p>
+          </div>
         </div>
 
         <!-- Step 2: Form Fields -->
@@ -445,6 +463,7 @@ const form = ref({
   category: '',
   departmentId: '',
   requiresApproval: true,
+  requiresSubstituteSelection: false,
   estimatedProcessingDays: undefined as number | undefined,
   passingScore: 80,
   fields: [] as RequestTemplateField[],
@@ -559,6 +578,18 @@ const saveTemplate = async () => {
       order: q.order
     }))
 
+    // Prepare fields - add substitute field if required
+    const fieldsToSubmit = [...form.value.fields]
+    if (form.value.requiresSubstituteSelection) {
+      fieldsToSubmit.push({
+        label: 'Wybierz zastępcę',
+        fieldType: 'UserSelect',
+        placeholder: 'Wybierz osobę zastępującą',
+        isRequired: true,
+        order: 999
+      })
+    }
+
     await createTemplate({
       name: form.value.name,
       description: form.value.description,
@@ -566,9 +597,10 @@ const saveTemplate = async () => {
       category: form.value.category,
       departmentId: form.value.departmentId || undefined,
       requiresApproval: form.value.requiresApproval,
+      requiresSubstituteSelection: form.value.requiresSubstituteSelection,
       estimatedProcessingDays: form.value.estimatedProcessingDays,
       passingScore: form.value.passingScore,
-      fields: form.value.fields,
+      fields: fieldsToSubmit,
       approvalStepTemplates: form.value.approvalStepTemplates,
       quizQuestions: quizQuestionsFormatted
     })
