@@ -46,11 +46,15 @@ const indentStyle = computed(() => {
 const getDepartmentHeadInitials = (name: string | null | undefined): string => {
   if (!name) return 'N/A'
 
-  const parts = name.trim().split(' ')
+  const parts = name.trim().split(' ').filter(p => p.length > 0)
   if (parts.length >= 2) {
-    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+    const first = parts[0]?.[0] || ''
+    const last = parts[parts.length - 1]?.[0] || ''
+    if (first && last) {
+      return `${first}${last}`.toUpperCase()
+    }
   }
-  return name.substring(0, 2).toUpperCase()
+  return name.substring(0, Math.min(2, name.length)).toUpperCase() || 'N/A'
 }
 
 // Get background color for avatar based on level
@@ -64,8 +68,8 @@ const getAvatarColor = (level: number): string => {
     'bg-indigo-500',
     'bg-teal-500',
     'bg-red-500'
-  ]
-  return colors[level % colors.length]
+  ] as const
+  return colors[level % colors.length] as string
 }
 
 // Handle action menu clicks

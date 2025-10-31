@@ -6,34 +6,33 @@ definePageMeta({
   middleware: ['auth', 'verified']
 })
 
-const { getOrganizationTree, getDepartments, getEmployees } = useMockData()
-
+// TODO: Replace with real API calls when organization/employees endpoints are available
 const viewMode = ref<'tree' | 'departments' | 'list'>('tree')
 const selectedDepartment = ref<number | null>(null)
 const searchQuery = ref<string>('')
 
-const organizationTree = getOrganizationTree()
-const departments = getDepartments()
-const allEmployees = getEmployees()
+const organizationTree = ref<any[]>([])
+const departments = ref<any[]>([])
+const allEmployees = ref<any[]>([])
 
 const selectedEmployee = ref<Employee | null>(null)
 const showEmployeeModal = ref(false)
 
 const filteredEmployees = computed(() => {
-  let filtered = allEmployees
+  let filtered = allEmployees.value
 
   if (selectedDepartment.value) {
-    filtered = filtered.filter(e => e.departmentId === selectedDepartment.value)
+    filtered = filtered.filter((e: any) => e.departmentId === selectedDepartment.value)
   }
 
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(e =>
-      e.firstName.toLowerCase().includes(query) ||
-      e.lastName.toLowerCase().includes(query) ||
-      e.email.toLowerCase().includes(query) ||
-      e.position?.name.toLowerCase().includes(query) ||
-      e.department?.name.toLowerCase().includes(query)
+    filtered = filtered.filter((e: any) =>
+      e.firstName?.toLowerCase().includes(query) ||
+      e.lastName?.toLowerCase().includes(query) ||
+      e.email?.toLowerCase().includes(query) ||
+      e.position?.name?.toLowerCase().includes(query) ||
+      e.department?.name?.toLowerCase().includes(query)
     )
   }
 
@@ -51,11 +50,11 @@ const closeEmployeeModal = () => {
 }
 
 const getInitials = (employee: Employee) => {
-  return `${employee.firstName[0]}${employee.lastName[0]}`
+  return `${employee.firstName?.[0] || ''}${employee.lastName?.[0] || ''}`
 }
 
 const getEmployeesByDepartment = (departmentId: number) => {
-  return allEmployees.filter(e => e.departmentId === departmentId)
+  return allEmployees.value.filter((e: any) => e.departmentId === departmentId)
 }
 
 

@@ -4,12 +4,11 @@ definePageMeta({
   middleware: ['auth', 'verified']
 })
 
-const { getDocuments, getDocumentsByCategory, searchDocuments } = useMockData()
-
+// TODO: Replace with real API calls when documents endpoint is available
 const selectedCategory = ref<string>('all')
 const searchQuery = ref<string>('')
 
-const allDocuments = getDocuments()
+const allDocuments = ref<any[]>([])
 
 const categories = [
   { value: 'all', label: 'Wszystkie' },
@@ -22,15 +21,18 @@ const categories = [
 ]
 
 const filteredDocuments = computed(() => {
-  let filtered = selectedCategory.value === 'all'
-    ? allDocuments
-    : getDocumentsByCategory(selectedCategory.value)
+  let filtered = allDocuments.value
+
+  if (selectedCategory.value !== 'all') {
+    filtered = filtered.filter((doc: any) => doc.category === selectedCategory.value)
+  }
 
   if (searchQuery.value) {
-    filtered = searchDocuments(searchQuery.value)
-    if (selectedCategory.value !== 'all') {
-      filtered = filtered.filter(doc => doc.category === selectedCategory.value)
-    }
+    const query = searchQuery.value.toLowerCase()
+    filtered = filtered.filter((doc: any) =>
+      doc.title?.toLowerCase().includes(query) ||
+      doc.description?.toLowerCase().includes(query)
+    )
   }
 
   return filtered

@@ -68,10 +68,10 @@ const getAvatarColor = (userId: string): string => {
     'bg-indigo-500',
     'bg-teal-500',
     'bg-red-500'
-  ]
+  ] as const
   // Simple hash function to get consistent color for user
   const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return colors[hash % colors.length]
+  return colors[hash % colors.length] as string
 }
 
 // Search users

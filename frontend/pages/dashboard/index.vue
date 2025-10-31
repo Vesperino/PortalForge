@@ -1,13 +1,32 @@
 <script setup lang="ts">
+import type { News } from '~/types'
+
 definePageMeta({
   layout: 'default',
   middleware: ['auth', 'verified']
 })
 
-const { getLatestNews, getUpcomingEvents } = useMockData()
+// Fetch real data from API
+const { fetchAllNews } = useNewsApi()
+const latestNews = ref<News[]>([])
+const upcomingEvents = ref<News[]>([])
+const loading = ref(true)
 
-const latestNews = getLatestNews(3)
-const upcomingEvents = getUpcomingEvents(5)
+onMounted(async () => {
+  try {
+    // Fetch latest news (not events)
+    const newsData = await fetchAllNews(undefined, undefined, false)
+    latestNews.value = newsData.slice(0, 3)
+
+    // Fetch upcoming events (isEvent=true)
+    const eventsData = await fetchAllNews(undefined, undefined, true)
+    upcomingEvents.value = eventsData.slice(0, 5)
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error)
+  } finally {
+    loading.value = false
+  }
+})
 
 const quickLinks = [
   {
@@ -279,12 +298,12 @@ const getCategoryLabel = (category: string) => {
           >
             <div class="flex gap-4">
               <!-- Date Badge -->
-              <div class="flex-shrink-0 w-14 h-14 bg-blue-600 rounded-lg flex flex-col items-center justify-center text-white">
+              <div v-if="event.eventDateTime" class="flex-shrink-0 w-14 h-14 bg-blue-600 rounded-lg flex flex-col items-center justify-center text-white">
                 <span class="text-xs font-medium">
-                  {{ new Intl.DateTimeFormat('pl-PL', { month: 'short' }).format(event.startDate) }}
+                  {{ new Intl.DateTimeFormat('pl-PL', { month: 'short' }).format(new Date(event.eventDateTime)) }}
                 </span>
                 <span class="text-xl font-bold">
-                  {{ event.startDate.getDate() }}
+                  {{ new Date(event.eventDateTime).getDate() }}
                 </span>
               </div>
 
@@ -293,24 +312,23 @@ const getCategoryLabel = (category: string) => {
                 <h3 class="font-semibold text-gray-900 dark:text-white mb-1 truncate">
                   {{ event.title }}
                 </h3>
-                <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                  {{ formatEventDate(event.startDate) }}
+                <p v-if="event.eventDateTime" class="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                  {{ formatEventDate(new Date(event.eventDateTime)) }}
                 </p>
                 <div class="flex flex-wrap gap-1">
                   <span
-                    v-for="tag in event.tags.slice(0, 2)"
-                    :key="tag"
-                    :class="getEventTagColor(tag)"
+                    v-if="event.eventHashtag"
+                    :class="getEventTagColor(event.eventHashtag)"
                     class="px-2 py-0.5 text-xs font-medium rounded-full"
                   >
-                    #{{ tag }}
+                    #{{ event.eventHashtag }}
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div v-if="upcomingEvents.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+          <div v-if="upcomingEvents.length === 0 && !loading" class="text-center py-8 text-gray-500 dark:text-gray-400">
             <svg class="mx-auto h-12 w-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>

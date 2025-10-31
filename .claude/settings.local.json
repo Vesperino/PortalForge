@@ -56,7 +56,8 @@
       "Bash(rm:*)",
       "Bash(/dev/null)",
       "Bash(findstr:*)",
-      "Bash(Select-String -Pattern \"niepowodzenie|powodzenie|łącznie\" -CaseSensitive)"
+      "Bash(Select-String -Pattern \"niepowodzenie|powodzenie|łącznie\" -CaseSensitive)",
+      "Bash(Select-String -Pattern \"powodzenie|niepowodzenie|łącznie\" -CaseSensitive)"
     ],
     "deny": [],
     "ask": []
