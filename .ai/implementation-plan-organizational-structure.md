@@ -666,7 +666,7 @@ foreach (var date in dateRange)
 
 ---
 
-#### [ ] Task 2.4: Substitute Routing in Approval
+#### [x] Task 2.4: Substitute Routing in Approval
 
 **File**: `backend/PortalForge.Application/UseCases/Requests/Commands/ApproveRequestStep/ApproveRequestStepCommandHandler.cs`
 

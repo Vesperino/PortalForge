@@ -10,13 +10,16 @@ public class ApproveRequestStepCommandHandler
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notificationService;
+    private readonly IVacationScheduleService _vacationService;
 
     public ApproveRequestStepCommandHandler(
         IUnitOfWork unitOfWork,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IVacationScheduleService vacationService)
     {
         _unitOfWork = unitOfWork;
         _notificationService = notificationService;
+        _vacationService = vacationService;
     }
 
     public async Task<ApproveRequestStepResult> Handle(
@@ -88,12 +91,23 @@ public class ApproveRequestStepCommandHandler
 
         if (nextStep != null)
         {
+            // Check if next approver is on vacation
+            var originalApproverId = nextStep.ApproverId;
+            var substitute = await _vacationService.GetActiveSubstituteAsync(originalApproverId);
+
+            if (substitute != null)
+            {
+                // Route to substitute instead
+                nextStep.ApproverId = substitute.Id;
+                nextStep.Comment = $"Routed to substitute for approver on vacation";
+            }
+
             // Move to next step
             nextStep.Status = ApprovalStepStatus.InReview;
             nextStep.StartedAt = DateTime.UtcNow;
             request.Status = RequestStatus.InReview;
 
-            // Notify next approver
+            // Notify next approver (original or substitute)
             await _notificationService.NotifyApproverAsync(nextStep.ApproverId, request);
         }
         else
