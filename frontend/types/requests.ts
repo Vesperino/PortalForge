@@ -18,6 +18,9 @@ export type NotificationType =
   | 'RequestCommented'
   | 'System'
   | 'Announcement'
+  | 'VacationCoverageAssigned'
+  | 'VacationCoverageStarted'
+  | 'VacationEnded'
 
 export interface RequestTemplateField {
   id?: string
