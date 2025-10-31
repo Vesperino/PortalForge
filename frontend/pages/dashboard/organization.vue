@@ -11,7 +11,7 @@ const viewMode = ref<'tree' | 'departments' | 'list'>('tree')
 const selectedDepartment = ref<number | null>(null)
 const searchQuery = ref<string>('')
 
-const organizationTree = ref<any[]>([])
+const organizationTree = ref<Employee | null>(null)
 const departments = ref<any[]>([])
 const allEmployees = ref<any[]>([])
 
@@ -321,11 +321,12 @@ const getEmployeesByDepartment = (departmentId: number) => {
               <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 Struktura organizacyjna - Hierarchia
               </h2>
-              <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              <p v-if="organizationTree" class="text-sm text-gray-600 dark:text-gray-400 mb-6">
                 CEO: {{ organizationTree.firstName }} {{ organizationTree.lastName }}
               </p>
 
               <OrganizationOrgTreeChart
+                v-if="organizationTree"
                 :employee="organizationTree"
                 :on-select-employee="selectEmployee"
                 @select-employee="selectEmployee"

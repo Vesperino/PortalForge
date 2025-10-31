@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { User } from '~/types/auth'
+
 definePageMeta({
   layout: 'default',
   middleware: ['auth', 'verified']
@@ -7,7 +9,7 @@ definePageMeta({
 const authStore = useAuthStore()
 
 // Use real user data from auth store
-const currentUser = computed(() => authStore.user)
+const currentUser = computed(() => authStore.user as User)
 
 if (!currentUser.value) {
   throw new Error('User not authenticated')
@@ -154,7 +156,7 @@ const logout = async () => {
         <!-- Avatar -->
         <div class="flex items-end -mt-16 mb-4">
           <div class="w-32 h-32 rounded-full bg-gray-300 dark:bg-gray-700 border-4 border-white dark:border-gray-800 flex items-center justify-center text-4xl font-bold text-white">
-            {{ user.firstName[0] }}{{ user.lastName[0] }}
+            {{ user.firstName?.[0] || '' }}{{ user.lastName?.[0] || '' }}
           </div>
           <div class="ml-4 mb-2">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">

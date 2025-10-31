@@ -126,7 +126,7 @@ const loadRequest = async () => {
   error.value = null
 
   try {
-    const data = await $fetch<Request>(`/api/requests/${requestId}`)
+    const data = await $fetch(`/api/requests/${requestId}`) as Request
     request.value = data
   } catch (err: any) {
     if (err.statusCode === 404) {
@@ -286,7 +286,7 @@ onMounted(() => {
             <div>
               <p class="text-gray-500 dark:text-gray-400">Wnioskodawca</p>
               <p class="font-medium text-gray-900 dark:text-white">
-                {{ request.employeeName }}
+                {{ request.submittedByName }}
               </p>
             </div>
             <div>

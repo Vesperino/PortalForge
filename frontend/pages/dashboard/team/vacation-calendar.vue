@@ -7,8 +7,8 @@ import VacationListView from '~/components/vacation/VacationListView.vue'
 
 // Meta tags
 definePageMeta({
-  middleware: ['auth', 'manager'],
-  layout: 'dashboard'
+  middleware: ['auth', 'verified'],
+  layout: 'default'
 })
 
 // Page title
@@ -52,9 +52,9 @@ const fetchCalendarData = async () => {
     const year = currentMonth.value.getFullYear()
     const month = currentMonth.value.getMonth() + 1
 
-    const response = await $fetch<VacationCalendar>(
+    const response = await $fetch(
       `/api/vacation-schedules/team?departmentId=${selectedDepartmentId.value}&year=${year}&month=${month}`
-    )
+    ) as VacationCalendar
 
     calendarData.value = response
   } catch (err: any) {
@@ -342,7 +342,7 @@ onMounted(() => {
               Alerty kolizji
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-500 truncate">
-              {{ calendarData.alerts[0].message }}
+              {{ calendarData.alerts[0]?.message || 'Brak alertów' }}
             </div>
           </div>
         </div>

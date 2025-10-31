@@ -74,7 +74,7 @@ const loadSubstitutions = async () => {
   error.value = null
 
   try {
-    const data = await $fetch<VacationSchedule[]>('/api/vacation-schedules/my-substitutions')
+    const data = await $fetch('/api/vacation-schedules/my-substitutions') as VacationSchedule[]
     substitutions.value = data
   } catch (err: any) {
     error.value = err.message || 'Nie udało się pobrać zastępstw'

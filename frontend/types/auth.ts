@@ -11,6 +11,10 @@ export interface User {
   mustChangePassword?: boolean
   role?: UserRole
   createdAt?: string
+  profilePhotoUrl?: string
+  subordinates?: User[]
+  supervisorId?: string
+  departmentId?: string
 }
 
 export enum UserRole {

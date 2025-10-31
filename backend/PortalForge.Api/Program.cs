@@ -29,6 +29,7 @@ builder.Services.AddCors(options =>
                   "https://krablab.pl",
                   "http://krablab.pl",
                   "http://localhost:3000",
+                  "http://localhost:3001",
                   "https://83.168.107.39",
                   "http://83.168.107.39")
               .AllowAnyHeader()

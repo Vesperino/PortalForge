@@ -71,21 +71,29 @@ const quickLinks = [
   }
 ]
 
-const formatDate = (date: Date) => {
+const formatDate = (date: Date | string) => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  if (isNaN(dateObj.getTime())) {
+    return 'Nieprawidłowa data'
+  }
   return new Intl.DateTimeFormat('pl-PL', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
-  }).format(date)
+  }).format(dateObj)
 }
 
-const formatEventDate = (date: Date) => {
+const formatEventDate = (date: Date | string) => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  if (isNaN(dateObj.getTime())) {
+    return 'Nieprawidłowa data'
+  }
   return new Intl.DateTimeFormat('pl-PL', {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
     minute: '2-digit'
-  }).format(date)
+  }).format(dateObj)
 }
 
 const getEventTagColor = (tag: string) => {
@@ -313,7 +321,7 @@ const getCategoryLabel = (category: string) => {
                   {{ event.title }}
                 </h3>
                 <p v-if="event.eventDateTime" class="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                  {{ formatEventDate(new Date(event.eventDateTime)) }}
+                  {{ formatEventDate(event.eventDateTime) }}
                 </p>
                 <div class="flex flex-wrap gap-1">
                   <span
