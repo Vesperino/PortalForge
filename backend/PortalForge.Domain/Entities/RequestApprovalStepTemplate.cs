@@ -43,6 +43,13 @@ public class RequestApprovalStepTemplate
     public RoleGroup? ApproverGroup { get; set; }
 
     /// <summary>
+    /// For ApproverType.SpecificDepartment: The department whose head must approve.
+    /// Null for other approver types.
+    /// </summary>
+    public Guid? SpecificDepartmentId { get; set; }
+    public Department? SpecificDepartment { get; set; }
+
+    /// <summary>
     /// Whether this step requires completing a quiz before approval.
     /// </summary>
     public bool RequiresQuiz { get; set; } = false;
