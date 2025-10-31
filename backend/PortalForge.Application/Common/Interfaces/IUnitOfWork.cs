@@ -16,6 +16,7 @@ public interface IUnitOfWork : IDisposable
     IRequestTemplateRepository RequestTemplateRepository { get; }
     IRequestRepository RequestRepository { get; }
     INotificationRepository NotificationRepository { get; }
+    IDepartmentRepository DepartmentRepository { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

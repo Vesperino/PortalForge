@@ -22,6 +22,7 @@ public class UnitOfWork : IUnitOfWork
     private IRequestTemplateRepository? _requestTemplateRepository;
     private IRequestRepository? _requestRepository;
     private INotificationRepository? _notificationRepository;
+    private IDepartmentRepository? _departmentRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -63,6 +64,9 @@ public class UnitOfWork : IUnitOfWork
 
     public INotificationRepository NotificationRepository =>
         _notificationRepository ??= new NotificationRepository(_context);
+
+    public IDepartmentRepository DepartmentRepository =>
+        _departmentRepository ??= new DepartmentRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {
