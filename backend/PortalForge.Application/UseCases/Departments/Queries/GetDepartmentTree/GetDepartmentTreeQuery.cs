@@ -12,4 +12,10 @@ public class GetDepartmentTreeQuery : IRequest<List<DepartmentTreeDto>>
     /// Whether to include inactive departments in the tree.
     /// </summary>
     public bool IncludeInactive { get; set; } = false;
+
+    /// <summary>
+    /// Optional user ID for filtering departments based on organizational permissions.
+    /// If not provided, all departments will be returned (for admins/anonymous).
+    /// </summary>
+    public Guid? UserId { get; set; }
 }

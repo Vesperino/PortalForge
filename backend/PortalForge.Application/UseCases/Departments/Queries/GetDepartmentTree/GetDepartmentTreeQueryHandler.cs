@@ -27,7 +27,8 @@ public class GetDepartmentTreeQueryHandler
         GetDepartmentTreeQuery request,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Getting department tree (IncludeInactive: {IncludeInactive})", request.IncludeInactive);
+        _logger.LogInformation("Getting department tree (IncludeInactive: {IncludeInactive}, UserId: {UserId})",
+            request.IncludeInactive, request.UserId);
 
         // 1. Get all departments
         var allDepartments = await _unitOfWork.DepartmentRepository.GetAllAsync();
@@ -36,6 +37,47 @@ public class GetDepartmentTreeQueryHandler
         var departments = request.IncludeInactive
             ? allDepartments.ToList()
             : allDepartments.Where(d => d.IsActive).ToList();
+
+        // 3. Filter by organizational permissions if UserId is provided
+        if (request.UserId.HasValue)
+        {
+            var permission = await _unitOfWork.OrganizationalPermissionRepository.GetByUserIdAsync(request.UserId.Value);
+
+            if (permission != null && !permission.CanViewAllDepartments)
+            {
+                // User can only see specific departments
+                var visibleDepartmentIds = permission.GetVisibleDepartmentIds();
+
+                _logger.LogInformation("User {UserId} can view {Count} departments",
+                    request.UserId.Value, visibleDepartmentIds.Count);
+
+                // Filter departments to only those the user can see (including parents for tree structure)
+                var visibleWithParents = new HashSet<Guid>(visibleDepartmentIds);
+
+                // Add all parent departments to maintain tree structure
+                foreach (var deptId in visibleDepartmentIds)
+                {
+                    var dept = departments.FirstOrDefault(d => d.Id == deptId);
+                    if (dept != null)
+                    {
+                        AddParentDepartments(dept, departments, visibleWithParents);
+                    }
+                }
+
+                departments = departments.Where(d => visibleWithParents.Contains(d.Id)).ToList();
+
+                _logger.LogInformation("After permission filtering: {Count} departments visible", departments.Count);
+            }
+            else if (permission == null)
+            {
+                _logger.LogWarning("User {UserId} has no organizational permission, returning empty tree", request.UserId.Value);
+                return new List<DepartmentTreeDto>();
+            }
+            else
+            {
+                _logger.LogInformation("User {UserId} can view all departments", request.UserId.Value);
+            }
+        }
 
         if (!departments.Any())
         {
@@ -107,5 +149,24 @@ public class GetDepartmentTreeQueryHandler
         }
 
         return dto;
+    }
+
+    /// <summary>
+    /// Recursively adds all parent departments to the visible set to maintain tree structure.
+    /// </summary>
+    private void AddParentDepartments(
+        Department department,
+        List<Department> allDepartments,
+        HashSet<Guid> visibleSet)
+    {
+        if (department.ParentDepartmentId.HasValue)
+        {
+            var parent = allDepartments.FirstOrDefault(d => d.Id == department.ParentDepartmentId.Value);
+            if (parent != null && !visibleSet.Contains(parent.Id))
+            {
+                visibleSet.Add(parent.Id);
+                AddParentDepartments(parent, allDepartments, visibleSet);
+            }
+        }
     }
 }

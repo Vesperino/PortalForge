@@ -36,6 +36,18 @@ public class DepartmentsController : ControllerBase
     public async Task<ActionResult<List<DepartmentTreeDto>>> GetTree()
     {
         var query = new GetDepartmentTreeQuery();
+
+        // Try to get user ID from JWT claims if user is authenticated
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var userIdClaim = User.FindFirst("sub") ?? User.FindFirst("userId") ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
+            {
+                query.UserId = userId;
+                _logger.LogInformation("Fetching department tree for user {UserId}", userId);
+            }
+        }
+
         var result = await _mediator.Send(query);
         return Ok(result);
     }
