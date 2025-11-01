@@ -66,8 +66,10 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
 
         // Update user with additional information
         user.Department = request.Department;
+        user.DepartmentId = request.DepartmentId;
         user.Position = request.Position;
         user.PhoneNumber = request.PhoneNumber;
+        user.ProfilePhotoUrl = request.ProfilePhotoUrl;
         user.Role = userRole;
         user.MustChangePassword = request.MustChangePassword;
 

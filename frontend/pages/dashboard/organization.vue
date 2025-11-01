@@ -158,7 +158,7 @@ const convertDepartmentToOrgChart = (dept: DepartmentTreeDto): OrganizationChart
   departmentLookup.set(nodeKey, dept)
 
   const manager = getManagerByDepartment(dept)
-  const employeeCount = getEmployeesByDepartment(dept.id).length
+  const employees = dept.employees || []
 
   const node: OrganizationChartNode = {
     key: nodeKey,
@@ -168,10 +168,35 @@ const convertDepartmentToOrgChart = (dept: DepartmentTreeDto): OrganizationChart
       name: dept.name,
       description: dept.description,
       manager: manager ? `${manager.firstName} ${manager.lastName}` : 'Brak kierownika',
-      employeeCount: employeeCount,
+      employeeCount: employees.length,
       level: dept.level
     },
-    children: dept.children?.map(child => convertDepartmentToOrgChart(child)) || []
+    children: []
+  }
+
+  // Add employees as children (excluding department head as separate node if they're in the department)
+  employees.forEach(emp => {
+    node.children?.push({
+      key: `emp-${emp.id}`,
+      type: 'employee',
+      data: {
+        id: emp.id,
+        firstName: emp.firstName,
+        lastName: emp.lastName,
+        position: emp.position,
+        email: emp.email,
+        profilePhotoUrl: emp.profilePhotoUrl,
+        isHead: dept.departmentHeadId === emp.id
+      },
+      children: []
+    })
+  })
+
+  // Add child departments
+  if (dept.children && dept.children.length > 0) {
+    dept.children.forEach(child => {
+      node.children?.push(convertDepartmentToOrgChart(child))
+    })
   }
 
   return node
@@ -510,6 +535,31 @@ const handleDepartmentNodeClick = (event: any) => {
                     </div>
                   </div>
                 </template>
+
+                <template #employee="slotProps">
+                  <div class="employee-node">
+                    <div class="employee-avatar">
+                      <img
+                        v-if="slotProps.node.data.profilePhotoUrl"
+                        :src="slotProps.node.data.profilePhotoUrl"
+                        :alt="`${slotProps.node.data.firstName} ${slotProps.node.data.lastName}`"
+                        class="employee-avatar-img"
+                      />
+                      <span v-else>
+                        {{ slotProps.node.data.firstName[0] }}{{ slotProps.node.data.lastName[0] }}
+                      </span>
+                    </div>
+                    <div class="employee-name">
+                      {{ slotProps.node.data.firstName }} {{ slotProps.node.data.lastName }}
+                    </div>
+                    <div class="employee-position">
+                      {{ slotProps.node.data.position || 'Brak stanowiska' }}
+                    </div>
+                    <div v-if="slotProps.node.data.isHead" class="employee-head-badge">
+                      Kierownik
+                    </div>
+                  </div>
+                </template>
               </OrganizationChart>
             </div>
           </div>
@@ -845,6 +895,74 @@ const handleDepartmentNodeClick = (event: any) => {
   background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
 }
 
+/* Employee Node Styling */
+.employee-node {
+  min-width: 180px;
+  padding: 14px;
+  margin: 8px;
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  border: 2px solid #374151;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(107, 114, 128, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  color: white;
+}
+
+.employee-node:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(107, 114, 128, 0.3);
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+}
+
+.employee-avatar {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+}
+
+.employee-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.employee-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.employee-position {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.employee-head-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  display: inline-block;
+  margin-top: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
 .department-name {
   font-size: 1.1rem;
   font-weight: 700;
@@ -909,6 +1027,11 @@ const handleDepartmentNodeClick = (event: any) => {
 :global(.dark) .department-node {
   background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
   border-color: #1d4ed8;
+}
+
+:global(.dark) .employee-node {
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+  border-color: #6b7280;
 }
 
 :global(.dark) :deep(.p-organizationchart-connector-down) {

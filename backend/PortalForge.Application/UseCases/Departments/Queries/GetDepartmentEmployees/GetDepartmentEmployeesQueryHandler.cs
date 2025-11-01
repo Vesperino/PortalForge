@@ -50,6 +50,7 @@ public class GetDepartmentEmployeesQueryHandler : IRequestHandler<GetDepartmentE
             LastName = e.LastName,
             Email = e.Email,
             Position = e.Position,
+            ProfilePhotoUrl = e.ProfilePhotoUrl,
             DepartmentId = department.Id, // Use department ID from parent
             DepartmentName = department.Name,
             IsActive = e.IsActive

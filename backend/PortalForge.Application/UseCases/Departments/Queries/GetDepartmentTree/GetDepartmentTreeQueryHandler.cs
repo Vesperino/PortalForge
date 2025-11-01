@@ -89,7 +89,10 @@ public class GetDepartmentTreeQueryHandler
                 LastName = e.LastName,
                 Position = e.Position,
                 Email = e.Email,
-                IsActive = e.IsActive
+                ProfilePhotoUrl = e.ProfilePhotoUrl,
+                IsActive = e.IsActive,
+                DepartmentId = e.DepartmentId ?? Guid.Empty,
+                DepartmentName = department.Name
             }).ToList() ?? new List<EmployeeDto>()
         };
 

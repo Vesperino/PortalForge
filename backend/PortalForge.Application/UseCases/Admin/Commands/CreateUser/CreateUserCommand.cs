@@ -10,8 +10,10 @@ public class CreateUserCommand : IRequest<CreateUserResult>, ITransactionalReque
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Department { get; set; } = string.Empty;
+    public Guid? DepartmentId { get; set; }
     public string Position { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
+    public string? ProfilePhotoUrl { get; set; }
     public string Role { get; set; } = "Employee";
     public List<Guid> RoleGroupIds { get; set; } = new();
     public bool MustChangePassword { get; set; } = true;

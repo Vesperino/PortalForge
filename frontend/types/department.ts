@@ -48,6 +48,7 @@ export interface EmployeeDto {
   lastName: string
   email: string
   position: string | null
+  profilePhotoUrl: string | null
   departmentId: string
   isActive: boolean
 }

@@ -38,19 +38,6 @@ public class DepartmentTreeDto
 }
 
 /// <summary>
-/// DTO for employee information in tree view.
-/// </summary>
-public class EmployeeDto
-{
-    public Guid Id { get; set; }
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string? Position { get; set; }
-    public string Email { get; set; } = string.Empty;
-    public bool IsActive { get; set; }
-}
-
-/// <summary>
 /// DTO for creating a new department.
 /// </summary>
 public class CreateDepartmentDto
