@@ -34,6 +34,20 @@ public class DepartmentTreeDto
     public int Level { get; set; }
     public int EmployeeCount { get; set; }
     public List<DepartmentTreeDto> Children { get; set; } = new();
+    public List<EmployeeDto> Employees { get; set; } = new();
+}
+
+/// <summary>
+/// DTO for employee information in tree view.
+/// </summary>
+public class EmployeeDto
+{
+    public Guid Id { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string? Position { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
 }
 
 /// <summary>

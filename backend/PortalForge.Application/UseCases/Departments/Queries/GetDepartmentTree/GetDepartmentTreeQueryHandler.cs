@@ -81,7 +81,16 @@ public class GetDepartmentTreeQueryHandler
             IsActive = department.IsActive,
             Level = level,
             EmployeeCount = department.Employees?.Count ?? 0,
-            Children = new List<DepartmentTreeDto>()
+            Children = new List<DepartmentTreeDto>(),
+            Employees = department.Employees?.Select(e => new EmployeeDto
+            {
+                Id = e.Id,
+                FirstName = e.FirstName,
+                LastName = e.LastName,
+                Position = e.Position,
+                Email = e.Email,
+                IsActive = e.IsActive
+            }).ToList() ?? new List<EmployeeDto>()
         };
 
         // Find and build children recursively

@@ -302,6 +302,45 @@ onUnmounted(() => {
       </div>
     </div>
 
+    <!-- Employees List -->
+    <div
+      v-if="isExpanded && department.employees && department.employees.length > 0"
+      class="employees-list ml-12 mt-2"
+    >
+      <div
+        v-for="employee in department.employees"
+        :key="employee.id"
+        class="employee-item flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-lg transition-colors"
+        :style="indentStyle"
+      >
+        <!-- Employee Icon -->
+        <div
+          class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold"
+          :class="getAvatarColor(level + 1)"
+        >
+          {{ employee.firstName[0] }}{{ employee.lastName[0] }}
+        </div>
+
+        <!-- Employee Info -->
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+            {{ employee.firstName }} {{ employee.lastName }}
+          </p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+            {{ employee.position || 'Brak stanowiska' }}
+          </p>
+        </div>
+
+        <!-- Badge if department head -->
+        <span
+          v-if="department.departmentHeadId === employee.id"
+          class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+        >
+          Kierownik
+        </span>
+      </div>
+    </div>
+
     <!-- Children Departments (Recursive) -->
     <div
       v-if="hasChildren && isExpanded"

@@ -8,6 +8,7 @@ interface User {
   lastName: string
   email: string
   position: string | null
+  department: string | null
   departmentId: string | null
 }
 
@@ -300,7 +301,7 @@ onUnmounted(() => {
               {{ getUserFullName(user) }}
             </p>
             <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
-              {{ user.position || 'Brak stanowiska' }}
+              {{ user.department || 'Nie przypisany do działu' }}
             </p>
           </div>
         </div>
@@ -337,7 +338,7 @@ onUnmounted(() => {
           {{ getUserFullName(internalSelectedUser) }}
         </p>
         <p class="text-sm text-gray-600 dark:text-gray-400 truncate">
-          {{ internalSelectedUser.position || 'Brak stanowiska' }}
+          {{ internalSelectedUser.department || 'Nie przypisany do działu' }}
         </p>
       </div>
 

@@ -24,6 +24,7 @@ export interface DepartmentTreeDto {
   level: number
   employeeCount: number
   children: DepartmentTreeDto[]
+  employees: EmployeeDto[]
 }
 
 export interface CreateDepartmentDto {
