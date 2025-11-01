@@ -186,7 +186,8 @@ const handleEdit = async (departmentId: string) => {
       name: department.name,
       description: department.description,
       parentDepartmentId: department.parentDepartmentId,
-      departmentHeadId: department.departmentHeadId
+      departmentHeadId: department.departmentHeadId,
+      isActive: department.isActive
     }
 
     // Find and set selected department head

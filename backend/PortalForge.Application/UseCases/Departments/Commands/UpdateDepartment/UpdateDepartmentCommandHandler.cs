@@ -28,7 +28,8 @@ public class UpdateDepartmentCommandHandler : IRequestHandler<UpdateDepartmentCo
         UpdateDepartmentCommand request,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Updating department: {DepartmentId}", request.DepartmentId);
+        _logger.LogInformation("Updating department: {DepartmentId}, ParentId: {ParentDepartmentId}, HeadId: {HeadOfDepartmentId}, IsActive: {IsActive}",
+            request.DepartmentId, request.ParentDepartmentId, request.DepartmentHeadId, request.IsActive);
 
         // 1. Validate the command
         await _validatorService.ValidateAsync(request);
@@ -41,6 +42,9 @@ public class UpdateDepartmentCommandHandler : IRequestHandler<UpdateDepartmentCo
             _logger.LogWarning("Department not found: {DepartmentId}", request.DepartmentId);
             throw new NotFoundException($"Department with ID {request.DepartmentId} not found");
         }
+
+        _logger.LogInformation("Current department state - Name: {Name}, ParentId: {ParentId}, HeadId: {HeadId}",
+            department.Name, department.ParentDepartmentId, department.HeadOfDepartmentId);
 
         // 3. Update properties
         department.Name = request.Name;

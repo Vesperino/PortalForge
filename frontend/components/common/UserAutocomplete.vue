@@ -13,6 +13,7 @@ interface User {
 
 interface Props {
   modelValue?: string | null
+  selectedUser?: User | null
   departmentId?: string | null
   placeholder?: string
   required?: boolean
@@ -20,6 +21,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
+  selectedUser: null,
   departmentId: null,
   placeholder: 'Wpisz imię lub nazwisko...',
   required: false
@@ -27,6 +29,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 interface Emits {
   (e: 'update:modelValue', userId: string | null): void
+  (e: 'update:selectedUser', user: User | null): void
   (e: 'select', user: User | null): void
 }
 
@@ -50,7 +53,7 @@ const getAuthHeaders = (): Record<string, string> | undefined => {
 // State
 const searchQuery = ref('')
 const results = ref<User[]>([])
-const selectedUser = ref<User | null>(null)
+const internalSelectedUser = ref<User | null>(props.selectedUser || null)
 const isOpen = ref(false)
 const isLoading = ref(false)
 const highlightedIndex = ref(-1)
@@ -61,6 +64,14 @@ const dropdownRef = ref<HTMLDivElement | null>(null)
 
 // Debounced search
 let searchTimeout: NodeJS.Timeout | null = null
+
+// Watch for external changes to selectedUser prop
+watch(
+  () => props.selectedUser,
+  (newUser) => {
+    internalSelectedUser.value = newUser
+  }
+)
 
 // Full name computed
 const getUserFullName = (user: User): string => {
@@ -135,21 +146,23 @@ const handleInput = () => {
 
 // Select user
 const selectUser = (user: User) => {
-  selectedUser.value = user
+  internalSelectedUser.value = user
   searchQuery.value = ''
   results.value = []
   isOpen.value = false
   emit('update:modelValue', user.id)
+  emit('update:selectedUser', user)
   emit('select', user)
 }
 
 // Clear selection
 const clearSelection = () => {
-  selectedUser.value = null
+  internalSelectedUser.value = null
   searchQuery.value = ''
   results.value = []
   isOpen.value = false
   emit('update:modelValue', null)
+  emit('update:selectedUser', null)
   emit('select', null)
 }
 
@@ -199,16 +212,18 @@ const handleKeydown = (event: KeyboardEvent) => {
 watch(
   () => props.modelValue,
   async (newValue) => {
-    if (newValue && !selectedUser.value) {
+    if (newValue && !internalSelectedUser.value) {
       // Load user by ID if modelValue is provided but no user is selected
       try {
-        const user = await $fetch<User>(`/api/users/${newValue}`)
-        selectedUser.value = user
+        const user = await $fetch<User>(`${apiUrl}/api/users/${newValue}`, {
+          headers: getAuthHeaders()
+        })
+        internalSelectedUser.value = user
       } catch (err) {
         console.error('Error loading user:', err)
       }
     } else if (!newValue) {
-      selectedUser.value = null
+      internalSelectedUser.value = null
     }
   },
   { immediate: true }
@@ -228,7 +243,7 @@ onUnmounted(() => {
 <template>
   <div class="user-autocomplete">
     <!-- Search Input (shown when no user is selected) -->
-    <div v-if="!selectedUser" class="relative">
+    <div v-if="!internalSelectedUser" class="relative">
       <input
         ref="inputRef"
         v-model="searchQuery"
@@ -311,18 +326,18 @@ onUnmounted(() => {
       <!-- Avatar -->
       <div
         class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0"
-        :class="getAvatarColor(selectedUser.id)"
+        :class="getAvatarColor(internalSelectedUser.id)"
       >
-        {{ getUserInitials(selectedUser) }}
+        {{ getUserInitials(internalSelectedUser) }}
       </div>
 
       <!-- User Info -->
       <div class="flex-1 min-w-0">
         <p class="font-medium text-gray-900 dark:text-white truncate">
-          {{ getUserFullName(selectedUser) }}
+          {{ getUserFullName(internalSelectedUser) }}
         </p>
         <p class="text-sm text-gray-600 dark:text-gray-400 truncate">
-          {{ selectedUser.position || 'Brak stanowiska' }}
+          {{ internalSelectedUser.position || 'Brak stanowiska' }}
         </p>
       </div>
 
