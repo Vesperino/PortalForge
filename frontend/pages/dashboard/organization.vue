@@ -387,8 +387,16 @@ const handleDepartmentNodeClick = (event: any) => {
                 class="flex items-center gap-3 cursor-pointer"
                 @click="selectEmployee(getManagerByDepartment(dept))"
               >
-                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-                  {{ getInitials(getManagerByDepartment(dept)) }}
+                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
+                  <img
+                    v-if="getManagerByDepartment(dept).profilePhotoUrl"
+                    :src="getManagerByDepartment(dept).profilePhotoUrl"
+                    :alt="`${getManagerByDepartment(dept).firstName} ${getManagerByDepartment(dept).lastName}`"
+                    class="w-full h-full object-cover"
+                  />
+                  <span v-else>
+                    {{ getInitials(getManagerByDepartment(dept)) }}
+                  </span>
                 </div>
                 <div>
                   <p class="font-medium text-gray-900 dark:text-white">
@@ -409,8 +417,16 @@ const handleDepartmentNodeClick = (event: any) => {
                 class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                 @click="selectEmployee(employee)"
               >
-                <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 font-semibold text-sm">
-                  {{ getInitials(employee) }}
+                <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 font-semibold text-sm overflow-hidden">
+                  <img
+                    v-if="employee.profilePhotoUrl"
+                    :src="employee.profilePhotoUrl"
+                    :alt="`${employee.firstName} ${employee.lastName}`"
+                    class="w-full h-full object-cover"
+                  />
+                  <span v-else>
+                    {{ getInitials(employee) }}
+                  </span>
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="font-medium text-gray-900 dark:text-white truncate text-sm">
@@ -457,8 +473,16 @@ const handleDepartmentNodeClick = (event: any) => {
                 >
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-                        {{ getInitials(employee) }}
+                      <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm overflow-hidden">
+                        <img
+                          v-if="employee.profilePhotoUrl"
+                          :src="employee.profilePhotoUrl"
+                          :alt="`${employee.firstName} ${employee.lastName}`"
+                          class="w-full h-full object-cover"
+                        />
+                        <span v-else>
+                          {{ getInitials(employee) }}
+                        </span>
                       </div>
                       <div>
                         <p class="font-medium text-gray-900 dark:text-white">
