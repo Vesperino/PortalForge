@@ -17,6 +17,7 @@ public interface IUnitOfWork : IDisposable
     IRequestRepository RequestRepository { get; }
     INotificationRepository NotificationRepository { get; }
     IDepartmentRepository DepartmentRepository { get; }
+    IPositionRepository PositionRepository { get; }
     IVacationScheduleRepository VacationScheduleRepository { get; }
     IOrganizationalPermissionRepository OrganizationalPermissionRepository { get; }
 

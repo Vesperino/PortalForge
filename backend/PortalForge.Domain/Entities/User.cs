@@ -25,6 +25,10 @@ public class User
     public Guid? DepartmentId { get; set; }
     public Department? DepartmentEntity { get; set; }
 
+    // Link to Position entity
+    public Guid? PositionId { get; set; }
+    public Position? PositionEntity { get; set; }
+
     public string? PhoneNumber { get; set; }
     public string? ProfilePhotoUrl { get; set; }
 

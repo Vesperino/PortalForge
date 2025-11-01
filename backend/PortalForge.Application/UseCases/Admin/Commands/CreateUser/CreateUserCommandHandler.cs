@@ -75,6 +75,43 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
 
         await _unitOfWork.UserRepository.UpdateAsync(user);
 
+        // Auto-create organizational permission if user has a department
+        if (request.DepartmentId.HasValue)
+        {
+            var existingPermission = await _unitOfWork.OrganizationalPermissionRepository.GetByUserIdAsync(user.Id);
+
+            if (existingPermission == null)
+            {
+                // Create new permission with access to user's department
+                var permission = new OrganizationalPermission
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    CanViewAllDepartments = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                permission.SetVisibleDepartmentIds(new List<Guid> { request.DepartmentId.Value });
+
+                await _unitOfWork.OrganizationalPermissionRepository.CreateAsync(permission);
+                _logger.LogInformation("Auto-created organizational permission for user {UserId} to view department {DepartmentId}",
+                    user.Id, request.DepartmentId.Value);
+            }
+            else
+            {
+                // Update existing permission to include new department
+                var visibleDepts = existingPermission.GetVisibleDepartmentIds();
+                if (!visibleDepts.Contains(request.DepartmentId.Value))
+                {
+                    visibleDepts.Add(request.DepartmentId.Value);
+                    existingPermission.SetVisibleDepartmentIds(visibleDepts);
+                    existingPermission.UpdatedAt = DateTime.UtcNow;
+                    await _unitOfWork.OrganizationalPermissionRepository.UpdateAsync(existingPermission);
+                    _logger.LogInformation("Updated organizational permission for user {UserId} to include department {DepartmentId}",
+                        user.Id, request.DepartmentId.Value);
+                }
+            }
+        }
+
         // Assign role groups
         foreach (var roleGroupId in request.RoleGroupIds)
         {

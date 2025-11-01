@@ -37,6 +37,7 @@ public class ApplicationDbContext : DbContext
 
     // Organizational Structure
     public DbSet<Department> Departments { get; set; }
+    public DbSet<Position> Positions { get; set; }
     public DbSet<VacationSchedule> VacationSchedules { get; set; }
     public DbSet<OrganizationalPermission> OrganizationalPermissions { get; set; }
 
@@ -66,6 +67,7 @@ public class ApplicationDbContext : DbContext
 
         // Organizational Structure
         modelBuilder.ApplyConfiguration(new DepartmentConfiguration());
+        modelBuilder.ApplyConfiguration(new PositionConfiguration());
         modelBuilder.ApplyConfiguration(new VacationScheduleConfiguration());
         modelBuilder.ApplyConfiguration(new OrganizationalPermissionConfiguration());
 

@@ -23,6 +23,7 @@ public class UnitOfWork : IUnitOfWork
     private IRequestRepository? _requestRepository;
     private INotificationRepository? _notificationRepository;
     private IDepartmentRepository? _departmentRepository;
+    private IPositionRepository? _positionRepository;
     private IVacationScheduleRepository? _vacationScheduleRepository;
     private IOrganizationalPermissionRepository? _organizationalPermissionRepository;
 
@@ -69,6 +70,9 @@ public class UnitOfWork : IUnitOfWork
 
     public IDepartmentRepository DepartmentRepository =>
         _departmentRepository ??= new DepartmentRepository(_context);
+
+    public IPositionRepository PositionRepository =>
+        _positionRepository ??= new PositionRepository(_context);
 
     public IVacationScheduleRepository VacationScheduleRepository =>
         _vacationScheduleRepository ??= new VacationScheduleRepository(_context);

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Exceptions;
+using PortalForge.Domain.Entities;
 
 namespace PortalForge.Application.UseCases.Users.Commands.BulkAssignDepartment;
 
@@ -45,6 +46,36 @@ public class BulkAssignDepartmentCommandHandler : IRequestHandler<BulkAssignDepa
             {
                 employee.DepartmentId = request.DepartmentId;
                 await _unitOfWork.UserRepository.UpdateAsync(employee);
+
+                // Auto-update organizational permission to grant access to new department
+                var permission = await _unitOfWork.OrganizationalPermissionRepository.GetByUserIdAsync(employeeId);
+
+                if (permission == null)
+                {
+                    // Create new permission
+                    permission = new OrganizationalPermission
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = employeeId,
+                        CanViewAllDepartments = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    permission.SetVisibleDepartmentIds(new List<Guid> { request.DepartmentId });
+                    await _unitOfWork.OrganizationalPermissionRepository.CreateAsync(permission);
+                }
+                else
+                {
+                    // Update existing permission
+                    var visibleDepts = permission.GetVisibleDepartmentIds();
+                    if (!visibleDepts.Contains(request.DepartmentId))
+                    {
+                        visibleDepts.Add(request.DepartmentId);
+                        permission.SetVisibleDepartmentIds(visibleDepts);
+                        permission.UpdatedAt = DateTime.UtcNow;
+                        await _unitOfWork.OrganizationalPermissionRepository.UpdateAsync(permission);
+                    }
+                }
+
                 updatedCount++;
             }
             else
