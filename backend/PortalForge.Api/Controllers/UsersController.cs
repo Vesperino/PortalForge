@@ -106,6 +106,7 @@ public class UsersController : ControllerBase
             FirstName = request.FirstName,
             LastName = request.LastName,
             Department = request.Department,
+            DepartmentId = request.DepartmentId,
             Position = request.Position,
             PhoneNumber = request.PhoneNumber,
             Role = request.Role,
@@ -153,6 +154,7 @@ public class UpdateUserRequest
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Department { get; set; } = string.Empty;
+    public Guid? DepartmentId { get; set; }
     public string Position { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
     public string Role { get; set; } = string.Empty;

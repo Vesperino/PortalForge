@@ -73,12 +73,7 @@ function countDepartments(departments: DepartmentTreeDto[]): number {
 }
 
 // Get auth headers
-function getAuthHeaders() {
-  const token = useCookie('auth_token')
-  return {
-    'Authorization': `Bearer ${token.value}`
-  }
-}
+const { getAuthHeaders } = useAuth()
 
 // Load department tree
 const loadDepartmentTree = async () => {
@@ -100,7 +95,6 @@ const loadAllUsers = async () => {
       headers: getAuthHeaders()
     }) as any
 
-    // API returns paginated response with 'users' field
     if (response && response.users && Array.isArray(response.users)) {
       allUsers.value = response.users as User[]
     } else if (Array.isArray(response)) {
@@ -336,24 +330,24 @@ const assignUserToDepartment = async (departmentId: string) => {
     const user = allUsers.value.find(u => u.id === assigningUserId.value)
     if (!user) return
 
-    // Update user with department
     await $fetch(`${apiUrl}/api/admin/users/${user.id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: {
         firstName: user.firstName,
         lastName: user.lastName,
-        department: departmentId, // This will need to be updated to departmentId once backend is fixed
+        department: user.department || '',
+        departmentId: departmentId,
         position: user.position || '',
         phoneNumber: user.phoneNumber,
         role: user.role,
         roleGroupIds: [],
         isActive: user.isActive,
-        updatedBy: user.id // Current user
+        updatedBy: user.id
       }
     })
 
-    await loadAllUsers()
+    await loadData()
     showAssignModal.value = false
     assigningUserId.value = null
   } catch (err: any) {
@@ -545,7 +539,7 @@ onMounted(() => {
     <!-- Department Structure Tab -->
     <div v-else-if="activeTab === 'structure'">
       <div v-if="departmentTree.length > 0" class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-        <DepartmentTree
+        <AdminDepartmentTree
           v-for="department in departmentTree"
           :key="department.id"
           :department="department"
@@ -721,7 +715,7 @@ onMounted(() => {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Kierownik działu
             </label>
-            <UserAutocomplete
+            <CommonUserAutocomplete
               :selected-user="selectedDepartmentHead"
               placeholder="Wyszukaj kierownika po imieniu, nazwisku lub email"
               @update:selected-user="handleDepartmentHeadSelected"
@@ -794,7 +788,7 @@ onMounted(() => {
 
           <!-- Department Tree for Selection -->
           <div class="space-y-2">
-            <DepartmentTree
+            <AdminDepartmentTree
               v-for="department in departmentTree"
               :key="department.id"
               :department="department"

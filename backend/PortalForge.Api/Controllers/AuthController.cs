@@ -23,12 +23,18 @@ public class AuthController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ILogger<AuthController> _logger;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IWebHostEnvironment _environment;
 
-    public AuthController(IMediator mediator, ILogger<AuthController> logger, IUnitOfWork unitOfWork)
+    public AuthController(
+        IMediator mediator,
+        ILogger<AuthController> logger,
+        IUnitOfWork unitOfWork,
+        IWebHostEnvironment environment)
     {
         _mediator = mediator;
         _logger = logger;
         _unitOfWork = unitOfWork;
+        _environment = environment;
     }
 
     [HttpPost("register")]
@@ -80,6 +86,7 @@ public class AuthController : ControllerBase
                 LastName = user.LastName,
                 PhoneNumber = user.PhoneNumber,
                 Department = user.Department,
+                DepartmentId = user.DepartmentId,
                 Position = user.Position,
                 Role = user.Role.ToString().ToLower(),
                 IsEmailVerified = user.IsEmailVerified,
@@ -195,6 +202,7 @@ public class AuthController : ControllerBase
             LastName = user.LastName,
             PhoneNumber = user.PhoneNumber,
             Department = user.Department,
+            DepartmentId = user.DepartmentId,
             Position = user.Position,
             Role = user.Role.ToString().ToLower(),
             IsEmailVerified = user.IsEmailVerified,
@@ -246,8 +254,10 @@ public class AuthController : ControllerBase
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            // Secure = true only in production (HTTPS), false in development (HTTP)
+            Secure = _environment.IsProduction(),
+            // SameSite = Lax for development, Strict for production
+            SameSite = _environment.IsProduction() ? SameSiteMode.Strict : SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         };
 

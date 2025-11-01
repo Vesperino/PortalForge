@@ -4,13 +4,13 @@ using PortalForge.Application.DTOs;
 namespace PortalForge.Application.UseCases.Users.Queries.SearchUsers;
 
 /// <summary>
-/// Query to search users by name or email.
+/// Query to search users by name, email, department, or position.
 /// Used for autocomplete dropdowns and user selection.
 /// </summary>
 public class SearchUsersQuery : IRequest<List<UserSearchDto>>
 {
     /// <summary>
-    /// Search query - searches in FirstName, LastName, and Email
+    /// Search query - searches in FirstName, LastName, Email, Department, and Position
     /// </summary>
     public string Query { get; set; } = string.Empty;
 

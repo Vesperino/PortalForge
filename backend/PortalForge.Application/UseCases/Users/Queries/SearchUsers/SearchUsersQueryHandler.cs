@@ -32,7 +32,9 @@ public class SearchUsersQueryHandler : IRequestHandler<SearchUsersQuery, List<Us
             .Where(u =>
                 u.FirstName.Contains(request.Query, StringComparison.OrdinalIgnoreCase) ||
                 u.LastName.Contains(request.Query, StringComparison.OrdinalIgnoreCase) ||
-                u.Email.Contains(request.Query, StringComparison.OrdinalIgnoreCase))
+                u.Email.Contains(request.Query, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrEmpty(u.Department) && u.Department.Contains(request.Query, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrEmpty(u.Position) && u.Position.Contains(request.Query, StringComparison.OrdinalIgnoreCase)))
             .Where(u => !request.DepartmentId.HasValue || u.DepartmentId == request.DepartmentId.Value)
             .Take(request.Limit)
             .Select(u => new UserSearchDto

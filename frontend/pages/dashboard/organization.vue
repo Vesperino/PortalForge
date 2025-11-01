@@ -1,22 +1,86 @@
 <script setup lang="ts">
 import type { Employee } from '~/types'
+import type { DepartmentTreeDto } from '~/types/department'
+import type { OrganizationChartNode } from 'primevue/organizationchart'
 
 definePageMeta({
   layout: 'default',
   middleware: ['auth', 'verified']
 })
 
-// TODO: Replace with real API calls when organization/employees endpoints are available
-const viewMode = ref<'tree' | 'departments' | 'list'>('tree')
-const selectedDepartment = ref<number | null>(null)
+const config = useRuntimeConfig()
+const apiUrl = config.public.apiUrl
+
+const authStore = useAuthStore()
+
+const getAuthHeaders = (): Record<string, string> | undefined => {
+  const token = authStore.accessToken
+  if (token) {
+    return { Authorization: `Bearer ${token}` }
+  }
+  return undefined
+}
+
+const viewMode = ref<'tree' | 'departments' | 'list'>('departments')
+const selectedDepartment = ref<string | null>(null)
 const searchQuery = ref<string>('')
 
-const organizationTree = ref<Employee | null>(null)
-const departments = ref<any[]>([])
+const departments = ref<DepartmentTreeDto[]>([])
 const allEmployees = ref<any[]>([])
+const isLoading = ref(false)
+const error = ref<string | null>(null)
 
 const selectedEmployee = ref<Employee | null>(null)
 const showEmployeeModal = ref(false)
+const selectedDepartmentNode = ref<DepartmentTreeDto | null>(null)
+const showDepartmentModal = ref(false)
+
+// Load data on mount
+onMounted(async () => {
+  await loadData()
+})
+
+// Load all data
+const loadData = async () => {
+  isLoading.value = true
+  error.value = null
+
+  try {
+    await Promise.all([
+      loadDepartments(),
+      loadAllUsers()
+    ])
+  } catch (err: any) {
+    error.value = err.message || 'Nie udało się pobrać danych'
+    console.error('Error loading data:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Load departments
+const loadDepartments = async () => {
+  try {
+    const response = await $fetch<DepartmentTreeDto[]>(`${apiUrl}/api/departments/tree`, {
+      headers: getAuthHeaders()
+    })
+    departments.value = response
+  } catch (err: any) {
+    console.error('Error loading departments:', err)
+  }
+}
+
+// Load all users
+const loadAllUsers = async () => {
+  try {
+    const response = await $fetch<any>(`${apiUrl}/api/admin/users`, {
+      headers: getAuthHeaders()
+    })
+    allEmployees.value = response.users || []
+  } catch (err: any) {
+    console.error('Error loading users:', err)
+  }
+}
 
 const filteredEmployees = computed(() => {
   let filtered = allEmployees.value
@@ -31,8 +95,8 @@ const filteredEmployees = computed(() => {
       e.firstName?.toLowerCase().includes(query) ||
       e.lastName?.toLowerCase().includes(query) ||
       e.email?.toLowerCase().includes(query) ||
-      e.position?.name?.toLowerCase().includes(query) ||
-      e.department?.name?.toLowerCase().includes(query)
+      e.position?.toLowerCase().includes(query) ||
+      e.department?.toLowerCase().includes(query)
     )
   }
 
@@ -53,10 +117,80 @@ const getInitials = (employee: Employee) => {
   return `${employee.firstName?.[0] || ''}${employee.lastName?.[0] || ''}`
 }
 
-const getEmployeesByDepartment = (departmentId: number) => {
+const getEmployeesByDepartment = (departmentId: string) => {
   return allEmployees.value.filter((e: any) => e.departmentId === departmentId)
 }
 
+const getDepartmentEmployees = (dept: DepartmentTreeDto): any[] => {
+  const employees = getEmployeesByDepartment(dept.id)
+  // Recursively get employees from child departments
+  if (dept.children && dept.children.length > 0) {
+    dept.children.forEach(child => {
+      employees.push(...getDepartmentEmployees(child))
+    })
+  }
+  return employees
+}
+
+const getManagerByDepartment = (dept: DepartmentTreeDto): any | null => {
+  if (!dept.departmentHeadId) return null
+  return allEmployees.value.find((e: any) => e.id === dept.departmentHeadId) || null
+}
+
+const getAllDepartmentsFlat = (depts: DepartmentTreeDto[]): DepartmentTreeDto[] => {
+  const result: DepartmentTreeDto[] = []
+  depts.forEach(dept => {
+    result.push(dept)
+    if (dept.children && dept.children.length > 0) {
+      result.push(...getAllDepartmentsFlat(dept.children))
+    }
+  })
+  return result
+}
+
+const departmentsFlat = computed(() => getAllDepartmentsFlat(departments.value))
+
+// Convert Department tree to PrimeVue OrganizationChart format
+const departmentLookup = new Map<string, DepartmentTreeDto>()
+
+const convertDepartmentToOrgChart = (dept: DepartmentTreeDto): OrganizationChartNode => {
+  const nodeKey = `dept-${dept.id}`
+  departmentLookup.set(nodeKey, dept)
+
+  const manager = getManagerByDepartment(dept)
+  const employeeCount = getEmployeesByDepartment(dept.id).length
+
+  const node: OrganizationChartNode = {
+    key: nodeKey,
+    type: 'department',
+    data: {
+      id: dept.id,
+      name: dept.name,
+      description: dept.description,
+      manager: manager ? `${manager.firstName} ${manager.lastName}` : 'Brak kierownika',
+      employeeCount: employeeCount,
+      level: dept.level
+    },
+    children: dept.children?.map(child => convertDepartmentToOrgChart(child)) || []
+  }
+
+  return node
+}
+
+const departmentOrgChartData = computed(() => {
+  if (departments.value.length === 0) return []
+  departmentLookup.clear()
+  return departments.value.map(dept => convertDepartmentToOrgChart(dept))
+})
+
+const handleDepartmentNodeClick = (event: any) => {
+  const node = event.node || event
+  const department = departmentLookup.get(node.key as string)
+  if (department) {
+    selectedDepartmentNode.value = department
+    showDepartmentModal.value = true
+  }
+}
 
 
 
@@ -159,7 +293,7 @@ const getEmployeesByDepartment = (departmentId: number) => {
               <option :value="null">
                 Wszystkie działy
               </option>
-              <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+              <option v-for="dept in departmentsFlat" :key="dept.id" :value="dept.id">
                 {{ dept.name }}
               </option>
             </select>
@@ -168,20 +302,47 @@ const getEmployeesByDepartment = (departmentId: number) => {
       </div>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="isLoading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12">
+      <div class="flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie danych...</p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+      <div class="flex items-center gap-3">
+        <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+          <h3 class="text-lg font-semibold text-red-900 dark:text-red-200">Błąd ładowania danych</h3>
+          <p class="text-sm text-red-700 dark:text-red-300">{{ error }}</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Main Content Area - Full Width -->
-    <div class="w-full">
+    <div v-else class="w-full">
         <!-- Departments View -->
         <div v-if="viewMode === 'departments'" class="space-y-4">
           <div
-            v-for="dept in departments"
+            v-for="dept in departmentsFlat"
             :key="dept.id"
             class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
+            :class="{ 'ml-8': dept.level && dept.level > 0 }"
           >
             <div class="flex items-center justify-between mb-4">
-              <div>
-                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-                  {{ dept.name }}
-                </h3>
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <span v-if="dept.level && dept.level > 0" class="text-gray-400 dark:text-gray-600">
+                    {{ '└─'.repeat(dept.level) }}
+                  </span>
+                  <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                    {{ dept.name }}
+                  </h3>
+                </div>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
                   {{ dept.description }}
                 </p>
@@ -195,21 +356,21 @@ const getEmployeesByDepartment = (departmentId: number) => {
             </div>
 
             <!-- Department Manager -->
-            <div v-if="dept.manager" class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div v-if="getManagerByDepartment(dept)" class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kierownik działu</p>
               <div
                 class="flex items-center gap-3 cursor-pointer"
-                @click="selectEmployee(dept.manager)"
+                @click="selectEmployee(getManagerByDepartment(dept))"
               >
                 <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-                  {{ getInitials(dept.manager) }}
+                  {{ getInitials(getManagerByDepartment(dept)) }}
                 </div>
                 <div>
                   <p class="font-medium text-gray-900 dark:text-white">
-                    {{ dept.manager.firstName }} {{ dept.manager.lastName }}
+                    {{ getManagerByDepartment(dept).firstName }} {{ getManagerByDepartment(dept).lastName }}
                   </p>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
-                    {{ dept.manager.position?.name }}
+                    {{ getManagerByDepartment(dept).position }}
                   </p>
                 </div>
               </div>
@@ -218,7 +379,7 @@ const getEmployeesByDepartment = (departmentId: number) => {
             <!-- Department Employees -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div
-                v-for="employee in getEmployeesByDepartment(dept.id).filter(e => e.id !== dept.managerId)"
+                v-for="employee in getEmployeesByDepartment(dept.id).filter(e => e.id !== dept.departmentHeadId)"
                 :key="employee.id"
                 class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                 @click="selectEmployee(employee)"
@@ -231,7 +392,7 @@ const getEmployeesByDepartment = (departmentId: number) => {
                     {{ employee.firstName }} {{ employee.lastName }}
                   </p>
                   <p class="text-xs text-gray-600 dark:text-gray-400 truncate">
-                    {{ employee.position?.name }}
+                    {{ employee.position }}
                   </p>
                 </div>
               </div>
@@ -282,18 +443,18 @@ const getEmployeesByDepartment = (departmentId: number) => {
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                    {{ employee.position?.name }}
+                    {{ employee.position }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                      {{ employee.department?.name }}
+                      {{ employee.department }}
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                     {{ employee.email }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                    {{ employee.phone || '-' }}
+                    {{ employee.phoneNumber || '-' }}
                   </td>
                 </tr>
               </tbody>
@@ -315,34 +476,53 @@ const getEmployeesByDepartment = (departmentId: number) => {
         </div>
 
         <!-- Tree View -->
-        <div v-else>
-          <div v-if="organizationTree" class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
-            <div class="p-6">
-              <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                Struktura organizacyjna - Hierarchia
-              </h2>
-              <p v-if="organizationTree" class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                CEO: {{ organizationTree.firstName }} {{ organizationTree.lastName }}
-              </p>
+        <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+          <div v-if="departmentOrgChartData.length > 0" class="p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Struktura organizacyjna - Drzewo działów
+            </h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              Hierarchiczna struktura działów w organizacji
+            </p>
 
-              <OrganizationOrgTreeChart
-                v-if="organizationTree"
-                :employee="organizationTree"
-                :on-select-employee="selectEmployee"
-                @select-employee="selectEmployee"
-              />
+            <div class="org-chart-container">
+              <OrganizationChart
+                v-for="rootDept in departmentOrgChartData"
+                :key="rootDept.key"
+                :value="rootDept"
+                collapsible
+                selection-mode="single"
+                @node-select="handleDepartmentNodeClick"
+                class="mb-8"
+              >
+                <template #department="slotProps">
+                  <div class="department-node">
+                    <div class="department-name">
+                      {{ slotProps.node.data.name }}
+                    </div>
+                    <div class="department-manager">
+                      👤 {{ slotProps.node.data.manager }}
+                    </div>
+                    <div class="department-stats">
+                      <span class="employee-badge">
+                        👥 {{ slotProps.node.data.employeeCount }} pracowników
+                      </span>
+                    </div>
+                  </div>
+                </template>
+              </OrganizationChart>
             </div>
           </div>
 
-          <div v-else class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+          <div v-else class="text-center py-12">
             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
             <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-              Brak danych
+              Brak działów
             </h3>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Brak danych o strukturze organizacyjnej
+              Nie znaleziono działów w systemie
             </p>
           </div>
         </div>
@@ -391,13 +571,12 @@ const getEmployeesByDepartment = (departmentId: number) => {
                   {{ selectedEmployee.firstName }} {{ selectedEmployee.lastName }}
                 </h4>
                 <p class="mt-1 text-gray-600 dark:text-gray-400">
-                  {{ selectedEmployee.position?.name }}
+                  {{ selectedEmployee.position }}
                 </p>
                 <span
-                  class="inline-block mt-3 px-4 py-1.5 text-sm font-medium rounded-full text-white shadow-sm"
-                  :style="{ backgroundColor: selectedEmployee.department?.color || '#3b82f6' }"
+                  class="inline-block mt-3 px-4 py-1.5 text-sm font-medium rounded-full text-white bg-blue-500 shadow-sm"
                 >
-                  {{ selectedEmployee.department?.name }}
+                  {{ selectedEmployee.department }}
                 </span>
               </div>
 
@@ -420,7 +599,7 @@ const getEmployeesByDepartment = (departmentId: number) => {
                   </div>
                 </div>
 
-                <div v-if="selectedEmployee.phone" class="flex items-center gap-4">
+                <div v-if="selectedEmployee.phoneNumber" class="flex items-center gap-4">
                   <div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
                     <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -429,10 +608,10 @@ const getEmployeesByDepartment = (departmentId: number) => {
                   <div class="flex-1 min-w-0">
                     <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Telefon</p>
                     <a
-                      :href="`tel:${selectedEmployee.phone}`"
+                      :href="`tel:${selectedEmployee.phoneNumber}`"
                       class="text-sm text-green-600 dark:text-green-400 hover:underline font-medium"
                     >
-                      {{ selectedEmployee.phone }}
+                      {{ selectedEmployee.phoneNumber }}
                     </a>
                   </div>
                 </div>
@@ -455,7 +634,7 @@ const getEmployeesByDepartment = (departmentId: number) => {
                       {{ selectedEmployee.supervisor.firstName }} {{ selectedEmployee.supervisor.lastName }}
                     </p>
                     <p class="text-xs text-gray-600 dark:text-gray-400">
-                      {{ selectedEmployee.supervisor.position?.name }}
+                      {{ selectedEmployee.supervisor.position }}
                     </p>
                   </div>
                   <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -492,7 +671,7 @@ const getEmployeesByDepartment = (departmentId: number) => {
                         {{ sub.firstName }} {{ sub.lastName }}
                       </p>
                       <p class="text-xs text-gray-600 dark:text-gray-400">
-                        {{ sub.position?.name }}
+                        {{ sub.position }}
                       </p>
                     </div>
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -517,5 +696,235 @@ const getEmployeesByDepartment = (departmentId: number) => {
         </div>
       </div>
     </Teleport>
+
+    <!-- Department Details Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showDepartmentModal && selectedDepartmentNode"
+        class="fixed inset-0 z-50 overflow-y-auto"
+        @click.self="showDepartmentModal = false"
+      >
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+          <!-- Background overlay -->
+          <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75" @click="showDepartmentModal = false" />
+
+          <!-- Modal panel -->
+          <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-white">
+                  Szczegóły działu
+                </h3>
+                <button
+                  type="button"
+                  class="text-white hover:text-gray-200 focus:outline-none"
+                  @click="showDepartmentModal = false"
+                >
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="px-6 py-6">
+              <!-- Department Info -->
+              <div class="mb-6">
+                <h4 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  {{ selectedDepartmentNode.name }}
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  {{ selectedDepartmentNode.description }}
+                </p>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kierownik działu</p>
+                    <p class="font-semibold text-gray-900 dark:text-white">
+                      {{ getManagerByDepartment(selectedDepartmentNode)?.firstName || 'Brak' }}
+                      {{ getManagerByDepartment(selectedDepartmentNode)?.lastName || 'kierownika' }}
+                    </p>
+                  </div>
+                  <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Liczba pracowników</p>
+                    <p class="font-semibold text-gray-900 dark:text-white">
+                      {{ getEmployeesByDepartment(selectedDepartmentNode.id).length }} pracowników
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Employees List -->
+              <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Pracownicy działu
+                </h5>
+
+                <div v-if="getEmployeesByDepartment(selectedDepartmentNode.id).length > 0" class="space-y-2 max-h-96 overflow-y-auto">
+                  <div
+                    v-for="employee in getEmployeesByDepartment(selectedDepartmentNode.id)"
+                    :key="employee.id"
+                    class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                    @click="selectEmployee(employee); showDepartmentModal = false"
+                  >
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold">
+                      {{ getInitials(employee) }}
+                    </div>
+                    <div class="flex-1">
+                      <p class="font-medium text-gray-900 dark:text-white">
+                        {{ employee.firstName }} {{ employee.lastName }}
+                        <span v-if="employee.id === selectedDepartmentNode.departmentHeadId" class="ml-2 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded-full">
+                          Kierownik
+                        </span>
+                      </p>
+                      <p class="text-sm text-gray-600 dark:text-gray-400">
+                        {{ employee.position }}
+                      </p>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div v-else class="text-center py-8">
+                  <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Brak pracowników w tym dziale
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4">
+              <button
+                type="button"
+                class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                @click="showDepartmentModal = false"
+              >
+                Zamknij
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
+
+<style scoped>
+/* Organization Chart Container */
+.org-chart-container {
+  width: 100%;
+  overflow-x: auto;
+  padding: 20px 0;
+}
+
+/* Department Node Styling */
+.department-node {
+  min-width: 220px;
+  padding: 16px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border: 2px solid #1e40af;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  color: white;
+}
+
+.department-node:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+}
+
+.department-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.department-manager {
+  font-size: 0.875rem;
+  opacity: 0.95;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.department-stats {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.employee-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  display: inline-block;
+}
+
+/* PrimeVue OrganizationChart overrides */
+:deep(.p-organizationchart) {
+  padding: 20px;
+}
+
+:deep(.p-organizationchart-node-content) {
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Connection lines */
+:deep(.p-organizationchart-connector-down) {
+  width: 2px !important;
+  height: 20px !important;
+  background-color: #2563eb !important;
+  margin: 0 auto !important;
+}
+
+:deep(.p-organizationchart-connector-left),
+:deep(.p-organizationchart-connector-right) {
+  border-top: 2px solid #2563eb !important;
+}
+
+:deep(.p-organizationchart-connector-left) {
+  border-right: 2px solid #2563eb !important;
+}
+
+:deep(.p-organizationchart-connector-right) {
+  border-left: 2px solid #2563eb !important;
+}
+
+/* Dark mode */
+:global(.dark) .department-node {
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  border-color: #1d4ed8;
+}
+
+:global(.dark) :deep(.p-organizationchart-connector-down) {
+  background-color: #3b82f6 !important;
+}
+
+:global(.dark) :deep(.p-organizationchart-connector-left),
+:global(.dark) :deep(.p-organizationchart-connector-right) {
+  border-top-color: #3b82f6 !important;
+}
+
+:global(.dark) :deep(.p-organizationchart-connector-left) {
+  border-right-color: #3b82f6 !important;
+}
+
+:global(.dark) :deep(.p-organizationchart-connector-right) {
+  border-left-color: #3b82f6 !important;
+}
+</style>

@@ -46,8 +46,10 @@ public class GetDepartmentTreeQueryHandler
         // 3. Build dictionary for quick lookup
         var departmentDict = departments.ToDictionary(d => d.Id);
 
-        // 4. Build tree structure - start with root departments (no parent)
-        var rootDepartments = departments.Where(d => d.ParentDepartmentId == null).ToList();
+        // 4. Build tree structure - start with root departments (no parent OR parent not in filtered list)
+        var rootDepartments = departments.Where(d =>
+            d.ParentDepartmentId == null ||
+            !departmentDict.ContainsKey(d.ParentDepartmentId.Value)).ToList();
 
         _logger.LogInformation("Found {RootCount} root departments out of {TotalCount} total",
             rootDepartments.Count, departments.Count);

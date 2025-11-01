@@ -32,6 +32,21 @@ interface Emits {
 
 const emit = defineEmits<Emits>()
 
+// Get API URL
+const config = useRuntimeConfig()
+const apiUrl = config.public.apiUrl
+
+// Auth store
+const authStore = useAuthStore()
+
+const getAuthHeaders = (): Record<string, string> | undefined => {
+  const token = authStore.accessToken
+  if (token) {
+    return { Authorization: `Bearer ${token}` }
+  }
+  return undefined
+}
+
 // State
 const searchQuery = ref('')
 const results = ref<User[]>([])
@@ -95,7 +110,9 @@ const searchUsers = async () => {
       params.append('departmentId', props.departmentId)
     }
 
-    const data = await $fetch<User[]>(`/api/users/search?${params.toString()}`)
+    const data = await $fetch<User[]>(`${apiUrl}/api/users/search?${params.toString()}`, {
+      headers: getAuthHeaders()
+    })
     results.value = data
     isOpen.value = true
     highlightedIndex.value = -1

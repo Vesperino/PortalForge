@@ -275,13 +275,61 @@ public class SupabaseAuthService : ISupabaseAuthService
     {
         try
         {
-            _logger.LogInformation("Attempting token refresh");
+            _logger.LogInformation("Attempting token refresh with provided refresh token");
 
-            var refreshResponse = await _supabaseClient.Auth.RefreshSession();
-
-            if (refreshResponse?.AccessToken == null)
+            if (string.IsNullOrWhiteSpace(refreshToken))
             {
-                _logger.LogWarning("Token refresh failed");
+                _logger.LogWarning("Refresh token is null or empty");
+                return new AuthResult
+                {
+                    Success = false,
+                    ErrorMessage = "Refresh token is required"
+                };
+            }
+
+            // Set the session with the refresh token, then refresh it
+            // Note: We need to provide both access token and refresh token to SetSession
+            // Since we only have refresh token, we use RefreshSession directly
+            // First, we need to set the session using the Supabase REST API
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("apikey", _supabaseKey);
+
+            var requestBody = new
+            {
+                refresh_token = refreshToken
+            };
+
+            var content = new StringContent(
+                System.Text.Json.JsonSerializer.Serialize(requestBody),
+                System.Text.Encoding.UTF8,
+                "application/json");
+
+            var response = await httpClient.PostAsync(
+                $"{_supabaseUrl}/auth/v1/token?grant_type=refresh_token",
+                content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Token refresh failed: {StatusCode} - {Error}",
+                    response.StatusCode, errorContent);
+                return new AuthResult
+                {
+                    Success = false,
+                    ErrorMessage = "Token refresh failed"
+                };
+            }
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var tokenResponse = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseContent);
+
+            var accessToken = tokenResponse.GetProperty("access_token").GetString();
+            var newRefreshToken = tokenResponse.GetProperty("refresh_token").GetString();
+            var expiresIn = tokenResponse.GetProperty("expires_in").GetInt32();
+
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                _logger.LogWarning("Token refresh failed - no access token returned");
                 return new AuthResult
                 {
                     Success = false,
@@ -291,21 +339,17 @@ public class SupabaseAuthService : ISupabaseAuthService
 
             _logger.LogInformation("Token refreshed successfully");
 
-            DateTime? expiresAt = refreshResponse.ExpiresAt() != default
-                ? refreshResponse.ExpiresAt()
-                : null;
-
             return new AuthResult
             {
                 Success = true,
-                AccessToken = refreshResponse.AccessToken,
-                RefreshToken = refreshResponse.RefreshToken,
-                ExpiresAt = expiresAt
+                AccessToken = accessToken,
+                RefreshToken = newRefreshToken ?? refreshToken,
+                ExpiresAt = DateTime.UtcNow.AddSeconds(expiresIn)
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during token refresh");
+            _logger.LogError(ex, "Error during token refresh: {Message}", ex.Message);
             return new AuthResult
             {
                 Success = false,

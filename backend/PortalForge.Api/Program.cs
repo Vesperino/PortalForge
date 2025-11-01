@@ -5,6 +5,14 @@ using PortalForge.Infrastructure.BackgroundJobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+if (builder.Environment.IsProduction())
+{
+    builder.Logging.AddEventLog();
+}
+
 // Add services to the container.
 
 // Add Application and Infrastructure layers

@@ -36,6 +36,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Updat
             FirstName = user.FirstName,
             LastName = user.LastName,
             Department = user.Department,
+            DepartmentId = user.DepartmentId,
             Position = user.Position,
             PhoneNumber = user.PhoneNumber,
             Role = user.Role.ToString(),
@@ -48,14 +49,23 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Updat
             throw new ValidationException("Invalid role", new List<string> { $"Role '{request.Role}' is not valid" });
         }
 
-        // Update user
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
         user.Department = request.Department;
+        user.DepartmentId = request.DepartmentId;
         user.Position = request.Position;
         user.PhoneNumber = request.PhoneNumber;
         user.Role = userRole;
         user.IsActive = request.IsActive;
+
+        if (request.DepartmentId.HasValue)
+        {
+            var department = await _unitOfWork.DepartmentRepository.GetByIdAsync(request.DepartmentId.Value);
+            if (department != null)
+            {
+                user.Department = department.Name;
+            }
+        }
 
         await _unitOfWork.UserRepository.UpdateAsync(user);
 
@@ -100,6 +110,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Updat
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     Department = user.Department,
+                    DepartmentId = user.DepartmentId,
                     Position = user.Position,
                     PhoneNumber = user.PhoneNumber,
                     Role = user.Role.ToString(),

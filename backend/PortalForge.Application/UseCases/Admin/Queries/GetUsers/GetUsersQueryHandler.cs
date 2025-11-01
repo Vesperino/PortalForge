@@ -96,6 +96,7 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, GetUsersResul
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Department = user.Department,
+                DepartmentId = user.DepartmentId,
                 Position = user.Position,
                 Role = user.Role.ToString(),
                 IsActive = user.IsActive,

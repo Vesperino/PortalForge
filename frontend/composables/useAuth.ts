@@ -57,7 +57,10 @@ export function useAuth() {
     } finally {
       // Zawsze wyczyść lokalnie
       authStore.clearUser()
-      await router.push('/auth/login')
+      // Avoid redundant navigation
+      if (router.currentRoute.value.path !== '/auth/login') {
+        await router.push('/auth/login')
+      }
     }
   }
 
@@ -80,7 +83,10 @@ export function useAuth() {
     } catch (error) {
       console.error('Refresh token error:', error)
       authStore.clearUser()
-      await router.push('/auth/login')
+      // Avoid redundant navigation
+      if (router.currentRoute.value.path !== '/auth/login') {
+        await router.push('/auth/login')
+      }
       throw error
     }
   }

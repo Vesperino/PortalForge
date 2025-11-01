@@ -320,11 +320,9 @@ const fetchUsers = async () => {
       headers: getAuthHeaders(),
     }) as any
 
-    // API returns paginated response with 'users' field
     if (response && response.users && Array.isArray(response.users)) {
       users.value = response.users as User[]
     } else if (Array.isArray(response)) {
-      // Fallback: handle direct array response
       users.value = response as User[]
     } else {
       console.error('Response is not in expected format:', response)
@@ -333,7 +331,6 @@ const fetchUsers = async () => {
       return
     }
 
-    // Initialize permissions for each user
     for (const user of users.value) {
       await loadUserPermissions(user.id)
     }

@@ -1,4 +1,4 @@
-import type { RoleGroupDto } from '~/stores/roleGroups'
+import type { RoleGroupDto, GetRoleGroupsResult } from '~/stores/roleGroups'
 
 export interface CreateRoleGroupRequest {
   name: string
@@ -27,10 +27,6 @@ export interface DeleteRoleGroupResult {
 
 export interface GetRoleGroupByIdResult {
   roleGroup: RoleGroupDto
-}
-
-export interface GetRoleGroupsResult {
-  roleGroups: RoleGroupDto[]
 }
 
 export function useRoleGroupApi() {

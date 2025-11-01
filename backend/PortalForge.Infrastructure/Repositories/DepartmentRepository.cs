@@ -29,7 +29,7 @@ public class DepartmentRepository : IDepartmentRepository
         return await _context.Departments
             .Include(d => d.ParentDepartment)
             .Include(d => d.HeadOfDepartment)
-            .Where(d => d.IsActive)
+            .Include(d => d.Employees)
             .ToListAsync();
     }
 

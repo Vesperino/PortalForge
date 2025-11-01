@@ -24,7 +24,7 @@ public class PublicUsersController : ControllerBase
     }
 
     /// <summary>
-    /// Search users by name or email. Used for autocomplete components.
+    /// Search users by name, email, department, or position. Used for autocomplete components.
     /// </summary>
     /// <param name="q">Search query (minimum 2 characters)</param>
     /// <param name="departmentId">Optional department filter</param>

@@ -17,6 +17,7 @@ public class AdminUserDto
     public string LastName { get; set; } = string.Empty;
     public string FullName => $"{FirstName} {LastName}";
     public string Department { get; set; } = string.Empty;
+    public Guid? DepartmentId { get; set; }
     public string Position { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public bool IsActive { get; set; }
