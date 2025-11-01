@@ -48,7 +48,7 @@ public class GetDepartmentTreeQueryHandler
                 // User can only see specific departments
                 var visibleDepartmentIds = permission.GetVisibleDepartmentIds();
 
-                _logger.LogInformation("User {UserId} can view {Count} departments",
+                _logger.LogInformation("User {UserId} can view {Count} specific departments",
                     request.UserId.Value, visibleDepartmentIds.Count);
 
                 // Filter departments to only those the user can see (including parents for tree structure)
@@ -68,14 +68,17 @@ public class GetDepartmentTreeQueryHandler
 
                 _logger.LogInformation("After permission filtering: {Count} departments visible", departments.Count);
             }
-            else if (permission == null)
+            else if (permission != null && permission.CanViewAllDepartments)
             {
-                _logger.LogWarning("User {UserId} has no organizational permission, returning empty tree", request.UserId.Value);
-                return new List<DepartmentTreeDto>();
+                _logger.LogInformation("User {UserId} can view all departments (CanViewAllDepartments = true)", request.UserId.Value);
+                // No filtering needed - user sees all departments
             }
             else
             {
-                _logger.LogInformation("User {UserId} can view all departments", request.UserId.Value);
+                // permission == null - User has no OrganizationalPermission record
+                // Show all departments by default (backward compatible behavior)
+                _logger.LogInformation("User {UserId} has no organizational permission - showing all departments (default behavior)", request.UserId.Value);
+                // No filtering needed
             }
         }
 
