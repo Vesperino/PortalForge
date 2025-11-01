@@ -533,7 +533,7 @@ const handleEmployeeNodeClick = (node: any) => {
         </div>
 
         <!-- Tree View -->
-        <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
           <div v-if="departmentOrgChartData.length > 0" class="p-6">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               Struktura organizacyjna - Drzewo działów
@@ -542,7 +542,8 @@ const handleEmployeeNodeClick = (node: any) => {
               Hierarchiczna struktura działów w organizacji
             </p>
 
-            <div class="org-chart-container">
+            <div class="org-chart-wrapper">
+              <div class="org-chart-container">
               <OrganizationChart
                 v-for="rootDept in departmentOrgChartData"
                 :key="rootDept.key"
@@ -593,6 +594,7 @@ const handleEmployeeNodeClick = (node: any) => {
                   </div>
                 </template>
               </OrganizationChart>
+              </div>
             </div>
           </div>
 
@@ -908,11 +910,21 @@ const handleEmployeeNodeClick = (node: any) => {
 </template>
 
 <style scoped>
+/* Organization Chart Wrapper - prevents overflow from escaping the card */
+.org-chart-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  position: relative;
+}
+
 /* Organization Chart Container */
 .org-chart-container {
-  width: 100%;
-  overflow-x: auto;
+  min-width: 100%;
+  width: max-content;
   padding: 20px 0;
+  position: relative;
 }
 
 /* Department Node Styling */
