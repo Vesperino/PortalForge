@@ -273,7 +273,8 @@ const loadUser = async () => {
 
     // Set position name for autocomplete
     positionName.value = user.position || ''
-    positionId.value = user.positionId || null
+    // positionId is optional - will be set if user selects from autocomplete
+    positionId.value = null
 
     form.value = {
       firstName: user.firstName,

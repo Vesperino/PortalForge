@@ -2,6 +2,7 @@
 import type { Employee } from '~/types'
 import type { DepartmentTreeDto } from '~/types/department'
 import type { OrganizationChartNode } from 'primevue/organizationchart'
+import PositionAutocomplete from '~/components/common/PositionAutocomplete.vue'
 
 definePageMeta({
   layout: 'default',
@@ -34,6 +35,18 @@ const selectedEmployee = ref<Employee | null>(null)
 const showEmployeeModal = ref(false)
 const selectedDepartmentNode = ref<DepartmentTreeDto | null>(null)
 const showDepartmentModal = ref(false)
+
+// Quick edit modal for department/position changes
+const showQuickEditModal = ref(false)
+const quickEditEmployee = ref<any | null>(null)
+const quickEditForm = ref({
+  department: '',
+  position: ''
+})
+const quickEditLoading = ref(false)
+const quickEditError = ref<string | null>(null)
+const positionId = ref<string | null>(null)
+const positionName = ref<string>('')
 
 // Load data on mount
 onMounted(async () => {
@@ -225,7 +238,71 @@ const handleEmployeeNodeClick = (node: any) => {
   }
 }
 
+// Quick edit functions
+const openQuickEdit = (employee: any, event?: Event) => {
+  if (event) {
+    event.stopPropagation()
+  }
 
+  quickEditEmployee.value = employee
+  quickEditForm.value = {
+    department: employee.department || '',
+    position: employee.position || ''
+  }
+  positionName.value = employee.position || ''
+  positionId.value = null
+  quickEditError.value = null
+  showQuickEditModal.value = true
+}
+
+const closeQuickEditModal = () => {
+  showQuickEditModal.value = false
+  quickEditEmployee.value = null
+  quickEditError.value = null
+}
+
+const handlePositionUpdate = (value: string | null) => {
+  positionId.value = value
+}
+
+const handlePositionNameUpdate = (name: string) => {
+  positionName.value = name
+  quickEditForm.value.position = name
+}
+
+const saveQuickEdit = async () => {
+  if (!quickEditEmployee.value) return
+
+  quickEditLoading.value = true
+  quickEditError.value = null
+
+  try {
+    // Update employee via admin API
+    await $fetch(`${apiUrl}/api/admin/users/${quickEditEmployee.value.id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: {
+        firstName: quickEditEmployee.value.firstName,
+        lastName: quickEditEmployee.value.lastName,
+        department: quickEditForm.value.department,
+        position: quickEditForm.value.position,
+        phoneNumber: quickEditEmployee.value.phoneNumber || '',
+        role: quickEditEmployee.value.role,
+        roleGroupIds: [],
+        isActive: quickEditEmployee.value.isActive
+      }
+    })
+
+    // Reload data to reflect changes
+    await loadData()
+    closeQuickEditModal()
+  } catch (err: any) {
+    quickEditError.value = err.message || 'Nie udało się zapisać zmian'
+    console.error('Error saving quick edit:', err)
+  } finally {
+    quickEditLoading.value = false
+  }
+}
 
 </script>
 
@@ -393,7 +470,7 @@ const handleEmployeeNodeClick = (node: any) => {
               <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kierownik działu</p>
               <div
                 class="flex items-center gap-3 cursor-pointer"
-                @click="selectEmployee(getManagerByDepartment(dept))"
+                @click="openQuickEdit(getManagerByDepartment(dept))"
               >
                 <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
                   <img
@@ -423,7 +500,7 @@ const handleEmployeeNodeClick = (node: any) => {
                 v-for="employee in getEmployeesByDepartment(dept.id).filter(e => e.id !== dept.departmentHeadId)"
                 :key="employee.id"
                 class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
-                @click="selectEmployee(employee)"
+                @click="openQuickEdit(employee)"
               >
                 <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 font-semibold text-sm overflow-hidden">
                   <img
@@ -533,7 +610,7 @@ const handleEmployeeNodeClick = (node: any) => {
         </div>
 
         <!-- Tree View -->
-        <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
           <div v-if="departmentOrgChartData.length > 0" class="p-6">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               Struktura organizacyjna - Drzewo działów
@@ -542,7 +619,7 @@ const handleEmployeeNodeClick = (node: any) => {
               Hierarchiczna struktura działów w organizacji
             </p>
 
-            <div class="org-chart-wrapper">
+            <div class="org-chart-wrapper overflow-x-auto">
               <div class="org-chart-container">
               <OrganizationChart
                 v-for="rootDept in departmentOrgChartData"
@@ -906,6 +983,131 @@ const handleEmployeeNodeClick = (node: any) => {
         </div>
       </div>
     </Teleport>
+
+    <!-- Quick Edit Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showQuickEditModal && quickEditEmployee"
+        class="fixed inset-0 z-50 overflow-y-auto"
+        @click.self="closeQuickEditModal"
+      >
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+          <!-- Background overlay -->
+          <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75" @click="closeQuickEditModal" />
+
+          <!-- Modal panel -->
+          <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-white">
+                  Szybka edycja
+                </h3>
+                <button
+                  type="button"
+                  class="text-white hover:text-gray-200 focus:outline-none"
+                  @click="closeQuickEditModal"
+                >
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="px-6 py-6">
+              <!-- Employee Info -->
+              <div class="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center gap-3">
+                  <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold overflow-hidden">
+                    <img
+                      v-if="quickEditEmployee.profilePhotoUrl"
+                      :src="quickEditEmployee.profilePhotoUrl"
+                      :alt="`${quickEditEmployee.firstName} ${quickEditEmployee.lastName}`"
+                      class="w-full h-full object-cover"
+                    />
+                    <span v-else>
+                      {{ getInitials(quickEditEmployee) }}
+                    </span>
+                  </div>
+                  <div>
+                    <h4 class="text-xl font-bold text-gray-900 dark:text-white">
+                      {{ quickEditEmployee.firstName }} {{ quickEditEmployee.lastName }}
+                    </h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                      {{ quickEditEmployee.email }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Error Message -->
+              <div v-if="quickEditError" class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <p class="text-sm text-red-800 dark:text-red-200">{{ quickEditError }}</p>
+              </div>
+
+              <!-- Form -->
+              <form @submit.prevent="saveQuickEdit" class="space-y-4">
+                <!-- Department -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Dział <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    v-model="quickEditForm.department"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">Wybierz dział</option>
+                    <option
+                      v-for="dept in departmentsFlat"
+                      :key="dept.id"
+                      :value="dept.name"
+                    >
+                      {{ dept.level > 0 ? '└─'.repeat(dept.level) + ' ' : '' }}{{ dept.name }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Position -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Stanowisko <span class="text-red-500">*</span>
+                  </label>
+                  <PositionAutocomplete
+                    :model-value="positionId"
+                    @update:modelValue="handlePositionUpdate"
+                    @update:positionName="handlePositionNameUpdate"
+                    placeholder="Wpisz lub wybierz stanowisko..."
+                    required
+                  />
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end gap-3 pt-4">
+                  <button
+                    type="button"
+                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    @click="closeQuickEditModal"
+                    :disabled="quickEditLoading"
+                  >
+                    Anuluj
+                  </button>
+                  <button
+                    type="submit"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                    :disabled="quickEditLoading"
+                  >
+                    {{ quickEditLoading ? 'Zapisywanie...' : 'Zapisz' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -913,17 +1115,18 @@ const handleEmployeeNodeClick = (node: any) => {
 /* Organization Chart Wrapper - prevents overflow from escaping the card */
 .org-chart-wrapper {
   width: 100%;
-  max-width: 100%;
+  max-width: calc(100vw - 280px); /* Subtract sidebar width + padding */
   overflow-x: auto;
   overflow-y: visible;
   position: relative;
+  margin: 0 auto;
 }
 
 /* Organization Chart Container */
 .org-chart-container {
   min-width: 100%;
   width: max-content;
-  padding: 20px 0;
+  padding: 20px;
   position: relative;
 }
 
