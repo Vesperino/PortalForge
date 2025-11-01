@@ -217,6 +217,14 @@ const handleDepartmentNodeClick = (event: any) => {
   }
 }
 
+const handleEmployeeNodeClick = (node: any) => {
+  // Find the employee in allEmployees array by ID
+  const employee = allEmployees.value.find((e: any) => e.id === node.data.id)
+  if (employee) {
+    selectEmployee(employee)
+  }
+}
+
 
 
 </script>
@@ -561,7 +569,7 @@ const handleDepartmentNodeClick = (event: any) => {
                 </template>
 
                 <template #employee="slotProps">
-                  <div class="employee-node">
+                  <div class="employee-node" @click="handleEmployeeNodeClick(slotProps.node)">
                     <div class="employee-avatar">
                       <img
                         v-if="slotProps.node.data.profilePhotoUrl"
@@ -638,8 +646,16 @@ const handleDepartmentNodeClick = (event: any) => {
             <div class="px-6 py-6 space-y-6">
               <!-- Avatar & Basic Info -->
               <div class="text-center">
-                <div class="inline-flex w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 items-center justify-center text-3xl font-bold text-white shadow-lg">
-                  {{ getInitials(selectedEmployee) }}
+                <div class="inline-flex w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 items-center justify-center text-3xl font-bold text-white shadow-lg overflow-hidden">
+                  <img
+                    v-if="selectedEmployee.profilePhotoUrl"
+                    :src="selectedEmployee.profilePhotoUrl"
+                    :alt="`${selectedEmployee.firstName} ${selectedEmployee.lastName}`"
+                    class="w-full h-full object-cover"
+                  />
+                  <span v-else>
+                    {{ getInitials(selectedEmployee) }}
+                  </span>
                 </div>
                 <h4 class="mt-4 text-2xl font-bold text-gray-900 dark:text-white">
                   {{ selectedEmployee.firstName }} {{ selectedEmployee.lastName }}
