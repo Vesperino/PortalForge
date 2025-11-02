@@ -8,10 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
-if (builder.Environment.IsProduction())
-{
-    builder.Logging.AddEventLog();
-}
+// EventLog is Windows-only, removed for Linux/Docker compatibility
 
 // Add services to the container.
 
