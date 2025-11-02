@@ -19,6 +19,7 @@ public class AdminUserDto
     public string Department { get; set; } = string.Empty;
     public Guid? DepartmentId { get; set; }
     public string Position { get; set; } = string.Empty;
+    public Guid? PositionId { get; set; }
     public string Role { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public bool IsEmailVerified { get; set; }

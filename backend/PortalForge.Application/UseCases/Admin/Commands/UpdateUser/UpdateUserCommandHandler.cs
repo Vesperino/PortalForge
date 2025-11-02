@@ -38,6 +38,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Updat
             Department = user.Department,
             DepartmentId = user.DepartmentId,
             Position = user.Position,
+            PositionId = user.PositionId,
             PhoneNumber = user.PhoneNumber,
             Role = user.Role.ToString(),
             IsActive = user.IsActive
@@ -54,6 +55,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Updat
         user.Department = request.Department;
         user.DepartmentId = request.DepartmentId;
         user.Position = request.Position;
+        user.PositionId = request.PositionId;
         user.PhoneNumber = request.PhoneNumber;
         user.Role = userRole;
         user.IsActive = request.IsActive;
@@ -112,6 +114,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Updat
                     Department = user.Department,
                     DepartmentId = user.DepartmentId,
                     Position = user.Position,
+                    PositionId = user.PositionId,
                     PhoneNumber = user.PhoneNumber,
                     Role = user.Role.ToString(),
                     IsActive = user.IsActive,
