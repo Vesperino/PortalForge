@@ -136,6 +136,47 @@ const goToPage = (page: number) => {
   }
 }
 
+// Smart pagination: pokazuj max 7 przycisków
+const visiblePages = computed(() => {
+  const total = totalPages.value
+  const current = currentPage.value
+  const pages: (number | string)[] = []
+
+  if (total <= 7) {
+    // Jeśli jest 7 lub mniej stron, pokaż wszystkie
+    for (let i = 1; i <= total; i++) {
+      pages.push(i)
+    }
+  } else {
+    // Zawsze pokaż pierwszą stronę
+    pages.push(1)
+
+    // Oblicz zakres stron wokół bieżącej
+    let startPage = Math.max(2, current - 1)
+    let endPage = Math.min(total - 1, current + 1)
+
+    // Dodaj "..." jeśli jest luka po lewej
+    if (startPage > 2) {
+      pages.push('...')
+    }
+
+    // Dodaj strony wokół bieżącej
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i)
+    }
+
+    // Dodaj "..." jeśli jest luka po prawej
+    if (endPage < total - 1) {
+      pages.push('...')
+    }
+
+    // Zawsze pokaż ostatnią stronę
+    pages.push(total)
+  }
+
+  return pages
+})
+
 watch([searchQuery], () => {
   currentPage.value = 1
 })
@@ -576,17 +617,26 @@ const handleDelete = async () => {
 
             <!-- Page numbers -->
             <div class="flex items-center gap-1">
-              <button
-                v-for="page in totalPages"
-                :key="page"
-                class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                :class="page === currentPage
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
-                @click="goToPage(page)"
-              >
-                {{ page }}
-              </button>
+              <template v-for="(page, index) in visiblePages" :key="index">
+                <!-- Ellipsis -->
+                <span
+                  v-if="page === '...'"
+                  class="px-2 text-gray-500 dark:text-gray-400"
+                >
+                  ...
+                </span>
+                <!-- Page button -->
+                <button
+                  v-else
+                  class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  :class="page === currentPage
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                  @click="goToPage(page as number)"
+                >
+                  {{ page }}
+                </button>
+              </template>
             </div>
 
             <!-- Next button -->
