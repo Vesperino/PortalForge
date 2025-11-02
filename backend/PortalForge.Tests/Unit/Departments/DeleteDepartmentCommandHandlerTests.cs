@@ -84,6 +84,9 @@ public class DeleteDepartmentCommandHandlerTests
         _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(departmentId))
             .ReturnsAsync(existingDepartment);
 
+        _mockUnitOfWork.Setup(u => u.UserRepository.UpdateAsync(It.IsAny<User>()))
+            .Returns(Task.CompletedTask);
+
         var command = new DeleteDepartmentCommand { DepartmentId = departmentId };
 
         // Act
@@ -116,6 +119,9 @@ public class DeleteDepartmentCommandHandlerTests
 
         _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(departmentId))
             .ReturnsAsync(existingDepartment);
+
+        _mockUnitOfWork.Setup(u => u.DepartmentRepository.UpdateAsync(It.IsAny<Department>()))
+            .Returns(Task.CompletedTask);
 
         var command = new DeleteDepartmentCommand { DepartmentId = departmentId };
 
@@ -152,6 +158,12 @@ public class DeleteDepartmentCommandHandlerTests
 
         _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(departmentId))
             .ReturnsAsync(existingDepartment);
+
+        _mockUnitOfWork.Setup(u => u.UserRepository.UpdateAsync(It.IsAny<User>()))
+            .Returns(Task.CompletedTask);
+
+        _mockUnitOfWork.Setup(u => u.DepartmentRepository.UpdateAsync(It.IsAny<Department>()))
+            .Returns(Task.CompletedTask);
 
         var command = new DeleteDepartmentCommand { DepartmentId = departmentId };
 
