@@ -58,8 +58,8 @@ jobs:
         run: |
           mkdir -p ~/portalforge/storage/images
           mkdir -p ~/portalforge/storage/documents
-          chmod -R 755 ~/portalforge/storage
-          echo "✅ Storage directories created"
+          chmod -R 777 ~/portalforge/storage
+          echo "✅ Storage directories created with write permissions"
 
       - name: Run Docker container
         run: |
