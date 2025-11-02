@@ -54,12 +54,20 @@ jobs:
           cd backend
           docker build -t portalforge-backend:latest .
 
+      - name: Create storage directories on host
+        run: |
+          mkdir -p ~/portalforge/storage/images
+          mkdir -p ~/portalforge/storage/documents
+          chmod -R 755 ~/portalforge/storage
+          echo "✅ Storage directories created"
+
       - name: Run Docker container
         run: |
           docker run -d \
             --name portalforge-backend \
             --restart unless-stopped \
             -p 22022:5000 \
+            -v ~/portalforge/storage:/app/storage \
             --env-file ~/portalforge/backend/.env \
             portalforge-backend:latest
 
