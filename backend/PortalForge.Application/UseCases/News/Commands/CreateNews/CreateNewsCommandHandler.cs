@@ -69,8 +69,8 @@ public class CreateNewsCommandHandler : IRequestHandler<CreateNewsCommand, int>
             DepartmentId = request.DepartmentId
         };
 
-        // Handle hashtags - combine from request and auto-detect from content
-        var allHashtags = await ProcessHashtagsAsync(request.Hashtags, request.Content);
+        // Handle hashtags - combine from request, auto-detect from content, and include eventHashtag
+        var allHashtags = await ProcessHashtagsAsync(request.Hashtags, request.Content, request.EventHashtag);
         news.Hashtags = allHashtags;
 
         await _unitOfWork.NewsRepository.CreateAsync(news);
@@ -82,18 +82,24 @@ public class CreateNewsCommandHandler : IRequestHandler<CreateNewsCommand, int>
         return news.Id;
     }
 
-    private async Task<List<Domain.Entities.Hashtag>> ProcessHashtagsAsync(List<string>? requestHashtags, string content)
+    private async Task<List<Domain.Entities.Hashtag>> ProcessHashtagsAsync(List<string>? requestHashtags, string content, string? eventHashtag)
     {
         var hashtagsFromRequest = requestHashtags ?? new List<string>();
-        
+
         // Auto-detect hashtags from content using regex
         var hashtagPattern = @"(?:^|\s)(#[\w]+)";
         var matches = Regex.Matches(content, hashtagPattern);
         var hashtagsFromContent = matches.Select(m => m.Groups[1].Value).Distinct().ToList();
 
-        // Combine both sources and remove duplicates (case-insensitive)
-        var allHashtagNames = hashtagsFromRequest
-            .Concat(hashtagsFromContent)
+        // Include eventHashtag if provided
+        var hashtagsToProcess = hashtagsFromRequest.Concat(hashtagsFromContent).ToList();
+        if (!string.IsNullOrWhiteSpace(eventHashtag))
+        {
+            hashtagsToProcess.Add(eventHashtag);
+        }
+
+        // Combine all sources and remove duplicates (case-insensitive)
+        var allHashtagNames = hashtagsToProcess
             .Select(h => h.StartsWith("#") ? h : $"#{h}")
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();

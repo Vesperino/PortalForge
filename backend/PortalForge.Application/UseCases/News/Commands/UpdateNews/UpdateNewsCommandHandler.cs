@@ -62,9 +62,9 @@ public class UpdateNewsCommandHandler : IRequestHandler<UpdateNewsCommand, Unit>
         news.DepartmentId = request.DepartmentId;
         news.UpdatedAt = DateTime.UtcNow;
 
-        // Handle hashtags - combine from request and auto-detect from content
+        // Handle hashtags - combine from request, auto-detect from content, and include eventHashtag
         news.Hashtags.Clear();
-        var allHashtags = await ProcessHashtagsAsync(request.Hashtags, request.Content);
+        var allHashtags = await ProcessHashtagsAsync(request.Hashtags, request.Content, request.EventHashtag);
         news.Hashtags = allHashtags;
 
         await _unitOfWork.NewsRepository.UpdateAsync(news);
@@ -75,18 +75,24 @@ public class UpdateNewsCommandHandler : IRequestHandler<UpdateNewsCommand, Unit>
         return Unit.Value;
     }
 
-    private async Task<List<Domain.Entities.Hashtag>> ProcessHashtagsAsync(List<string>? requestHashtags, string content)
+    private async Task<List<Domain.Entities.Hashtag>> ProcessHashtagsAsync(List<string>? requestHashtags, string content, string? eventHashtag)
     {
         var hashtagsFromRequest = requestHashtags ?? new List<string>();
-        
+
         // Auto-detect hashtags from content using regex
         var hashtagPattern = @"(?:^|\s)(#[\w]+)";
         var matches = Regex.Matches(content, hashtagPattern);
         var hashtagsFromContent = matches.Select(m => m.Groups[1].Value).Distinct().ToList();
 
-        // Combine both sources and remove duplicates (case-insensitive)
-        var allHashtagNames = hashtagsFromRequest
-            .Concat(hashtagsFromContent)
+        // Include eventHashtag if provided
+        var hashtagsToProcess = hashtagsFromRequest.Concat(hashtagsFromContent).ToList();
+        if (!string.IsNullOrWhiteSpace(eventHashtag))
+        {
+            hashtagsToProcess.Add(eventHashtag);
+        }
+
+        // Combine all sources and remove duplicates (case-insensitive)
+        var allHashtagNames = hashtagsToProcess
             .Select(h => h.StartsWith("#") ? h : $"#{h}")
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
