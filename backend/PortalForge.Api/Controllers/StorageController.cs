@@ -1,7 +1,10 @@
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.UseCases.Storage.Commands.UploadNewsImage;
+using PortalForge.Application.UseCases.Storage.Commands.DeleteNewsImage;
 
 namespace PortalForge.Api.Controllers;
 
@@ -10,13 +13,16 @@ namespace PortalForge.Api.Controllers;
 [Authorize]
 public class StorageController : ControllerBase
 {
+    private readonly IMediator _mediator;
     private readonly ILogger<StorageController> _logger;
     private readonly IFileStorageService _fileStorageService;
 
     public StorageController(
+        IMediator mediator,
         ILogger<StorageController> logger,
         IFileStorageService fileStorageService)
     {
+        _mediator = mediator;
         _logger = logger;
         _fileStorageService = fileStorageService;
     }
@@ -26,46 +32,26 @@ public class StorageController : ControllerBase
     {
         try
         {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest(new { message = "No file provided" });
-            }
-
-            // Get storage settings for max file size
-            var settings = await _fileStorageService.GetStorageSettingsAsync();
-            var maxFileSizeMB = int.Parse(settings.GetValueOrDefault("Storage:MaxFileSizeMB", "10"));
-            var maxFileSize = maxFileSizeMB * 1024 * 1024;
-
-            if (file.Length > maxFileSize)
-            {
-                return BadRequest(new { message = $"File size exceeds {maxFileSizeMB}MB limit" });
-            }
-
-            // Validate file type
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(fileExtension))
-            {
-                return BadRequest(new { message = "Invalid file type. Allowed: JPG, PNG, GIF, WebP" });
-            }
-
-            _logger.LogInformation("Uploading file: {FileName}", file.FileName);
-
-            // Save file using storage service
             using var fileStream = file.OpenReadStream();
-            var relativePath = await _fileStorageService.SaveFileAsync(fileStream, file.FileName, "news-images");
 
-            // Build URL for frontend to access the file
+            var command = new UploadNewsImageCommand
+            {
+                FileStream = fileStream,
+                FileName = file.FileName,
+                FileSize = file.Length
+            };
+
+            var result = await _mediator.Send(command);
+
+            // Build full URL with proper scheme and host
             var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
-            var publicUrl = $"{baseUrl}/api/storage/files/{relativePath}";
-
-            _logger.LogInformation("File uploaded successfully: {PublicUrl}", publicUrl);
+            var publicUrl = $"{baseUrl}/api/storage/files/{result.FilePath}";
 
             return Ok(new UploadImageResponse
             {
                 Url = publicUrl,
-                FileName = Path.GetFileName(relativePath),
-                FilePath = relativePath
+                FileName = result.FileName,
+                FilePath = result.FilePath
             });
         }
         catch (Exception ex)
@@ -80,16 +66,12 @@ public class StorageController : ControllerBase
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(filePath))
+            var command = new DeleteNewsImageCommand
             {
-                return BadRequest(new { message = "File path is required" });
-            }
+                FilePath = filePath
+            };
 
-            _logger.LogInformation("Deleting file: {FilePath}", filePath);
-
-            await _fileStorageService.DeleteFileAsync(filePath);
-
-            _logger.LogInformation("File deleted successfully: {FilePath}", filePath);
+            await _mediator.Send(command);
 
             return Ok(new { message = "File deleted successfully" });
         }
