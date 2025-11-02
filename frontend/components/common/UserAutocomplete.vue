@@ -150,15 +150,15 @@ const selectUser = (user: User) => {
   // Emit selection to parent (e.g., open modal)
   emit('select', user)
 
-  // Clear internal state so the input does not remain in "selected" mode
-  internalSelectedUser.value = null
+  // Update internal state with selected user
+  internalSelectedUser.value = user
   searchQuery.value = ''
   results.value = []
   isOpen.value = false
 
-  // Reset v-model bindings (if any) to neutral state
-  emit('update:modelValue', null)
-  emit('update:selectedUser', null)
+  // Emit selected user to parent
+  emit('update:modelValue', user.id)
+  emit('update:selectedUser', user)
 }
 
 // Clear selection
