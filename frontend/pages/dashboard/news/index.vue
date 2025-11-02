@@ -8,6 +8,7 @@ definePageMeta({
 })
 
 const authStore = useAuthStore()
+const route = useRoute()
 const { fetchAllNews, deleteNews } = useNewsApi()
 
 const selectedCategory = ref<string>('all')
@@ -85,6 +86,13 @@ onMounted(() => {
   if (import.meta.client) {
     window.addEventListener('resize', updateWindowWidth)
   }
+
+  // Check for hashtag in URL query parameter
+  const hashtagFromUrl = route.query.hashtag
+  if (hashtagFromUrl && typeof hashtagFromUrl === 'string') {
+    selectedHashtags.value = [hashtagFromUrl.startsWith('#') ? hashtagFromUrl : `#${hashtagFromUrl}`]
+  }
+
   loadNews()
 })
 

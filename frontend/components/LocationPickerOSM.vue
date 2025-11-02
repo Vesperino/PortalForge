@@ -28,6 +28,9 @@ const mapContainer = ref<HTMLDivElement | null>(null)
 const selectedCachedLocation = ref<number | null>(null)
 const coordinatesInput = ref('')
 const coordinatesError = ref<string | null>(null)
+const addressSearch = ref('')
+const isSearching = ref(false)
+const searchError = ref<string | null>(null)
 
 let map: L.Map | null = null
 let marker: L.Marker | null = null
@@ -170,14 +173,41 @@ function handleCoordinatesInput() {
 
 function selectCachedLocation(locationId: number) {
   const location = locationsStore.cachedLocations.find(l => l.id === locationId)
-  
+
   if (location) {
     emit('update:modelValue', location.address)
     emit('update:latitude', location.latitude)
     emit('update:longitude', location.longitude)
-    
+
     addMarker(location.latitude, location.longitude)
     selectedCachedLocation.value = locationId
+  }
+}
+
+async function searchAddress() {
+  if (!addressSearch.value.trim() || !isOnline.value) return
+
+  isSearching.value = true
+  searchError.value = null
+
+  try {
+    const result = await locationsStore.geocodeAddress(addressSearch.value)
+
+    if (result) {
+      emit('update:modelValue', result.address)
+      emit('update:latitude', result.latitude)
+      emit('update:longitude', result.longitude)
+
+      addMarker(result.latitude, result.longitude)
+      addressSearch.value = '' // Clear search after success
+    } else {
+      searchError.value = 'Nie znaleziono podanego adresu'
+    }
+  } catch (error) {
+    searchError.value = 'Błąd podczas wyszukiwania adresu'
+    console.error('Address search error:', error)
+  } finally {
+    isSearching.value = false
   }
 }
 
@@ -219,6 +249,48 @@ watch(isDark, (newDark) => {
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
       </svg>
       Tryb offline - dostępne tylko zapisane lokalizacje
+    </div>
+
+    <!-- Address Search (Nominatim OSM) -->
+    <div v-if="isOnline">
+      <div class="flex items-center justify-between mb-2">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          🇵🇱 Wyszukaj polski adres
+        </label>
+        <span class="text-xs text-gray-500 dark:text-gray-400">
+          Nominatim OSM
+        </span>
+      </div>
+      <div class="flex gap-2">
+        <input
+          v-model="addressSearch"
+          type="text"
+          class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          placeholder="np. Rynek Główny 1, Kraków"
+          :disabled="isSearching"
+          @keyup.enter="searchAddress"
+        >
+        <button
+          type="button"
+          class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+          :disabled="!addressSearch.trim() || isSearching"
+          @click="searchAddress"
+        >
+          <svg v-if="isSearching" class="animate-spin h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          {{ isSearching ? 'Szukam...' : 'Szukaj' }}
+        </button>
+      </div>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        Wpisz dowolny polski adres (ulica, miasto, miejsce) i naciśnij Enter lub kliknij Szukaj
+      </p>
+      <p v-if="searchError" class="mt-1 text-xs text-red-600 dark:text-red-400">
+        {{ searchError }}
+      </p>
     </div>
 
     <!-- Cached Locations Dropdown -->
