@@ -28,6 +28,8 @@ public class UnitOfWork : IUnitOfWork
     private IOrganizationalPermissionRepository? _organizationalPermissionRepository;
     private ICachedLocationRepository? _cachedLocationRepository;
     private ISystemSettingRepository? _systemSettingRepository;
+    private IInternalServiceRepository? _internalServiceRepository;
+    private IInternalServiceCategoryRepository? _internalServiceCategoryRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -87,6 +89,12 @@ public class UnitOfWork : IUnitOfWork
 
     public ISystemSettingRepository SystemSettingRepository =>
         _systemSettingRepository ??= new SystemSettingRepository(_context);
+
+    public IInternalServiceRepository InternalServiceRepository =>
+        _internalServiceRepository ??= new InternalServiceRepository(_context);
+
+    public IInternalServiceCategoryRepository InternalServiceCategoryRepository =>
+        _internalServiceCategoryRepository ??= new InternalServiceCategoryRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {

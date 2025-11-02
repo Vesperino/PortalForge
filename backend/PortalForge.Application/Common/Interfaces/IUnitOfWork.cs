@@ -22,6 +22,8 @@ public interface IUnitOfWork : IDisposable
     IOrganizationalPermissionRepository OrganizationalPermissionRepository { get; }
     ICachedLocationRepository CachedLocationRepository { get; }
     ISystemSettingRepository SystemSettingRepository { get; }
+    IInternalServiceRepository InternalServiceRepository { get; }
+    IInternalServiceCategoryRepository InternalServiceCategoryRepository { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

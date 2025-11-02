@@ -76,6 +76,11 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new VacationScheduleConfiguration());
         modelBuilder.ApplyConfiguration(new OrganizationalPermissionConfiguration());
 
+        // Internal Services
+        modelBuilder.ApplyConfiguration(new InternalServiceConfiguration());
+        modelBuilder.ApplyConfiguration(new InternalServiceCategoryConfiguration());
+        modelBuilder.ApplyConfiguration(new InternalServiceDepartmentConfiguration());
+
         base.OnModelCreating(modelBuilder);
     }
 }
