@@ -11,7 +11,7 @@ using PortalForge.Application.UseCases.SystemSettings.Queries.GetSettingByKey;
 namespace PortalForge.Api.Controllers;
 
 [ApiController]
-[Route("api/admin/[controller]")]
+[Route("api/admin/system-settings")]
 [Authorize(Roles = "Admin")]
 public class SystemSettingsController : ControllerBase
 {
