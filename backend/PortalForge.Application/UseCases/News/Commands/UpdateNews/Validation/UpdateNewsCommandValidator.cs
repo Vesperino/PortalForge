@@ -1,4 +1,5 @@
 using FluentValidation;
+using PortalForge.Domain.Entities;
 
 namespace PortalForge.Application.UseCases.News.Commands.UpdateNews.Validation;
 
@@ -25,10 +26,16 @@ public class UpdateNewsCommandValidator : AbstractValidator<UpdateNewsCommand>
             .When(x => !string.IsNullOrEmpty(x.ImageUrl));
 
         RuleFor(x => x.Category)
-            .IsInEnum().WithMessage("Invalid news category");
+            .NotEmpty().WithMessage("Category is required")
+            .Must(BeValidCategory).WithMessage("Invalid news category. Valid categories: Company, HR, IT, Event, Social, Achievement, Training, General");
 
         RuleFor(x => x.EventId)
             .GreaterThan(0).WithMessage("Event ID must be greater than 0")
             .When(x => x.EventId.HasValue);
+    }
+
+    private bool BeValidCategory(string category)
+    {
+        return Enum.TryParse<NewsCategory>(category, true, out _);
     }
 }

@@ -8,7 +8,6 @@ using PortalForge.Application.UseCases.News.Commands.UpdateNews;
 using PortalForge.Application.UseCases.News.DTOs;
 using PortalForge.Application.UseCases.News.Queries.GetAllNews;
 using PortalForge.Application.UseCases.News.Queries.GetNewsById;
-using PortalForge.Domain.Entities;
 using System.Security.Claims;
 
 namespace PortalForge.Api.Controllers;
@@ -69,11 +68,6 @@ public class NewsController : ControllerBase
             return Unauthorized("User ID not found in token");
         }
 
-        if (!Enum.TryParse<NewsCategory>(request.Category, true, out var category))
-        {
-            return BadRequest("Invalid category");
-        }
-
         var command = new CreateNewsCommand
         {
             Title = request.Title,
@@ -81,7 +75,7 @@ public class NewsController : ControllerBase
             Excerpt = request.Excerpt,
             ImageUrl = request.ImageUrl,
             AuthorId = authorId,
-            Category = category,
+            Category = request.Category,
             EventId = request.EventId,
             IsEvent = request.IsEvent,
             EventHashtag = request.EventHashtag,
@@ -99,11 +93,6 @@ public class NewsController : ControllerBase
     [Authorize(Roles = "Admin,Hr,Marketing")]
     public async Task<ActionResult> Update(int id, [FromBody] UpdateNewsRequestDto request)
     {
-        if (!Enum.TryParse<NewsCategory>(request.Category, true, out var category))
-        {
-            return BadRequest("Invalid category");
-        }
-
         var command = new UpdateNewsCommand
         {
             NewsId = id,
@@ -111,7 +100,7 @@ public class NewsController : ControllerBase
             Content = request.Content,
             Excerpt = request.Excerpt,
             ImageUrl = request.ImageUrl,
-            Category = category,
+            Category = request.Category,
             EventId = request.EventId,
             IsEvent = request.IsEvent,
             EventHashtag = request.EventHashtag,

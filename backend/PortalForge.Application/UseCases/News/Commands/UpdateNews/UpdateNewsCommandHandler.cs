@@ -43,11 +43,14 @@ public class UpdateNewsCommandHandler : IRequestHandler<UpdateNewsCommand, Unit>
             }
         }
 
+        // Parse category string to enum (validator already checked it's valid)
+        var category = Enum.Parse<Domain.Entities.NewsCategory>(request.Category, ignoreCase: true);
+
         news.Title = request.Title;
         news.Content = request.Content;
         news.Excerpt = request.Excerpt;
         news.ImageUrl = request.ImageUrl;
-        news.Category = request.Category;
+        news.Category = category;
         news.EventId = request.EventId;
         news.IsEvent = request.IsEvent;
         news.EventHashtag = request.EventHashtag;
