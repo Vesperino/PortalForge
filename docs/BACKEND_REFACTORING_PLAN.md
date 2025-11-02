@@ -1051,37 +1051,671 @@ dotnet_diagnostic.IDE0005.severity = warning
 
 ## Testing Strategy
 
-### Unit Tests
+**⚠️ CRITICAL REQUIREMENT**: All refactoring MUST maintain or improve code coverage. Target minimum: **>70% coverage** for business logic.
 
-For each refactored component, create:
+---
 
-1. **Command Handler Tests**:
-   - Happy path
-   - Validation failures
-   - Not found scenarios
-   - Permission errors
+### Unit Tests - MANDATORY for Each Refactored Component
 
-2. **Validator Tests**:
-   - Each validation rule
-   - Async validation
-   - Edge cases
+**Test-First Approach**: Write tests BEFORE refactoring to ensure existing behavior is preserved.
 
-3. **Controller Tests** (simplified after refactoring):
-   - Request mapping
-   - Response formatting
-   - Error handling
+#### 1. Command Handler Tests (REQUIRED)
+
+**Coverage Target**: 100% of handler logic
+
+For each command handler, create comprehensive tests covering:
+
+**✅ Happy Path Scenarios**:
+```csharp
+[Fact]
+public async Task Handle_ValidCommand_CreatesEntitySuccessfully()
+{
+    // Arrange
+    var unitOfWorkMock = new Mock<IUnitOfWork>();
+    var validatorMock = new Mock<IUnifiedValidatorService>();
+
+    var command = new CreateDepartmentCommand
+    {
+        Name = "Engineering",
+        Description = "Tech department"
+    };
+
+    // Act
+    var handler = new CreateDepartmentCommandHandler(
+        unitOfWorkMock.Object,
+        validatorMock.Object);
+
+    var result = await handler.Handle(command, CancellationToken.None);
+
+    // Assert
+    result.Should().NotBeNull();
+    result.DepartmentId.Should().BeGreaterThan(0);
+    unitOfWorkMock.Verify(x => x.DepartmentRepository.CreateAsync(
+        It.Is<Department>(d => d.Name == "Engineering")),
+        Times.Once);
+}
+```
+
+**✅ Validation Failure Scenarios**:
+```csharp
+[Fact]
+public async Task Handle_InvalidCommand_ThrowsValidationException()
+{
+    // Arrange
+    var validatorMock = new Mock<IUnifiedValidatorService>();
+    validatorMock
+        .Setup(x => x.ValidateAsync(It.IsAny<CreateDepartmentCommand>()))
+        .ThrowsAsync(new ValidationException("Validation failed",
+            new List<string> { "Name is required" }));
+
+    var command = new CreateDepartmentCommand { Name = "" };
+
+    // Act
+    var handler = new CreateDepartmentCommandHandler(
+        Mock.Of<IUnitOfWork>(),
+        validatorMock.Object);
+
+    Func<Task> act = async () => await handler.Handle(command, CancellationToken.None);
+
+    // Assert
+    await act.Should().ThrowAsync<ValidationException>()
+        .WithMessage("*Validation failed*");
+}
+```
+
+**✅ Not Found Scenarios**:
+```csharp
+[Fact]
+public async Task Handle_EntityNotFound_ThrowsNotFoundException()
+{
+    // Arrange
+    var unitOfWorkMock = new Mock<IUnitOfWork>();
+    unitOfWorkMock
+        .Setup(x => x.DepartmentRepository.GetByIdAsync(It.IsAny<Guid>()))
+        .ReturnsAsync((Department?)null);
+
+    var command = new UpdateDepartmentCommand { DepartmentId = Guid.NewGuid() };
+
+    // Act
+    var handler = new UpdateDepartmentCommandHandler(
+        unitOfWorkMock.Object,
+        Mock.Of<IUnifiedValidatorService>());
+
+    Func<Task> act = async () => await handler.Handle(command, CancellationToken.None);
+
+    // Assert
+    await act.Should().ThrowAsync<NotFoundException>()
+        .WithMessage("*Department*not found*");
+}
+```
+
+**✅ Permission/Authorization Errors**:
+```csharp
+[Fact]
+public async Task Handle_UnauthorizedUser_ThrowsForbiddenException()
+{
+    // Test authorization logic
+}
+```
+
+**✅ Edge Cases**:
+- Null/empty inputs
+- Boundary values
+- Concurrent operations
+- Database constraint violations
+
+---
+
+#### 2. Validator Tests (REQUIRED)
+
+**Coverage Target**: 100% of validation rules
+
+For each validator, test ALL validation rules:
+
+**✅ Required Field Validation**:
+```csharp
+[Fact]
+public void Validate_EmptyName_ReturnsValidationError()
+{
+    // Arrange
+    var validator = new CreateDepartmentCommandValidator(Mock.Of<IUnitOfWork>());
+    var command = new CreateDepartmentCommand { Name = "" };
+
+    // Act
+    var result = validator.Validate(command);
+
+    // Assert
+    result.IsValid.Should().BeFalse();
+    result.Errors.Should().ContainSingle(e =>
+        e.PropertyName == nameof(CreateDepartmentCommand.Name) &&
+        e.ErrorMessage.Contains("required"));
+}
+```
+
+**✅ Length Validation**:
+```csharp
+[Fact]
+public void Validate_NameTooLong_ReturnsValidationError()
+{
+    // Arrange
+    var validator = new CreateDepartmentCommandValidator(Mock.Of<IUnitOfWork>());
+    var command = new CreateDepartmentCommand
+    {
+        Name = new string('A', 101) // Exceeds 100 char limit
+    };
+
+    // Act
+    var result = validator.Validate(command);
+
+    // Assert
+    result.IsValid.Should().BeFalse();
+    result.Errors.Should().Contain(e =>
+        e.ErrorMessage.Contains("100 characters"));
+}
+```
+
+**✅ Async Validation (Database Checks)**:
+```csharp
+[Fact]
+public async Task Validate_DuplicateEmail_ReturnsValidationError()
+{
+    // Arrange
+    var unitOfWorkMock = new Mock<IUnitOfWork>();
+    unitOfWorkMock
+        .Setup(x => x.UserRepository.GetByEmailAsync("test@example.com"))
+        .ReturnsAsync(new User { Email = "test@example.com" });
+
+    var validator = new CreateUserCommandValidator(unitOfWorkMock.Object);
+    var command = new CreateUserCommand { Email = "test@example.com" };
+
+    // Act
+    var result = await validator.ValidateAsync(command);
+
+    // Assert
+    result.IsValid.Should().BeFalse();
+    result.Errors.Should().ContainSingle(e =>
+        e.ErrorMessage.Contains("already exists"));
+}
+```
+
+**✅ Format Validation** (email, phone, etc.):
+```csharp
+[Fact]
+public void Validate_InvalidEmailFormat_ReturnsValidationError()
+{
+    // Test email format validation
+}
+```
+
+**✅ Business Rule Validation**:
+```csharp
+[Fact]
+public async Task Validate_InactiveDepartment_ReturnsValidationError()
+{
+    // Test complex business rules
+}
+```
+
+---
+
+#### 3. Controller Tests (Simplified after refactoring)
+
+**Coverage Target**: 80-90% of controller code
+
+After refactoring, controllers should be thin, so tests are simpler:
+
+**✅ Request Mapping**:
+```csharp
+[Fact]
+public async Task CreateDepartment_ValidRequest_CallsMediatorWithCorrectCommand()
+{
+    // Arrange
+    var mediatorMock = new Mock<IMediator>();
+    var controller = new DepartmentsController(mediatorMock.Object);
+
+    var request = new CreateDepartmentRequest
+    {
+        Name = "Engineering",
+        Description = "Tech dept"
+    };
+
+    // Act
+    await controller.CreateDepartment(request);
+
+    // Assert
+    mediatorMock.Verify(x => x.Send(
+        It.Is<CreateDepartmentCommand>(cmd =>
+            cmd.Name == "Engineering" &&
+            cmd.Description == "Tech dept"),
+        It.IsAny<CancellationToken>()),
+        Times.Once);
+}
+```
+
+**✅ Response Formatting**:
+```csharp
+[Fact]
+public async Task CreateDepartment_Success_ReturnsOkWithResult()
+{
+    // Arrange
+    var mediatorMock = new Mock<IMediator>();
+    mediatorMock
+        .Setup(x => x.Send(It.IsAny<CreateDepartmentCommand>(), It.IsAny<CancellationToken>()))
+        .ReturnsAsync(new CreateDepartmentResult { DepartmentId = Guid.NewGuid() });
+
+    var controller = new DepartmentsController(mediatorMock.Object);
+
+    // Act
+    var result = await controller.CreateDepartment(new CreateDepartmentRequest());
+
+    // Assert
+    var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+    okResult.Value.Should().BeOfType<CreateDepartmentResult>();
+}
+```
+
+**✅ Error Handling**:
+```csharp
+[Fact]
+public async Task CreateDepartment_ValidationException_ReturnsBadRequest()
+{
+    // Arrange
+    var mediatorMock = new Mock<IMediator>();
+    mediatorMock
+        .Setup(x => x.Send(It.IsAny<CreateDepartmentCommand>(), It.IsAny<CancellationToken>()))
+        .ThrowsAsync(new ValidationException("Validation failed", new List<string>()));
+
+    var controller = new DepartmentsController(mediatorMock.Object);
+
+    // Act
+    var result = await controller.CreateDepartment(new CreateDepartmentRequest());
+
+    // Assert
+    result.Should().BeOfType<BadRequestObjectResult>();
+}
+```
+
+---
 
 ### Integration Tests
 
-1. **End-to-End Flow Tests**:
-   - Create → Read → Update → Delete
-   - Authentication flow
-   - Authorization checks
+**Coverage Target**: Critical business flows must have integration tests
 
-2. **API Contract Tests**:
-   - Request/response schemas
-   - HTTP status codes
-   - Error responses
+#### 1. End-to-End Flow Tests
+
+**✅ CRUD Operations**:
+```csharp
+[Fact]
+public async Task DepartmentFlow_CreateReadUpdateDelete_Success()
+{
+    // Arrange - Use real database (in-memory or test DB)
+    var factory = new WebApplicationFactory<Program>();
+    var client = factory.CreateClient();
+
+    // Act & Assert
+    // 1. CREATE
+    var createResponse = await client.PostAsJsonAsync("/api/departments",
+        new CreateDepartmentRequest { Name = "Test Dept" });
+    createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+    var createResult = await createResponse.Content.ReadFromJsonAsync<CreateDepartmentResult>();
+
+    // 2. READ
+    var getResponse = await client.GetAsync($"/api/departments/{createResult!.DepartmentId}");
+    getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+    // 3. UPDATE
+    var updateResponse = await client.PutAsJsonAsync($"/api/departments/{createResult.DepartmentId}",
+        new UpdateDepartmentRequest { Name = "Updated Dept" });
+    updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+    // 4. DELETE
+    var deleteResponse = await client.DeleteAsync($"/api/departments/{createResult.DepartmentId}");
+    deleteResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+}
+```
+
+**✅ Authentication & Authorization Flow**:
+```csharp
+[Fact]
+public async Task Login_ValidCredentials_ReturnsTokenAndUser()
+{
+    // Test complete auth flow
+}
+
+[Fact]
+public async Task AccessProtectedEndpoint_WithoutToken_Returns401()
+{
+    // Test authorization
+}
+```
+
+#### 2. API Contract Tests
+
+**✅ Request/Response Schemas**:
+```csharp
+[Fact]
+public async Task CreateDepartment_Response_MatchesExpectedSchema()
+{
+    // Verify response structure matches contract
+}
+```
+
+**✅ HTTP Status Codes**:
+```csharp
+[Theory]
+[InlineData("/api/departments", HttpStatusCode.OK)]
+[InlineData("/api/departments/invalid-guid", HttpStatusCode.BadRequest)]
+[InlineData("/api/departments/00000000-0000-0000-0000-000000000001", HttpStatusCode.NotFound)]
+public async Task Endpoints_ReturnCorrectStatusCodes(string url, HttpStatusCode expected)
+{
+    // Test status codes
+}
+```
+
+---
+
+### Code Coverage Requirements
+
+**Mandatory Coverage Targets**:
+
+| Component Type | Minimum Coverage | Target Coverage |
+|----------------|------------------|-----------------|
+| Command Handlers | **90%** | 100% |
+| Query Handlers | **85%** | 95% |
+| Validators | **100%** | 100% |
+| Controllers (refactored) | **80%** | 90% |
+| Domain Entities | **70%** | 85% |
+| **Overall Project** | **>70%** | **>80%** |
+
+**Coverage Tools**:
+
+```bash
+# Generate coverage report
+dotnet test /p:CollectCoverage=true \
+            /p:CoverletOutputFormat=opencover \
+            /p:CoverletOutput=./coverage/
+
+# Generate HTML report with ReportGenerator
+reportgenerator -reports:coverage/coverage.opencover.xml \
+                -targetdir:coverage/report \
+                -reporttypes:Html
+
+# View report
+start coverage/report/index.html
+```
+
+**CI/CD Integration**:
+```yaml
+# .github/workflows/test.yml
+- name: Run tests with coverage
+  run: dotnet test --configuration Release /p:CollectCoverage=true
+
+- name: Check coverage threshold
+  run: |
+    if [ $COVERAGE -lt 70 ]; then
+      echo "Coverage is below 70%!"
+      exit 1
+    fi
+```
+
+---
+
+### Testing During Refactoring - Step-by-Step Process
+
+**🔴 MANDATORY PROCESS for Each Refactored Component**:
+
+#### Step 1: Baseline Tests (BEFORE Refactoring)
+```bash
+# 1. Run existing tests and document coverage
+dotnet test /p:CollectCoverage=true
+# Note current coverage: e.g., 65%
+
+# 2. Create baseline test for current behavior
+[Fact]
+public async Task CurrentBehavior_Baseline()
+{
+    // Document how it currently works
+    // This test will be updated after refactoring
+}
+```
+
+#### Step 2: Write New Tests (DURING Refactoring)
+```bash
+# 3. Write tests for new command handler
+Create[Feature]CommandHandlerTests.cs
+  - Write happy path test
+  - Write validation failure tests
+  - Write error scenario tests
+
+# 4. Write tests for new validator
+Create[Feature]CommandValidatorTests.cs
+  - Test each validation rule
+  - Test async validations
+  - Test edge cases
+
+# 5. Write simplified controller tests
+[Feature]ControllerTests.cs
+  - Test MediatR integration
+  - Test response formatting
+```
+
+#### Step 3: Refactor with Test Safety Net
+```bash
+# 6. Refactor code
+# 7. Run tests continuously
+dotnet watch test
+
+# 8. Ensure all tests pass
+# 9. Check coverage increased
+dotnet test /p:CollectCoverage=true
+# New coverage should be >= baseline (e.g., 70%+)
+```
+
+#### Step 4: Coverage Verification (AFTER Refactoring)
+```bash
+# 10. Generate detailed coverage report
+dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+
+# 11. Verify coverage meets targets:
+# ✅ Command handlers: >90%
+# ✅ Validators: 100%
+# ✅ Controllers: >80%
+
+# 12. If coverage is below target, write additional tests
+```
+
+---
+
+### Test Organization
+
+**Project Structure**:
+```
+backend/PortalForge.Tests/
+├── Unit/
+│   ├── Application/
+│   │   └── UseCases/
+│   │       ├── Departments/
+│   │       │   ├── Commands/
+│   │       │   │   ├── CreateDepartment/
+│   │       │   │   │   ├── CreateDepartmentCommandHandlerTests.cs
+│   │       │   │   │   └── CreateDepartmentCommandValidatorTests.cs
+│   │       │   │   └── UpdateDepartment/
+│   │       │   │       ├── UpdateDepartmentCommandHandlerTests.cs
+│   │       │   │       └── UpdateDepartmentCommandValidatorTests.cs
+│   │       │   └── Queries/
+│   │       │       └── GetDepartments/
+│   │       │           └── GetDepartmentsQueryHandlerTests.cs
+│   │       └── Users/
+│   │           └── Commands/
+│   │               └── CreateUser/
+│   │                   ├── CreateUserCommandHandlerTests.cs
+│   │                   └── CreateUserCommandValidatorTests.cs
+│   └── Domain/
+│       └── Entities/
+│           ├── DepartmentTests.cs
+│           └── UserTests.cs
+├── Integration/
+│   ├── Api/
+│   │   ├── DepartmentsControllerTests.cs
+│   │   └── UsersControllerTests.cs
+│   └── Flows/
+│       ├── DepartmentCrudFlowTests.cs
+│       └── AuthenticationFlowTests.cs
+└── TestUtilities/
+    ├── Builders/
+    │   ├── DepartmentBuilder.cs
+    │   └── UserBuilder.cs
+    └── Fixtures/
+        └── DatabaseFixture.cs
+```
+
+**Naming Conventions**:
+- Unit test classes: `[ClassName]Tests.cs`
+- Test methods: `[MethodName]_[Scenario]_[ExpectedResult]`
+- Integration test classes: `[Feature]FlowTests.cs`
+
+---
+
+### Continuous Testing During Refactoring
+
+**Watch Mode** (recommended during development):
+```bash
+# Terminal 1: Watch tests
+dotnet watch test
+
+# Terminal 2: Work on refactoring
+# Tests run automatically on file save
+```
+
+**Pre-Commit Hook**:
+```bash
+#!/bin/sh
+# .git/hooks/pre-commit
+
+echo "Running tests before commit..."
+dotnet test --no-build --verbosity quiet
+
+if [ $? -ne 0 ]; then
+    echo "Tests failed! Commit aborted."
+    exit 1
+fi
+
+echo "Running coverage check..."
+dotnet test /p:CollectCoverage=true /p:Threshold=70 /p:ThresholdType=line
+
+if [ $? -ne 0 ]; then
+    echo "Coverage is below 70%! Commit aborted."
+    exit 1
+fi
+
+echo "All tests passed, coverage meets threshold. Proceeding with commit."
+```
+
+---
+
+### Test Data Builders (Recommended)
+
+Use builder pattern for complex test objects:
+
+```csharp
+// TestUtilities/Builders/DepartmentBuilder.cs
+public class DepartmentBuilder
+{
+    private Guid _id = Guid.NewGuid();
+    private string _name = "Test Department";
+    private string? _description = "Test description";
+    private bool _isActive = true;
+
+    public DepartmentBuilder WithId(Guid id)
+    {
+        _id = id;
+        return this;
+    }
+
+    public DepartmentBuilder WithName(string name)
+    {
+        _name = name;
+        return this;
+    }
+
+    public DepartmentBuilder Inactive()
+    {
+        _isActive = false;
+        return this;
+    }
+
+    public Department Build()
+    {
+        return new Department
+        {
+            Id = _id,
+            Name = _name,
+            Description = _description,
+            IsActive = _isActive,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+}
+
+// Usage in tests:
+var department = new DepartmentBuilder()
+    .WithName("Engineering")
+    .Inactive()
+    .Build();
+```
+
+---
+
+### Mutation Testing (Advanced - Optional)
+
+To ensure test quality:
+
+```bash
+# Install Stryker.NET
+dotnet tool install -g dotnet-stryker
+
+# Run mutation testing
+dotnet stryker
+
+# This will mutate your code and check if tests catch the mutations
+# High mutation score = high-quality tests
+```
+
+**Target**: >80% mutation score for critical business logic
+
+---
+
+### Testing Checklist for Each Refactored Component
+
+**Before marking refactoring as complete, verify**:
+
+- [ ] All existing tests still pass
+- [ ] New command handler has comprehensive unit tests (>90% coverage)
+- [ ] New validator has 100% coverage of all rules
+- [ ] Controller has simplified tests for MediatR integration
+- [ ] Integration test exists for critical flow
+- [ ] Code coverage meets or exceeds target (>70% overall)
+- [ ] All edge cases are tested
+- [ ] Error scenarios are tested
+- [ ] No test warnings or skipped tests
+- [ ] Tests run fast (<5 seconds for unit tests)
+- [ ] Tests are deterministic (no flaky tests)
+- [ ] Test names clearly describe what they test
+
+---
+
+### Summary: Testing Philosophy
+
+**Key Principles**:
+
+1. **Test-First Refactoring**: Write tests before changing code
+2. **Comprehensive Coverage**: Aim for >70% overall, 100% for validators
+3. **Fast Feedback**: Use watch mode during development
+4. **Quality Over Quantity**: Focus on meaningful tests, not just coverage percentage
+5. **Continuous Verification**: Run tests before every commit
+6. **Documentation**: Tests serve as living documentation of behavior
+
+**Remember**: **High test coverage is NOT negotiable** during this refactoring. Tests are our safety net to ensure we don't break existing functionality while improving code quality
 
 ---
 
