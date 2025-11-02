@@ -56,9 +56,20 @@ jobs:
 
       - name: Create storage directories on host
         run: |
+          # Create new directory structure
           mkdir -p ~/portalforge/storage/images
           mkdir -p ~/portalforge/storage/documents
-          chmod -R 777 ~/portalforge/storage
+
+          # Migrate files from old 'news-images' to new 'images' directory
+          if [ -d ~/portalforge/storage/news-images ]; then
+            echo "Migrating files from news-images to images..."
+            sudo mv ~/portalforge/storage/news-images/* ~/portalforge/storage/images/ 2>/dev/null || true
+            sudo rmdir ~/portalforge/storage/news-images 2>/dev/null || true
+          fi
+
+          # Fix ownership and permissions
+          sudo chown -R $(whoami):$(whoami) ~/portalforge/storage 2>/dev/null || true
+          chmod -R 777 ~/portalforge/storage 2>/dev/null || true
           echo "✅ Storage directories created with write permissions"
 
       - name: Run Docker container
