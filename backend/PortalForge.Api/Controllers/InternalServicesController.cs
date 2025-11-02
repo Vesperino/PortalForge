@@ -4,10 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using PortalForge.Application.UseCases.InternalServices.Commands.CreateService;
 using PortalForge.Application.UseCases.InternalServices.Commands.UpdateService;
 using PortalForge.Application.UseCases.InternalServices.Commands.DeleteService;
+using PortalForge.Application.UseCases.InternalServices.Commands.CreateCategory;
+using PortalForge.Application.UseCases.InternalServices.Commands.DeleteCategory;
 using PortalForge.Application.UseCases.InternalServices.DTOs;
 using PortalForge.Application.UseCases.InternalServices.Queries.GetAllServices;
 using PortalForge.Application.UseCases.InternalServices.Queries.GetServiceById;
 using PortalForge.Application.UseCases.InternalServices.Queries.GetServicesForUser;
+using PortalForge.Application.UseCases.InternalServices.Queries.GetAllCategories;
 
 namespace PortalForge.Api.Controllers;
 
@@ -142,6 +145,50 @@ public class InternalServicesController : BaseController
     public async Task<ActionResult> Delete(Guid id)
     {
         var command = new DeleteServiceCommand { Id = id };
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    // ========== CATEGORIES ==========
+
+    /// <summary>
+    /// Get all categories.
+    /// </summary>
+    [HttpGet("categories")]
+    public async Task<ActionResult<List<InternalServiceCategoryDto>>> GetAllCategories()
+    {
+        var query = new GetAllCategoriesQuery();
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Create a new category (Admin only).
+    /// </summary>
+    [HttpPost("categories")]
+    [Authorize(Policy = "RequireAdminRole")]
+    public async Task<ActionResult<Guid>> CreateCategory([FromBody] CreateCategoryRequest request)
+    {
+        var command = new CreateCategoryCommand
+        {
+            Name = request.Name,
+            Description = request.Description,
+            Icon = request.Icon,
+            DisplayOrder = request.DisplayOrder
+        };
+
+        var categoryId = await _mediator.Send(command);
+        return Ok(categoryId);
+    }
+
+    /// <summary>
+    /// Delete a category (Admin only).
+    /// </summary>
+    [HttpDelete("categories/{id}")]
+    [Authorize(Policy = "RequireAdminRole")]
+    public async Task<ActionResult> DeleteCategory(Guid id)
+    {
+        var command = new DeleteCategoryCommand { Id = id };
         var result = await _mediator.Send(command);
         return Ok(result);
     }

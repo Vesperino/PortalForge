@@ -166,11 +166,11 @@
                 <select
                   v-model="form.departmentIds"
                   multiple
-                  size="5"
+                  size="8"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                    {{ dept.name }}
+                  <option v-for="dept in departmentsFlat" :key="dept.id" :value="dept.id">
+                    {{ dept.level > 0 ? '└─'.repeat(dept.level) + ' ' : '' }}{{ dept.name }}
                   </option>
                 </select>
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -205,7 +205,7 @@
 
 <script setup lang="ts">
 import type { InternalService, InternalServiceCategory } from '~/types/internal-services'
-import type { Department } from '~/types'
+import type { DepartmentTreeDto } from '~/types/department'
 
 const props = defineProps<{
   service?: InternalService | null
@@ -217,6 +217,9 @@ const emit = defineEmits<{
   (e: 'saved'): void
 }>()
 
+const config = useRuntimeConfig()
+const apiUrl = config.public.apiUrl
+const authStore = useAuthStore()
 const { createService, updateService } = useInternalServicesApi()
 
 const isEditing = computed(() => !!props.service)
@@ -236,7 +239,26 @@ const form = reactive({
   departmentIds: [] as string[]
 })
 
-const departments = ref<Department[]>([])
+const departmentsTree = ref<DepartmentTreeDto[]>([])
+
+const getAuthHeaders = (): Record<string, string> | undefined => {
+  const token = authStore.accessToken
+  if (token) {
+    return { Authorization: `Bearer ${token}` }
+  }
+  return undefined
+}
+
+// Flatten departments tree for multi-select
+const departmentsFlat = computed(() => {
+  const flattenDepartments = (depts: DepartmentTreeDto[], level = 0): Array<DepartmentTreeDto & { level: number }> => {
+    return depts.flatMap(dept => [
+      { ...dept, level },
+      ...flattenDepartments(dept.children || [], level + 1)
+    ])
+  }
+  return flattenDepartments(departmentsTree.value)
+})
 
 const iconPlaceholder = computed(() => {
   switch (form.iconType) {
@@ -265,8 +287,14 @@ const iconHelpText = computed(() => {
 })
 
 async function loadDepartments() {
-  // TODO: Load departments from API
-  departments.value = []
+  try {
+    const response = await $fetch<DepartmentTreeDto[]>(`${apiUrl}/api/departments/tree`, {
+      headers: getAuthHeaders()
+    })
+    departmentsTree.value = response
+  } catch (err: any) {
+    console.error('Error loading departments:', err)
+  }
 }
 
 async function handleSubmit() {

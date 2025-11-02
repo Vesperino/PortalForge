@@ -214,7 +214,7 @@ definePageMeta({
   layout: 'dashboard'
 })
 
-const { fetchAllServices, deleteService } = useInternalServicesApi()
+const { fetchAllServices, deleteService, fetchAllCategories } = useInternalServicesApi()
 
 const services = ref<InternalService[]>([])
 const categories = ref<InternalServiceCategory[]>([])
@@ -258,8 +258,11 @@ async function loadServices() {
 }
 
 async function loadCategories() {
-  // TODO: Implement when category API is ready
-  categories.value = []
+  try {
+    categories.value = await fetchAllCategories()
+  } catch (err) {
+    console.error('Error loading categories:', err)
+  }
 }
 
 function openCreateModal() {
