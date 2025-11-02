@@ -102,8 +102,19 @@ function addMarker(lat: number, lng: number) {
     map.removeLayer(marker)
   }
 
+  // Create custom icon to fix marker display issue
+  const defaultIcon = L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  })
+
   // Add new marker
-  marker = L.marker([lat, lng]).addTo(map)
+  marker = L.marker([lat, lng], { icon: defaultIcon }).addTo(map)
   map.setView([lat, lng], 15)
 }
 
@@ -156,18 +167,25 @@ function parseCoordinates(input: string): { lat: number; lng: number } | null {
   return { lat, lng }
 }
 
-function handleCoordinatesInput() {
+async function handleCoordinatesInput() {
   if (!coordinatesInput.value.trim()) return
-  
+
   const coords = parseCoordinates(coordinatesInput.value)
-  
+
   if (coords) {
     emit('update:latitude', coords.lat)
     emit('update:longitude', coords.lng)
-    emit('update:modelValue', `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`)
-    
+
     addMarker(coords.lat, coords.lng)
     coordinatesInput.value = ''
+
+    // Try to get address from coordinates (reverse geocoding)
+    if (isOnline.value) {
+      await reverseGeocode(coords.lat, coords.lng)
+    } else {
+      // Offline: just use coordinates as address
+      emit('update:modelValue', `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`)
+    }
   }
 }
 
@@ -199,7 +217,8 @@ async function searchAddress() {
       emit('update:longitude', result.longitude)
 
       addMarker(result.latitude, result.longitude)
-      addressSearch.value = '' // Clear search after success
+      // Keep the searched address visible instead of clearing
+      addressSearch.value = result.address
     } else {
       searchError.value = 'Nie znaleziono podanego adresu'
     }

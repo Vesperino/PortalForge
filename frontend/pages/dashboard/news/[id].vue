@@ -79,7 +79,18 @@ function initializeMap() {
     maxZoom: 19
   }).addTo(map)
 
-  L.marker([lat, lng]).addTo(map)
+  // Create custom icon to fix marker display issue
+  const defaultIcon = L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  })
+
+  L.marker([lat, lng], { icon: defaultIcon }).addTo(map)
 }
 
 async function handleDelete() {
@@ -363,9 +374,27 @@ onBeforeUnmount(() => {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      <div>
+                      <div class="flex-1">
                         <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Lokalizacja</p>
                         <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ news.eventLocation }}</p>
+
+                        <!-- GPS Coordinates & Google Maps Link -->
+                        <div v-if="news.eventLatitude && news.eventLongitude" class="mt-2 space-y-1">
+                          <p class="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                            GPS: {{ news.eventLatitude.toFixed(6) }}, {{ news.eventLongitude.toFixed(6) }}
+                          </p>
+                          <a
+                            :href="`https://www.google.com/maps/search/?api=1&query=${news.eventLatitude},${news.eventLongitude}`"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            Otwórz w Google Maps
+                          </a>
+                        </div>
                       </div>
                     </div>
 
