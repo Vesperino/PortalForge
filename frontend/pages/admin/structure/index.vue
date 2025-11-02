@@ -896,14 +896,14 @@ onMounted(() => {
           <!-- Department Director Field with UserAutocomplete -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Dyrektor dzia³u (opcjonalnie)
+              Dyrektor dziaÅ‚u (opcjonalnie)
             </label>
             <CommonUserAutocomplete
               :selected-user="selectedDepartmentDirector"
               placeholder="Wyszukaj dyrektora..."
               @update:selected-user="handleDepartmentDirectorSelected"
             />
-            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Mo¿esz pozostawiæ puste.</p>
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">MoÅ¼esz pozostawiÄ‡ puste.</p>
           </div>
         </div>
 
