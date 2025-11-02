@@ -56,8 +56,12 @@ async function loadNews() {
       latitude: news.value.eventLatitude,
       longitude: news.value.eventLongitude,
       contentLength: news.value.content?.length,
-      contentPreview: news.value.content?.substring(0, 200)
+      contentPreview: news.value.content?.substring(0, 500)
     })
+
+    console.log('=== FULL CONTENT HTML ===')
+    console.log(news.value.content)
+    console.log('=== END CONTENT HTML ===')
 
     // Initialize map if coordinates are available (removed isEvent check)
     if (news.value.eventLatitude && news.value.eventLongitude) {
