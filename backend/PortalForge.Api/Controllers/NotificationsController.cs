@@ -5,14 +5,12 @@ using PortalForge.Application.UseCases.Notifications.Commands.MarkAllAsRead;
 using PortalForge.Application.UseCases.Notifications.Commands.MarkAsRead;
 using PortalForge.Application.UseCases.Notifications.Queries.GetUnreadCount;
 using PortalForge.Application.UseCases.Notifications.Queries.GetUserNotifications;
-using System.Security.Claims;
 
 namespace PortalForge.Api.Controllers;
 
-[ApiController]
 [Route("api/notifications")]
 [Authorize]
-public class NotificationsController : ControllerBase
+public class NotificationsController : BaseController
 {
     private readonly IMediator _mediator;
 
@@ -30,10 +28,10 @@ public class NotificationsController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
         {
-            return Unauthorized("User ID not found in token");
+            return unauthorizedResult;
         }
 
         var query = new GetUserNotificationsQuery
@@ -54,10 +52,10 @@ public class NotificationsController : ControllerBase
     [HttpGet("unread-count")]
     public async Task<ActionResult> GetUnreadCount()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
         {
-            return Unauthorized("User ID not found in token");
+            return unauthorizedResult;
         }
 
         var query = new GetUnreadCountQuery
@@ -90,10 +88,10 @@ public class NotificationsController : ControllerBase
     [HttpPatch("mark-all-read")]
     public async Task<ActionResult> MarkAllAsRead()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
         {
-            return Unauthorized("User ID not found in token");
+            return unauthorizedResult;
         }
 
         var command = new MarkAllAsReadCommand

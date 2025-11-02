@@ -8,14 +8,12 @@ using PortalForge.Application.UseCases.Requests.Commands.SubmitRequest;
 using PortalForge.Application.UseCases.Requests.Queries.GetMyRequests;
 using PortalForge.Application.UseCases.Requests.Queries.GetPendingApprovals;
 using PortalForge.Application.UseCases.Requests.Queries.GetRequestsToApprove;
-using System.Security.Claims;
 
 namespace PortalForge.Api.Controllers;
 
-[ApiController]
 [Route("api/requests")]
 [Authorize]
-public class RequestsController : ControllerBase
+public class RequestsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<RequestsController> _logger;
@@ -33,10 +31,10 @@ public class RequestsController : ControllerBase
     [Authorize(Policy = "RequirePermission:requests.view")]
     public async Task<ActionResult> GetMyRequests()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
         {
-            return Unauthorized("User ID not found in token");
+            return unauthorizedResult;
         }
 
         var query = new GetMyRequestsQuery { UserId = userGuid };
@@ -51,10 +49,10 @@ public class RequestsController : ControllerBase
     [Authorize(Policy = "RequirePermission:requests.approve")]
     public async Task<ActionResult> GetRequestsToApprove()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
         {
-            return Unauthorized("User ID not found in token");
+            return unauthorizedResult;
         }
 
         var query = new GetRequestsToApproveQuery { ApproverId = userGuid };
@@ -69,10 +67,10 @@ public class RequestsController : ControllerBase
     [Authorize(Policy = "RequirePermission:requests.approve")]
     public async Task<ActionResult> GetPendingApprovals()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
         {
-            return Unauthorized("User ID not found in token");
+            return unauthorizedResult;
         }
 
         var query = new GetPendingApprovalsQuery { UserId = userGuid };
@@ -87,10 +85,10 @@ public class RequestsController : ControllerBase
     [Authorize(Policy = "RequirePermission:requests.create")]
     public async Task<ActionResult> SubmitRequest([FromBody] SubmitRequestCommand command)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
         {
-            return Unauthorized("User ID not found in token");
+            return unauthorizedResult;
         }
 
         command.SubmittedById = userGuid;
@@ -106,10 +104,10 @@ public class RequestsController : ControllerBase
     [Authorize(Policy = "RequirePermission:requests.approve")]
     public async Task<ActionResult> ApproveStep(Guid requestId, Guid stepId, [FromBody] ApproveStepDto dto)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
         {
-            return Unauthorized("User ID not found in token");
+            return unauthorizedResult;
         }
 
         var command = new ApproveRequestStepCommand
@@ -137,10 +135,10 @@ public class RequestsController : ControllerBase
     [Authorize(Policy = "RequirePermission:requests.approve")]
     public async Task<ActionResult> RejectStep(Guid requestId, Guid stepId, [FromBody] RejectStepDto dto)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
         {
-            return Unauthorized("User ID not found in token");
+            return unauthorizedResult;
         }
 
         var command = new RejectRequestStepCommand

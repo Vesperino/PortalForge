@@ -15,9 +15,7 @@ using PortalForge.Application.UseCases.Auth.Queries.GetCurrentUser;
 
 namespace PortalForge.Api.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<AuthController> _logger;
@@ -174,11 +172,10 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
     {
-        // Get current user ID from JWT token
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userId, "User not authenticated");
+        if (unauthorizedResult != null)
         {
-            return Unauthorized(new { message = "User not authenticated" });
+            return unauthorizedResult;
         }
 
         var command = new ChangePasswordCommand

@@ -8,14 +8,12 @@ using PortalForge.Application.UseCases.RequestTemplates.Commands.UpdateRequestTe
 using PortalForge.Application.UseCases.RequestTemplates.Queries.GetAvailableRequestTemplates;
 using PortalForge.Application.UseCases.RequestTemplates.Queries.GetRequestTemplateById;
 using PortalForge.Application.UseCases.RequestTemplates.Queries.GetRequestTemplates;
-using System.Security.Claims;
 
 namespace PortalForge.Api.Controllers;
 
-[ApiController]
 [Route("api/request-templates")]
 [Authorize]
-public class RequestTemplatesController : ControllerBase
+public class RequestTemplatesController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<RequestTemplatesController> _logger;
@@ -44,10 +42,10 @@ public class RequestTemplatesController : ControllerBase
     [HttpGet("available")]
     public async Task<ActionResult> GetAvailable()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
         {
-            return Unauthorized("User ID not found in token");
+            return unauthorizedResult;
         }
 
         var query = new GetAvailableRequestTemplatesQuery { UserId = userGuid };
