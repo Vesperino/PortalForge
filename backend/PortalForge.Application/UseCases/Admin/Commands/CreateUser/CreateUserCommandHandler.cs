@@ -73,6 +73,30 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
         user.Role = userRole;
         user.MustChangePassword = request.MustChangePassword;
 
+        // If a position name is provided, ensure a Position record exists and link it
+        if (!string.IsNullOrWhiteSpace(request.Position))
+        {
+            var existingPosition = await _unitOfWork.PositionRepository.GetByNameAsync(request.Position);
+            if (existingPosition == null)
+            {
+                var newPosition = new Position
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.Position.Trim(),
+                    Description = null,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _unitOfWork.PositionRepository.CreateAsync(newPosition);
+                user.PositionId = newPosition.Id;
+            }
+            else
+            {
+                user.PositionId = existingPosition.Id;
+                user.Position = existingPosition.Name;
+            }
+        }
+
         await _unitOfWork.UserRepository.UpdateAsync(user);
 
         // Auto-create organizational permission if user has a department

@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import type { DepartmentTreeDto, CreateDepartmentDto, UpdateDepartmentDto } from '~/types/department'
 import type { User } from '~/types/user'
 import PositionAutocomplete from '~/components/common/PositionAutocomplete.vue'
+import UserAutocomplete from '~/components/common/UserAutocomplete.vue'
 
 definePageMeta({
   middleware: ['auth', 'verified', 'admin'],
@@ -15,6 +16,7 @@ const apiUrl = config.public.apiUrl
 // State
 const departmentTree = ref<DepartmentTreeDto[]>([])
 const allUsers = ref<User[]>([])
+const userSearchQuery = ref('')
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const activeTab = ref<'structure' | 'employees'>('structure')
@@ -68,9 +70,25 @@ const stats = computed(() => {
 })
 
 // Unassigned users
-const unassignedUsers = computed(() => {
-  return allUsers.value.filter(u => !u.departmentId)
+const unassignedUsers = computed(() => allUsers.value.filter(u => !u.departmentId))
+
+// Filtered unassigned users by search query
+const filteredUnassignedUsers = computed(() => {
+  const q = userSearchQuery.value.trim().toLowerCase()
+  if (!q) return unassignedUsers.value
+  return unassignedUsers.value.filter(u =>
+    `${u.firstName} ${u.lastName}`.toLowerCase().includes(q) ||
+    (u.email || '').toLowerCase().includes(q) ||
+    (u.position || '').toLowerCase().includes(q)
+  )
 })
+
+// Global user search select → open Quick Edit
+const onGlobalUserSelect = (user: any | null) => {
+  if (user && user.id) {
+    handleEmployeeClick(user.id)
+  }
+}
 
 // Flatten departments tree for dropdown
 const departmentsFlat = computed(() => {
@@ -711,10 +729,18 @@ onMounted(() => {
           <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Kliknij "Przypisz do działu" aby dodać pracownika do struktury organizacyjnej
           </p>
+          <div class="mt-4">
+            <input
+              v-model="userSearchQuery"
+              type="text"
+              placeholder="Wyszukaj po imieniu, nazwisku, emailu lub stanowisku..."
+              class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </div>
         </div>
         <div class="divide-y divide-gray-200 dark:divide-gray-700">
           <div
-            v-for="user in unassignedUsers"
+            v-for="user in filteredUnassignedUsers"
             :key="user.id"
             class="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
           >

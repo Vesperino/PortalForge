@@ -24,7 +24,7 @@ public class PositionRepository : IPositionRepository
     public async Task<Position?> GetByNameAsync(string name)
     {
         return await _context.Positions
-            .FirstOrDefaultAsync(p => p.Name == name);
+            .FirstOrDefaultAsync(p => p.Name.ToLower() == name.ToLower());
     }
 
     public async Task<IEnumerable<Position>> GetAllAsync()
@@ -46,9 +46,10 @@ public class PositionRepository : IPositionRepository
 
     public async Task<IEnumerable<Position>> SearchByNameAsync(string searchTerm)
     {
+        var term = searchTerm.ToLower();
         return await _context.Positions
             .AsNoTracking()
-            .Where(p => p.IsActive && p.Name.ToLower().Contains(searchTerm.ToLower()))
+            .Where(p => p.IsActive && p.Name.ToLower().Contains(term))
             .OrderBy(p => p.Name)
             .Take(10)
             .ToListAsync();

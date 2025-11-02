@@ -44,27 +44,24 @@ async function onSearch(event: { query: string }) {
 // When user selects a position from dropdown
 function onSelect(event: { value: Position }) {
   selectedPosition.value = event.value
+  // Keep input as plain string to avoid sending objects in payload
+  positionInput.value = event.value.name
   emit('update:modelValue', event.value.id)
   emit('update:positionName', event.value.name)
 }
 
-// When user types manually without selecting
-function onInput(event: any) {
-  const inputValue = event.target?.value || event.value
-
-  if (typeof inputValue === 'string') {
-    positionInput.value = inputValue
-    emit('update:positionName', inputValue)
-
-    // If input doesn't match any existing position, clear the ID
-    const exactMatch = suggestions.value.find(p =>
-      p.name.toLowerCase() === inputValue.toLowerCase()
-    )
-    if (!exactMatch) {
-      emit('update:modelValue', null)
-    }
+// Keep position name in sync when typing; coerce objects to string; clear ID if no exact match
+watch(positionInput, (val: any) => {
+  const name = typeof val === 'string' ? val : (val && typeof val === 'object' && 'name' in val ? (val as any).name : '')
+  if (typeof val !== 'string') {
+    // Coerce model back to string to prevent sending objects in requests
+    positionInput.value = name
+    return
   }
-}
+  emit('update:positionName', name || '')
+  const exact = suggestions.value.find(p => p.name.toLowerCase() === (name || '').toLowerCase())
+  if (!exact) emit('update:modelValue', null)
+})
 
 // Open modal to create new position
 function openCreateModal() {
@@ -154,9 +151,14 @@ watch(() => props.initialPositionName, async (newName) => {
         :required="required"
         :disabled="disabled"
         class="flex-1"
+        :appendTo="'self'"
+        :pt="{
+          root: { class: 'w-full' },
+          input: { class: 'w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all' },
+          panel: { class: 'max-h-64 overflow-auto' }
+        }"
         @complete="onSearch"
         @item-select="onSelect"
-        @input="onInput"
       >
         <template #option="slotProps">
           <div class="flex flex-col">
@@ -228,5 +230,10 @@ watch(() => props.initialPositionName, async (newName) => {
 <style scoped>
 .position-autocomplete {
   width: 100%;
+}
+
+/* Ensure the suggestions panel appears above custom modals */
+:global(.p-autocomplete-panel) {
+  z-index: 1000 !important;
 }
 </style>

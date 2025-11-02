@@ -2,7 +2,13 @@ import type { Position, CreatePositionDto } from '~/types/position'
 
 export function usePositions() {
   const config = useRuntimeConfig()
-  const baseUrl = config.public.apiBaseUrl
+  // Use the same public API URL as the rest of the app
+  const baseUrl = config.public.apiUrl || 'http://localhost:5155'
+  const authStore = useAuthStore()
+  const getAuthHeaders = (): Record<string, string> | undefined => {
+    const token = authStore.accessToken
+    return token ? { Authorization: `Bearer ${token}` } : undefined
+  }
 
   /**
    * Search positions by name for autocomplete
@@ -10,7 +16,8 @@ export function usePositions() {
   async function searchPositions(searchTerm: string): Promise<Position[]> {
     try {
       const response = await $fetch<Position[]>(`${baseUrl}/api/positions/search`, {
-        params: { searchTerm }
+        params: { searchTerm },
+        headers: getAuthHeaders()
       })
       return response
     } catch (error) {
@@ -25,7 +32,8 @@ export function usePositions() {
   async function getAllPositions(activeOnly: boolean = true): Promise<Position[]> {
     try {
       const response = await $fetch<Position[]>(`${baseUrl}/api/positions`, {
-        params: { activeOnly }
+        params: { activeOnly },
+        headers: getAuthHeaders()
       })
       return response
     } catch (error) {
@@ -41,7 +49,8 @@ export function usePositions() {
     try {
       const response = await $fetch<string>(`${baseUrl}/api/positions`, {
         method: 'POST',
-        body: dto
+        body: dto,
+        headers: getAuthHeaders()
       })
       return response
     } catch (error) {

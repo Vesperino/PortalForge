@@ -54,8 +54,35 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Updat
         user.LastName = request.LastName;
         user.Department = request.Department;
         user.DepartmentId = request.DepartmentId;
+        // Position handling: prefer PositionId, otherwise auto-create/reuse by name
         user.Position = request.Position;
         user.PositionId = request.PositionId;
+
+        if ((request.PositionId == null || request.PositionId == Guid.Empty) && !string.IsNullOrWhiteSpace(request.Position))
+        {
+            // Try to find an existing position by name (case-insensitive)
+            var existingPosition = await _unitOfWork.PositionRepository.GetByNameAsync(request.Position);
+            if (existingPosition == null)
+            {
+                var newPosition = new Position
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.Position.Trim(),
+                    Description = null,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.PositionRepository.CreateAsync(newPosition);
+                user.PositionId = newPosition.Id;
+            }
+            else
+            {
+                // Reuse existing and normalize user.Position to canonical name
+                user.PositionId = existingPosition.Id;
+                user.Position = existingPosition.Name;
+            }
+        }
         user.PhoneNumber = request.PhoneNumber;
         user.Role = userRole;
         user.IsActive = request.IsActive;
