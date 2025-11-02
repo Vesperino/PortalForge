@@ -20,6 +20,7 @@ public interface IUnitOfWork : IDisposable
     IPositionRepository PositionRepository { get; }
     IVacationScheduleRepository VacationScheduleRepository { get; }
     IOrganizationalPermissionRepository OrganizationalPermissionRepository { get; }
+    ICachedLocationRepository CachedLocationRepository { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

@@ -49,6 +49,9 @@ public static class DependencyInjection
         // Register Notification Service
         services.AddScoped<PortalForge.Application.Services.INotificationService, PortalForge.Infrastructure.Services.NotificationService>();
 
+        // Register Geocoding Service
+        services.AddScoped<PortalForge.Application.Interfaces.IGeocodingService, PortalForge.Infrastructure.Services.GeocodingService>();
+
         // Register Unit of Work and Repositories
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
