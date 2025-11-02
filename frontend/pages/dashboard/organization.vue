@@ -1297,6 +1297,14 @@ watch(departmentOrgChartData, () => {
   will-change: transform;
   pointer-events: none; /* Disable pointer events on container, enable on children */
   box-sizing: border-box;
+
+  /* Improve rendering quality at different scales */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
 }
 
 /* Department Node Styling */
@@ -1313,6 +1321,11 @@ watch(departmentOrgChartData, () => {
   color: white;
   user-select: none;
   pointer-events: auto;
+
+  /* Sharp text rendering at all zoom levels */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .department-node:hover {
@@ -1336,6 +1349,11 @@ watch(departmentOrgChartData, () => {
   color: white;
   user-select: none;
   pointer-events: auto;
+
+  /* Sharp text rendering at all zoom levels */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .employee-node:hover {
@@ -1364,6 +1382,11 @@ watch(departmentOrgChartData, () => {
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
+
+  /* Crisp image rendering when scaled */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
 }
 
 .employee-name {
@@ -1371,6 +1394,8 @@ watch(departmentOrgChartData, () => {
   font-weight: 700;
   margin-bottom: 4px;
   line-height: 1.2;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .employee-position {
@@ -1378,6 +1403,8 @@ watch(departmentOrgChartData, () => {
   opacity: 0.9;
   font-weight: 500;
   margin-bottom: 4px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .employee-head-badge {
@@ -1396,6 +1423,8 @@ watch(departmentOrgChartData, () => {
   font-weight: 700;
   margin-bottom: 8px;
   line-height: 1.3;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .department-manager {
@@ -1403,6 +1432,8 @@ watch(departmentOrgChartData, () => {
   opacity: 0.95;
   margin-bottom: 8px;
   font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .department-stats {
