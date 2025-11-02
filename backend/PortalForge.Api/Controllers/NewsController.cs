@@ -54,7 +54,6 @@ public class NewsController : BaseController
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,Hr,Marketing")]
     public async Task<ActionResult<int>> Create([FromBody] CreateNewsRequestDto request)
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var authorId);
@@ -85,7 +84,6 @@ public class NewsController : BaseController
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Hr,Marketing")]
     public async Task<ActionResult> Update(int id, [FromBody] UpdateNewsRequestDto request)
     {
         var command = new UpdateNewsCommand
@@ -110,7 +108,6 @@ public class NewsController : BaseController
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin,Hr,Marketing")]
     public async Task<ActionResult> Delete(int id)
     {
         var command = new DeleteNewsCommand { NewsId = id };

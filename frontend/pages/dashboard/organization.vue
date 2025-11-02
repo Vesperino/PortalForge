@@ -430,7 +430,7 @@ watch(zoom, (newZoom) => {
           Struktura organizacyjna
         </h1>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          {{ allEmployees.length }} pracowników w {{ departments.length }} działach
+          {{ allEmployees.length }} pracownik�w w {{ departments.length }} dzia�ach
         </p>
       </div>
     </div>
@@ -466,7 +466,7 @@ watch(zoom, (newZoom) => {
             <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
-            Według działów
+            Wed�ug dzia��w
           </button>
           <button
             :class="[
@@ -480,7 +480,7 @@ watch(zoom, (newZoom) => {
             <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
             </svg>
-            Lista pracowników
+            Lista pracownik�w
           </button>
         </div>
 
@@ -573,16 +573,16 @@ watch(zoom, (newZoom) => {
                 </p>
               </div>
               <div class="text-right">
+              <div class="text-right">
                 <p class="text-2xl font-bold text-gray-900 dark:text-white">
                   {{ getEmployeesByDepartment(dept.id).length }}
                 </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">pracowników</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">pracownik�w</p>
               </div>
             </div>
-
-            <!-- Department Manager -->
+              </div>
             <div v-if="getManagerByDepartment(dept)" class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kierownik działu</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kierownik dzia�u</p>
               <div
                 class="flex items-center gap-3 cursor-pointer"
                 @click="selectEmployee(getManagerByDepartment(dept))"
@@ -1609,4 +1609,7 @@ watch(zoom, (newZoom) => {
   border-left-color: #3b82f6 !important;
 }
 </style>
+
+
+
 
