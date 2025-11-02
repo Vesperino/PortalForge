@@ -11,6 +11,9 @@ const { fetchAllNews } = useNewsApi()
 const latestNews = ref<News[]>([])
 const upcomingEvents = ref<News[]>([])
 const loading = ref(true)
+const selectedEvent = ref<News | null>(null)
+const showEventModal = ref(false)
+const router = useRouter()
 
 onMounted(async () => {
   try {
@@ -129,6 +132,21 @@ const getCategoryLabel = (category: string) => {
     'event': 'Event'
   }
   return labels[category] || category
+}
+
+function handleEventClick(event: News) {
+  selectedEvent.value = event
+  showEventModal.value = true
+}
+
+function closeEventModal() {
+  showEventModal.value = false
+  selectedEvent.value = null
+}
+
+function viewEventDetails(eventId: number) {
+  router.push(`/dashboard/news/${eventId}`)
+  closeEventModal()
 }
 </script>
 
@@ -303,6 +321,7 @@ const getCategoryLabel = (category: string) => {
             v-for="event in upcomingEvents"
             :key="event.id"
             class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer"
+            @click="handleEventClick(event)"
           >
             <div class="flex gap-4">
               <!-- Date Badge -->
@@ -346,5 +365,12 @@ const getCategoryLabel = (category: string) => {
       </div>
     </div>
 
+    <!-- Event Modal -->
+    <EventModal
+      :event="selectedEvent"
+      :show="showEventModal"
+      @close="closeEventModal"
+      @view-details="viewEventDetails"
+    />
   </div>
 </template>

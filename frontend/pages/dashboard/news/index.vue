@@ -106,6 +106,16 @@ watch([selectedCategory, selectedDepartment, showOnlyEvents, selectedHashtags], 
   loadNews()
 })
 
+// Watch for route query parameter changes (e.g., when clicking hashtags)
+watch(() => route.query.hashtag, (newHashtag) => {
+  if (newHashtag && typeof newHashtag === 'string') {
+    const formattedHashtag = newHashtag.startsWith('#') ? newHashtag : `#${newHashtag}`
+    if (!selectedHashtags.value.includes(formattedHashtag)) {
+      selectedHashtags.value = [formattedHashtag]
+    }
+  }
+})
+
 const filteredNews = computed(() => {
   if (!searchQuery.value) {
     return allNews.value
