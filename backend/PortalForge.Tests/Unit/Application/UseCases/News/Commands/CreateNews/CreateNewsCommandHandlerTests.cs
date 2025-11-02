@@ -40,7 +40,7 @@ public class CreateNewsCommandHandlerTests
             Content = "Test Content",
             Excerpt = "Test Excerpt",
             AuthorId = authorId,
-            Category = NewsCategory.Announcement
+            Category = "Announcement"
         };
 
         var author = new User { Id = authorId, Email = "test@example.com" };
@@ -48,7 +48,11 @@ public class CreateNewsCommandHandlerTests
         _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(authorId))
             .ReturnsAsync(author);
 
+        _unitOfWorkMock.Setup(x => x.HashtagRepository.GetOrCreateHashtagsAsync(It.IsAny<List<string>>()))
+            .ReturnsAsync(new List<Hashtag>());
+
         _unitOfWorkMock.Setup(x => x.NewsRepository.CreateAsync(It.IsAny<Domain.Entities.News>()))
+            .Callback<Domain.Entities.News>(n => n.Id = 1)
             .ReturnsAsync(1);
 
         // Act
@@ -75,7 +79,7 @@ public class CreateNewsCommandHandlerTests
             Content = "Test Content",
             Excerpt = "Test Excerpt",
             AuthorId = Guid.NewGuid(),
-            Category = NewsCategory.Announcement
+            Category = "Announcement"
         };
 
         _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(It.IsAny<Guid>()))
@@ -101,7 +105,7 @@ public class CreateNewsCommandHandlerTests
             Content = "Test Content",
             Excerpt = "Test Excerpt",
             AuthorId = authorId,
-            Category = NewsCategory.Event,
+            Category = "Event",
             EventId = eventId
         };
 
@@ -112,7 +116,10 @@ public class CreateNewsCommandHandlerTests
             .ReturnsAsync(author);
         _unitOfWorkMock.Setup(x => x.EventRepository.GetByIdAsync(eventId))
             .ReturnsAsync(eventEntity);
+        _unitOfWorkMock.Setup(x => x.HashtagRepository.GetOrCreateHashtagsAsync(It.IsAny<List<string>>()))
+            .ReturnsAsync(new List<Hashtag>());
         _unitOfWorkMock.Setup(x => x.NewsRepository.CreateAsync(It.IsAny<Domain.Entities.News>()))
+            .Callback<Domain.Entities.News>(n => n.Id = 1)
             .ReturnsAsync(1);
 
         // Act

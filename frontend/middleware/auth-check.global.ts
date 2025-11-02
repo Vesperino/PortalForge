@@ -18,13 +18,20 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   // Check if user is authenticated
   if (!authStore.isAuthenticated) {
-    return navigateTo('/auth/login')
+    // Avoid redundant navigation
+    if (to.path !== '/auth/login') {
+      return navigateTo('/auth/login')
+    }
+    return
   }
 
   // Check if token is expired
   if (checkTokenExpiration()) {
     console.warn('Token expired, logging out...')
     await logout()
-    return navigateTo('/auth/login')
+    // Avoid redundant navigation after logout
+    if (to.path !== '/auth/login') {
+      return navigateTo('/auth/login')
+    }
   }
 })

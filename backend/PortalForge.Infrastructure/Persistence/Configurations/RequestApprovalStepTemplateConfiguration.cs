@@ -52,8 +52,14 @@ public class RequestApprovalStepTemplateConfiguration : IEntityTypeConfiguration
             .HasForeignKey(ast => ast.ApproverGroupId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.HasOne(ast => ast.SpecificDepartment)
+            .WithMany()
+            .HasForeignKey(ast => ast.SpecificDepartmentId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Indexes
         builder.HasIndex(ast => new { ast.RequestTemplateId, ast.StepOrder });
+        builder.HasIndex(ast => ast.SpecificDepartmentId);
     }
 }
 

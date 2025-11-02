@@ -10,6 +10,7 @@ namespace PortalForge.Tests.Unit.Application.UseCases.Auth.Commands.Login;
 public class LoginCommandHandlerTests
 {
     private readonly Mock<ISupabaseAuthService> _authServiceMock;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IUnifiedValidatorService> _validatorServiceMock;
     private readonly Mock<ILogger<LoginCommandHandler>> _loggerMock;
     private readonly LoginCommandHandler _handler;
@@ -17,11 +18,13 @@ public class LoginCommandHandlerTests
     public LoginCommandHandlerTests()
     {
         _authServiceMock = new Mock<ISupabaseAuthService>();
+        _unitOfWorkMock = new Mock<IUnitOfWork>();
         _validatorServiceMock = new Mock<IUnifiedValidatorService>();
         _loggerMock = new Mock<ILogger<LoginCommandHandler>>();
 
         _handler = new LoginCommandHandler(
             _authServiceMock.Object,
+            _unitOfWorkMock.Object,
             _validatorServiceMock.Object,
             _loggerMock.Object);
     }
@@ -52,6 +55,16 @@ public class LoginCommandHandlerTests
         _authServiceMock
             .Setup(x => x.LoginAsync(command.Email, command.Password))
             .ReturnsAsync(expectedAuthResult);
+
+        _unitOfWorkMock
+            .Setup(x => x.UserRepository.GetByIdAsync(expectedAuthResult.UserId!.Value))
+            .ReturnsAsync(new Domain.Entities.User
+            {
+                Id = expectedAuthResult.UserId.Value,
+                Email = command.Email,
+                FirstName = "Test",
+                LastName = "User"
+            });
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);

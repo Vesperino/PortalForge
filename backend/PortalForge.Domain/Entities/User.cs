@@ -21,6 +21,14 @@ public class User
     public string Position { get; set; } = string.Empty;
     public DepartmentRole DepartmentRole { get; set; } = DepartmentRole.Employee;
 
+    // NEW: Link to Department entity
+    public Guid? DepartmentId { get; set; }
+    public Department? DepartmentEntity { get; set; }
+
+    // Link to Position entity
+    public Guid? PositionId { get; set; }
+    public Position? PositionEntity { get; set; }
+
     public string? PhoneNumber { get; set; }
     public string? ProfilePhotoUrl { get; set; }
 

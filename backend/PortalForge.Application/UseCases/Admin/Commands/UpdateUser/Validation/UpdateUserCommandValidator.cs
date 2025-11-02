@@ -1,0 +1,85 @@
+using FluentValidation;
+using PortalForge.Application.Common.Interfaces;
+
+namespace PortalForge.Application.UseCases.Admin.Commands.UpdateUser.Validation;
+
+public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    public UpdateUserCommandValidator(IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork;
+
+        RuleFor(x => x.UserId)
+            .NotEmpty().WithMessage("User ID is required")
+            .MustAsync(UserExists).WithMessage("User does not exist");
+
+        RuleFor(x => x.FirstName)
+            .NotEmpty().WithMessage("First name is required")
+            .MinimumLength(2).WithMessage("First name must be at least 2 characters")
+            .MaximumLength(100).WithMessage("First name cannot exceed 100 characters");
+
+        RuleFor(x => x.LastName)
+            .NotEmpty().WithMessage("Last name is required")
+            .MinimumLength(2).WithMessage("Last name must be at least 2 characters")
+            .MaximumLength(100).WithMessage("Last name cannot exceed 100 characters");
+
+        RuleFor(x => x.Department)
+            .NotEmpty().WithMessage("Department is required")
+            .MaximumLength(200).WithMessage("Department cannot exceed 200 characters");
+
+        When(x => x.DepartmentId.HasValue, () =>
+        {
+            RuleFor(x => x.DepartmentId!.Value)
+                .MustAsync(DepartmentExists).WithMessage("Department does not exist");
+        });
+
+        RuleFor(x => x.Position)
+            .NotEmpty().WithMessage("Position is required")
+            .MaximumLength(200).WithMessage("Position cannot exceed 200 characters");
+
+        When(x => x.PositionId.HasValue, () =>
+        {
+            RuleFor(x => x.PositionId!.Value)
+                .MustAsync(PositionExists).WithMessage("Position does not exist");
+        });
+
+        When(x => !string.IsNullOrEmpty(x.PhoneNumber), () =>
+        {
+            RuleFor(x => x.PhoneNumber)
+                .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Invalid phone number format");
+        });
+
+        RuleFor(x => x.Role)
+            .NotEmpty().WithMessage("Role is required")
+            .Must(BeValidRole).WithMessage("Role must be one of: Admin, HR, Manager, Marketing, Employee");
+
+        RuleFor(x => x.UpdatedBy)
+            .NotEmpty().WithMessage("UpdatedBy is required");
+    }
+
+    private async Task<bool> UserExists(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+        return user != null;
+    }
+
+    private async Task<bool> DepartmentExists(Guid departmentId, CancellationToken cancellationToken)
+    {
+        var department = await _unitOfWork.DepartmentRepository.GetByIdAsync(departmentId);
+        return department != null;
+    }
+
+    private async Task<bool> PositionExists(Guid positionId, CancellationToken cancellationToken)
+    {
+        var position = await _unitOfWork.PositionRepository.GetByIdAsync(positionId);
+        return position != null;
+    }
+
+    private bool BeValidRole(string role)
+    {
+        var validRoles = new[] { "Admin", "HR", "Manager", "Marketing", "Employee" };
+        return validRoles.Contains(role, StringComparer.OrdinalIgnoreCase);
+    }
+}

@@ -13,6 +13,7 @@ public class ApproveRequestStepCommandHandlerTests
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
     private readonly Mock<IRequestRepository> _mockRequestRepo;
     private readonly Mock<INotificationService> _mockNotificationService;
+    private readonly Mock<IVacationScheduleService> _mockVacationService;
     private readonly ApproveRequestStepCommandHandler _handler;
 
     public ApproveRequestStepCommandHandlerTests()
@@ -20,8 +21,12 @@ public class ApproveRequestStepCommandHandlerTests
         _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockRequestRepo = new Mock<IRequestRepository>();
         _mockNotificationService = new Mock<INotificationService>();
+        _mockVacationService = new Mock<IVacationScheduleService>();
         _mockUnitOfWork.Setup(u => u.RequestRepository).Returns(_mockRequestRepo.Object);
-        _handler = new ApproveRequestStepCommandHandler(_mockUnitOfWork.Object, _mockNotificationService.Object);
+        _handler = new ApproveRequestStepCommandHandler(
+            _mockUnitOfWork.Object,
+            _mockNotificationService.Object,
+            _mockVacationService.Object);
     }
 
     [Fact]
@@ -216,6 +221,150 @@ public class ApproveRequestStepCommandHandlerTests
         Assert.Contains("Quiz must be completed", result.Message);
         Assert.Equal(ApprovalStepStatus.RequiresSurvey, request.ApprovalSteps.First().Status);
         Assert.Equal(RequestStatus.AwaitingSurvey, request.Status);
+    }
+
+    [Fact]
+    public async Task Handle_NextApproverOnVacation_RoutesToSubstitute()
+    {
+        // Arrange
+        var requestId = Guid.NewGuid();
+        var step1Id = Guid.NewGuid();
+        var step2Id = Guid.NewGuid();
+        var approver1Id = Guid.NewGuid();
+        var approver2Id = Guid.NewGuid(); // Original approver (on vacation)
+        var substituteId = Guid.NewGuid(); // Substitute
+
+        var substitute = new User
+        {
+            Id = substituteId,
+            FirstName = "John",
+            LastName = "Substitute",
+            Email = "john.sub@test.com"
+        };
+
+        var request = new Request
+        {
+            Id = requestId,
+            RequestNumber = "REQ-2025-0001",
+            Status = RequestStatus.InReview,
+            ApprovalSteps = new List<RequestApprovalStep>
+            {
+                new RequestApprovalStep
+                {
+                    Id = step1Id,
+                    StepOrder = 1,
+                    ApproverId = approver1Id,
+                    Status = ApprovalStepStatus.InReview,
+                    RequiresQuiz = false
+                },
+                new RequestApprovalStep
+                {
+                    Id = step2Id,
+                    StepOrder = 2,
+                    ApproverId = approver2Id,
+                    Status = ApprovalStepStatus.Pending,
+                    RequiresQuiz = false
+                }
+            }
+        };
+
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+            .ReturnsAsync(request);
+
+        // Setup: approver2 is on vacation, return substitute
+        _mockVacationService.Setup(v => v.GetActiveSubstituteAsync(approver2Id))
+            .ReturnsAsync(substitute);
+
+        var command = new ApproveRequestStepCommand
+        {
+            RequestId = requestId,
+            StepId = step1Id,
+            ApproverId = approver1Id
+        };
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.Success);
+
+        // Step 2 should now be assigned to substitute, not original approver
+        var step2 = request.ApprovalSteps.ElementAt(1);
+        Assert.Equal(substituteId, step2.ApproverId);
+        Assert.Equal(ApprovalStepStatus.InReview, step2.Status);
+        Assert.Contains("substitute", step2.Comment?.ToLower() ?? "");
+
+        // Verify substitute was notified
+        _mockNotificationService.Verify(
+            n => n.NotifyApproverAsync(substituteId, request),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_NextApproverNotOnVacation_RoutesNormally()
+    {
+        // Arrange
+        var requestId = Guid.NewGuid();
+        var step1Id = Guid.NewGuid();
+        var step2Id = Guid.NewGuid();
+        var approver1Id = Guid.NewGuid();
+        var approver2Id = Guid.NewGuid();
+
+        var request = new Request
+        {
+            Id = requestId,
+            RequestNumber = "REQ-2025-0001",
+            Status = RequestStatus.InReview,
+            ApprovalSteps = new List<RequestApprovalStep>
+            {
+                new RequestApprovalStep
+                {
+                    Id = step1Id,
+                    StepOrder = 1,
+                    ApproverId = approver1Id,
+                    Status = ApprovalStepStatus.InReview,
+                    RequiresQuiz = false
+                },
+                new RequestApprovalStep
+                {
+                    Id = step2Id,
+                    StepOrder = 2,
+                    ApproverId = approver2Id,
+                    Status = ApprovalStepStatus.Pending,
+                    RequiresQuiz = false
+                }
+            }
+        };
+
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+            .ReturnsAsync(request);
+
+        // Setup: approver2 is NOT on vacation, return null
+        _mockVacationService.Setup(v => v.GetActiveSubstituteAsync(approver2Id))
+            .ReturnsAsync((User?)null);
+
+        var command = new ApproveRequestStepCommand
+        {
+            RequestId = requestId,
+            StepId = step1Id,
+            ApproverId = approver1Id
+        };
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.Success);
+
+        // Step 2 should still be assigned to original approver
+        var step2 = request.ApprovalSteps.ElementAt(1);
+        Assert.Equal(approver2Id, step2.ApproverId);
+        Assert.Equal(ApprovalStepStatus.InReview, step2.Status);
+
+        // Verify original approver was notified
+        _mockNotificationService.Verify(
+            n => n.NotifyApproverAsync(approver2Id, request),
+            Times.Once);
     }
 }
 

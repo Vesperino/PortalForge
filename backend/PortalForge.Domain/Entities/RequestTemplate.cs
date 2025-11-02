@@ -13,6 +13,7 @@ public class RequestTemplate
     
     public bool IsActive { get; set; } = true;
     public bool RequiresApproval { get; set; } = true;
+    public bool RequiresSubstituteSelection { get; set; } = false;
     public int? EstimatedProcessingDays { get; set; }
     
     // Quiz passing score (0-100)

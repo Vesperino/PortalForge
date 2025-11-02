@@ -6,6 +6,7 @@ using PortalForge.Application.UseCases.Admin.Commands.DeleteUser;
 using PortalForge.Application.UseCases.Admin.Commands.UpdateUser;
 using PortalForge.Application.UseCases.Admin.Queries.GetUserById;
 using PortalForge.Application.UseCases.Admin.Queries.GetUsers;
+using PortalForge.Application.UseCases.Users.Commands.BulkAssignDepartment;
 using System.Security.Claims;
 
 namespace PortalForge.Api.Controllers;
@@ -106,7 +107,9 @@ public class UsersController : ControllerBase
             FirstName = request.FirstName,
             LastName = request.LastName,
             Department = request.Department,
+            DepartmentId = request.DepartmentId,
             Position = request.Position,
+            PositionId = request.PositionId,
             PhoneNumber = request.PhoneNumber,
             Role = request.Role,
             RoleGroupIds = request.RoleGroupIds,
@@ -132,6 +135,36 @@ public class UsersController : ControllerBase
         var result = await _mediator.Send(command);
         return Ok(result);
     }
+
+    /// <summary>
+    /// Bulk assign multiple employees to a department
+    /// </summary>
+    [HttpPost("bulk-assign-department")]
+    public async Task<ActionResult<int>> BulkAssignDepartment([FromBody] BulkAssignDepartmentRequest request)
+    {
+        _logger.LogInformation("Bulk assigning {Count} employees to department {DepartmentId}",
+            request.EmployeeIds.Count, request.DepartmentId);
+
+        var command = new BulkAssignDepartmentCommand
+        {
+            EmployeeIds = request.EmployeeIds,
+            DepartmentId = request.DepartmentId
+        };
+
+        var updatedCount = await _mediator.Send(command);
+
+        return Ok(new
+        {
+            UpdatedCount = updatedCount,
+            Message = $"Successfully assigned {updatedCount} employees to department"
+        });
+    }
+}
+
+public class BulkAssignDepartmentRequest
+{
+    public List<Guid> EmployeeIds { get; set; } = new();
+    public Guid DepartmentId { get; set; }
 }
 
 public class CreateUserRequest
@@ -153,7 +186,9 @@ public class UpdateUserRequest
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Department { get; set; } = string.Empty;
+    public Guid? DepartmentId { get; set; }
     public string Position { get; set; } = string.Empty;
+    public Guid? PositionId { get; set; }
     public string? PhoneNumber { get; set; }
     public string Role { get; set; } = string.Empty;
     public List<Guid> RoleGroupIds { get; set; } = new();

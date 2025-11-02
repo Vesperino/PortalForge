@@ -49,6 +49,17 @@ public class RoleGroupRepository : IRoleGroupRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<User>> GetUsersInGroupAsync(Guid roleGroupId)
+    {
+        return await _context.UserRoleGroups
+            .Where(urg => urg.RoleGroupId == roleGroupId)
+            .Include(urg => urg.User)
+            .Select(urg => urg.User)
+            .Where(u => u.IsActive)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public async Task<Guid> CreateAsync(RoleGroup roleGroup)
     {
         await _context.RoleGroups.AddAsync(roleGroup);

@@ -45,6 +45,9 @@ public class CreateNewsCommandHandler : IRequestHandler<CreateNewsCommand, int>
             }
         }
 
+        // Parse category string to enum (validator already checked it's valid)
+        var category = Enum.Parse<Domain.Entities.NewsCategory>(request.Category, ignoreCase: true);
+
         var news = new Domain.Entities.News
         {
             Title = request.Title,
@@ -52,7 +55,7 @@ public class CreateNewsCommandHandler : IRequestHandler<CreateNewsCommand, int>
             Excerpt = request.Excerpt,
             ImageUrl = request.ImageUrl,
             AuthorId = request.AuthorId,
-            Category = request.Category,
+            Category = category,
             EventId = request.EventId,
             CreatedAt = DateTime.UtcNow,
             Views = 0,

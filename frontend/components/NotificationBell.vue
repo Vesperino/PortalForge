@@ -60,39 +60,51 @@
           </div>
 
           <div v-else>
-            <div
-              v-for="notification in notifications"
-              :key="notification.id"
-              @click="handleNotificationClick(notification)"
-              class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
-              :class="{ 'bg-blue-50 dark:bg-blue-900/20': !notification.isRead }"
-            >
-              <div class="flex items-start gap-3">
-                <!-- Icon based on type -->
-                <div class="flex-shrink-0 mt-1">
-                  <Icon
-                    :name="getNotificationIcon(notification.type)"
-                    class="w-5 h-5"
-                    :class="getNotificationIconColor(notification.type)"
-                  />
-                </div>
+            <!-- Grouped Notifications -->
+            <div v-for="(group, category) in groupedNotifications" :key="category">
+              <!-- Category Header -->
+              <div class="px-4 py-2 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                  {{ getCategoryLabel(category as NotificationCategory) }}
+                  <span class="ml-1 text-gray-500 dark:text-gray-400">({{ group?.length || 0 }})</span>
+                </h4>
+              </div>
 
-                <!-- Content -->
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-900 dark:text-white">
-                    {{ notification.title }}
-                  </p>
-                  <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    {{ notification.message }}
-                  </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {{ formatDate(notification.createdAt) }}
-                  </p>
-                </div>
+              <!-- Notifications in Category -->
+              <div
+                v-for="notification in group"
+                :key="notification.id"
+                @click="handleNotificationClick(notification)"
+                class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                :class="{ 'bg-blue-50 dark:bg-blue-900/20': !notification.isRead }"
+              >
+                <div class="flex items-start gap-3">
+                  <!-- Icon based on type -->
+                  <div class="flex-shrink-0 mt-1">
+                    <Icon
+                      :name="getNotificationIcon(notification.type)"
+                      class="w-5 h-5"
+                      :class="getNotificationIconColor(notification.type)"
+                    />
+                  </div>
 
-                <!-- Unread indicator -->
-                <div v-if="!notification.isRead" class="flex-shrink-0">
-                  <div class="w-2 h-2 bg-blue-600 rounded-full"></div>
+                  <!-- Content -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">
+                      {{ notification.title }}
+                    </p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                      {{ notification.message }}
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {{ formatDate(notification.createdAt) }}
+                    </p>
+                  </div>
+
+                  <!-- Unread indicator -->
+                  <div v-if="!notification.isRead" class="flex-shrink-0">
+                    <div class="w-2 h-2 bg-blue-600 rounded-full"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -118,11 +130,37 @@
 import { storeToRefs } from 'pinia'
 import type { Notification, NotificationType } from '~/types/requests'
 
+type NotificationCategory = 'requests' | 'vacations' | 'system'
+
 const notificationsStore = useNotificationsStore()
 const { notifications, unreadCount, loading } = storeToRefs(notificationsStore)
 
 const isOpen = ref(false)
 let pollingInterval: NodeJS.Timeout | null = null
+
+// Group notifications by category
+const groupedNotifications = computed(() => {
+  const groups: Record<NotificationCategory, Notification[]> = {
+    requests: [],
+    vacations: [],
+    system: []
+  }
+
+  notifications.value.forEach((notification) => {
+    const category = getNotificationCategory(notification.type)
+    groups[category].push(notification)
+  })
+
+  // Remove empty groups and return
+  const result: Partial<Record<NotificationCategory, Notification[]>> = {}
+  Object.entries(groups).forEach(([key, value]) => {
+    if (value.length > 0) {
+      result[key as NotificationCategory] = value
+    }
+  })
+
+  return result
+})
 
 const toggleDropdown = async () => {
   isOpen.value = !isOpen.value
@@ -150,6 +188,35 @@ const handleMarkAllAsRead = async () => {
   await notificationsStore.markAllAsRead()
 }
 
+const getNotificationCategory = (type: NotificationType): NotificationCategory => {
+  const requestTypes: NotificationType[] = [
+    'RequestPendingApproval',
+    'RequestApproved',
+    'RequestRejected',
+    'RequestCompleted',
+    'RequestCommented'
+  ]
+
+  const vacationTypes: NotificationType[] = [
+    'VacationCoverageAssigned',
+    'VacationCoverageStarted',
+    'VacationEnded'
+  ]
+
+  if (requestTypes.includes(type)) return 'requests'
+  if (vacationTypes.includes(type)) return 'vacations'
+  return 'system'
+}
+
+const getCategoryLabel = (category: NotificationCategory): string => {
+  const labels: Record<NotificationCategory, string> = {
+    requests: 'Wnioski',
+    vacations: 'Urlopy',
+    system: 'System'
+  }
+  return labels[category]
+}
+
 const getNotificationIcon = (type: NotificationType) => {
   const icons: Record<NotificationType, string> = {
     RequestPendingApproval: 'heroicons:clock',
@@ -158,7 +225,10 @@ const getNotificationIcon = (type: NotificationType) => {
     RequestCompleted: 'heroicons:check-badge',
     RequestCommented: 'heroicons:chat-bubble-left-right',
     System: 'heroicons:cog-6-tooth',
-    Announcement: 'heroicons:megaphone'
+    Announcement: 'heroicons:megaphone',
+    VacationCoverageAssigned: 'heroicons:calendar-days',
+    VacationCoverageStarted: 'heroicons:calendar',
+    VacationEnded: 'heroicons:calendar-date-range'
   }
   return icons[type] || 'heroicons:bell'
 }
@@ -171,7 +241,10 @@ const getNotificationIconColor = (type: NotificationType) => {
     RequestCompleted: 'text-blue-600',
     RequestCommented: 'text-purple-600',
     System: 'text-gray-600',
-    Announcement: 'text-indigo-600'
+    Announcement: 'text-indigo-600',
+    VacationCoverageAssigned: 'text-orange-600',
+    VacationCoverageStarted: 'text-teal-600',
+    VacationEnded: 'text-cyan-600'
   }
   return colors[type] || 'text-gray-600'
 }

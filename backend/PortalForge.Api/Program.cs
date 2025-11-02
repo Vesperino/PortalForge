@@ -1,14 +1,27 @@
 using PortalForge.Api.Middleware;
 using PortalForge.Application;
 using PortalForge.Infrastructure;
+using PortalForge.Infrastructure.BackgroundJobs;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+if (builder.Environment.IsProduction())
+{
+    builder.Logging.AddEventLog();
+}
 
 // Add services to the container.
 
 // Add Application and Infrastructure layers
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Register background jobs
+builder.Services.AddHostedService<UpdateVacationStatusesJob>();
+builder.Services.AddHostedService<PortalForge.Infrastructure.Services.VacationReminderBackgroundService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -24,6 +37,7 @@ builder.Services.AddCors(options =>
                   "https://krablab.pl",
                   "http://krablab.pl",
                   "http://localhost:3000",
+                  "http://localhost:3001",
                   "https://83.168.107.39",
                   "http://83.168.107.39")
               .AllowAnyHeader()
@@ -84,3 +98,6 @@ app.MapGet("/health", () => Results.Ok(new
 app.MapControllers();
 
 app.Run();
+
+// Make the implicit Program class public for integration tests
+public partial class Program { }

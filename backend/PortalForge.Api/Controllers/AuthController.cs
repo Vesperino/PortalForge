@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Common.Models;
 using PortalForge.Application.UseCases.Auth.Commands.ChangePassword;
 using PortalForge.Application.UseCases.Auth.Commands.Login;
@@ -16,19 +15,20 @@ using PortalForge.Application.UseCases.Auth.Queries.GetCurrentUser;
 
 namespace PortalForge.Api.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<AuthController> _logger;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IWebHostEnvironment _environment;
 
-    public AuthController(IMediator mediator, ILogger<AuthController> logger, IUnitOfWork unitOfWork)
+    public AuthController(
+        IMediator mediator,
+        ILogger<AuthController> logger,
+        IWebHostEnvironment environment)
     {
         _mediator = mediator;
         _logger = logger;
-        _unitOfWork = unitOfWork;
+        _environment = environment;
     }
 
     [HttpPost("register")]
@@ -62,30 +62,9 @@ public class AuthController : ControllerBase
 
         var result = await _mediator.Send(command);
 
-        // Get full user data from database
-        var user = await _unitOfWork.UserRepository.GetByIdAsync(result.UserId ?? Guid.Empty);
-
-        if (user == null)
-        {
-            return BadRequest("User not found");
-        }
-
         var response = new AuthResponseDto
         {
-            User = new UserDto
-            {
-                Id = user.Id,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                PhoneNumber = user.PhoneNumber,
-                Department = user.Department,
-                Position = user.Position,
-                Role = user.Role.ToString().ToLower(),
-                IsEmailVerified = user.IsEmailVerified,
-                MustChangePassword = user.MustChangePassword,
-                CreatedAt = user.CreatedAt
-            },
+            User = result.User,
             AccessToken = result.AccessToken ?? string.Empty,
             RefreshToken = result.RefreshToken ?? string.Empty
         };
@@ -186,34 +165,17 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<UserDto>> GetCurrentUser()
     {
         var user = await _mediator.Send(new GetCurrentUserQuery());
-
-        var userDto = new UserDto
-        {
-            Id = user.Id,
-            Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            PhoneNumber = user.PhoneNumber,
-            Department = user.Department,
-            Position = user.Position,
-            Role = user.Role.ToString().ToLower(),
-            IsEmailVerified = user.IsEmailVerified,
-            MustChangePassword = user.MustChangePassword,
-            CreatedAt = user.CreatedAt
-        };
-
-        return Ok(userDto);
+        return Ok(user);
     }
 
     [HttpPost("change-password")]
     [Authorize]
     public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
     {
-        // Get current user ID from JWT token
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userId, "User not authenticated");
+        if (unauthorizedResult != null)
         {
-            return Unauthorized(new { message = "User not authenticated" });
+            return unauthorizedResult;
         }
 
         var command = new ChangePasswordCommand
@@ -246,8 +208,10 @@ public class AuthController : ControllerBase
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            // Secure = true only in production (HTTPS), false in development (HTTP)
+            Secure = _environment.IsProduction(),
+            // SameSite = Lax for development, Strict for production
+            SameSite = _environment.IsProduction() ? SameSiteMode.Strict : SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         };
 

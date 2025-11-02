@@ -8,14 +8,10 @@ using PortalForge.Application.UseCases.News.Commands.UpdateNews;
 using PortalForge.Application.UseCases.News.DTOs;
 using PortalForge.Application.UseCases.News.Queries.GetAllNews;
 using PortalForge.Application.UseCases.News.Queries.GetNewsById;
-using PortalForge.Domain.Entities;
-using System.Security.Claims;
 
 namespace PortalForge.Api.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class NewsController : ControllerBase
+public class NewsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<NewsController> _logger;
@@ -62,16 +58,10 @@ public class NewsController : ControllerBase
     [Authorize(Roles = "Admin,Hr,Marketing")]
     public async Task<ActionResult<int>> Create([FromBody] CreateNewsRequestDto request)
     {
-        // Get user ID from token
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var authorId))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var authorId);
+        if (unauthorizedResult != null)
         {
-            return Unauthorized("User ID not found in token");
-        }
-
-        if (!Enum.TryParse<NewsCategory>(request.Category, true, out var category))
-        {
-            return BadRequest("Invalid category");
+            return unauthorizedResult;
         }
 
         var command = new CreateNewsCommand
@@ -81,7 +71,7 @@ public class NewsController : ControllerBase
             Excerpt = request.Excerpt,
             ImageUrl = request.ImageUrl,
             AuthorId = authorId,
-            Category = category,
+            Category = request.Category,
             EventId = request.EventId,
             IsEvent = request.IsEvent,
             EventHashtag = request.EventHashtag,
@@ -92,18 +82,13 @@ public class NewsController : ControllerBase
         };
 
         var newsId = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetById), new { id = newsId }, newsId);
+        return CreatedAtAction(nameof(GetById), new { id = newsId}, newsId);
     }
 
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin,Hr,Marketing")]
     public async Task<ActionResult> Update(int id, [FromBody] UpdateNewsRequestDto request)
     {
-        if (!Enum.TryParse<NewsCategory>(request.Category, true, out var category))
-        {
-            return BadRequest("Invalid category");
-        }
-
         var command = new UpdateNewsCommand
         {
             NewsId = id,
@@ -111,7 +96,7 @@ public class NewsController : ControllerBase
             Content = request.Content,
             Excerpt = request.Excerpt,
             ImageUrl = request.ImageUrl,
-            Category = category,
+            Category = request.Category,
             EventId = request.EventId,
             IsEvent = request.IsEvent,
             EventHashtag = request.EventHashtag,

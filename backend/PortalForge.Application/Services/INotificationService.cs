@@ -50,6 +50,21 @@ public interface INotificationService
     /// Mark all notifications as read for a user.
     /// </summary>
     Task MarkAllAsReadAsync(Guid userId);
+
+    /// <summary>
+    /// Notify a substitute that they will be covering for someone on vacation.
+    /// </summary>
+    Task NotifySubstituteAsync(Guid substituteId, VacationSchedule schedule);
+
+    /// <summary>
+    /// Notify a substitute that a vacation they're covering has started.
+    /// </summary>
+    Task NotifyVacationStartedAsync(Guid substituteId, VacationSchedule schedule);
+
+    /// <summary>
+    /// Notify a user that their vacation has ended.
+    /// </summary>
+    Task NotifyVacationEndedAsync(Guid userId, VacationSchedule schedule);
 }
 
 

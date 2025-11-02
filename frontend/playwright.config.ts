@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : 2,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3000/portalforge/fe',
+    baseURL: 'http://localhost:3001/portalforge/fe',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },

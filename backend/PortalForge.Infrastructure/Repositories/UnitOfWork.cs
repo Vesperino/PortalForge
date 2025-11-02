@@ -22,6 +22,12 @@ public class UnitOfWork : IUnitOfWork
     private IRequestTemplateRepository? _requestTemplateRepository;
     private IRequestRepository? _requestRepository;
     private INotificationRepository? _notificationRepository;
+    private IDepartmentRepository? _departmentRepository;
+    private IPositionRepository? _positionRepository;
+    private IVacationScheduleRepository? _vacationScheduleRepository;
+    private IOrganizationalPermissionRepository? _organizationalPermissionRepository;
+    private ICachedLocationRepository? _cachedLocationRepository;
+    private ISystemSettingRepository? _systemSettingRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -63,6 +69,24 @@ public class UnitOfWork : IUnitOfWork
 
     public INotificationRepository NotificationRepository =>
         _notificationRepository ??= new NotificationRepository(_context);
+
+    public IDepartmentRepository DepartmentRepository =>
+        _departmentRepository ??= new DepartmentRepository(_context);
+
+    public IPositionRepository PositionRepository =>
+        _positionRepository ??= new PositionRepository(_context);
+
+    public IVacationScheduleRepository VacationScheduleRepository =>
+        _vacationScheduleRepository ??= new VacationScheduleRepository(_context);
+
+    public IOrganizationalPermissionRepository OrganizationalPermissionRepository =>
+        _organizationalPermissionRepository ??= new OrganizationalPermissionRepository(_context);
+
+    public ICachedLocationRepository CachedLocationRepository =>
+        _cachedLocationRepository ??= new CachedLocationRepository(_context);
+
+    public ISystemSettingRepository SystemSettingRepository =>
+        _systemSettingRepository ??= new SystemSettingRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {

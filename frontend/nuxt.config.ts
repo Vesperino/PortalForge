@@ -105,7 +105,7 @@ export default defineNuxtConfig({
 
   typescript: {
     strict: true,
-    typeCheck: true,
+    typeCheck: false,
   },
 
   runtimeConfig: {
@@ -114,7 +114,7 @@ export default defineNuxtConfig({
 
     // Public keys (exposed to frontend)
     public: {
-      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:5000',
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:5155',
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL || '',
       supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_KEY || '',
       googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',

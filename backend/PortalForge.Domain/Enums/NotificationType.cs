@@ -38,7 +38,22 @@ public enum NotificationType
     /// <summary>
     /// Company-wide announcement.
     /// </summary>
-    Announcement
+    Announcement,
+
+    /// <summary>
+    /// User has been assigned as a substitute for someone's vacation.
+    /// </summary>
+    VacationCoverageAssigned,
+
+    /// <summary>
+    /// A vacation that the user is covering has started.
+    /// </summary>
+    VacationCoverageStarted,
+
+    /// <summary>
+    /// User's vacation has ended, they're back from vacation.
+    /// </summary>
+    VacationEnded
 }
 
 

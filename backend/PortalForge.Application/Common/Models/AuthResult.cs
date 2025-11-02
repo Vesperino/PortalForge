@@ -1,3 +1,5 @@
+using PortalForge.Application.UseCases.Auth.DTOs;
+
 namespace PortalForge.Application.Common.Models;
 
 public class AuthResult
@@ -10,4 +12,5 @@ public class AuthResult
     public DateTime? ExpiresAt { get; set; }
     public string? ErrorMessage { get; set; }
     public bool RequiresEmailVerification { get; set; }
+    public UserDto? User { get; set; }
 }

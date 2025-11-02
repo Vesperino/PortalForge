@@ -16,16 +16,10 @@ const isDark = computed(() => colorMode.value === 'dark')
 
 type UnknownRecord = Record<string, unknown>
 
-const { getEmployees } = useMockData()
-const employees = getEmployees()
-const fallbackUser = employees.length > 0 ? employees[0] : null
-
 const toRecord = (value: unknown): UnknownRecord | null =>
   typeof value === 'object' && value !== null ? value as UnknownRecord : null
 
-const fallbackRecord = toRecord(fallbackUser)
-
-const currentUserRecord = computed<UnknownRecord | null>(() => toRecord(authStore.user) ?? fallbackRecord)
+const currentUserRecord = computed<UnknownRecord | null>(() => toRecord(authStore.user))
 
 const roleLabels: Record<string, string> = {
   admin: 'Administrator',

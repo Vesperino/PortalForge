@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using PortalForge.Application.Extensions;
+using PortalForge.Application.Services;
 using System.Reflection;
 
 namespace PortalForge.Application;
@@ -14,14 +15,15 @@ public static class DependencyInjection
         // Add AutoMapper
         services.AddAutoMapper(assembly);
 
-        // Add MediatR
-        services.AddMediatR(config =>
-        {
-            config.RegisterServicesFromAssembly(assembly);
-        });
+        // Add MediatR (v11.x syntax)
+        services.AddMediatR(assembly);
 
         // Register validators automatically
         services.AddValidators(assembly);
+
+        // Register application services
+        services.AddScoped<IRequestRoutingService, RequestRoutingService>();
+        services.AddScoped<IVacationScheduleService, VacationScheduleService>();
 
         return services;
     }

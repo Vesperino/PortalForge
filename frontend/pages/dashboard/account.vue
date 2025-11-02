@@ -1,42 +1,42 @@
 <script setup lang="ts">
+import type { User } from '~/types/auth'
+
 definePageMeta({
   layout: 'default',
   middleware: ['auth', 'verified']
 })
 
 const authStore = useAuthStore()
-const { getEmployees, getNews, getDocuments } = useMockData()
 
-// Get a sample employee as the current user (in real app, this would come from auth store)
-const employees = getEmployees()
-const currentUser = employees.length > 0 ? employees[0] : null
+// Use real user data from auth store
+const currentUser = computed(() => authStore.user as User)
 
-if (!currentUser) {
-  throw new Error('No employees found')
+if (!currentUser.value) {
+  throw new Error('User not authenticated')
 }
 
 const user = ref({
-  firstName: currentUser.firstName,
-  lastName: currentUser.lastName,
-  email: currentUser.email,
-  department: currentUser.department?.name || '',
-  position: currentUser.position?.name || '',
-  phone: currentUser.phone || '',
-  avatar: ''
+  firstName: currentUser.value.firstName,
+  lastName: currentUser.value.lastName,
+  email: currentUser.value.email,
+  department: currentUser.value.department || '',
+  position: currentUser.value.position || '',
+  phone: currentUser.value.phoneNumber || '',
+  avatar: currentUser.value.profilePhotoUrl || ''
 })
 
 const isEditing = ref(false)
 
-// Get user's activity
-const userNews = getNews().filter(news => news.authorId === currentUser.id)
-const userDocuments = getDocuments().filter(doc => doc.uploadedBy === currentUser.id)
+// User's activity - TODO: Replace with real API calls when endpoints are available
+const userNews = ref<any[]>([])
+const userDocuments = ref<any[]>([])
 
 // Calculate stats
 const stats = computed(() => ({
-  newsPublished: userNews.length,
-  documentsUploaded: userDocuments.length,
-  teamMembers: currentUser?.subordinates?.length || 0,
-  lastLogin: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) // Random date within last week
+  newsPublished: userNews.value.length,
+  documentsUploaded: userDocuments.value.length,
+  teamMembers: 0, // TODO: Fetch from API when subordinates endpoint is available
+  lastLogin: new Date() // TODO: Track real last login
 }))
 
 // Vacation and sick leave data (mock data)
@@ -156,7 +156,7 @@ const logout = async () => {
         <!-- Avatar -->
         <div class="flex items-end -mt-16 mb-4">
           <div class="w-32 h-32 rounded-full bg-gray-300 dark:bg-gray-700 border-4 border-white dark:border-gray-800 flex items-center justify-center text-4xl font-bold text-white">
-            {{ user.firstName[0] }}{{ user.lastName[0] }}
+            {{ user.firstName?.[0] || '' }}{{ user.lastName?.[0] || '' }}
           </div>
           <div class="ml-4 mb-2">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">

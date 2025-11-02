@@ -128,6 +128,52 @@ namespace PortalForge.Infrastructure.Migrations
                     b.ToTable("CachedLocations", "public");
                 });
 
+            modelBuilder.Entity("PortalForge.Domain.Entities.Department", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid?>("HeadOfDepartmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("ParentDepartmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HeadOfDepartmentId");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("ParentDepartmentId");
+
+                    b.ToTable("Departments", (string)null);
+                });
+
             modelBuilder.Entity("PortalForge.Domain.Entities.Event", b =>
                 {
                     b.Property<int>("Id")
@@ -378,6 +424,40 @@ namespace PortalForge.Infrastructure.Migrations
                     b.ToTable("Notifications", "public");
                 });
 
+            modelBuilder.Entity("PortalForge.Domain.Entities.OrganizationalPermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("CanViewAllDepartments")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VisibleDepartmentIds")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValue("[]");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("OrganizationalPermissions", (string)null);
+                });
+
             modelBuilder.Entity("PortalForge.Domain.Entities.Permission", b =>
                 {
                     b.Property<Guid>("Id")
@@ -408,6 +488,41 @@ namespace PortalForge.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Permissions", "public");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.Position", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("Positions", (string)null);
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.QuizAnswer", b =>
@@ -612,6 +727,9 @@ namespace PortalForge.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<Guid?>("SpecificDepartmentId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("SpecificUserId")
                         .HasColumnType("uuid");
 
@@ -621,6 +739,8 @@ namespace PortalForge.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ApproverGroupId");
+
+                    b.HasIndex("SpecificDepartmentId");
 
                     b.HasIndex("SpecificUserId");
 
@@ -680,6 +800,11 @@ namespace PortalForge.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
+
+                    b.Property<bool>("RequiresSubstituteSelection")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -893,6 +1018,9 @@ namespace PortalForge.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<Guid?>("DepartmentId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("DepartmentRole")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -942,6 +1070,9 @@ namespace PortalForge.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<Guid?>("PositionId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ProfilePhotoUrl")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -956,8 +1087,12 @@ namespace PortalForge.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DepartmentId");
+
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("PositionId");
 
                     b.HasIndex("SupervisorId");
 
@@ -987,6 +1122,54 @@ namespace PortalForge.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserRoleGroups", "public");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.VacationSchedule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("SourceRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("SubstituteUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EndDate");
+
+                    b.HasIndex("SourceRequestId");
+
+                    b.HasIndex("StartDate");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SubstituteUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("StartDate", "EndDate");
+
+                    b.ToTable("VacationSchedules", (string)null);
                 });
 
             modelBuilder.Entity("NewsHashtags", b =>
@@ -1025,6 +1208,23 @@ namespace PortalForge.Infrastructure.Migrations
                     b.Navigation("CreatedByUser");
                 });
 
+            modelBuilder.Entity("PortalForge.Domain.Entities.Department", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.User", "HeadOfDepartment")
+                        .WithMany()
+                        .HasForeignKey("HeadOfDepartmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("PortalForge.Domain.Entities.Department", "ParentDepartment")
+                        .WithMany("ChildDepartments")
+                        .HasForeignKey("ParentDepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("HeadOfDepartment");
+
+                    b.Navigation("ParentDepartment");
+                });
+
             modelBuilder.Entity("PortalForge.Domain.Entities.Event", b =>
                 {
                     b.HasOne("PortalForge.Domain.Entities.User", "Creator")
@@ -1059,6 +1259,17 @@ namespace PortalForge.Infrastructure.Migrations
                     b.HasOne("PortalForge.Domain.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.OrganizationalPermission", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.User", "User")
+                        .WithOne()
+                        .HasForeignKey("PortalForge.Domain.Entities.OrganizationalPermission", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1146,6 +1357,11 @@ namespace PortalForge.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PortalForge.Domain.Entities.Department", "SpecificDepartment")
+                        .WithMany()
+                        .HasForeignKey("SpecificDepartmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("PortalForge.Domain.Entities.User", "SpecificUser")
                         .WithMany()
                         .HasForeignKey("SpecificUserId")
@@ -1154,6 +1370,8 @@ namespace PortalForge.Infrastructure.Migrations
                     b.Navigation("ApproverGroup");
 
                     b.Navigation("RequestTemplate");
+
+                    b.Navigation("SpecificDepartment");
 
                     b.Navigation("SpecificUser");
                 });
@@ -1211,10 +1429,24 @@ namespace PortalForge.Infrastructure.Migrations
 
             modelBuilder.Entity("PortalForge.Domain.Entities.User", b =>
                 {
+                    b.HasOne("PortalForge.Domain.Entities.Department", "DepartmentEntity")
+                        .WithMany("Employees")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("PortalForge.Domain.Entities.Position", "PositionEntity")
+                        .WithMany("Users")
+                        .HasForeignKey("PositionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("PortalForge.Domain.Entities.User", "Supervisor")
                         .WithMany("Subordinates")
                         .HasForeignKey("SupervisorId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("DepartmentEntity");
+
+                    b.Navigation("PositionEntity");
 
                     b.Navigation("Supervisor");
                 });
@@ -1245,6 +1477,40 @@ namespace PortalForge.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PortalForge.Domain.Entities.VacationSchedule", b =>
+                {
+                    b.HasOne("PortalForge.Domain.Entities.Request", "SourceRequest")
+                        .WithMany()
+                        .HasForeignKey("SourceRequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PortalForge.Domain.Entities.User", "Substitute")
+                        .WithMany()
+                        .HasForeignKey("SubstituteUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PortalForge.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SourceRequest");
+
+                    b.Navigation("Substitute");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.Department", b =>
+                {
+                    b.Navigation("ChildDepartments");
+
+                    b.Navigation("Employees");
+                });
+
             modelBuilder.Entity("PortalForge.Domain.Entities.Event", b =>
                 {
                     b.Navigation("News");
@@ -1253,6 +1519,11 @@ namespace PortalForge.Infrastructure.Migrations
             modelBuilder.Entity("PortalForge.Domain.Entities.Permission", b =>
                 {
                     b.Navigation("RoleGroupPermissions");
+                });
+
+            modelBuilder.Entity("PortalForge.Domain.Entities.Position", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.QuizQuestion", b =>

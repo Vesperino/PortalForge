@@ -16,6 +16,12 @@ public interface IUnitOfWork : IDisposable
     IRequestTemplateRepository RequestTemplateRepository { get; }
     IRequestRepository RequestRepository { get; }
     INotificationRepository NotificationRepository { get; }
+    IDepartmentRepository DepartmentRepository { get; }
+    IPositionRepository PositionRepository { get; }
+    IVacationScheduleRepository VacationScheduleRepository { get; }
+    IOrganizationalPermissionRepository OrganizationalPermissionRepository { get; }
+    ICachedLocationRepository CachedLocationRepository { get; }
+    ISystemSettingRepository SystemSettingRepository { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

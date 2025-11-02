@@ -86,13 +86,20 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Dział <span class="text-red-500">*</span>
             </label>
-            <input
+            <select
               v-model="form.department"
-              type="text"
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="IT"
-            />
+            >
+              <option value="">Wybierz dział</option>
+              <option
+                v-for="dept in departmentsFlat"
+                :key="dept.id"
+                :value="dept.name"
+              >
+                {{ dept.level > 0 ? '└─'.repeat(dept.level) + ' ' : '' }}{{ dept.name }}
+              </option>
+            </select>
           </div>
 
           <!-- Position -->
@@ -100,12 +107,12 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Stanowisko <span class="text-red-500">*</span>
             </label>
-            <input
-              v-model="form.position"
-              type="text"
+            <PositionAutocomplete
+              :model-value="positionId"
+              @update:modelValue="handlePositionUpdate"
+              @update:positionName="handlePositionNameUpdate"
+              placeholder="Wpisz lub wybierz stanowisko..."
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Developer"
             />
           </div>
 
@@ -206,6 +213,8 @@
 
 <script setup lang="ts">
 import type { CreateUserRequest } from '~/stores/admin'
+import type { DepartmentTreeDto } from '~/types/department'
+import PositionAutocomplete from '~/components/common/PositionAutocomplete.vue'
 
 definePageMeta({
   middleware: ['auth', 'verified', 'admin'],
@@ -216,8 +225,19 @@ useHead({
   title: 'Dodaj Użytkownika - Panel Administracyjny',
 })
 
+const config = useRuntimeConfig()
+const apiUrl = config.public.apiUrl
 const adminStore = useAdminStore()
 const roleGroupsStore = useRoleGroupsStore()
+const authStore = useAuthStore()
+
+const getAuthHeaders = (): Record<string, string> | undefined => {
+  const token = authStore.accessToken
+  if (token) {
+    return { Authorization: `Bearer ${token}` }
+  }
+  return undefined
+}
 
 const form = ref<CreateUserRequest>({
   email: '',
@@ -234,12 +254,40 @@ const form = ref<CreateUserRequest>({
 
 const loading = ref(false)
 const error = ref<string | null>(null)
+const departments = ref<DepartmentTreeDto[]>([])
+const positionId = ref<string | null>(null)
+const positionName = ref<string>('')
+
+const loadDepartments = async () => {
+  try {
+    const response = await $fetch<DepartmentTreeDto[]>(`${apiUrl}/api/departments/tree`, {
+      headers: getAuthHeaders()
+    })
+    departments.value = response
+  } catch (err: any) {
+    console.error('Error loading departments:', err)
+  }
+}
+
+// Flatten departments tree
+const departmentsFlat = computed(() => {
+  const flattenDepartments = (depts: DepartmentTreeDto[], level = 0): DepartmentTreeDto[] => {
+    return depts.flatMap(dept => [
+      { ...dept, level },
+      ...flattenDepartments(dept.children || [], level + 1)
+    ])
+  }
+  return flattenDepartments(departments.value)
+})
 
 const handleSubmit = async () => {
   loading.value = true
   error.value = null
 
   try {
+    // Update position with the current value from autocomplete
+    form.value.position = positionName.value
+
     await adminStore.createUser(form.value)
     await navigateTo('/admin/users')
   } catch (err: any) {
@@ -249,9 +297,22 @@ const handleSubmit = async () => {
   }
 }
 
-// Fetch role groups on mount
-onMounted(() => {
-  roleGroupsStore.fetchRoleGroups()
+// Handle position autocomplete updates
+const handlePositionUpdate = (value: string | null) => {
+  positionId.value = value
+}
+
+const handlePositionNameUpdate = (name: string) => {
+  positionName.value = name
+  form.value.position = name
+}
+
+// Fetch data on mount
+onMounted(async () => {
+  await Promise.all([
+    roleGroupsStore.fetchRoleGroups(),
+    loadDepartments()
+  ])
 })
 </script>
 

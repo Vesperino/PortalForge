@@ -35,6 +35,12 @@ public class ApplicationDbContext : DbContext
     // Notifications
     public DbSet<Notification> Notifications { get; set; }
 
+    // Organizational Structure
+    public DbSet<Department> Departments { get; set; }
+    public DbSet<Position> Positions { get; set; }
+    public DbSet<VacationSchedule> VacationSchedules { get; set; }
+    public DbSet<OrganizationalPermission> OrganizationalPermissions { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());
@@ -58,6 +64,12 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new QuizQuestionConfiguration());
         modelBuilder.ApplyConfiguration(new QuizAnswerConfiguration());
         modelBuilder.ApplyConfiguration(new NotificationConfiguration());
+
+        // Organizational Structure
+        modelBuilder.ApplyConfiguration(new DepartmentConfiguration());
+        modelBuilder.ApplyConfiguration(new PositionConfiguration());
+        modelBuilder.ApplyConfiguration(new VacationScheduleConfiguration());
+        modelBuilder.ApplyConfiguration(new OrganizationalPermissionConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }

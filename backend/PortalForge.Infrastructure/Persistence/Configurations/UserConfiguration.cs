@@ -77,6 +77,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasForeignKey(u => u.SupervisorId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Department relationship
+        builder.HasOne(u => u.DepartmentEntity)
+            .WithMany(d => d.Employees)
+            .HasForeignKey(u => u.DepartmentId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasIndex(u => u.DepartmentId);
+
         // Ignore computed property
         builder.Ignore(u => u.FullName);
     }
