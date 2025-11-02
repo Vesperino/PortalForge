@@ -429,7 +429,7 @@ watch(zoom, (newZoom) => {
           Struktura organizacyjna
         </h1>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          {{ allEmployees.length }} pracownik贸w w {{ departments.length }} dzia艂ach
+          {{ allEmployees.length }} pracownik體 w {{ departments.length }} dzia砤ch
         </p>
       </div>
     </div>
@@ -465,7 +465,7 @@ watch(zoom, (newZoom) => {
             <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
-            Wed艂ug dzia艂贸w
+            Wed硊g dzia丑w
           </button>
           <button
             :class="[
@@ -479,7 +479,7 @@ watch(zoom, (newZoom) => {
             <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
             </svg>
-            Lista pracownik贸w
+            Lista pracownik體
           </button>
         </div>
 
@@ -572,16 +572,16 @@ watch(zoom, (newZoom) => {
                 </p>
               </div>
               <div class="text-right">
+              <div class="text-right">
                 <p class="text-2xl font-bold text-gray-900 dark:text-white">
                   {{ getEmployeesByDepartment(dept.id).length }}
                 </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">pracownik贸w</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">pracownik體</p>
               </div>
             </div>
-
-            <!-- Department Manager -->
+              </div>
             <div v-if="getManagerByDepartment(dept)" class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kierownik dzia艂u</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kierownik dzia硊</p>
               <div
                 class="flex items-center gap-3 cursor-pointer"
                 @click="selectEmployee(getManagerByDepartment(dept))"
@@ -1116,13 +1116,20 @@ watch(zoom, (newZoom) => {
 
                 <div class="grid grid-cols-2 gap-4">
                   <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 cursor-pointer" @click="getManagerByDepartment(selectedDepartmentNode) ? (selectEmployee(getManagerByDepartment(selectedDepartmentNode) as any), showDepartmentModal = false) : null">
-                    <p class="font-semibold text-gray-900 dark:text-white">
-                      {{ getManagerByDepartment(selectedDepartmentNode)?.firstName || 'Brak' }}
-                      {{ getManagerByDepartment(selectedDepartmentNode)?.lastName || 'kierownika' }}
-                    </p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kierownik dzia硊</p>
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
+                        <img v-if="getManagerByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :src="getManagerByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :alt="`${getManagerByDepartment(selectedDepartmentNode)?.firstName} ${getManagerByDepartment(selectedDepartmentNode)?.lastName}`" class="w-full h-full object-cover" />
+                        <span v-else>{{ getInitials(getManagerByDepartment(selectedDepartmentNode) as any) }}</span>
+                      </div>
+                      <div>
+                        <p class="font-semibold text-gray-900 dark:text-white">{{ getManagerByDepartment(selectedDepartmentNode)?.firstName }} {{ getManagerByDepartment(selectedDepartmentNode)?.lastName }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ getManagerByDepartment(selectedDepartmentNode)?.position }}</p>
+                      </div>
+                    </div>
                   </div>
                   <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 cursor-pointer" @click="getDirectorByDepartment(selectedDepartmentNode) ? (selectEmployee(getDirectorByDepartment(selectedDepartmentNode) as any), showDepartmentModal = false) : null">
-                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor dzia锟絬</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor dzia硊</p>
                     <div class="flex items-center gap-3">
                       <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-semibold overflow-hidden">
                         <img v-if="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :src="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :alt="`${getDirectorByDepartment(selectedDepartmentNode)?.firstName} ${getDirectorByDepartment(selectedDepartmentNode)?.lastName}`" class="w-full h-full object-cover" />
@@ -1134,9 +1141,7 @@ watch(zoom, (newZoom) => {
                       </div>
                     </div>
                   </div>
-                  <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
-                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Liczba pracownik贸w</p>
-                    <p class="font-semibold text-gray-900 dark:text-white">
+                </div>
                       {{ getEmployeesByDepartment(selectedDepartmentNode.id).length }} pracownik贸w
                     </p>
                   </div>
@@ -1593,4 +1598,7 @@ watch(zoom, (newZoom) => {
   border-left-color: #3b82f6 !important;
 }
 </style>
+
+
+
 
