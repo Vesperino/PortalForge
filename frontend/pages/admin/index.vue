@@ -72,6 +72,22 @@
           <p class="text-gray-600 dark:text-gray-400">Zarządzaj dostępem do działów organizacyjnych</p>
         </NuxtLink>
 
+        <!-- Internal Services Card -->
+        <NuxtLink
+          to="/admin/internal-services"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <div class="p-3 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
+              <svg class="w-8 h-8 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+            </div>
+          </div>
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Serwisy Wewnętrzne</h2>
+          <p class="text-gray-600 dark:text-gray-400">Zarządzaj linkami do narzędzi i systemów wewnętrznych</p>
+        </NuxtLink>
+
         <!-- Audit Logs Card -->
         <NuxtLink
           to="/admin/audit"
