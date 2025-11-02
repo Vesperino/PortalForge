@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PortalForge – Oferta licencji rocznej (Early Adopter)</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --text: #111827;
+      --muted: #4b5563;
+      --border: #e5e7eb;
+      --bg: #ffffff;
+    }
+    @page { size: A4; margin: 20mm; }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; color: var(--text); background: var(--bg); margin: 0; }
+    .page { max-width: 980px; margin: 0 auto; padding: 0; }
+    .header { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), #1d4ed8); display: grid; place-items: center; color: #fff; font-weight: 800; letter-spacing: 0.5px; }
+    .brand h1 { font-size: 20px; margin: 0; }
+    .brand p { margin: 0; color: var(--muted); font-size: 12px; }
+    .title { margin: 22px 0 8px; font-size: 22px; }
+    .subtitle { margin: 0 0 18px; color: var(--muted); }
+    .badge { display: inline-block; background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; font-weight: 600; font-size: 12px; padding: 4px 8px; border-radius: 999px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .card { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+    .card h3 { margin: 0 0 10px; font-size: 14px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+    .price { font-size: 28px; font-weight: 800; color: var(--primary); margin: 4px 0 0; }
+    ul { margin: 8px 0 0 18px; padding: 0; }
+    li { margin: 6px 0; }
+    .muted { color: var(--muted); }
+    .terms { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; font-size: 12px; color: var(--muted); }
+    .footer { margin-top: 24px; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+    .sign { border-top: 1px dashed var(--border); padding-top: 8px; font-size: 12px; color: var(--muted); }
+    .right { text-align: right; }
+    @media print { .btn { display: none; } }
+    .btn { display: inline-block; margin: 10px 0 0; padding: 10px 14px; background: var(--primary); color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta name="description" content="Oferta licencji rocznej – PortalForge (self‑hosted, nielimitowani użytkownicy)">
+  <meta name="keywords" content="PortalForge, intranet, self‑hosted, licencja roczna">
+  <meta name="author" content="PortalForge">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="brand">
+        <div class="logo">PF</div>
+        <div>
+          <h1>PortalForge</h1>
+          <p>Wewnętrzny portal firmowy (intranet)</p>
+        </div>
+      </div>
+      <div class="right">
+        <div class="badge">Oferta Early Adopter</div>
+        <div class="muted" style="font-size:12px; margin-top:6px;">Ważna 30 dni od wystawienia</div>
+      </div>
+    </div>
+
+    <h2 class="title">Licencja roczna – self‑hosted, nielimitowani użytkownicy</h2>
+    <p class="subtitle">Dla pierwszego klienta („klient założycielski”) – preferencyjne warunki startowe.</p>
+
+    <div class="grid" style="margin-bottom: 10px;">
+      <div class="card">
+        <h3>Cena i zawartość</h3>
+        <div class="price">1000 PLN / miesiąc</div>
+        <ul>
+          <li>Licencja self‑hosted, nielimitowani użytkownicy</li>
+          <li>Aktualizacje + poprawki bezpieczeństwa (kwartalnie + hot‑fixy)</li>
+          <li>SLA odpowiedzi: 48h w dni robocze</li>
+          <li>Wsparcie: 4h/kwartał w cenie (helpdesk, drobne poprawki)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Onboarding i wsparcie</h3>
+        <ul>
+          <li>Onboarding 0 PLN przy umowie na 12 miesięcy (2h konfiguracji + 2h szkolenia)</li>
+          <li>Nadwyżki wsparcia: 300 PLN/h lub pakiety (10h = 2500 PLN)</li>
+          <li>1 instancja prod + 1 instancja staging w licencji</li>
+          <li>Możliwość rozbudowy (SSO/AD, workflow, DMS) – wycena osobno</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 6px;">
+      <h3>Zakres funkcjonalny MVP</h3>
+      <ul>
+        <li>Użytkownicy, role i uprawnienia; mój profil</li>
+        <li>Struktura organizacyjna: działy, stanowiska, kierownicy; drzewo z podglądem</li>
+        <li>Aktualności (CMS), dokumenty (upload/metadane), wnioski (workflow), kalendarz</li>
+        <li>Powiadomienia e‑mail, panel administratora, logi podstawowe</li>
+      </ul>
+      <p class="muted" style="margin-top:8px;">Szczegółowy zakres dostarczony w specyfikacji wdrożeniowej. Integracje i customizacje wyceniane oddzielnie.</p>
+    </div>
+
+    <div class="terms">
+      <strong>Warunki handlowe:</strong> minimalny okres 12 miesięcy; fakturowanie miesięczne lub –10% przy płatności rocznej z góry; licencja na 1 instancję produkcyjną + 1 staging; brak prawa do redystrybucji. Krytyczne poprawki bezpieczeństwa poza harmonogramem. Odnowienie po 12 mies. na warunkach cennika bazowego (możliwość utrzymania ceny dla „klienta założycielskiego”).
+    </div>
+
+    <div class="footer">
+      <div class="sign">
+        <div style="height: 40px"></div>
+        Podpis i pieczęć Klienta
+      </div>
+      <div class="right">
+        <div class="sign">
+          <div style="height: 40px"></div>
+          PortalForge – wystawiający ofertę
+        </div>
+        <a class="btn" href="#" onclick="window.print();return false;">Drukuj / Zapisz jako PDF</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
