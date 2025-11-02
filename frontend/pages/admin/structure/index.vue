@@ -533,7 +533,7 @@ onMounted(() => {
 
       <!-- Page Header with Stats -->
       <div class="mb-8">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
               Struktura organizacyjna
@@ -542,7 +542,12 @@ onMounted(() => {
               Zarządzaj działami i przypisuj pracowników do struktury firmy
             </p>
           </div>
-        <button
+          <div class="hidden md:hidden">
+            <UserAutocomplete
+              placeholder="Szybkie wyszukiwanie pracownika..."
+              @select="onGlobalUserSelect"
+            /></div>
+        <button hidden
           class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 transition-all shadow-md hover:shadow-lg"
           @click="openAddRootModal"
         >
@@ -634,7 +639,8 @@ onMounted(() => {
     <!-- Tabs -->
     <div class="mb-6">
       <div class="border-b border-gray-200 dark:border-gray-700">
-        <nav class="flex gap-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <nav class="flex flex-wrap gap-4">
           <button
             class="px-4 py-3 text-sm font-medium border-b-2 transition-colors"
             :class="activeTab === 'structure'
@@ -667,6 +673,21 @@ onMounted(() => {
             </div>
           </button>
         </nav>
+        <!-- Right side: search + add button -->
+        <div class="flex items-center gap-2 w-full md:w-auto md:max-w-xl mt-3 md:mt-0">
+          <UserAutocomplete
+            class="flex-1"
+            placeholder="Szybkie wyszukiwanie pracownika..."
+            @select="onGlobalUserSelect"
+          />
+          <button
+            class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+            @click="openAddRootModal"
+          >
+            Dodaj dział główny
+          </button>
+        </div>
+        </div>
       </div>
     </div>
 
@@ -1142,3 +1163,4 @@ onMounted(() => {
   }
 }
 </style>
+
