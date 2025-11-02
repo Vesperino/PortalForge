@@ -1100,22 +1100,6 @@ watch(zoom, (newZoom) => {
                   </svg>
                 </button>
               </div>
-                <!-- Department Director (below grid) -->
-                <div class="mt-4">
-                  <div v-if="getDirectorByDepartment(selectedDepartmentNode)" class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 cursor-pointer" @click="selectEmployee(getDirectorByDepartment(selectedDepartmentNode) as any); showDepartmentModal = false">
-                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor dzia≥u</p>
-                    <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-semibold overflow-hidden">
-                        <img v-if="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :src="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :alt="`${getDirectorByDepartment(selectedDepartmentNode)?.firstName} ${getDirectorByDepartment(selectedDepartmentNode)?.lastName}`" class="w-full h-full object-cover" />
-                        <span v-else>{{ getInitials(getDirectorByDepartment(selectedDepartmentNode) as any) }}</span>
-                      </div>
-                      <div>
-                        <p class="font-semibold text-gray-900 dark:text-white">{{ getDirectorByDepartment(selectedDepartmentNode)?.firstName }} {{ getDirectorByDepartment(selectedDepartmentNode)?.lastName }}</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ getDirectorByDepartment(selectedDepartmentNode)?.position }}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
             </div>
 
             <!-- Content -->
@@ -1136,11 +1120,29 @@ watch(zoom, (newZoom) => {
                       {{ getManagerByDepartment(selectedDepartmentNode)?.lastName || 'kierownika' }}
                     </p>
                   </div>
+                  <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 cursor-pointer" @click="getDirectorByDepartment(selectedDepartmentNode) ? (selectEmployee(getDirectorByDepartment(selectedDepartmentNode) as any), showDepartmentModal = false) : null">
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor dzia≥u</p>
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-semibold overflow-hidden">
+                        <img v-if="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :src="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :alt="`${getDirectorByDepartment(selectedDepartmentNode)?.firstName} ${getDirectorByDepartment(selectedDepartmentNode)?.lastName}`" class="w-full h-full object-cover" />
+                        <span v-else>{{ getInitials(getDirectorByDepartment(selectedDepartmentNode) as any) }}</span>
+                      </div>
+                      <div>
+                        <p class="font-semibold text-gray-900 dark:text-white">{{ getDirectorByDepartment(selectedDepartmentNode)?.firstName }} {{ getDirectorByDepartment(selectedDepartmentNode)?.lastName }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ getDirectorByDepartment(selectedDepartmentNode)?.position }}</p>
+                      </div>
+                    </div>
+                  </div>
                   <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                     <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Liczba pracownik√≥w</p>
                     <p class="font-semibold text-gray-900 dark:text-white">
                       {{ getEmployeesByDepartment(selectedDepartmentNode.id).length }} pracownik√≥w
                     </p>
+                  </div>
+                  <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Poziom w strukturze</p>
+                    <p class="font-semibold text-gray-900 dark:text-white">{{ selectedDepartmentNode.level }}</p>
+                    <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">ID: {{ selectedDepartmentNode.id }}</p>
                   </div>
                 </div>
               </div>

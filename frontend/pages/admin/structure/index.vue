@@ -37,11 +37,14 @@ const departmentForm = ref<CreateDepartmentDto | UpdateDepartmentDto>({
   name: '',
   description: null,
   parentDepartmentId: null,
-  departmentHeadId: null
+    departmentHeadId: null,
+    departmentDirectorId: null,
+  departmentDirectorId: null
 })
 
 // Selected department head (for UserAutocomplete)
 const selectedDepartmentHead = ref<User | null>(null)
+const selectedDepartmentDirector = ref<User | null>(null)
 
 // Quick edit form state
 const quickEditForm = ref({
@@ -170,12 +173,8 @@ const openAddRootModal = () => {
   editingDepartment.value = null
   parentDepartmentId.value = null
   selectedDepartmentHead.value = null
-  departmentForm.value = {
-    name: '',
-    description: null,
-    parentDepartmentId: null,
-    departmentHeadId: null
-  }
+  selectedDepartmentDirector.value = null
+  departmentForm.value = {}
   formErrors.value = {}
   showDepartmentModal.value = true
 }
@@ -185,12 +184,8 @@ const handleAddChild = (departmentId: string) => {
   editingDepartment.value = null
   parentDepartmentId.value = departmentId
   selectedDepartmentHead.value = null
-  departmentForm.value = {
-    name: '',
-    description: null,
-    parentDepartmentId: departmentId,
-    departmentHeadId: null
-  }
+  selectedDepartmentDirector.value = null
+  departmentForm.value = {}
   formErrors.value = {}
   showDepartmentModal.value = true
 }
@@ -227,6 +222,7 @@ const handleEdit = async (departmentId: string) => {
       description: department.description,
       parentDepartmentId: department.parentDepartmentId,
       departmentHeadId: department.departmentHeadId,
+      departmentDirectorId: (department as any).departmentDirectorId,
       isActive: department.isActive
     }
 
@@ -236,6 +232,13 @@ const handleEdit = async (departmentId: string) => {
       selectedDepartmentHead.value = head || null
     } else {
       selectedDepartmentHead.value = null
+    }
+
+    if ((department as any).departmentDirectorId) {
+      const director = allUsers.value.find(u => u.id === (department as any).departmentDirectorId)
+      selectedDepartmentDirector.value = director || null
+    } else {
+      selectedDepartmentDirector.value = null
     }
 
     formErrors.value = {}
@@ -250,6 +253,11 @@ const handleEdit = async (departmentId: string) => {
 const handleDepartmentHeadSelected = (user: User | null) => {
   selectedDepartmentHead.value = user
   departmentForm.value.departmentHeadId = user?.id || null
+}
+
+const handleDepartmentDirectorSelected = (user: User | null) => {
+  selectedDepartmentDirector.value = user
+  ;(departmentForm.value as any).departmentDirectorId = user?.id || null
 }
 
 // Validate form
@@ -885,6 +893,18 @@ onMounted(() => {
               Zacznij wpisywaÄ‡ imiÄ™ lub nazwisko aby wyszukaÄ‡ pracownika
             </p>
           </div>
+          <!-- Department Director Field with UserAutocomplete -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Dyrektor dzia³u (opcjonalnie)
+            </label>
+            <CommonUserAutocomplete
+              :selected-user="selectedDepartmentDirector"
+              placeholder="Wyszukaj dyrektora..."
+              @update:selected-user="handleDepartmentDirectorSelected"
+            />
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Mo¿esz pozostawiæ puste.</p>
+          </div>
         </div>
 
         <!-- Modal Footer -->
@@ -1149,6 +1169,13 @@ onMounted(() => {
   }
 }
 </style>
+
+
+
+
+
+
+
 
 
 
