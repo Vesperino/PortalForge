@@ -178,4 +178,101 @@ public class UpdateDepartmentCommandValidatorTests
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
+
+    [Fact]
+    public async Task Validate_ParentDepartmentExistsButInactive_ShouldNotHaveValidationError()
+    {
+        // Arrange
+        var departmentId = Guid.NewGuid();
+        var parentId = Guid.NewGuid();
+
+        _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(departmentId))
+            .ReturnsAsync(new Department { Id = departmentId });
+
+        // Parent exists but is inactive - should still pass validation for UPDATE
+        _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(parentId))
+            .ReturnsAsync(new Department { Id = parentId, IsActive = false });
+
+        var command = new UpdateDepartmentCommand
+        {
+            DepartmentId = departmentId,
+            Name = "Valid Department",
+            ParentDepartmentId = parentId
+        };
+
+        // Act
+        var result = await _validator.TestValidateAsync(command);
+
+        // Assert
+        result.ShouldNotHaveValidationErrorFor(x => x.ParentDepartmentId);
+    }
+
+    [Fact]
+    public async Task Validate_ParentDepartmentIdIsGuidEmpty_ShouldNotHaveValidationError()
+    {
+        // Arrange
+        var departmentId = Guid.NewGuid();
+
+        _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(departmentId))
+            .ReturnsAsync(new Department { Id = departmentId });
+
+        var command = new UpdateDepartmentCommand
+        {
+            DepartmentId = departmentId,
+            Name = "Valid Department",
+            ParentDepartmentId = Guid.Empty // Should be treated as null
+        };
+
+        // Act
+        var result = await _validator.TestValidateAsync(command);
+
+        // Assert
+        result.ShouldNotHaveValidationErrorFor(x => x.ParentDepartmentId);
+    }
+
+    [Fact]
+    public async Task Validate_DepartmentHeadIdIsGuidEmpty_ShouldNotHaveValidationError()
+    {
+        // Arrange
+        var departmentId = Guid.NewGuid();
+
+        _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(departmentId))
+            .ReturnsAsync(new Department { Id = departmentId });
+
+        var command = new UpdateDepartmentCommand
+        {
+            DepartmentId = departmentId,
+            Name = "Valid Department",
+            DepartmentHeadId = Guid.Empty // Should be treated as null
+        };
+
+        // Act
+        var result = await _validator.TestValidateAsync(command);
+
+        // Assert
+        result.ShouldNotHaveValidationErrorFor(x => x.DepartmentHeadId);
+    }
+
+    [Fact]
+    public async Task Validate_ParentDepartmentIdIsNull_ShouldNotHaveValidationError()
+    {
+        // Arrange
+        var departmentId = Guid.NewGuid();
+
+        _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(departmentId))
+            .ReturnsAsync(new Department { Id = departmentId });
+
+        var command = new UpdateDepartmentCommand
+        {
+            DepartmentId = departmentId,
+            Name = "Valid Department",
+            ParentDepartmentId = null
+        };
+
+        // Act
+        var result = await _validator.TestValidateAsync(command);
+
+        // Assert
+        result.ShouldNotHaveValidationErrorFor(x => x.ParentDepartmentId);
+    }
 }

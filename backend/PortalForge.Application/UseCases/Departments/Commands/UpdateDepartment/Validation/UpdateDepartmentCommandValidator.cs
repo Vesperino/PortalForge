@@ -51,7 +51,9 @@ public class UpdateDepartmentCommandValidator : AbstractValidator<UpdateDepartme
         if (!parentId.HasValue) return true;
 
         var department = await _unitOfWork.DepartmentRepository.GetByIdAsync(parentId.Value);
-        return department != null && department.IsActive;
+        // For UPDATE operations, we only check if parent exists, not if it's active
+        // This allows editing departments even if their parent was deactivated
+        return department != null;
     }
 
     private async Task<bool> UserExists(Guid? userId, CancellationToken cancellationToken)
