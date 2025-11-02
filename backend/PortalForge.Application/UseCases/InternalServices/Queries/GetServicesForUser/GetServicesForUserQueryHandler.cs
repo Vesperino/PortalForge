@@ -31,7 +31,12 @@ public class GetServicesForUserQueryHandler : IRequestHandler<GetServicesForUser
 
         IEnumerable<Domain.Entities.InternalService> services;
 
-        if (user.DepartmentId.HasValue)
+        // Admin sees ALL active services
+        if (user.Role == Domain.Entities.UserRole.Admin)
+        {
+            services = await _unitOfWork.InternalServiceRepository.GetActiveAsync();
+        }
+        else if (user.DepartmentId.HasValue)
         {
             services = await _unitOfWork.InternalServiceRepository.GetByDepartmentIdAsync(user.DepartmentId.Value);
         }
