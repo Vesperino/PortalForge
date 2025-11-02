@@ -87,7 +87,7 @@
 
                 <!-- Emoji Picker -->
                 <div v-if="form.iconType === 'emoji'" class="flex items-center gap-2">
-                  <EmojiPicker v-model="form.icon" />
+                  <CommonEmojiPicker v-model="form.icon" />
                   <span v-if="form.icon" class="text-3xl">{{ form.icon }}</span>
                 </div>
 
