@@ -1,15 +1,12 @@
 import { test, expect } from '@playwright/test'
 import { loginAsAdmin } from './helpers/auth'
-import { seedNewsData } from './helpers/seed'
 
 test.describe('News System', () => {
-  test.beforeAll(async () => {
-    await seedNewsData()
-  })
-  test('should display news list with seeded data', async ({ page }) => {
-    // Login as admin first
+  test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page)
-    
+  })
+
+  test('should display news list with seeded data', async ({ page }) => {
     // Navigate to news page
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
@@ -48,9 +45,6 @@ test.describe('News System', () => {
   })
 
   test('should filter news by category', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)
@@ -83,9 +77,6 @@ test.describe('News System', () => {
   })
 
   test('should navigate to single news article and display full content', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-    
     // Navigate directly to a seeded news detail page (ID 1 assumed from seed)
     await page.goto('/dashboard/news/1')
     await page.waitForLoadState('networkidle')
@@ -102,9 +93,6 @@ test.describe('News System', () => {
   })
 
   test('should increment view count when viewing news article', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-    
     await page.goto('/dashboard/news/1')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)
@@ -133,9 +121,6 @@ test.describe('News System', () => {
   })
 
   test('should display create news button for authorized users', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)
@@ -163,9 +148,6 @@ test.describe('News System', () => {
   })
 
   test('should validate required fields in create news form', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-    
     await page.goto('/dashboard/news/create')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)
@@ -191,9 +173,6 @@ test.describe('News System', () => {
   })
 
   test('should navigate between news articles in pagination', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)
@@ -222,9 +201,6 @@ test.describe('News System', () => {
   })
 
   test('should display different news categories', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)
@@ -256,9 +232,6 @@ test.describe('News System', () => {
   })
 
   test('should create news with event fields', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-
     // Wait for auth to settle
     await page.waitForTimeout(3000)
 
@@ -303,9 +276,6 @@ test.describe('News System', () => {
   })
 
   test('should filter news by events only', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)
@@ -328,9 +298,6 @@ test.describe('News System', () => {
   })
 
   test('should filter news by department', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)
@@ -346,9 +313,6 @@ test.describe('News System', () => {
   })
 
   test('should display event details on news detail page', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-    
     // This test assumes there's an event news with ID 1
     await page.goto('/dashboard/news/1')
     await page.waitForLoadState('networkidle')
@@ -376,9 +340,6 @@ test.describe('News System', () => {
   })
 
   test('should display events in calendar', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-
     // Wait for auth to settle
     await page.waitForTimeout(2000)
 
@@ -412,9 +373,6 @@ test.describe('News System', () => {
   })
 
   test('should display Google Maps for event location', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-    
     await page.goto('/dashboard/news/1')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)
@@ -429,9 +387,6 @@ test.describe('News System', () => {
   })
 
   test('should work in dark mode', async ({ page }) => {
-    // Login as admin first
-    await loginAsAdmin(page)
-    
     await page.goto('/dashboard/news')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)

@@ -3,32 +3,6 @@ import type { Page } from '@playwright/test'
 const API_URL = process.env.NUXT_PUBLIC_API_URL || 'http://localhost:5155'
 
 /**
- * Seed news data for testing
- */
-export async function seedNewsData() {
-  try {
-    const response = await fetch(`${API_URL}/api/news/seed`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    
-    if (!response.ok) {
-      console.warn('Failed to seed news data:', response.statusText)
-      return false
-    }
-    
-    const result = await response.json()
-    console.log('Seeded news:', result.message)
-    return true
-  } catch (error) {
-    console.error('Error seeding news data:', error)
-    return false
-  }
-}
-
-/**
  * Seed request templates data for testing
  * Requires admin authentication
  */
@@ -71,12 +45,10 @@ export async function seedRequestTemplates(page: Page) {
  */
 export async function seedAllTestData(page: Page) {
   console.log('Seeding test data...')
-  
-  const newsSeeded = await seedNewsData()
+
   const templatesSeeded = await seedRequestTemplates(page)
-  
+
   return {
-    news: newsSeeded,
     templates: templatesSeeded,
   }
 }

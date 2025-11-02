@@ -171,6 +171,7 @@ const convertDepartmentToOrgChart = (dept: DepartmentTreeDto): OrganizationChart
       name: dept.name,
       description: dept.description,
       manager: manager ? `${manager.firstName} ${manager.lastName}` : 'Brak kierownika',
+      director: director ? `${director.firstName} ${director.lastName}` : 'Brak dyrektora',
       employeeCount: employees.length,
       level: dept.level
     },
@@ -597,9 +598,20 @@ watch(zoom, (newZoom) => {
                     {{ getInitials(getManagerByDepartment(dept)) }}
                   </span>
                 </div>
+                <div>
+                  <p class="font-medium text-gray-900 dark:text-white">
+                    {{ getManagerByDepartment(dept).firstName }} {{ getManagerByDepartment(dept).lastName }}
+                  </p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                    {{ getManagerByDepartment(dept).position }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <!-- Department Director -->
             <div v-if="getDirectorByDepartment(dept)" class="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor dzia�u</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor działu</p>
               <div
                 class="flex items-center gap-3 cursor-pointer"
                 @click="selectEmployee(getDirectorByDepartment(dept))"
@@ -621,16 +633,6 @@ watch(zoom, (newZoom) => {
                   </p>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
                     {{ getDirectorByDepartment(dept).position }}
-                  </p>
-                </div>
-              </div>
-            </div>
-                <div>
-                  <p class="font-medium text-gray-900 dark:text-white">
-                    {{ getManagerByDepartment(dept).firstName }} {{ getManagerByDepartment(dept).lastName }}
-                  </p>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
-                    {{ getManagerByDepartment(dept).position }}
                   </p>
                 </div>
               </div>
@@ -1115,14 +1117,24 @@ watch(zoom, (newZoom) => {
                 </p>
 
                 <div class="grid grid-cols-2 gap-4">
+                  <!-- Manager Tile -->
                   <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 cursor-pointer" @click="getManagerByDepartment(selectedDepartmentNode) ? (selectEmployee(getManagerByDepartment(selectedDepartmentNode) as any), showDepartmentModal = false) : null">
-                    <p class="font-semibold text-gray-900 dark:text-white">
-                      {{ getManagerByDepartment(selectedDepartmentNode)?.firstName || 'Brak' }}
-                      {{ getManagerByDepartment(selectedDepartmentNode)?.lastName || 'kierownika' }}
-                    </p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kierownik działu</p>
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
+                        <img v-if="getManagerByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :src="getManagerByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :alt="`${getManagerByDepartment(selectedDepartmentNode)?.firstName} ${getManagerByDepartment(selectedDepartmentNode)?.lastName}`" class="w-full h-full object-cover" />
+                        <span v-else>{{ getInitials(getManagerByDepartment(selectedDepartmentNode) as any) }}</span>
+                      </div>
+                      <div>
+                        <p class="font-semibold text-gray-900 dark:text-white">{{ getManagerByDepartment(selectedDepartmentNode)?.firstName }} {{ getManagerByDepartment(selectedDepartmentNode)?.lastName }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ getManagerByDepartment(selectedDepartmentNode)?.position }}</p>
+                      </div>
+                    </div>
                   </div>
+
+                  <!-- Director Tile -->
                   <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 cursor-pointer" @click="getDirectorByDepartment(selectedDepartmentNode) ? (selectEmployee(getDirectorByDepartment(selectedDepartmentNode) as any), showDepartmentModal = false) : null">
-                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor dzia�u</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor działu</p>
                     <div class="flex items-center gap-3">
                       <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-semibold overflow-hidden">
                         <img v-if="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :src="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :alt="`${getDirectorByDepartment(selectedDepartmentNode)?.firstName} ${getDirectorByDepartment(selectedDepartmentNode)?.lastName}`" class="w-full h-full object-cover" />
@@ -1134,12 +1146,16 @@ watch(zoom, (newZoom) => {
                       </div>
                     </div>
                   </div>
+
+                  <!-- Employee Count Tile -->
                   <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                     <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Liczba pracowników</p>
                     <p class="font-semibold text-gray-900 dark:text-white">
                       {{ getEmployeesByDepartment(selectedDepartmentNode.id).length }} pracowników
                     </p>
                   </div>
+
+                  <!-- Level Tile -->
                   <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
                     <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Poziom w strukturze</p>
                     <p class="font-semibold text-gray-900 dark:text-white">{{ selectedDepartmentNode.level }}</p>
