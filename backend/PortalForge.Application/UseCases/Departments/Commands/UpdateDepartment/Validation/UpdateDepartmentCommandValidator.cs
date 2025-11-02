@@ -29,15 +29,15 @@ public class UpdateDepartmentCommandValidator : AbstractValidator<UpdateDepartme
         RuleFor(x => x.ParentDepartmentId)
             .MustAsync(ParentDepartmentExists)
             .WithMessage("Parent department does not exist")
-            .When(x => x.ParentDepartmentId.HasValue)
+            .When(x => x.ParentDepartmentId.HasValue && x.ParentDepartmentId.Value != Guid.Empty)
             .Must((command, parentId) => parentId != command.DepartmentId)
             .WithMessage("Department cannot be its own parent")
-            .When(x => x.ParentDepartmentId.HasValue);
+            .When(x => x.ParentDepartmentId.HasValue && x.ParentDepartmentId.Value != Guid.Empty);
 
         RuleFor(x => x.DepartmentHeadId)
             .MustAsync(UserExists)
             .WithMessage("Department head user does not exist")
-            .When(x => x.DepartmentHeadId.HasValue);
+            .When(x => x.DepartmentHeadId.HasValue && x.DepartmentHeadId.Value != Guid.Empty);
     }
 
     private async Task<bool> DepartmentExists(Guid departmentId, CancellationToken cancellationToken)
