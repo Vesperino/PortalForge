@@ -326,6 +326,11 @@ const handleWheel = (e: WheelEvent) => {
   panY.value = mouseY - pointY * newZoom
 
   zoom.value = newZoom
+
+  // Force repaint to fix rendering quality immediately
+  if (containerRef.value) {
+    containerRef.value.style.transform = `translate3d(${panX.value}px, ${panY.value}px, 0) scale(${newZoom})`
+  }
 }
 
 const handleMouseDown = (e: MouseEvent) => {
@@ -375,9 +380,9 @@ const resetView = () => {
   fitToWidth()
 }
 
-// Computed style for transform
+// Computed style for transform with GPU acceleration
 const transformStyle = computed(() => ({
-  transform: `translate(${panX.value}px, ${panY.value}px) scale(${zoom.value})`
+  transform: `translate3d(${panX.value}px, ${panY.value}px, 0) scale(${zoom.value})`
 }))
 
 // Computed style for wrapper cursor
@@ -391,6 +396,21 @@ const wrapperCursor = computed(() => {
 watch(departmentOrgChartData, () => {
   // Next tick to wait for DOM of charts
   nextTick(() => setTimeout(fitToWidth, 0))
+})
+
+// Force repaint when zoom changes to fix rendering quality
+watch(zoom, (newZoom) => {
+  if (containerRef.value) {
+    // Use requestAnimationFrame to ensure repaint happens
+    requestAnimationFrame(() => {
+      if (containerRef.value) {
+        // Force browser to recalculate and re-render with GPU acceleration
+        containerRef.value.style.transform = `translate3d(${panX.value}px, ${panY.value}px, 0) scale(${newZoom})`
+        // Trigger reflow to force immediate repaint
+        void containerRef.value.offsetHeight
+      }
+    })
+  }
 })
 
 </script>
