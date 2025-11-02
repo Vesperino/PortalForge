@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using PortalForge.Api.DTOs.Responses.Storage;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.UseCases.Storage.Commands.UploadNewsImage;
 using PortalForge.Application.UseCases.Storage.Commands.DeleteNewsImage;
@@ -133,12 +134,5 @@ public class StorageController : ControllerBase
             return StatusCode(500, new { message = "Error serving file" });
         }
     }
-}
-
-public class UploadImageResponse
-{
-    public string Url { get; set; } = string.Empty;
-    public string FileName { get; set; } = string.Empty;
-    public string FilePath { get; set; } = string.Empty;
 }
 

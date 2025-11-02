@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Api.DTOs.Requests.Requests;
 using PortalForge.Application.UseCases.Requests.Commands.ApproveRequestStep;
 using PortalForge.Application.UseCases.Requests.Commands.RejectRequestStep;
 using PortalForge.Application.UseCases.Requests.Commands.SubmitRequest;
@@ -159,15 +160,5 @@ public class RequestsController : ControllerBase
 
         return Ok(result);
     }
-}
-
-public class ApproveStepDto
-{
-    public string? Comment { get; set; }
-}
-
-public class RejectStepDto
-{
-    public string Reason { get; set; } = string.Empty;
 }
 
