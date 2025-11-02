@@ -160,7 +160,8 @@ const convertDepartmentToOrgChart = (dept: DepartmentTreeDto): OrganizationChart
   departmentLookup.set(nodeKey, dept)
 
   const manager = getManagerByDepartment(dept)
-  const director = getDirectorByDepartment(dept)\n  const employees = dept.employees || []
+  const director = getDirectorByDepartment(dept)
+  const employees = dept.employees || []
 
   const node: OrganizationChartNode = {
     key: nodeKey,
@@ -598,7 +599,7 @@ watch(zoom, (newZoom) => {
                 </div>
             <!-- Department Director -->
             <div v-if="getDirectorByDepartment(dept)" class="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor dzia³u</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor dziaï¿½u</p>
               <div
                 class="flex items-center gap-3 cursor-pointer"
                 @click="selectEmployee(getDirectorByDepartment(dept))"
@@ -1121,7 +1122,7 @@ watch(zoom, (newZoom) => {
                     </p>
                   </div>
                   <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 cursor-pointer" @click="getDirectorByDepartment(selectedDepartmentNode) ? (selectEmployee(getDirectorByDepartment(selectedDepartmentNode) as any), showDepartmentModal = false) : null">
-                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor dzia³u</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor dziaï¿½u</p>
                     <div class="flex items-center gap-3">
                       <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-semibold overflow-hidden">
                         <img v-if="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :src="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :alt="`${getDirectorByDepartment(selectedDepartmentNode)?.firstName} ${getDirectorByDepartment(selectedDepartmentNode)?.lastName}`" class="w-full h-full object-cover" />
