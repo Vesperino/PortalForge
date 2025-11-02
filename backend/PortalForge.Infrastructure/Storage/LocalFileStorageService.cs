@@ -24,7 +24,7 @@ public class LocalFileStorageService : IFileStorageService
     public async Task<string> SaveFileAsync(Stream fileStream, string fileName, string category)
     {
         var settings = await GetStorageSettingsAsync();
-        var basePath = settings.GetValueOrDefault("Storage:BasePath", "C:\\PortalForge\\Storage");
+        var basePath = settings.GetValueOrDefault("Storage:BasePath", GetDefaultBasePath());
         var categoryPath = settings.GetValueOrDefault($"Storage:{category}Path", category);
 
         // Create full directory path
@@ -47,15 +47,16 @@ public class LocalFileStorageService : IFileStorageService
         _logger.LogInformation("File saved: {FilePath}", fullFilePath);
 
         // Return relative path
-        return Path.Combine(categoryPath, uniqueFileName).Replace("\\", "/");
+        var normalizedCategory = categoryPath.Replace("\\", "/").Trim('/');
+        return $"{normalizedCategory}/{uniqueFileName}";
     }
 
     public async Task DeleteFileAsync(string relativePath)
     {
         var settings = await GetStorageSettingsAsync();
-        var basePath = settings.GetValueOrDefault("Storage:BasePath", "C:\\PortalForge\\Storage");
+        var basePath = settings.GetValueOrDefault("Storage:BasePath", GetDefaultBasePath());
 
-        var fullPath = Path.Combine(basePath, relativePath.Replace("/", "\\"));
+        var fullPath = CombineWithBasePath(basePath, relativePath);
 
         if (File.Exists(fullPath))
         {
@@ -71,9 +72,9 @@ public class LocalFileStorageService : IFileStorageService
     public async Task<bool> FileExistsAsync(string relativePath)
     {
         var settings = await GetStorageSettingsAsync();
-        var basePath = settings.GetValueOrDefault("Storage:BasePath", "C:\\PortalForge\\Storage");
+        var basePath = settings.GetValueOrDefault("Storage:BasePath", GetDefaultBasePath());
 
-        var fullPath = Path.Combine(basePath, relativePath.Replace("/", "\\"));
+        var fullPath = CombineWithBasePath(basePath, relativePath);
         return File.Exists(fullPath);
     }
 
@@ -84,7 +85,7 @@ public class LocalFileStorageService : IFileStorageService
         var basePath = _cachedSettings?.GetValueOrDefault("Storage:BasePath", "C:\\PortalForge\\Storage") 
                        ?? "C:\\PortalForge\\Storage";
 
-        return Path.Combine(basePath, relativePath.Replace("/", "\\"));
+        return CombineWithBasePath(basePath, relativePath);
     }
 
     public async Task<Dictionary<string, string>> GetStorageSettingsAsync()
@@ -105,7 +106,30 @@ public class LocalFileStorageService : IFileStorageService
 
         return settings;
     }
+
+    private static string GetDefaultBasePath()
+    {
+        return OperatingSystem.IsWindows() ? "C:\\PortalForge\\Storage" : "/app/storage";
+    }
+
+    private static string CombineWithBasePath(string basePath, string relativePath)
+    {
+        // Normalize relative path into segments and combine with base path using OS-specific separators
+        var segments = relativePath
+            .Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+
+        var all = new string[segments.Length + 1];
+        all[0] = basePath;
+        Array.Copy(segments, 0, all, 1, segments.Length);
+
+        return Path.Combine(all);
+    }
 }
+
+
+
+
+
 
 
 
