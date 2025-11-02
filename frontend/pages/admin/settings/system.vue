@@ -67,16 +67,16 @@ async function handleTestStorage() {
   }
 }
 
-const fullBasePath = computed(() => localSettings.value['Storage:BasePath'] || 'C:\\PortalForge\\Storage')
+const fullBasePath = computed(() => localSettings.value['Storage:BasePath'] || '/app/storage')
 const newsImagesFullPath = computed(() => {
-  const base = localSettings.value['Storage:BasePath'] || 'C:\\PortalForge\\Storage'
-  const sub = localSettings.value['Storage:NewsImagesPath'] || 'news-images'
-  return `${base}\\${sub}`
+  const base = localSettings.value['Storage:BasePath'] || '/app/storage'
+  const sub = localSettings.value['Storage:NewsImagesPath'] || 'images'
+  return `${base}/${sub}`
 })
 const documentsFullPath = computed(() => {
-  const base = localSettings.value['Storage:BasePath'] || 'C:\\PortalForge\\Storage'
+  const base = localSettings.value['Storage:BasePath'] || '/app/storage'
   const sub = localSettings.value['Storage:DocumentsPath'] || 'documents'
-  return `${base}\\${sub}`
+  return `${base}/${sub}`
 })
 </script>
 
@@ -140,11 +140,21 @@ const documentsFullPath = computed(() => {
             v-model="localSettings['Storage:BasePath']"
             type="text"
             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
-            placeholder="C:\PortalForge\Storage"
+            placeholder="/app/storage"
           >
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Absolutna ścieżka do głównego katalogu storage
+            Absolutna ścieżka do głównego katalogu storage <strong>(wewnątrz kontenera Docker)</strong>
           </p>
+          <div class="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <p class="text-xs text-blue-800 dark:text-blue-200">
+              <strong>Domyślnie:</strong> <code class="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded">/app/storage</code> (ścieżka w kontenerze)<br>
+              <strong>Na hoście VPS:</strong> <code class="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded">~/portalforge/storage</code> (zmapowane przez Docker volume)
+            </p>
+            <p class="mt-2 text-xs text-blue-700 dark:text-blue-300">
+              💡 Aby zmienić lokalizację na większy dysk (np. <code class="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded">/mnt/company-data</code>),
+              zrestartuj kontener z nowym volume: <code class="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded">-v /mnt/company-data/storage:/app/storage</code>
+            </p>
+          </div>
         </div>
 
         <!-- News Images Path -->
@@ -156,7 +166,7 @@ const documentsFullPath = computed(() => {
             v-model="localSettings['Storage:NewsImagesPath']"
             type="text"
             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
-            placeholder="news-images"
+            placeholder="images"
           >
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Relatywna ścieżka do Base Path
