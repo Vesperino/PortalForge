@@ -48,7 +48,11 @@ public class CreateNewsCommandHandlerTests
         _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(authorId))
             .ReturnsAsync(author);
 
+        _unitOfWorkMock.Setup(x => x.HashtagRepository.GetOrCreateHashtagsAsync(It.IsAny<List<string>>()))
+            .ReturnsAsync(new List<Hashtag>());
+
         _unitOfWorkMock.Setup(x => x.NewsRepository.CreateAsync(It.IsAny<Domain.Entities.News>()))
+            .Callback<Domain.Entities.News>(n => n.Id = 1)
             .ReturnsAsync(1);
 
         // Act
@@ -112,7 +116,10 @@ public class CreateNewsCommandHandlerTests
             .ReturnsAsync(author);
         _unitOfWorkMock.Setup(x => x.EventRepository.GetByIdAsync(eventId))
             .ReturnsAsync(eventEntity);
+        _unitOfWorkMock.Setup(x => x.HashtagRepository.GetOrCreateHashtagsAsync(It.IsAny<List<string>>()))
+            .ReturnsAsync(new List<Hashtag>());
         _unitOfWorkMock.Setup(x => x.NewsRepository.CreateAsync(It.IsAny<Domain.Entities.News>()))
+            .Callback<Domain.Entities.News>(n => n.Id = 1)
             .ReturnsAsync(1);
 
         // Act

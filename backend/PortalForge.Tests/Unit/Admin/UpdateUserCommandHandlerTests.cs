@@ -62,6 +62,12 @@ public class UpdateUserCommandHandlerTests
         _mockUnitOfWork.Setup(u => u.UserRoleGroupRepository.DeleteByUserIdAsync(userId))
             .Returns(Task.CompletedTask);
 
+        _mockUnitOfWork.Setup(u => u.PositionRepository.GetByNameAsync(It.IsAny<string>()))
+            .ReturnsAsync((Position?)null);
+
+        _mockUnitOfWork.Setup(u => u.AuditLogRepository.CreateAsync(It.IsAny<AuditLog>()))
+            .ReturnsAsync(Guid.NewGuid());
+
         var command = new UpdateUserCommand
         {
             UserId = userId,

@@ -16,6 +16,14 @@ public class DeleteNewsCommandValidatorTests
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _validator = new DeleteNewsCommandValidator(_unitOfWorkMock.Object);
+        SetupDefaultMocks();
+    }
+
+    private void SetupDefaultMocks()
+    {
+        // Setup default mocks for invalid values that trigger async validation
+        _unitOfWorkMock.Setup(x => x.NewsRepository.GetByIdAsync(It.IsAny<int>()))
+            .ReturnsAsync((Domain.Entities.News?)null);
     }
 
     [Fact]

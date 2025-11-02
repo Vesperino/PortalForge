@@ -39,29 +39,32 @@ public class DepartmentsControllerTests : IClassFixture<WebApplicationFactory<Pr
         // Create a new factory with in-memory database
         _customFactory = _factory.WithWebHostBuilder(builder =>
         {
-            builder.ConfigureServices((context, services) =>
-            {
-                // Remove all DbContext-related services added by Infrastructure
-                var descriptorsToRemove = services
-                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
-                                d.ServiceType == typeof(DbContextOptions) ||
-                                d.ServiceType == typeof(ApplicationDbContext))
-                    .ToList();
-
-                foreach (var descriptor in descriptorsToRemove)
-                {
-                    services.Remove(descriptor);
-                }
-            });
-
             builder.ConfigureTestServices(services =>
             {
-                // Add in-memory database
+                // Remove the production DbContext registration
+                var descriptorContext = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+                if (descriptorContext != null)
+                {
+                    services.Remove(descriptorContext);
+                }
+
+                // Create a separate service provider for the InMemory database to avoid conflicts
+                var serviceProvider = new ServiceCollection()
+                    .AddEntityFrameworkInMemoryDatabase()
+                    .BuildServiceProvider();
+
+                // Add in-memory database with separate service provider
                 var dbName = $"InMemoryTestDb_{Guid.NewGuid()}";
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
                     options.UseInMemoryDatabase(dbName);
+                    options.UseInternalServiceProvider(serviceProvider);
+                    options.EnableSensitiveDataLogging();
                 });
+
+                // Add HttpClient for GeocodingService
+                services.AddHttpClient();
 
                 // Add test authentication
                 services.AddAuthentication("Test")

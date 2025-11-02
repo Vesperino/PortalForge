@@ -56,6 +56,16 @@ public class LoginCommandHandlerTests
             .Setup(x => x.LoginAsync(command.Email, command.Password))
             .ReturnsAsync(expectedAuthResult);
 
+        _unitOfWorkMock
+            .Setup(x => x.UserRepository.GetByIdAsync(expectedAuthResult.UserId!.Value))
+            .ReturnsAsync(new Domain.Entities.User
+            {
+                Id = expectedAuthResult.UserId.Value,
+                Email = command.Email,
+                FirstName = "Test",
+                LastName = "User"
+            });
+
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
