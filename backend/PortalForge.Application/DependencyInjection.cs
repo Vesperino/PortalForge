@@ -15,11 +15,8 @@ public static class DependencyInjection
         // Add AutoMapper
         services.AddAutoMapper(assembly);
 
-        // Add MediatR
-        services.AddMediatR(config =>
-        {
-            config.RegisterServicesFromAssembly(assembly);
-        });
+        // Add MediatR (v11.x syntax)
+        services.AddMediatR(assembly);
 
         // Register validators automatically
         services.AddValidators(assembly);
