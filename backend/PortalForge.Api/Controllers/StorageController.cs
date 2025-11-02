@@ -6,6 +6,7 @@ using PortalForge.Api.DTOs.Responses.Storage;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.UseCases.Storage.Commands.UploadNewsImage;
 using PortalForge.Application.UseCases.Storage.Commands.DeleteNewsImage;
+using PortalForge.Application.UseCases.Storage.Commands.UploadServiceIcon;
 
 namespace PortalForge.Api.Controllers;
 
@@ -59,6 +60,41 @@ public class StorageController : ControllerBase
         {
             _logger.LogError(ex, "Error uploading file");
             return StatusCode(500, new { message = "Error uploading file", error = ex.Message });
+        }
+    }
+
+    [HttpPost("upload/service-icon")]
+    [Authorize(Policy = "RequirePermission:internal_services.manage")]
+    public async Task<ActionResult<UploadImageResponse>> UploadServiceIcon(IFormFile file)
+    {
+        try
+        {
+            using var fileStream = file.OpenReadStream();
+
+            var command = new UploadServiceIconCommand
+            {
+                FileStream = fileStream,
+                FileName = file.FileName,
+                FileSize = file.Length
+            };
+
+            var result = await _mediator.Send(command);
+
+            // Build full URL with proper scheme and host
+            var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+            var publicUrl = $"{baseUrl}/api/storage/files/{result.FilePath}";
+
+            return Ok(new UploadImageResponse
+            {
+                Url = publicUrl,
+                FileName = result.FileName,
+                FilePath = result.FilePath
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading service icon");
+            return StatusCode(500, new { message = "Error uploading service icon", error = ex.Message });
         }
     }
 

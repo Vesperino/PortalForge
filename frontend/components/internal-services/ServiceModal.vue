@@ -74,25 +74,43 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Ikona
                 </label>
-                <div class="flex gap-2">
+                <div class="mb-2">
                   <select
                     v-model="form.iconType"
-                    class="px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="emoji">Emoji</option>
-                    <option value="font">Font Icon</option>
-                    <option value="image">Obrazek</option>
+                    <option value="font">Font Icon (FontAwesome)</option>
+                    <option value="image">Własny obrazek</option>
                   </select>
+                </div>
+
+                <!-- Emoji Picker -->
+                <div v-if="form.iconType === 'emoji'" class="flex items-center gap-2">
+                  <EmojiPicker v-model="form.icon" />
+                  <span v-if="form.icon" class="text-3xl">{{ form.icon }}</span>
+                </div>
+
+                <!-- Font Icon Input -->
+                <div v-else-if="form.iconType === 'font'">
                   <input
                     v-model="form.icon"
                     type="text"
-                    class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    :placeholder="iconPlaceholder"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="fas fa-link"
+                  />
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Klasa Font Awesome, np. fas fa-link, fas fa-envelope
+                  </p>
+                </div>
+
+                <!-- Image Upload -->
+                <div v-else-if="form.iconType === 'image'">
+                  <InternalServicesServiceIconUpload
+                    v-model="form.icon"
+                    :max-size-m-b="5"
                   />
                 </div>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {{ iconHelpText }}
-                </p>
               </div>
 
               <!-- Category -->
@@ -258,32 +276,6 @@ const departmentsFlat = computed(() => {
     ])
   }
   return flattenDepartments(departmentsTree.value)
-})
-
-const iconPlaceholder = computed(() => {
-  switch (form.iconType) {
-    case 'emoji':
-      return '🔗'
-    case 'font':
-      return 'fas fa-link'
-    case 'image':
-      return 'https://example.com/icon.png'
-    default:
-      return ''
-  }
-})
-
-const iconHelpText = computed(() => {
-  switch (form.iconType) {
-    case 'emoji':
-      return 'Wklej emoji, np. 🔗 📧 📅'
-    case 'font':
-      return 'Klasa Font Awesome, np. fas fa-link'
-    case 'image':
-      return 'URL do obrazka'
-    default:
-      return ''
-  }
 })
 
 async function loadDepartments() {
