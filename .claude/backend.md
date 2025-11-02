@@ -239,6 +239,88 @@ public async Task<int> Handle(CreateEmployeeCommand request, CancellationToken c
 }
 ```
 
+## Configuration Best Practices
+
+### CRITICAL: Never Hardcode Paths or Configuration Values
+
+**❌ BAD - Hardcoded values:**
+```csharp
+// VERY BAD: Hardcoded file paths
+var relativePath = await _fileStorageService.SaveFileAsync(
+    request.FileStream,
+    request.FileName,
+    "news-images"  // ← Hardcoded! Cannot be changed without redeployment
+);
+
+// VERY BAD: Hardcoded URLs
+var apiUrl = "https://api.example.com";
+
+// VERY BAD: Hardcoded connection strings
+var connectionString = "Server=localhost;Database=MyDb;";
+```
+
+**✅ GOOD - Configuration from SystemSettings/appsettings:**
+```csharp
+// GOOD: Retrieve from SystemSettings for runtime configuration
+var newsImagesPathSetting = await _unitOfWork.SystemSettingRepository
+    .GetByKeyAsync("Storage:NewsImagesPath");
+var newsImagesPath = newsImagesPathSetting?.Value ?? "images";
+
+var relativePath = await _fileStorageService.SaveFileAsync(
+    request.FileStream,
+    request.FileName,
+    newsImagesPath  // ← Configurable through admin panel!
+);
+
+// GOOD: Inject configuration
+public class MyService
+{
+    private readonly IConfiguration _configuration;
+
+    public MyService(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+
+    public async Task ProcessAsync()
+    {
+        var apiUrl = _configuration["ExternalApi:Url"];
+        // Use the configured value
+    }
+}
+```
+
+### Configuration Priority
+
+1. **Runtime configurable** (SystemSettings table) - for values admins should change
+   - Storage paths
+   - Feature flags
+   - Business rules (max file size, retention periods)
+
+2. **Environment variables** (.env, appsettings.{Environment}.json) - for deployment-specific values
+   - Database connection strings
+   - API keys and secrets
+   - External service URLs
+
+3. **Code constants** (const/readonly) - ONLY for truly immutable values
+   - Mathematical constants
+   - Fixed business logic values
+   - HTTP status codes
+
+### Examples of What Should NEVER Be Hardcoded
+
+- ❌ File system paths (`"C:\\Storage"`, `"news-images"`)
+- ❌ URLs and endpoints (`"https://api.example.com"`)
+- ❌ Database connection strings
+- ❌ API keys and secrets
+- ❌ Email addresses
+- ❌ Port numbers
+- ❌ File size limits (make configurable)
+- ❌ Timeout values (make configurable)
+- ❌ Feature flags (use SystemSettings)
+
+**Why?** Hardcoded values require code changes and redeployment for simple configuration updates. Always use SystemSettings for runtime configuration or appsettings for environment-specific values.
+
 ## Logging with Serilog
 
 Use structured logging throughout the application:
