@@ -12,6 +12,7 @@ import Underline from '@tiptap/extension-underline'
 import { TextStyle } from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
 import Youtube from '@tiptap/extension-youtube'
+import CodeBlock from '@tiptap/extension-code-block'
 
 interface Props {
   modelValue: string
@@ -28,7 +29,9 @@ const emit = defineEmits<Emits>()
 const editor = useEditor({
   content: props.modelValue,
   extensions: [
-    StarterKit,
+    StarterKit.configure({
+      codeBlock: false, // Disable default codeBlock to use custom CodeBlock extension
+    }),
     Link.configure({
       openOnClick: false,
     }),
@@ -51,6 +54,12 @@ const editor = useEditor({
     Youtube.configure({
       width: 640,
       height: 480,
+    }),
+    CodeBlock.configure({
+      languageClassPrefix: 'language-',
+      HTMLAttributes: {
+        class: 'code-block',
+      },
     }),
   ],
   onUpdate: ({ editor }) => {
@@ -168,6 +177,10 @@ function addRowAfter() {
 function deleteRow() {
   editor.value?.chain().focus().deleteRow().run()
 }
+
+function toggleCodeBlock() {
+  editor.value?.chain().focus().toggleCodeBlock().run()
+}
 </script>
 
 <template>
@@ -239,38 +252,46 @@ function deleteRow() {
       <button
         type="button"
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive({ textAlign: 'left' }) }"
-        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
+        class="px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Wyrównaj do lewej"
         @click="setTextAlign('left')"
       >
-        ⬅
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h16" />
+        </svg>
       </button>
       <button
         type="button"
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive({ textAlign: 'center' }) }"
-        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
+        class="px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Wyśrodkuj"
         @click="setTextAlign('center')"
       >
-        ↔
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M8 12h8M4 18h16" />
+        </svg>
       </button>
       <button
         type="button"
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive({ textAlign: 'right' }) }"
-        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
+        class="px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Wyrównaj do prawej"
         @click="setTextAlign('right')"
       >
-        ➡
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M10 12h10M4 18h16" />
+        </svg>
       </button>
       <button
         type="button"
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive({ textAlign: 'justify' }) }"
-        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
+        class="px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Wyjustuj"
         @click="setTextAlign('justify')"
       >
-        ⬌
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
       </button>
 
       <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
@@ -293,6 +314,19 @@ function deleteRow() {
         @click="toggleOrderedList"
       >
         1. Lista
+      </button>
+
+      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+
+      <!-- Code Block -->
+      <button
+        type="button"
+        :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('codeBlock') }"
+        class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors font-mono"
+        title="Blok kodu"
+        @click="toggleCodeBlock"
+      >
+        &lt;/&gt; Kod
       </button>
 
       <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
@@ -558,5 +592,44 @@ function deleteRow() {
 
 .ProseMirror [style*="text-align: justify"] {
   text-align: justify;
+}
+
+/* Code blocks */
+.ProseMirror pre {
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.dark .ProseMirror pre {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.ProseMirror code {
+  background-color: #f1f5f9;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875em;
+}
+
+.dark .ProseMirror code {
+  background-color: #1e293b;
+  color: #e2e8f0;
+}
+
+.ProseMirror pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  color: inherit;
 }
 </style>

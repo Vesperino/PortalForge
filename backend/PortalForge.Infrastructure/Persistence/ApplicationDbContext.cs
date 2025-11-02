@@ -41,6 +41,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<VacationSchedule> VacationSchedules { get; set; }
     public DbSet<OrganizationalPermission> OrganizationalPermissions { get; set; }
 
+    // Internal Services
+    public DbSet<InternalService> InternalServices { get; set; }
+    public DbSet<InternalServiceCategory> InternalServiceCategories { get; set; }
+    public DbSet<InternalServiceDepartment> InternalServiceDepartments { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());

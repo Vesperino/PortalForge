@@ -87,6 +87,11 @@ public class Department
     /// Collection of employees assigned to this department.
     /// </summary>
     public ICollection<User> Employees { get; set; } = new List<User>();
+
+    /// <summary>
+    /// Many-to-many relationship with internal services.
+    /// </summary>
+    public ICollection<InternalServiceDepartment> DepartmentServices { get; set; } = new List<InternalServiceDepartment>();
 }
 
 
