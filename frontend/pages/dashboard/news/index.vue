@@ -523,7 +523,7 @@ const handleDelete = async () => {
                   📅 Wydarzenie
                 </span>
                 <span v-if="news.eventHashtag" class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                  {{ news.eventHashtag }}
+                  {{ news.eventHashtag.startsWith('#') ? news.eventHashtag : `#${news.eventHashtag}` }}
                 </span>
               </div>
               <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">

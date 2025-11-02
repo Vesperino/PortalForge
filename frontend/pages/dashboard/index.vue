@@ -348,7 +348,7 @@ function viewEventDetails(eventId: number) {
                     :class="getEventTagColor(event.eventHashtag)"
                     class="px-2 py-0.5 text-xs font-medium rounded-full"
                   >
-                    #{{ event.eventHashtag }}
+                    {{ event.eventHashtag.startsWith('#') ? event.eventHashtag : `#${event.eventHashtag}` }}
                   </span>
                 </div>
               </div>
