@@ -542,20 +542,6 @@ onMounted(() => {
               Zarządzaj działami i przypisuj pracowników do struktury firmy
             </p>
           </div>
-          <div class="hidden md:hidden">
-            <UserAutocomplete
-              placeholder="Szybkie wyszukiwanie pracownika..."
-              @select="onGlobalUserSelect"
-            /></div>
-        <button hidden
-          class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 transition-all shadow-md hover:shadow-lg"
-          @click="openAddRootModal"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Dodaj dział główny
-        </button>
       </div>
 
       <!-- Statistics Cards -->
@@ -813,7 +799,7 @@ onMounted(() => {
     <div
       v-if="showDepartmentModal"
       class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      @click.self="closeDepartmentModal"
+      
     >
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <!-- Modal Header -->
@@ -931,7 +917,7 @@ onMounted(() => {
     <div
       v-if="showAssignModal"
       class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      @click.self="cancelAssign"
+      
     >
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col">
         <!-- Modal Header -->
@@ -1044,7 +1030,7 @@ onMounted(() => {
     <div
       v-if="showQuickEditModal && editingUser"
       class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      @click.self="closeQuickEditModal"
+      
     >
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full">
         <!-- Modal Header -->
@@ -1163,4 +1149,7 @@ onMounted(() => {
   }
 }
 </style>
+
+
+
 
