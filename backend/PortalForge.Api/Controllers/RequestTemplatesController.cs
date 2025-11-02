@@ -77,10 +77,10 @@ public class RequestTemplatesController : BaseController
     [Authorize(Policy = "RequirePermission:requests.manage_templates")]
     public async Task<ActionResult> Create([FromBody] CreateRequestTemplateCommand command)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var creatorId))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var creatorId);
+        if (unauthorizedResult != null)
         {
-            return Unauthorized("User ID not found in token");
+            return unauthorizedResult;
         }
 
         command.CreatedById = creatorId;
@@ -114,10 +114,10 @@ public class RequestTemplatesController : BaseController
     [Authorize(Policy = "RequirePermission:requests.manage_templates")]
     public async Task<ActionResult> Delete(Guid id)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var deletedBy))
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var deletedBy);
+        if (unauthorizedResult != null)
         {
-            return Unauthorized("User ID not found in token");
+            return unauthorizedResult;
         }
 
         var command = new DeleteRequestTemplateCommand

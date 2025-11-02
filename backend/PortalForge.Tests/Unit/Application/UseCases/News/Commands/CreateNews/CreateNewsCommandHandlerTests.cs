@@ -40,7 +40,7 @@ public class CreateNewsCommandHandlerTests
             Content = "Test Content",
             Excerpt = "Test Excerpt",
             AuthorId = authorId,
-            Category = NewsCategory.Announcement
+            Category = "Announcement"
         };
 
         var author = new User { Id = authorId, Email = "test@example.com" };
@@ -75,7 +75,7 @@ public class CreateNewsCommandHandlerTests
             Content = "Test Content",
             Excerpt = "Test Excerpt",
             AuthorId = Guid.NewGuid(),
-            Category = NewsCategory.Announcement
+            Category = "Announcement"
         };
 
         _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(It.IsAny<Guid>()))
@@ -101,7 +101,7 @@ public class CreateNewsCommandHandlerTests
             Content = "Test Content",
             Excerpt = "Test Excerpt",
             AuthorId = authorId,
-            Category = NewsCategory.Event,
+            Category = "Event",
             EventId = eventId
         };
 
