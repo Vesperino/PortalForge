@@ -20,18 +20,37 @@ public class DeleteNewsCommandHandler : IRequestHandler<DeleteNewsCommand, Unit>
 
     public async Task<Unit> Handle(DeleteNewsCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Deleting news with ID: {NewsId}", request.NewsId);
+        _logger.LogInformation("Starting deletion of news with ID: {NewsId}", request.NewsId);
 
         var news = await _unitOfWork.NewsRepository.GetByIdAsync(request.NewsId);
         if (news == null)
         {
+            _logger.LogWarning("News with ID {NewsId} not found - cannot delete", request.NewsId);
             throw new NotFoundException($"News with ID {request.NewsId} not found");
         }
 
-        await _unitOfWork.NewsRepository.DeleteAsync(request.NewsId);
-        await _unitOfWork.SaveChangesAsync();
+        _logger.LogInformation("Found news to delete - ID: {NewsId}, Title: {Title}, HasEvent: {HasEvent}, HashtagCount: {HashtagCount}",
+            request.NewsId,
+            news.Title,
+            news.EventId.HasValue,
+            news.Hashtags?.Count ?? 0);
 
-        _logger.LogInformation("News deleted successfully: {NewsId}", request.NewsId);
+        await _unitOfWork.NewsRepository.DeleteAsync(request.NewsId);
+        _logger.LogInformation("News marked for deletion in context: {NewsId}", request.NewsId);
+
+        var changes = await _unitOfWork.SaveChangesAsync();
+        _logger.LogInformation("SaveChanges completed - News ID: {NewsId}, Changes saved: {ChangeCount}", request.NewsId, changes);
+
+        // Verify deletion
+        var deletedNews = await _unitOfWork.NewsRepository.GetByIdAsync(request.NewsId);
+        if (deletedNews != null)
+        {
+            _logger.LogError("CRITICAL: News still exists after deletion! ID: {NewsId}", request.NewsId);
+        }
+        else
+        {
+            _logger.LogInformation("Verified: News successfully deleted from database - ID: {NewsId}", request.NewsId);
+        }
 
         return Unit.Value;
     }

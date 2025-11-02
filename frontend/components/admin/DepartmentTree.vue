@@ -180,16 +180,15 @@ onUnmounted(() => {
             Nieaktywny
           </span>
         </div>
-        <div class="flex items-center gap-3 mt-1 text-xs text-gray-600 dark:text-gray-400">
+        <div class="flex flex-wrap items-center gap-3 mt-1 text-xs text-gray-600 dark:text-gray-400">
           <!-- Department Head -->
           <div v-if="department.departmentHeadName" class="flex items-center gap-1.5">
             <div
-              class="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold"
-              :class="getAvatarColor(level)"
+              class="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold bg-blue-500"
             >
               {{ getDepartmentHeadInitials(department.departmentHeadName) }}
             </div>
-            <span>{{ department.departmentHeadName }}</span>
+            <span class="font-medium">K: {{ department.departmentHeadName }}</span>
           </div>
           <div v-else class="flex items-center gap-1.5 text-gray-400">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,6 +200,16 @@ onUnmounted(() => {
               />
             </svg>
             <span>Brak kierownika</span>
+          </div>
+
+          <!-- Department Director -->
+          <div v-if="department.departmentDirectorName" class="flex items-center gap-1.5">
+            <div
+              class="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold bg-purple-500"
+            >
+              {{ getDepartmentHeadInitials(department.departmentDirectorName) }}
+            </div>
+            <span class="font-medium">D: {{ department.departmentDirectorName }}</span>
           </div>
 
           <!-- Employee Count -->

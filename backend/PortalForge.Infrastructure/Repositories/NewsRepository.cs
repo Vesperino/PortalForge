@@ -121,9 +121,15 @@ public class NewsRepository : INewsRepository
 
     public async Task DeleteAsync(int id)
     {
-        var news = await _context.News.FindAsync(id);
+        var news = await _context.News
+            .Include(n => n.Hashtags)
+            .FirstOrDefaultAsync(n => n.Id == id);
+
         if (news != null)
         {
+            // Clear hashtags relationship
+            news.Hashtags.Clear();
+
             _context.News.Remove(news);
         }
     }
