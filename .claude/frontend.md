@@ -285,6 +285,173 @@ components/
 - Use Nuxt's auto-imported components - no need for manual imports
 - Implement proper loading and error states in components
 
+## DOM Manipulation & Layout Calculations
+
+### CRITICAL: Never Use Hardcoded Values for Layout
+
+**❌ WRONG - Hardcoded values:**
+```typescript
+// BAD: Arbitrary values that don't reflect actual content
+const centerView = () => {
+  panX.value = 50
+  panY.value = 50
+}
+
+zoom.value = 1  // Assumes 100% is always correct
+```
+
+**✅ CORRECT - Calculate from real DOM dimensions:**
+```typescript
+// GOOD: Use template refs to access actual DOM elements
+const wrapperRef = ref<HTMLElement | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
+
+const fitToWidth = () => {
+  const wrapper = wrapperRef.value
+  const container = containerRef.value
+  if (!wrapper || !container) return
+
+  // Get actual dimensions
+  const contentWidth = container.scrollWidth || container.offsetWidth
+  const contentHeight = container.scrollHeight || container.offsetHeight
+  const wrapperWidth = wrapper.clientWidth
+  const wrapperHeight = wrapper.clientHeight
+
+  // Calculate optimal scale to fit content
+  const widthScale = wrapperWidth / contentWidth
+  const heightScale = contentHeight ? (wrapperHeight / contentHeight) : 1
+  const targetScale = Math.min(widthScale, heightScale)
+
+  // Apply scale with bounds and padding
+  const newZoom = Math.min(3, Math.max(0.3, targetScale * 0.98))
+  zoom.value = newZoom
+
+  // Calculate centered position mathematically
+  const scaledWidth = contentWidth * newZoom
+  const scaledHeight = contentHeight * newZoom
+  panX.value = (wrapperWidth - scaledWidth) / 2
+  panY.value = Math.max(20, (wrapperHeight - scaledHeight) / 2)
+}
+```
+
+### Template Refs for DOM Access
+
+```vue
+<template>
+  <div ref="wrapperRef" class="wrapper">
+    <div ref="containerRef" class="container">
+      <!-- Content -->
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+const wrapperRef = ref<HTMLElement | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
+
+// Access real DOM dimensions in lifecycle hooks or watchers
+onMounted(() => {
+  if (wrapperRef.value) {
+    const width = wrapperRef.value.clientWidth
+    const height = wrapperRef.value.clientHeight
+    // Use actual dimensions for calculations
+  }
+})
+</script>
+```
+
+### Responsive Layout Best Practices
+
+1. **Always respond to window resize:**
+```typescript
+onMounted(() => {
+  window.addEventListener('resize', recalculateLayout)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', recalculateLayout)
+})
+```
+
+2. **React to data changes:**
+```typescript
+watch(dataSource, () => {
+  // Wait for DOM to update before recalculating
+  nextTick(() => {
+    setTimeout(recalculateLayout, 0)
+  })
+})
+```
+
+3. **Use proper CSS containment:**
+```css
+.wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+```
+
+4. **Prevent horizontal scroll:**
+```vue
+<template>
+  <div class="overflow-x-hidden max-w-full">
+    <!-- Content that should not cause horizontal scroll -->
+  </div>
+</template>
+```
+
+### Pan & Zoom Implementation Pattern
+
+```typescript
+// State
+const zoom = ref(1)
+const panX = ref(0)
+const panY = ref(0)
+const wrapperRef = ref<HTMLElement | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
+
+// Zoom to cursor position (NOT to center)
+const handleWheel = (e: WheelEvent) => {
+  e.preventDefault()
+
+  const wrapper = e.currentTarget as HTMLElement
+  const rect = wrapper.getBoundingClientRect()
+  const mouseX = e.clientX - rect.left
+  const mouseY = e.clientY - rect.top
+
+  const delta = e.deltaY * -0.001
+  const oldZoom = zoom.value
+  const newZoom = Math.min(Math.max(0.3, oldZoom + delta), 3)
+
+  // Calculate point under cursor in content space
+  const pointX = (mouseX - panX.value) / oldZoom
+  const pointY = (mouseY - panY.value) / oldZoom
+
+  // Keep that point under cursor after zoom
+  panX.value = mouseX - pointX * newZoom
+  panY.value = mouseY - pointY * newZoom
+
+  zoom.value = newZoom
+}
+
+// Transform style
+const transformStyle = computed(() => ({
+  transform: `translate(${panX.value}px, ${panY.value}px) scale(${zoom.value})`
+}))
+```
+
+### Key Principles
+
+1. **Always use real DOM dimensions** - Never hardcode pixel values for layout
+2. **Calculate mathematically** - Center, scale, and position based on actual measurements
+3. **Be responsive** - Listen to resize events and data changes
+4. **Prevent overflow** - Use `overflow: hidden` and `max-width: 100%` strategically
+5. **Use template refs** - Access DOM elements through Vue's ref system
+6. **Wait for DOM updates** - Use `nextTick()` when layout depends on data changes
+7. **Zoom to cursor** - Transform relative to mouse position, not arbitrary center point
+
 ## Error Handling
 
 ### API Error Handling
