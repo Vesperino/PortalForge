@@ -160,7 +160,7 @@ const convertDepartmentToOrgChart = (dept: DepartmentTreeDto): OrganizationChart
   departmentLookup.set(nodeKey, dept)
 
   const manager = getManagerByDepartment(dept)
-  const employees = dept.employees || []
+  const director = getDirectorByDepartment(dept)\n  const employees = dept.employees || []
 
   const node: OrganizationChartNode = {
     key: nodeKey,
@@ -596,6 +596,34 @@ watch(zoom, (newZoom) => {
                     {{ getInitials(getManagerByDepartment(dept)) }}
                   </span>
                 </div>
+            <!-- Department Director -->
+            <div v-if="getDirectorByDepartment(dept)" class="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor dzia³u</p>
+              <div
+                class="flex items-center gap-3 cursor-pointer"
+                @click="selectEmployee(getDirectorByDepartment(dept))"
+              >
+                <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-semibold overflow-hidden">
+                  <img
+                    v-if="getDirectorByDepartment(dept).profilePhotoUrl"
+                    :src="getDirectorByDepartment(dept).profilePhotoUrl"
+                    :alt="`${getDirectorByDepartment(dept).firstName} ${getDirectorByDepartment(dept).lastName}`"
+                    class="w-full h-full object-cover"
+                  />
+                  <span v-else>
+                    {{ getInitials(getDirectorByDepartment(dept)) }}
+                  </span>
+                </div>
+                <div>
+                  <p class="font-medium text-gray-900 dark:text-white">
+                    {{ getDirectorByDepartment(dept).firstName }} {{ getDirectorByDepartment(dept).lastName }}
+                  </p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                    {{ getDirectorByDepartment(dept).position }}
+                  </p>
+                </div>
+              </div>
+            </div>
                 <div>
                   <p class="font-medium text-gray-900 dark:text-white">
                     {{ getManagerByDepartment(dept).firstName }} {{ getManagerByDepartment(dept).lastName }}
@@ -813,7 +841,7 @@ watch(zoom, (newZoom) => {
                       {{ slotProps.node.data.name }}
                     </div>
                     <div class="department-manager">
-                      ðŸ‘¤ {{ slotProps.node.data.manager }}
+                      ðŸ‘¤ <br/>Dyrektor: {{ slotProps.node.data.director }}
                     </div>
                     <div class="department-stats">
                       <span class="employee-badge">
@@ -1072,6 +1100,22 @@ watch(zoom, (newZoom) => {
                   </svg>
                 </button>
               </div>
+                <!-- Department Director (below grid) -->
+                <div class="mt-4">
+                  <div v-if="getDirectorByDepartment(selectedDepartmentNode)" class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 cursor-pointer" @click="selectEmployee(getDirectorByDepartment(selectedDepartmentNode) as any); showDepartmentModal = false">
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor dzia³u</p>
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-semibold overflow-hidden">
+                        <img v-if="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :src="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :alt="`${getDirectorByDepartment(selectedDepartmentNode)?.firstName} ${getDirectorByDepartment(selectedDepartmentNode)?.lastName}`" class="w-full h-full object-cover" />
+                        <span v-else>{{ getInitials(getDirectorByDepartment(selectedDepartmentNode) as any) }}</span>
+                      </div>
+                      <div>
+                        <p class="font-semibold text-gray-900 dark:text-white">{{ getDirectorByDepartment(selectedDepartmentNode)?.firstName }} {{ getDirectorByDepartment(selectedDepartmentNode)?.lastName }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ getDirectorByDepartment(selectedDepartmentNode)?.position }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
             </div>
 
             <!-- Content -->
@@ -1546,3 +1590,4 @@ watch(zoom, (newZoom) => {
   border-left-color: #3b82f6 !important;
 }
 </style>
+
