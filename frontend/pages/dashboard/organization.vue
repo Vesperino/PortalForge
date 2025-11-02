@@ -419,6 +419,16 @@ watch(zoom, (newZoom) => {
   }
 })
 
+// Watch route to refresh data when returning to organization page
+// This ensures changes made in admin panel are reflected
+const route = useRoute()
+watch(() => route.path, (newPath) => {
+  if (newPath === '/dashboard/organization') {
+    console.log('Returning to organization page - refreshing data')
+    loadData()
+  }
+})
+
 </script>
 
 <template>
