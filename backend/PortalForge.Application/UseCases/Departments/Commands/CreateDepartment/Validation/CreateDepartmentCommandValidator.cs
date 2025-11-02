@@ -31,6 +31,11 @@ public class CreateDepartmentCommandValidator : AbstractValidator<CreateDepartme
             .MustAsync(UserExists)
             .WithMessage("Department head user does not exist")
             .When(x => x.DepartmentHeadId.HasValue && x.DepartmentHeadId.Value != Guid.Empty);
+
+        RuleFor(x => x.DepartmentDirectorId)
+            .MustAsync(UserExists)
+            .WithMessage("Department director user does not exist")
+            .When(x => x.DepartmentDirectorId.HasValue && x.DepartmentDirectorId.Value != Guid.Empty);
     }
 
     private async Task<bool> ParentDepartmentExists(Guid? parentId, CancellationToken cancellationToken)

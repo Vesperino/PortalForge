@@ -13,4 +13,7 @@ public class CreateDepartmentCommand : IRequest<Guid>, ITransactionalRequest
     public string? Description { get; set; }
     public Guid? ParentDepartmentId { get; set; }
     public Guid? DepartmentHeadId { get; set; }
+    public Guid? DepartmentDirectorId { get; set; }
 }
+
+

@@ -39,15 +39,22 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
             .HasForeignKey(d => d.ParentDepartmentId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Department Head relationship
+        // Department Head relationship (Manager)
         builder.HasOne(d => d.HeadOfDepartment)
             .WithMany()
             .HasForeignKey(d => d.HeadOfDepartmentId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Department Director relationship
+        builder.HasOne(d => d.Director)
+            .WithMany()
+            .HasForeignKey(d => d.DirectorId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Indexes for performance
         builder.HasIndex(d => d.ParentDepartmentId);
         builder.HasIndex(d => d.HeadOfDepartmentId);
+        builder.HasIndex(d => d.DirectorId);
         builder.HasIndex(d => d.IsActive);
         builder.HasIndex(d => d.Name);
     }

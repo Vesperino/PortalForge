@@ -41,6 +41,7 @@ public class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCo
             Description = request.Description ?? string.Empty,
             ParentDepartmentId = request.ParentDepartmentId,
             HeadOfDepartmentId = request.DepartmentHeadId,
+            DirectorId = request.DepartmentDirectorId,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = null
@@ -55,3 +56,4 @@ public class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCo
         return createdDepartment.Id;
     }
 }
+

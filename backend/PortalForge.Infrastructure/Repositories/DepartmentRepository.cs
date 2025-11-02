@@ -20,6 +20,7 @@ public class DepartmentRepository : IDepartmentRepository
             .Include(d => d.ParentDepartment)
             .Include(d => d.ChildDepartments)
             .Include(d => d.HeadOfDepartment)
+                        .Include(d => d.Director)
             .Include(d => d.Employees)
             .FirstOrDefaultAsync(d => d.Id == id);
     }
@@ -29,6 +30,7 @@ public class DepartmentRepository : IDepartmentRepository
         return await _context.Departments
             .Include(d => d.ParentDepartment)
             .Include(d => d.HeadOfDepartment)
+                        .Include(d => d.Director)
             .Include(d => d.Employees)
             .ToListAsync();
     }
@@ -37,6 +39,7 @@ public class DepartmentRepository : IDepartmentRepository
     {
         return await _context.Departments
             .Include(d => d.HeadOfDepartment)
+                        .Include(d => d.Director)
             .Include(d => d.ChildDepartments)
             .Where(d => d.ParentDepartmentId == null && d.IsActive)
             .ToListAsync();
@@ -46,6 +49,7 @@ public class DepartmentRepository : IDepartmentRepository
     {
         return await _context.Departments
             .Include(d => d.HeadOfDepartment)
+                        .Include(d => d.Director)
             .Include(d => d.ChildDepartments)
             .Where(d => d.ParentDepartmentId == parentId && d.IsActive)
             .ToListAsync();
@@ -77,3 +81,5 @@ public class DepartmentRepository : IDepartmentRepository
         }
     }
 }
+
+

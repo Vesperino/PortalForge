@@ -53,6 +53,17 @@ public class Department
     /// </summary>
     public User? HeadOfDepartment { get; set; }
 
+
+    /// <summary>
+    /// User ID of the department director (optional).
+    /// </summary>
+    public Guid? DirectorId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the user who is director of this department.
+    /// </summary>
+    public User? Director { get; set; }
+
     // ===== STATUS =====
 
     /// <summary>
@@ -77,3 +88,7 @@ public class Department
     /// </summary>
     public ICollection<User> Employees { get; set; } = new List<User>();
 }
+
+
+
+

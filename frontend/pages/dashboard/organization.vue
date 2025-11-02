@@ -135,6 +135,10 @@ const getManagerByDepartment = (dept: DepartmentTreeDto): any | null => {
   return allEmployees.value.find((e: any) => e.id === dept.departmentHeadId) || null
 }
 
+const getDirectorByDepartment = (dept: DepartmentTreeDto): any | null => {
+  if (!dept.departmentDirectorId) return null
+  return allEmployees.value.find((e: any) => e.id === dept.departmentDirectorId) || null
+}
 const getAllDepartmentsFlat = (depts: DepartmentTreeDto[]): DepartmentTreeDto[] => {
   const result: DepartmentTreeDto[] = []
   depts.forEach(dept => {
@@ -1082,8 +1086,7 @@ watch(zoom, (newZoom) => {
                 </p>
 
                 <div class="grid grid-cols-2 gap-4">
-                  <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kierownik działu</p>
+                  <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 cursor-pointer" @click="getManagerByDepartment(selectedDepartmentNode) ? (selectEmployee(getManagerByDepartment(selectedDepartmentNode) as any), showDepartmentModal = false) : null">
                     <p class="font-semibold text-gray-900 dark:text-white">
                       {{ getManagerByDepartment(selectedDepartmentNode)?.firstName || 'Brak' }}
                       {{ getManagerByDepartment(selectedDepartmentNode)?.lastName || 'kierownika' }}
@@ -1111,8 +1114,9 @@ watch(zoom, (newZoom) => {
                     class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                     @click="selectEmployee(employee); showDepartmentModal = false"
                   >
-                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold">
-                      {{ getInitials(employee) }}
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold overflow-hidden">
+                      <img v-if="employee.profilePhotoUrl" :src="employee.profilePhotoUrl" :alt="`${employee.firstName} ${employee.lastName}`" class="w-full h-full object-cover" />
+                      <span v-else>{{ getInitials(employee) }}</span>
                     </div>
                     <div class="flex-1">
                       <p class="font-medium text-gray-900 dark:text-white">

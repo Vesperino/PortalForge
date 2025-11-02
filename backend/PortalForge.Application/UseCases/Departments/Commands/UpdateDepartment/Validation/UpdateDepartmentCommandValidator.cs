@@ -38,6 +38,11 @@ public class UpdateDepartmentCommandValidator : AbstractValidator<UpdateDepartme
             .MustAsync(UserExists)
             .WithMessage("Department head user does not exist")
             .When(x => x.DepartmentHeadId.HasValue && x.DepartmentHeadId.Value != Guid.Empty);
+
+        RuleFor(x => x.DepartmentDirectorId)
+            .MustAsync(UserExists)
+            .WithMessage("Department director user does not exist")
+            .When(x => x.DepartmentDirectorId.HasValue && x.DepartmentDirectorId.Value != Guid.Empty);
     }
 
     private async Task<bool> DepartmentExists(Guid departmentId, CancellationToken cancellationToken)

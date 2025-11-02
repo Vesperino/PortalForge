@@ -101,7 +101,8 @@ public class DepartmentsController : ControllerBase
             Name = dto.Name,
             Description = dto.Description,
             ParentDepartmentId = dto.ParentDepartmentId,
-            DepartmentHeadId = dto.DepartmentHeadId
+            DepartmentHeadId = dto.DepartmentHeadId,
+            DepartmentDirectorId = dto.DepartmentDirectorId
         };
 
         var departmentId = await _mediator.Send(command);
@@ -125,6 +126,7 @@ public class DepartmentsController : ControllerBase
             Description = dto.Description,
             ParentDepartmentId = dto.ParentDepartmentId,
             DepartmentHeadId = dto.DepartmentHeadId,
+            DepartmentDirectorId = dto.DepartmentDirectorId,
             IsActive = dto.IsActive
         };
 
@@ -146,3 +148,5 @@ public class DepartmentsController : ControllerBase
         return NoContent();
     }
 }
+
+

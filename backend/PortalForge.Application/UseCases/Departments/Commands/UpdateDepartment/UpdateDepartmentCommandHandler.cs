@@ -51,6 +51,7 @@ public class UpdateDepartmentCommandHandler : IRequestHandler<UpdateDepartmentCo
         department.Description = request.Description ?? string.Empty;
         department.ParentDepartmentId = request.ParentDepartmentId;
         department.HeadOfDepartmentId = request.DepartmentHeadId;
+        department.DirectorId = request.DepartmentDirectorId;
         department.IsActive = request.IsActive;
         department.UpdatedAt = DateTime.UtcNow;
 
@@ -63,3 +64,4 @@ public class UpdateDepartmentCommandHandler : IRequestHandler<UpdateDepartmentCo
         return Unit.Value;
     }
 }
+

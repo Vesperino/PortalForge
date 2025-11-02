@@ -52,6 +52,10 @@ public class GetDepartmentByIdQueryHandler : IRequestHandler<GetDepartmentByIdQu
             DepartmentHeadName = department.HeadOfDepartment != null
                 ? $"{department.HeadOfDepartment.FirstName} {department.HeadOfDepartment.LastName}"
                 : null,
+            DepartmentDirectorId = department.DirectorId,
+            DepartmentDirectorName = department.Director != null
+                ? $"{department.Director.FirstName} {department.Director.LastName}"
+                : null,
             IsActive = department.IsActive,
             CreatedAt = department.CreatedAt,
             UpdatedAt = department.UpdatedAt,

@@ -7,6 +7,8 @@ export interface DepartmentDto {
   parentDepartmentId: string | null
   departmentHeadId: string | null
   departmentHeadName: string | null
+  departmentDirectorId: string | null
+  departmentDirectorName: string | null
   isActive: boolean
   level: number
   employeeCount: number
@@ -20,6 +22,8 @@ export interface DepartmentTreeDto {
   parentDepartmentId: string | null
   departmentHeadId: string | null
   departmentHeadName: string | null
+  departmentDirectorId: string | null
+  departmentDirectorName: string | null
   isActive: boolean
   level: number
   employeeCount: number
@@ -32,15 +36,19 @@ export interface CreateDepartmentDto {
   description: string | null
   parentDepartmentId: string | null
   departmentHeadId: string | null
+  departmentDirectorId: string | null
 }
+
 
 export interface UpdateDepartmentDto {
   name: string
   description: string | null
   parentDepartmentId: string | null
   departmentHeadId: string | null
+  departmentDirectorId: string | null
   isActive: boolean
 }
+
 
 export interface EmployeeDto {
   id: string
@@ -52,3 +60,7 @@ export interface EmployeeDto {
   departmentId: string
   isActive: boolean
 }
+
+
+
+

@@ -12,6 +12,8 @@ public class DepartmentDto
     public string? ParentDepartmentName { get; set; }
     public Guid? DepartmentHeadId { get; set; }
     public string? DepartmentHeadName { get; set; }
+    public Guid? DepartmentDirectorId { get; set; }
+    public string? DepartmentDirectorName { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -30,6 +32,8 @@ public class DepartmentTreeDto
     public Guid? ParentDepartmentId { get; set; }
     public Guid? DepartmentHeadId { get; set; }
     public string? DepartmentHeadName { get; set; }
+    public Guid? DepartmentDirectorId { get; set; }
+    public string? DepartmentDirectorName { get; set; }
     public bool IsActive { get; set; }
     public int Level { get; set; }
     public int EmployeeCount { get; set; }
@@ -46,6 +50,7 @@ public class CreateDepartmentDto
     public string? Description { get; set; }
     public Guid? ParentDepartmentId { get; set; }
     public Guid? DepartmentHeadId { get; set; }
+    public Guid? DepartmentDirectorId { get; set; }
 }
 
 /// <summary>
@@ -57,5 +62,10 @@ public class UpdateDepartmentDto
     public string? Description { get; set; }
     public Guid? ParentDepartmentId { get; set; }
     public Guid? DepartmentHeadId { get; set; }
+    public Guid? DepartmentDirectorId { get; set; }
     public bool IsActive { get; set; }
 }
+
+
+
+

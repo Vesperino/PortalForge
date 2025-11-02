@@ -13,5 +13,7 @@ public class UpdateDepartmentCommand : IRequest<Unit>, ITransactionalRequest
     public string? Description { get; set; }
     public Guid? ParentDepartmentId { get; set; }
     public Guid? DepartmentHeadId { get; set; }
+    public Guid? DepartmentDirectorId { get; set; }
     public bool IsActive { get; set; }
 }
+
