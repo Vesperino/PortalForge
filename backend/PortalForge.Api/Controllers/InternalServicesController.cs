@@ -15,6 +15,7 @@ using PortalForge.Application.UseCases.InternalServices.Queries.GetAllCategories
 namespace PortalForge.Api.Controllers;
 
 [Authorize]
+[Route("api/internal-services")]
 public class InternalServicesController : BaseController
 {
     private readonly IMediator _mediator;
