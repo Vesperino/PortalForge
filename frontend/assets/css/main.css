@@ -423,7 +423,7 @@
     position: absolute;
     right: 0;
     top: calc(100% + 0.5rem);
-    width: 16rem;
+    width: 20rem;
     background-color: white;
     border-radius: 0.5rem;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -450,6 +450,8 @@
     font-size: 0.875rem;
     font-weight: 500;
     color: #111827;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   .dark .user-dropdown-name {
@@ -460,6 +462,8 @@
     font-size: 0.75rem;
     color: #6b7280;
     margin-top: 0.25rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   .dark .user-dropdown-email {
@@ -470,6 +474,8 @@
     font-size: 0.75rem;
     color: #6b7280;
     margin-top: 0.25rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   .dark .user-dropdown-position {
