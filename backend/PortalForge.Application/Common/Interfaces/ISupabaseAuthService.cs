@@ -5,6 +5,7 @@ namespace PortalForge.Application.Common.Interfaces;
 public interface ISupabaseAuthService
 {
     Task<AuthResult> RegisterAsync(string email, string password, string firstName, string lastName);
+    Task<AuthResult> AdminRegisterAsync(string email, string password, string firstName, string lastName);
     Task<AuthResult> LoginAsync(string email, string password);
     Task<AuthResult> SignInAsync(string email, string password);
     Task<bool> LogoutAsync(string accessToken);

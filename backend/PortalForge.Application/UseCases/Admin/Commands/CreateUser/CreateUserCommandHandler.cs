@@ -41,8 +41,8 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
             throw new ValidationException("Invalid role", new List<string> { $"Role '{request.Role}' is not valid" });
         }
 
-        // Register user with Supabase Auth
-        var authResult = await _authService.RegisterAsync(
+        // Register user with Supabase Auth via Admin API (no confirmation email)
+        var authResult = await _authService.AdminRegisterAsync(
             request.Email,
             request.Password,
             request.FirstName,

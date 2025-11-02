@@ -22,6 +22,7 @@ public class SupabaseAuthService : ISupabaseAuthService
     private readonly string _frontendUrl;
     private readonly string _supabaseUrl;
     private readonly string _supabaseKey;
+    private readonly string _supabaseServiceRoleKey;
 
     public SupabaseAuthService(
         IOptions<SupabaseSettings> supabaseSettings,
@@ -39,6 +40,7 @@ public class SupabaseAuthService : ISupabaseAuthService
         _frontendUrl = appSettings.Value.FrontendUrl;
         _supabaseUrl = settings.Url;
         _supabaseKey = settings.Key;
+        _supabaseServiceRoleKey = settings.ServiceRoleKey;
 
         var options = new SupabaseOptions
         {
@@ -611,6 +613,118 @@ public class SupabaseAuthService : ISupabaseAuthService
         {
             _logger.LogError(ex, "Error resending verification email to: {Email}", email);
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Admin-only registration that creates users without sending confirmation emails.
+    /// Uses Supabase Admin API to bypass email rate limits and auto-verify users.
+    /// </summary>
+    public async Task<AuthResult> AdminRegisterAsync(string email, string password, string firstName, string lastName)
+    {
+        try
+        {
+            _logger.LogInformation("Admin creating user with email: {Email}", email);
+
+            // Check if user already exists in our database
+            var existingUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (existingUser != null)
+            {
+                _logger.LogWarning("User with email {Email} already exists", email);
+                return new AuthResult
+                {
+                    Success = false,
+                    ErrorMessage = "Email already exists. Please choose a different email"
+                };
+            }
+
+            // Create user via Supabase Admin API (no confirmation email sent)
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("apikey", _supabaseServiceRoleKey);
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_supabaseServiceRoleKey}");
+
+            var requestBody = new
+            {
+                email = email,
+                password = password,
+                email_confirm = true, // Auto-confirm email
+                user_metadata = new
+                {
+                    first_name = firstName,
+                    last_name = lastName
+                }
+            };
+
+            var content = new StringContent(
+                System.Text.Json.JsonSerializer.Serialize(requestBody),
+                System.Text.Encoding.UTF8,
+                "application/json");
+
+            var response = await httpClient.PostAsync(
+                $"{_supabaseUrl}/auth/v1/admin/users",
+                content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to create user via Admin API: {Error}", errorContent);
+                return new AuthResult
+                {
+                    Success = false,
+                    ErrorMessage = $"Registration error: {errorContent}"
+                };
+            }
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var userResponse = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseContent);
+            var userId = userResponse.GetProperty("id").GetString();
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogError("Failed to get user ID from Admin API response");
+                return new AuthResult
+                {
+                    Success = false,
+                    ErrorMessage = "Registration failed - invalid response"
+                };
+            }
+
+            // Create user in our database (auto-verified)
+            var user = new DomainUser
+            {
+                Id = Guid.Parse(userId),
+                Email = email,
+                FirstName = firstName,
+                LastName = lastName,
+                CreatedAt = DateTime.UtcNow,
+                IsEmailVerified = true, // Auto-verified for admin-created users
+                Role = Domain.Entities.UserRole.Employee,
+                Department = "Unassigned",
+                Position = "Unassigned"
+            };
+
+            _dbContext.Users.Add(user);
+            await _dbContext.SaveChangesAsync();
+
+            _logger.LogInformation("User created successfully via Admin API: {Email} (no confirmation email sent)", email);
+
+            return new AuthResult
+            {
+                Success = true,
+                UserId = user.Id,
+                Email = user.Email,
+                AccessToken = null,
+                RefreshToken = null
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during admin registration for email: {Email}", email);
+            return new AuthResult
+            {
+                Success = false,
+                ErrorMessage = $"Registration error: {ex.Message}"
+            };
         }
     }
 }
