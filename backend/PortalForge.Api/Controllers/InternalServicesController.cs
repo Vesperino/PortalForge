@@ -27,10 +27,10 @@ public class InternalServicesController : BaseController
     }
 
     /// <summary>
-    /// Get all internal services (Admin only).
+    /// Get all internal services (requires internal_services.manage permission).
     /// </summary>
     [HttpGet]
-    [Authorize(Policy = "RequireAdminRole")]
+    [Authorize(Policy = "RequirePermission:internal_services.manage")]
     public async Task<ActionResult<List<InternalServiceDto>>> GetAll()
     {
         var query = new GetAllServicesQuery();
@@ -73,10 +73,10 @@ public class InternalServicesController : BaseController
     }
 
     /// <summary>
-    /// Create a new internal service (Admin only).
+    /// Create a new internal service (requires internal_services.manage permission).
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = "RequireAdminRole")]
+    [Authorize(Policy = "RequirePermission:internal_services.manage")]
     public async Task<ActionResult<Guid>> Create([FromBody] CreateInternalServiceRequestDto request)
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var creatorId);
@@ -106,10 +106,10 @@ public class InternalServicesController : BaseController
     }
 
     /// <summary>
-    /// Update an internal service (Admin only).
+    /// Update an internal service (requires internal_services.manage permission).
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Policy = "RequireAdminRole")]
+    [Authorize(Policy = "RequirePermission:internal_services.manage")]
     public async Task<ActionResult> Update(Guid id, [FromBody] UpdateInternalServiceRequestDto request)
     {
         if (id != request.Id)
@@ -138,10 +138,10 @@ public class InternalServicesController : BaseController
     }
 
     /// <summary>
-    /// Delete an internal service (Admin only).
+    /// Delete an internal service (requires internal_services.manage permission).
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Policy = "RequireAdminRole")]
+    [Authorize(Policy = "RequirePermission:internal_services.manage")]
     public async Task<ActionResult> Delete(Guid id)
     {
         var command = new DeleteServiceCommand { Id = id };
@@ -163,10 +163,10 @@ public class InternalServicesController : BaseController
     }
 
     /// <summary>
-    /// Create a new category (Admin only).
+    /// Create a new category (requires internal_services.manage permission).
     /// </summary>
     [HttpPost("categories")]
-    [Authorize(Policy = "RequireAdminRole")]
+    [Authorize(Policy = "RequirePermission:internal_services.manage")]
     public async Task<ActionResult<Guid>> CreateCategory([FromBody] CreateCategoryRequest request)
     {
         var command = new CreateCategoryCommand
@@ -182,10 +182,10 @@ public class InternalServicesController : BaseController
     }
 
     /// <summary>
-    /// Delete a category (Admin only).
+    /// Delete a category (requires internal_services.manage permission).
     /// </summary>
     [HttpDelete("categories/{id}")]
-    [Authorize(Policy = "RequireAdminRole")]
+    [Authorize(Policy = "RequirePermission:internal_services.manage")]
     public async Task<ActionResult> DeleteCategory(Guid id)
     {
         var command = new DeleteCategoryCommand { Id = id };

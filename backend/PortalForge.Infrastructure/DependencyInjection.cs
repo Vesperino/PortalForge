@@ -169,7 +169,8 @@ public static class DependencyInjection
                 "admin.roles.view",
                 "admin.roles.manage",
                 "admin.settings.view",
-                "admin.settings.manage"
+                "admin.settings.manage",
+                "internal_services.manage"
             };
 
             foreach (var permission in permissions)
