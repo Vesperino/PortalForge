@@ -98,20 +98,23 @@ async function handleCreatePosition() {
 }
 
 // Watch for external changes to modelValue
-watch(() => props.modelValue, async (newVal) => {
+watch(() => props.modelValue, async (newVal, oldVal) => {
+  // Avoid unnecessary updates if value hasn't changed
+  if (newVal === oldVal) return
+
   if (newVal && !selectedPosition.value) {
     // Load the position by ID if needed
     const allPositions = await searchPositions('')
     const position = allPositions.find(p => p.id === newVal)
-    if (position) {
+    if (position && positionInput.value !== position.name) {
       selectedPosition.value = position
       positionInput.value = position.name
     }
-  } else if (!newVal) {
+  } else if (!newVal && positionInput.value) {
     selectedPosition.value = null
     positionInput.value = ''
   }
-})
+}, { immediate: false })
 </script>
 
 <template>

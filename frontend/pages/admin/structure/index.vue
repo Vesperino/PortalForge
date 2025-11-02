@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import type { DepartmentTreeDto, CreateDepartmentDto, UpdateDepartmentDto } from '~/types/department'
 import type { User } from '~/types/user'
+import PositionAutocomplete from '~/components/common/PositionAutocomplete.vue'
 
 definePageMeta({
   middleware: ['auth', 'verified', 'admin'],
@@ -22,10 +23,12 @@ const activeTab = ref<'structure' | 'employees'>('structure')
 const showDepartmentModal = ref(false)
 const showDeleteModal = ref(false)
 const showAssignModal = ref(false)
+const showQuickEditModal = ref(false)
 const editingDepartment = ref<DepartmentTreeDto | null>(null)
 const deletingDepartmentId = ref<string | null>(null)
 const parentDepartmentId = ref<string | null>(null)
 const assigningUserId = ref<string | null>(null)
+const editingUser = ref<User | null>(null)
 
 // Form state
 const departmentForm = ref<CreateDepartmentDto | UpdateDepartmentDto>({
@@ -37,6 +40,14 @@ const departmentForm = ref<CreateDepartmentDto | UpdateDepartmentDto>({
 
 // Selected department head (for UserAutocomplete)
 const selectedDepartmentHead = ref<User | null>(null)
+
+// Quick edit form state
+const quickEditForm = ref({
+  departmentId: '',
+  departmentName: '',
+  position: '',
+  positionId: null as string | null
+})
 
 // Form validation errors
 const formErrors = ref<Record<string, string>>({})
@@ -59,6 +70,17 @@ const stats = computed(() => {
 // Unassigned users
 const unassignedUsers = computed(() => {
   return allUsers.value.filter(u => !u.departmentId)
+})
+
+// Flatten departments tree for dropdown
+const departmentsFlat = computed(() => {
+  const flattenDepartments = (depts: DepartmentTreeDto[], level = 0): Array<DepartmentTreeDto & { level: number }> => {
+    return depts.flatMap(dept => [
+      { ...dept, level },
+      ...flattenDepartments(dept.children || [], level + 1)
+    ])
+  }
+  return flattenDepartments(departmentTree.value)
 })
 
 // Count departments recursively
@@ -370,6 +392,96 @@ const getUsersForDepartment = (departmentId: string) => {
   return allUsers.value.filter(u => u.departmentId === departmentId)
 }
 
+// Handle employee click for quick edit
+const handleEmployeeClick = async (employeeId: string) => {
+  const user = allUsers.value.find(u => u.id === employeeId)
+  if (!user) return
+
+  editingUser.value = user
+  quickEditForm.value = {
+    departmentId: user.departmentId || '',
+    departmentName: user.department || '',
+    position: user.position || '',
+    positionId: null
+  }
+  showQuickEditModal.value = true
+}
+
+// Handle department change in quick edit
+const handleQuickEditDepartmentChange = (event: Event) => {
+  const target = event.target as HTMLSelectElement
+  const selectedDeptName = target.value
+
+  // Find the department to get its ID
+  const findDeptByName = (depts: DepartmentTreeDto[], name: string): DepartmentTreeDto | null => {
+    for (const dept of depts) {
+      if (dept.name === name) return dept
+      if (dept.children.length > 0) {
+        const found = findDeptByName(dept.children, name)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  const dept = findDeptByName(departmentTree.value, selectedDeptName)
+  if (dept) {
+    quickEditForm.value.departmentId = dept.id
+    quickEditForm.value.departmentName = dept.name
+  }
+}
+
+// Handle position updates from autocomplete
+const handlePositionUpdate = (value: string | null) => {
+  quickEditForm.value.positionId = value
+}
+
+const handlePositionNameUpdate = (name: string) => {
+  quickEditForm.value.position = name
+}
+
+// Save quick edit changes
+const saveQuickEdit = async () => {
+  if (!editingUser.value) return
+
+  isLoading.value = true
+  error.value = null
+
+  try {
+    await $fetch(`${apiUrl}/api/admin/users/${editingUser.value.id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: {
+        firstName: editingUser.value.firstName,
+        lastName: editingUser.value.lastName,
+        department: quickEditForm.value.departmentName,
+        departmentId: quickEditForm.value.departmentId,
+        position: quickEditForm.value.position,
+        phoneNumber: editingUser.value.phoneNumber,
+        role: editingUser.value.role,
+        roleGroupIds: [],
+        isActive: editingUser.value.isActive,
+        updatedBy: editingUser.value.id
+      }
+    })
+
+    await loadData()
+    showQuickEditModal.value = false
+    editingUser.value = null
+  } catch (err: any) {
+    error.value = err.message || 'Nie udało się zaktualizować pracownika'
+    console.error('Error updating employee:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Close quick edit modal
+const closeQuickEditModal = () => {
+  showQuickEditModal.value = false
+  editingUser.value = null
+}
+
 // Load data on mount
 onMounted(() => {
   loadData()
@@ -547,6 +659,7 @@ onMounted(() => {
           @add-child="handleAddChild"
           @edit="handleEdit"
           @delete="handleDelete"
+          @employee-click="handleEmployeeClick"
         />
       </div>
 
@@ -864,6 +977,109 @@ onMounted(() => {
               Usuwanie...
             </span>
             <span v-else>Usuń dział</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Edit Employee Modal -->
+    <div
+      v-if="showQuickEditModal && editingUser"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      @click.self="closeQuickEditModal"
+    >
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Szybka edycja pracownika
+          </h2>
+          <button
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+            @click="closeQuickEditModal"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 space-y-5">
+          <!-- Employee Info -->
+          <div class="flex items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
+              {{ editingUser.firstName[0] }}{{ editingUser.lastName[0] }}
+            </div>
+            <div>
+              <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+                {{ editingUser.firstName }} {{ editingUser.lastName }}
+              </h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">{{ editingUser.email }}</p>
+            </div>
+          </div>
+
+          <!-- Department Field -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Dział <span class="text-red-500">*</span>
+            </label>
+            <select
+              v-model="quickEditForm.departmentName"
+              @change="handleQuickEditDepartmentChange"
+              required
+              class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            >
+              <option value="">Wybierz dział</option>
+              <option
+                v-for="dept in departmentsFlat"
+                :key="dept.id"
+                :value="dept.name"
+              >
+                {{ dept.level > 0 ? '└─'.repeat(dept.level) + ' ' : '' }}{{ dept.name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Position Field -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Stanowisko <span class="text-red-500">*</span>
+            </label>
+            <PositionAutocomplete
+              :model-value="quickEditForm.positionId"
+              @update:modelValue="handlePositionUpdate"
+              @update:positionName="handlePositionNameUpdate"
+              placeholder="Wpisz lub wybierz stanowisko..."
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+          <button
+            class="px-5 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            @click="closeQuickEditModal"
+          >
+            Anuluj
+          </button>
+          <button
+            class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+            :disabled="isLoading || !quickEditForm.departmentName || !quickEditForm.position"
+            @click="saveQuickEdit"
+          >
+            <span v-if="isLoading" class="flex items-center gap-2">
+              <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Zapisywanie...
+            </span>
+            <span v-else>Zapisz zmiany</span>
           </button>
         </div>
       </div>

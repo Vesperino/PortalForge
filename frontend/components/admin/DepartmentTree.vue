@@ -18,6 +18,7 @@ interface Emits {
   (e: 'edit', departmentId: string): void
   (e: 'delete', departmentId: string): void
   (e: 'select', departmentId: string): void
+  (e: 'employee-click', employeeId: string): void
 }
 
 const emit = defineEmits<Emits>()
@@ -310,8 +311,9 @@ onUnmounted(() => {
       <div
         v-for="employee in department.employees"
         :key="employee.id"
-        class="employee-item flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-lg transition-colors"
+        class="employee-item flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-lg transition-colors cursor-pointer"
         :style="indentStyle"
+        @click="emit('employee-click', employee.id)"
       >
         <!-- Employee Icon -->
         <div
@@ -356,6 +358,7 @@ onUnmounted(() => {
         @edit="emit('edit', $event)"
         @delete="emit('delete', $event)"
         @select="emit('select', $event)"
+        @employee-click="emit('employee-click', $event)"
       />
     </div>
   </div>

@@ -36,22 +36,7 @@ const showEmployeeModal = ref(false)
 const selectedDepartmentNode = ref<DepartmentTreeDto | null>(null)
 const showDepartmentModal = ref(false)
 
-// Quick edit modal for department/position changes
-const showQuickEditModal = ref(false)
-const quickEditEmployee = ref<any | null>(null)
-const quickEditForm = ref({
-  department: '',
-  position: ''
-})
-const quickEditLoading = ref(false)
-const quickEditError = ref<string | null>(null)
-const positionId = ref<string | null>(null)
-const positionName = ref<string>('')
-
-// Load data on mount
-onMounted(async () => {
-  await loadData()
-})
+// Load data on mount - removed, will be in pan & zoom onMounted
 
 // Load all data
 const loadData = async () => {
@@ -238,76 +223,180 @@ const handleEmployeeNodeClick = (node: any) => {
   }
 }
 
-// Quick edit functions
-const openQuickEdit = (employee: any, event?: Event) => {
-  if (event) {
-    event.stopPropagation()
-  }
+// Pan & Zoom functionality
+const zoom = ref(1)
+const panX = ref(0)
+const panY = ref(0)
+const wrapperRef = ref<HTMLElement | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
+const isDragging = ref(false)
+const hasDragged = ref(false)
+const dragStart = ref({ x: 0, y: 0 })
+const isSpacePressed = ref(false)
 
-  quickEditEmployee.value = employee
-  quickEditForm.value = {
-    department: employee.department || '',
-    position: employee.position || ''
-  }
-  positionName.value = employee.position || ''
-  positionId.value = null
-  quickEditError.value = null
-  showQuickEditModal.value = true
-}
-
-const closeQuickEditModal = () => {
-  showQuickEditModal.value = false
-  quickEditEmployee.value = null
-  quickEditError.value = null
-}
-
-const handlePositionUpdate = (value: string | null) => {
-  positionId.value = value
-}
-
-const handlePositionNameUpdate = (name: string) => {
-  positionName.value = name
-  quickEditForm.value.position = name
-}
-
-const saveQuickEdit = async () => {
-  if (!quickEditEmployee.value) return
-
-  quickEditLoading.value = true
-  quickEditError.value = null
-
-  try {
-    // Update employee via admin API
-    await $fetch(`${apiUrl}/api/admin/users/${quickEditEmployee.value.id}`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: {
-        firstName: quickEditEmployee.value.firstName,
-        lastName: quickEditEmployee.value.lastName,
-        department: quickEditForm.value.department,
-        position: quickEditForm.value.position,
-        phoneNumber: quickEditEmployee.value.phoneNumber || '',
-        role: quickEditEmployee.value.role,
-        roleGroupIds: [],
-        isActive: quickEditEmployee.value.isActive
-      }
-    })
-
-    // Reload data to reflect changes
-    await loadData()
-    closeQuickEditModal()
-  } catch (err: any) {
-    quickEditError.value = err.message || 'Nie udało się zapisać zmian'
-    console.error('Error saving quick edit:', err)
-  } finally {
-    quickEditLoading.value = false
+// Handle keyboard events for space key
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.code === 'Space' && !isSpacePressed.value) {
+    isSpacePressed.value = true
+    e.preventDefault()
   }
 }
+
+const handleKeyUp = (e: KeyboardEvent) => {
+  if (e.code === 'Space') {
+    isSpacePressed.value = false
+    isDragging.value = false
+  }
+}
+
+// Fit the chart content to wrapper width/height and center it
+const fitToWidth = () => {
+  const wrapper = wrapperRef.value
+  const container = containerRef.value
+  if (!wrapper || !container) return
+
+  // Natural content size (unscaled)
+  const contentWidth = container.scrollWidth || container.offsetWidth
+  const contentHeight = container.scrollHeight || container.offsetHeight
+  const wrapperWidth = wrapper.clientWidth
+  const wrapperHeight = wrapper.clientHeight
+
+  if (!contentWidth || !wrapperWidth) return
+
+  // Calculate scale to fit width and height, with small padding
+  const widthScale = wrapperWidth / contentWidth
+  const heightScale = contentHeight ? (wrapperHeight / contentHeight) : 1
+  const targetScale = Math.min(widthScale, heightScale)
+  const newZoom = Math.min(3, Math.max(0.3, targetScale * 0.98))
+
+  zoom.value = newZoom
+
+  // Center horizontally, and vertically if there's room
+  const scaledWidth = contentWidth * newZoom
+  const scaledHeight = contentHeight * newZoom
+  panX.value = (wrapperWidth - scaledWidth) / 2
+  panY.value = Math.max(20, (wrapperHeight - scaledHeight) / 2)
+}
+
+// Add/remove keyboard listeners
+onMounted(async () => {
+  // Load data first
+  await loadData()
+
+  // Add keyboard listeners
+  window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('keyup', handleKeyUp)
+
+  // Fit to available width after content renders
+  // Use a short timeout to ensure PrimeVue chart tables have mounted
+  setTimeout(() => {
+    fitToWidth()
+  }, 100)
+
+  // Also refit on window resize
+  window.addEventListener('resize', fitToWidth)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('keyup', handleKeyUp)
+  window.removeEventListener('resize', fitToWidth)
+})
+
+const handleWheel = (e: WheelEvent) => {
+  e.preventDefault()
+
+  // Get mouse position relative to wrapper
+  const wrapper = e.currentTarget as HTMLElement
+  const rect = wrapper.getBoundingClientRect()
+  const mouseX = e.clientX - rect.left
+  const mouseY = e.clientY - rect.top
+
+  // Calculate new zoom
+  const delta = e.deltaY * -0.001
+  const oldZoom = zoom.value
+  const newZoom = Math.min(Math.max(0.3, oldZoom + delta), 3)
+
+  // Calculate the point in the content that's under the mouse
+  const pointX = (mouseX - panX.value) / oldZoom
+  const pointY = (mouseY - panY.value) / oldZoom
+
+  // Calculate new pan to keep the point under the mouse
+  panX.value = mouseX - pointX * newZoom
+  panY.value = mouseY - pointY * newZoom
+
+  zoom.value = newZoom
+}
+
+const handleMouseDown = (e: MouseEvent) => {
+  // Only start dragging on left mouse button
+  if (e.button !== 0) return
+
+  // Check if clicking on a node (skip dragging if on interactive element)
+  const target = e.target as HTMLElement
+  if (!isSpacePressed.value && (target.closest('.department-node') || target.closest('.employee-node'))) {
+    return
+  }
+
+  isDragging.value = true
+  hasDragged.value = false
+  dragStart.value = {
+    x: e.clientX - panX.value,
+    y: e.clientY - panY.value
+  }
+}
+
+const handleMouseMove = (e: MouseEvent) => {
+  if (!isDragging.value) return
+
+  // Update pan position
+  const newPanX = e.clientX - dragStart.value.x
+  const newPanY = e.clientY - dragStart.value.y
+
+  // Check if actually moved (to distinguish click from drag)
+  if (Math.abs(newPanX - panX.value) > 2 || Math.abs(newPanY - panY.value) > 2) {
+    hasDragged.value = true
+  }
+
+  panX.value = newPanX
+  panY.value = newPanY
+}
+
+const handleMouseUp = () => {
+  isDragging.value = false
+}
+
+const handleMouseLeave = () => {
+  isDragging.value = false
+}
+
+// Reset zoom and pan to fit
+const resetView = () => {
+  fitToWidth()
+}
+
+// Computed style for transform
+const transformStyle = computed(() => ({
+  transform: `translate(${panX.value}px, ${panY.value}px) scale(${zoom.value})`
+}))
+
+// Computed style for wrapper cursor
+const wrapperCursor = computed(() => {
+  if (isDragging.value) return 'grabbing'
+  if (isSpacePressed.value) return 'grab'
+  return 'default'
+})
+
+// Refit when data changes significantly
+watch(departmentOrgChartData, () => {
+  // Next tick to wait for DOM of charts
+  nextTick(() => setTimeout(fitToWidth, 0))
+})
 
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 overflow-x-hidden max-w-full">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
@@ -321,7 +410,7 @@ const saveQuickEdit = async () => {
     </div>
 
     <!-- View Mode Tabs & Search -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 max-w-full overflow-hidden">
       <div class="flex flex-col gap-4">
         <!-- Tabs -->
         <div class="flex flex-wrap gap-2">
@@ -434,7 +523,7 @@ const saveQuickEdit = async () => {
     </div>
 
     <!-- Main Content Area - Full Width -->
-    <div v-else class="w-full">
+    <div v-else class="w-full max-w-full overflow-hidden">
         <!-- Departments View -->
         <div v-if="viewMode === 'departments'" class="space-y-4">
           <div
@@ -470,7 +559,7 @@ const saveQuickEdit = async () => {
               <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kierownik działu</p>
               <div
                 class="flex items-center gap-3 cursor-pointer"
-                @click="openQuickEdit(getManagerByDepartment(dept))"
+                @click="selectEmployee(getManagerByDepartment(dept))"
               >
                 <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
                   <img
@@ -500,7 +589,7 @@ const saveQuickEdit = async () => {
                 v-for="employee in getEmployeesByDepartment(dept.id).filter(e => e.id !== dept.departmentHeadId)"
                 :key="employee.id"
                 class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
-                @click="openQuickEdit(employee)"
+                @click="selectEmployee(employee)"
               >
                 <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 font-semibold text-sm overflow-hidden">
                   <img
@@ -610,17 +699,81 @@ const saveQuickEdit = async () => {
         </div>
 
         <!-- Tree View -->
-        <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
-          <div v-if="departmentOrgChartData.length > 0" class="p-6">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Struktura organizacyjna - Drzewo działów
-            </h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-              Hierarchiczna struktura działów w organizacji
-            </p>
+        <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden max-w-full">
+          <div v-if="departmentOrgChartData.length > 0" class="p-4 sm:p-6 max-w-full box-border">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+              <div class="flex-shrink min-w-0">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                  Struktura organizacyjna - Drzewo działów
+                </h2>
+                <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 flex-wrap">
+                  <span class="inline-flex items-center gap-1">
+                    <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                    </svg>
+                    Przeciągnij
+                  </span>
+                  <span class="mx-1 sm:mx-2">•</span>
+                  <span class="inline-flex items-center gap-1">
+                    <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Scroll
+                  </span>
+                  <span class="mx-1 sm:mx-2">•</span>
+                  <span class="inline-flex items-center gap-1">
+                    <kbd class="px-1 py-0.5 text-xs font-semibold bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded">Space</kbd>
+                    + drag
+                  </span>
+                </p>
+              </div>
 
-            <div class="org-chart-wrapper overflow-x-auto">
-              <div class="org-chart-container">
+              <!-- Zoom Controls -->
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="text-sm text-gray-600 dark:text-gray-400 mr-2">
+                  {{ Math.round(zoom * 100) }}%
+                </span>
+                <button
+                  @click="zoom = Math.min(3, zoom + 0.2)"
+                  class="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                  title="Powiększ"
+                >
+                  <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                  </svg>
+                </button>
+                <button
+                  @click="zoom = Math.max(0.3, zoom - 0.2)"
+                  class="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                  title="Pomniejsz"
+                >
+                  <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                  </svg>
+                </button>
+                <button
+                  @click="resetView"
+                  class="p-2 bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-lg transition-colors"
+                  title="Resetuj widok"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div
+              ref="wrapperRef"
+              class="org-chart-wrapper"
+              :style="{ cursor: wrapperCursor }"
+              @wheel="handleWheel"
+              @mousedown="handleMouseDown"
+              @mousemove="handleMouseMove"
+              @mouseup="handleMouseUp"
+              @mouseleave="handleMouseLeave"
+            >
+              <div ref="containerRef" class="org-chart-container" :style="transformStyle">
               <OrganizationChart
                 v-for="rootDept in departmentOrgChartData"
                 :key="rootDept.key"
@@ -1112,22 +1265,38 @@ const saveQuickEdit = async () => {
 </template>
 
 <style scoped>
-/* Organization Chart Wrapper - prevents overflow from escaping the card */
+/* Organization Chart Wrapper - Pan & Zoom Container */
 .org-chart-wrapper {
   width: 100%;
-  max-width: calc(100vw - 280px); /* Subtract sidebar width + padding */
-  overflow-x: auto;
-  overflow-y: visible;
+  max-width: 100%;
+  height: calc(100vh - 450px); /* Full viewport height minus header and controls */
+  min-height: 500px;
+  max-height: 700px;
+  overflow: hidden; /* No scrollbars */
   position: relative;
-  margin: 0 auto;
+  margin: 0;
+  background: linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px),
+              linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: 0 0;
+  user-select: none; /* Prevent text selection while dragging */
+  border-radius: 8px;
+  box-sizing: border-box;
 }
 
 /* Organization Chart Container */
 .org-chart-container {
-  min-width: 100%;
   width: max-content;
+  height: max-content;
+  min-width: 100%;
+  min-height: 100%;
   padding: 20px;
   position: relative;
+  transform-origin: 0 0;
+  transition: none; /* Remove transition for smoother panning */
+  will-change: transform;
+  pointer-events: none; /* Disable pointer events on container, enable on children */
+  box-sizing: border-box;
 }
 
 /* Department Node Styling */
@@ -1138,10 +1307,12 @@ const saveQuickEdit = async () => {
   border: 2px solid #1e40af;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
-  cursor: pointer;
+  cursor: pointer !important;
   transition: all 0.3s ease;
   text-align: center;
   color: white;
+  user-select: none;
+  pointer-events: auto;
 }
 
 .department-node:hover {
@@ -1159,10 +1330,12 @@ const saveQuickEdit = async () => {
   border: 2px solid #374151;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(107, 114, 128, 0.2);
-  cursor: pointer;
+  cursor: pointer !important;
   transition: all 0.3s ease;
   text-align: center;
   color: white;
+  user-select: none;
+  pointer-events: auto;
 }
 
 .employee-node:hover {
@@ -1249,7 +1422,13 @@ const saveQuickEdit = async () => {
 
 /* PrimeVue OrganizationChart overrides */
 :deep(.p-organizationchart) {
-  padding: 20px;
+  padding: 10px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+:deep(.p-organizationchart-table) {
+  max-width: 100%;
 }
 
 :deep(.p-organizationchart-node-content) {
@@ -1279,6 +1458,12 @@ const saveQuickEdit = async () => {
 }
 
 /* Dark mode */
+:global(.dark) .org-chart-wrapper {
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+              linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
 :global(.dark) .department-node {
   background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
   border-color: #1d4ed8;
