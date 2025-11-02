@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Common.Models;
 using PortalForge.Application.UseCases.Auth.Commands.ChangePassword;
 using PortalForge.Application.UseCases.Auth.Commands.Login;
@@ -22,18 +21,15 @@ public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<AuthController> _logger;
-    private readonly IUnitOfWork _unitOfWork;
     private readonly IWebHostEnvironment _environment;
 
     public AuthController(
         IMediator mediator,
         ILogger<AuthController> logger,
-        IUnitOfWork unitOfWork,
         IWebHostEnvironment environment)
     {
         _mediator = mediator;
         _logger = logger;
-        _unitOfWork = unitOfWork;
         _environment = environment;
     }
 
@@ -68,31 +64,9 @@ public class AuthController : ControllerBase
 
         var result = await _mediator.Send(command);
 
-        // Get full user data from database
-        var user = await _unitOfWork.UserRepository.GetByIdAsync(result.UserId ?? Guid.Empty);
-
-        if (user == null)
-        {
-            return BadRequest("User not found");
-        }
-
         var response = new AuthResponseDto
         {
-            User = new UserDto
-            {
-                Id = user.Id,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                PhoneNumber = user.PhoneNumber,
-                Department = user.Department,
-                DepartmentId = user.DepartmentId,
-                Position = user.Position,
-                Role = user.Role.ToString().ToLower(),
-                IsEmailVerified = user.IsEmailVerified,
-                MustChangePassword = user.MustChangePassword,
-                CreatedAt = user.CreatedAt
-            },
+            User = result.User,
             AccessToken = result.AccessToken ?? string.Empty,
             RefreshToken = result.RefreshToken ?? string.Empty
         };
@@ -193,24 +167,7 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<UserDto>> GetCurrentUser()
     {
         var user = await _mediator.Send(new GetCurrentUserQuery());
-
-        var userDto = new UserDto
-        {
-            Id = user.Id,
-            Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            PhoneNumber = user.PhoneNumber,
-            Department = user.Department,
-            DepartmentId = user.DepartmentId,
-            Position = user.Position,
-            Role = user.Role.ToString().ToLower(),
-            IsEmailVerified = user.IsEmailVerified,
-            MustChangePassword = user.MustChangePassword,
-            CreatedAt = user.CreatedAt
-        };
-
-        return Ok(userDto);
+        return Ok(user);
     }
 
     [HttpPost("change-password")]

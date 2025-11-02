@@ -3,11 +3,11 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Exceptions;
-using PortalForge.Domain.Entities;
+using PortalForge.Application.UseCases.Auth.DTOs;
 
 namespace PortalForge.Application.UseCases.Auth.Queries.GetCurrentUser;
 
-public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, User>
+public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, UserDto>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<GetCurrentUserQueryHandler> _logger;
@@ -20,7 +20,7 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, U
         _logger = logger;
     }
 
-    public async Task<User> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
+    public async Task<UserDto> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
     {
         if (request.UserId == null)
         {
@@ -36,6 +36,20 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, U
             throw new NotFoundException($"Użytkownik o ID {request.UserId} nie został znaleziony");
         }
 
-        return user;
+        return new UserDto
+        {
+            Id = user.Id,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            PhoneNumber = user.PhoneNumber,
+            Department = user.Department,
+            DepartmentId = user.DepartmentId,
+            Position = user.Position,
+            Role = user.Role.ToString().ToLower(),
+            IsEmailVerified = user.IsEmailVerified,
+            MustChangePassword = user.MustChangePassword,
+            CreatedAt = user.CreatedAt
+        };
     }
 }
