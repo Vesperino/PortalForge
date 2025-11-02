@@ -402,7 +402,7 @@ const handleEmployeeClick = async (employeeId: string) => {
     departmentId: user.departmentId || '',
     departmentName: user.department || '',
     position: user.position || '',
-    positionId: null
+    positionId: user.positionId || null  // Use positionId if available
   }
   showQuickEditModal.value = true
 }
@@ -444,32 +444,43 @@ const handlePositionNameUpdate = (name: string) => {
 const saveQuickEdit = async () => {
   if (!editingUser.value) return
 
+  // Validation
+  if (!quickEditForm.value.departmentId || !quickEditForm.value.position) {
+    error.value = 'Dział i stanowisko są wymagane'
+    return
+  }
+
   isLoading.value = true
   error.value = null
 
   try {
+    const updateData = {
+      firstName: editingUser.value.firstName,
+      lastName: editingUser.value.lastName,
+      department: quickEditForm.value.departmentName,
+      departmentId: quickEditForm.value.departmentId,
+      position: quickEditForm.value.position,
+      positionId: quickEditForm.value.positionId || null,  // Include position ID if available
+      phoneNumber: editingUser.value.phoneNumber,
+      role: editingUser.value.role,
+      roleGroupIds: [],
+      isActive: editingUser.value.isActive ?? true,  // Ensure user stays active
+      updatedBy: editingUser.value.id
+    }
+
+    console.log('Saving user with data:', updateData)  // Debug log
+
     await $fetch(`${apiUrl}/api/admin/users/${editingUser.value.id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
-      body: {
-        firstName: editingUser.value.firstName,
-        lastName: editingUser.value.lastName,
-        department: quickEditForm.value.departmentName,
-        departmentId: quickEditForm.value.departmentId,
-        position: quickEditForm.value.position,
-        phoneNumber: editingUser.value.phoneNumber,
-        role: editingUser.value.role,
-        roleGroupIds: [],
-        isActive: editingUser.value.isActive,
-        updatedBy: editingUser.value.id
-      }
+      body: updateData
     })
 
     await loadData()
     showQuickEditModal.value = false
     editingUser.value = null
   } catch (err: any) {
-    error.value = err.message || 'Nie udało się zaktualizować pracownika'
+    error.value = err.data?.message || err.message || 'Nie udało się zaktualizować pracownika'
     console.error('Error updating employee:', err)
   } finally {
     isLoading.value = false
@@ -1051,6 +1062,7 @@ onMounted(() => {
             </label>
             <PositionAutocomplete
               :model-value="quickEditForm.positionId"
+              :initial-position-name="quickEditForm.position"
               @update:modelValue="handlePositionUpdate"
               @update:positionName="handlePositionNameUpdate"
               placeholder="Wpisz lub wybierz stanowisko..."

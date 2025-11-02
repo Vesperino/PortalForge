@@ -6,7 +6,9 @@ export interface User {
   lastName?: string
   phoneNumber?: string
   department?: string
+  departmentId?: string
   position?: string
+  positionId?: string  // Position ID for autocomplete
   isEmailVerified: boolean
   mustChangePassword?: boolean
   role?: UserRole
@@ -14,7 +16,7 @@ export interface User {
   profilePhotoUrl?: string
   subordinates?: User[]
   supervisorId?: string
-  departmentId?: string
+  isActive?: boolean
 }
 
 export enum UserRole {

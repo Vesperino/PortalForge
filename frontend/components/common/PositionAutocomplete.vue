@@ -11,6 +11,7 @@ const props = defineProps<{
   placeholder?: string
   required?: boolean
   disabled?: boolean
+  initialPositionName?: string  // Support for initial position name without ID
 }>()
 
 const emit = defineEmits<{
@@ -21,9 +22,10 @@ const emit = defineEmits<{
 const { searchPositions, createPosition } = usePositions()
 
 const selectedPosition = ref<Position | null>(null)
-const positionInput = ref<string>('')
+const positionInput = ref<string>(props.initialPositionName || '')
 const suggestions = ref<Position[]>([])
 const showCreateModal = ref(false)
+const isInitialized = ref(false)
 
 const newPosition = ref({
   name: '',
@@ -109,12 +111,36 @@ watch(() => props.modelValue, async (newVal, oldVal) => {
     if (position && positionInput.value !== position.name) {
       selectedPosition.value = position
       positionInput.value = position.name
+      isInitialized.value = true
     }
-  } else if (!newVal && positionInput.value) {
-    selectedPosition.value = null
-    positionInput.value = ''
+  } else if (!newVal && !isInitialized.value) {
+    // Only clear if not initialized with initial position name
+    // This prevents clearing when component is first loaded with initialPositionName but no ID
+    if (!props.initialPositionName || positionInput.value === '') {
+      selectedPosition.value = null
+      positionInput.value = ''
+    }
   }
 }, { immediate: false })
+
+// Watch for initialPositionName changes
+watch(() => props.initialPositionName, async (newName) => {
+  if (newName && !positionInput.value && !isInitialized.value) {
+    positionInput.value = newName
+
+    // Try to find matching position by name to get ID
+    const allPositions = await searchPositions('')
+    const position = allPositions.find(p =>
+      p.name.toLowerCase() === newName.toLowerCase()
+    )
+    if (position) {
+      selectedPosition.value = position
+      emit('update:modelValue', position.id)
+      emit('update:positionName', position.name)
+    }
+    isInitialized.value = true
+  }
+}, { immediate: true })
 </script>
 
 <template>
