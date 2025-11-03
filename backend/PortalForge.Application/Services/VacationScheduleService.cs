@@ -197,6 +197,121 @@ public class VacationScheduleService : IVacationScheduleService
         }
     }
 
+    public async Task ProcessApprovedSickLeaveRequestsAsync()
+    {
+        _logger.LogInformation("Processing approved sick leave requests");
+
+        var created = 0;
+
+        await _unitOfWork.BeginTransactionAsync();
+
+        try
+        {
+            // Get all approved sick leave requests that don't have a SickLeave record yet
+            var allRequests = await _unitOfWork.RequestRepository.GetAllAsync();
+            var allSickLeaves = await _unitOfWork.SickLeaveRepository.GetAllAsync();
+
+            var approvedSickLeaveRequests = allRequests
+                .Where(r => r.Status == RequestStatus.Approved &&
+                           r.RequestTemplate.Name.Contains("L4") && // Assuming sick leave templates contain "L4"
+                           !allSickLeaves.Any(sl => sl.SourceRequestId == r.Id))
+                .ToList();
+
+            _logger.LogInformation(
+                "Found {RequestCount} approved sick leave requests to process",
+                approvedSickLeaveRequests.Count);
+
+            foreach (var request in approvedSickLeaveRequests)
+            {
+                try
+                {
+                    // Parse form data
+                    var formData = JsonSerializer.Deserialize<Dictionary<string, object>>(
+                        request.FormData
+                    ) ?? throw new InvalidOperationException("Invalid form data");
+
+                    // Extract sick leave details
+                    var startDate = DateTime.Parse(formData["startDate"].ToString()!);
+                    var endDate = DateTime.Parse(formData["endDate"].ToString()!);
+
+                    // Calculate business days (sick leave is always consecutive calendar days)
+                    var daysCount = (endDate.Date - startDate.Date).Days + 1;
+
+                    // Check if ZUS documentation is required (>33 days)
+                    var requiresZusDocument = daysCount > 33;
+
+                    // Create SickLeave record
+                    var sickLeave = new SickLeave
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = request.SubmittedById,
+                        StartDate = startDate.Date,
+                        EndDate = endDate.Date,
+                        DaysCount = daysCount,
+                        SourceRequestId = request.Id,
+                        Status = SickLeaveStatus.Active,
+                        RequiresZusDocument = requiresZusDocument,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await _unitOfWork.SickLeaveRepository.CreateAsync(sickLeave);
+
+                    _logger.LogInformation(
+                        "Created SickLeave record for user {UserId} from {StartDate} to {EndDate} ({DaysCount} days, ZUS required: {RequiresZus})",
+                        sickLeave.UserId, sickLeave.StartDate, sickLeave.EndDate, sickLeave.DaysCount, requiresZusDocument);
+
+                    created++;
+
+                    // Send notification if ZUS documentation is required
+                    if (requiresZusDocument)
+                    {
+                        await _notificationService.CreateNotificationAsync(
+                            request.SubmittedById,
+                            NotificationType.System,
+                            "Wymagane zaświadczenie ZUS",
+                            $"Twoje zwolnienie lekarskie przekracza 33 dni ({daysCount} dni). Wymagane jest dostarczenie zaświadczenia ZUS do działu HR.",
+                            "SickLeave",
+                            sickLeave.Id.ToString(),
+                            $"/dashboard/sick-leaves/{sickLeave.Id}");
+
+                        _logger.LogInformation(
+                            "Sent ZUS documentation reminder to user {UserId} for sick leave {SickLeaveId}",
+                            sickLeave.UserId, sickLeave.Id);
+                    }
+
+                    // Notify supervisor about sick leave (informational)
+                    var user = await _unitOfWork.UserRepository.GetByIdAsync(request.SubmittedById);
+                    if (user?.SupervisorId.HasValue == true)
+                    {
+                        await _notificationService.SendSickLeaveNotificationAsync(
+                            user.SupervisorId.Value,
+                            sickLeave);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex,
+                        "Failed to process sick leave request {RequestId}",
+                        request.Id);
+                    // Continue with other requests even if one fails
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+
+            _logger.LogInformation(
+                "Processed {CreatedCount} sick leave requests successfully",
+                created);
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            _logger.LogError(ex, "Error processing approved sick leave requests");
+            throw;
+        }
+    }
+
     #region Private Helper Methods
 
     /// <summary>

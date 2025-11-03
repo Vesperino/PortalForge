@@ -62,6 +62,7 @@ public class UpdateVacationStatusesJob : BackgroundService
 
     /// <summary>
     /// Updates vacation statuses by activating scheduled vacations and completing active ones.
+    /// Also processes approved sick leave requests to create SickLeave records.
     /// Uses scoped service to ensure proper DbContext lifecycle.
     /// </summary>
     private async Task UpdateVacationStatusesAsync()
@@ -71,11 +72,15 @@ public class UpdateVacationStatusesJob : BackgroundService
             var vacationService = scope.ServiceProvider
                 .GetRequiredService<IVacationScheduleService>();
 
-            _logger.LogInformation("Starting vacation status update");
+            _logger.LogInformation("Starting vacation status update and sick leave processing");
 
+            // Update vacation statuses (Scheduled → Active, Active → Completed)
             await vacationService.UpdateVacationStatusesAsync();
 
-            _logger.LogInformation("Vacation status update completed");
+            // Process approved sick leave requests (create SickLeave records)
+            await vacationService.ProcessApprovedSickLeaveRequestsAsync();
+
+            _logger.LogInformation("Vacation status update and sick leave processing completed");
         }
     }
 }
