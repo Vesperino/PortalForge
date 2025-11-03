@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { User } from '~/types/auth'
+import type { VacationSummary } from '~/composables/useVacations'
 
 definePageMeta({
   layout: 'default',
@@ -39,11 +40,45 @@ const stats = computed(() => ({
   lastLogin: new Date() // TODO: Track real last login
 }))
 
-// Vacation and sick leave data (mock data)
-const vacationData = ref({
-  total: 26,
-  used: 8,
-  remaining: 18,
+// Vacation API integration
+const { getUserVacationSummary } = useVacations()
+const vacationSummary = ref<VacationSummary | null>(null)
+const isLoadingVacation = ref(false)
+const vacationError = ref<string | null>(null)
+
+// Fetch vacation data
+const fetchVacationData = async () => {
+  if (!currentUser.value?.id) return
+
+  isLoadingVacation.value = true
+  vacationError.value = null
+
+  try {
+    vacationSummary.value = await getUserVacationSummary(currentUser.value.id)
+  } catch (error: any) {
+    console.error('Error fetching vacation data:', error)
+    vacationError.value = error.message || 'Nie udało się pobrać danych urlopowych'
+  } finally {
+    isLoadingVacation.value = false
+  }
+}
+
+// Load vacation data on mount
+onMounted(() => {
+  fetchVacationData()
+})
+
+// Computed vacation data with fallbacks
+const vacationData = computed(() => ({
+  total: vacationSummary.value?.annualVacationDays ?? 0,
+  used: vacationSummary.value?.vacationDaysUsed ?? 0,
+  remaining: vacationSummary.value?.vacationDaysRemaining ?? 0,
+  onDemandUsed: vacationSummary.value?.onDemandVacationDaysUsed ?? 0,
+  onDemandRemaining: vacationSummary.value?.onDemandVacationDaysRemaining ?? 0,
+  carriedOver: vacationSummary.value?.carriedOverVacationDays ?? 0,
+  carriedOverExpiry: vacationSummary.value?.carriedOverExpiryDate,
+  totalAvailable: vacationSummary.value?.totalAvailableVacationDays ?? 0,
+  // TODO: Fetch real vacation history from API when endpoint is available
   history: [
     {
       id: 1,
@@ -70,10 +105,11 @@ const vacationData = ref({
       status: 'Zatwierdzony'
     }
   ]
-})
+}))
 
+// Sick leave data - TODO: Integrate with backend when endpoint is available
 const sickLeaveData = ref({
-  total: 3,
+  total: vacationSummary.value?.circumstantialLeaveDaysUsed ?? 0,
   history: [
     {
       id: 1,
@@ -282,8 +318,22 @@ const logout = async () => {
         Urlopy i absencje
       </h3>
 
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <!-- Loading State -->
+      <div v-if="isLoadingVacation" class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="vacationError" class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg mb-6">
+        <p class="text-sm text-red-600 dark:text-red-400">
+          {{ vacationError }}
+        </p>
+      </div>
+
+      <!-- Vacation Data -->
+      <template v-else>
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
           <div class="flex items-center gap-3">
             <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -438,29 +488,30 @@ const logout = async () => {
       </div>
 
       <!-- Work Experience -->
-      <div class="mt-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-        <div class="flex items-center gap-3">
-          <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-          <div class="flex-1">
-            <p class="text-sm font-medium text-gray-900 dark:text-white">
-              Staż pracy w firmie
-            </p>
-            <p class="text-xs text-gray-600 dark:text-gray-400">
-              Od {{ formatDateShort(workData.startDate) }}
-            </p>
-          </div>
-          <div class="text-right">
-            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">
-              {{ workData.yearsOfService }}
-            </p>
-            <p class="text-xs text-gray-600 dark:text-gray-400">
-              {{ workData.yearsOfService === 1 ? 'rok' : 'lat' }}
-            </p>
+        <div class="mt-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+          <div class="flex items-center gap-3">
+            <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-900 dark:text-white">
+                Staż pracy w firmie
+              </p>
+              <p class="text-xs text-gray-600 dark:text-gray-400">
+                Od {{ formatDateShort(workData.startDate) }}
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {{ workData.yearsOfService }}
+              </p>
+              <p class="text-xs text-gray-600 dark:text-gray-400">
+                {{ workData.yearsOfService === 1 ? 'rok' : 'lat' }}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
     </div>
 
     <!-- Recent Activity -->
