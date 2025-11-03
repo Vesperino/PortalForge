@@ -46,6 +46,9 @@ public static class DependencyInjection
         // Register File Storage Service
         services.AddScoped<PortalForge.Application.Interfaces.IFileStorageService, PortalForge.Infrastructure.Services.FileStorageService>();
 
+        // Register File Storage Service Adapter for Common.Interfaces (temporary solution until interfaces are unified)
+        services.AddScoped<PortalForge.Application.Common.Interfaces.IFileStorageService, PortalForge.Infrastructure.Services.FileStorageServiceAdapter>();
+
         // Register Notification Service
         services.AddScoped<PortalForge.Application.Services.INotificationService, PortalForge.Infrastructure.Services.NotificationService>();
 
