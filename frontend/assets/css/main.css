@@ -51,7 +51,7 @@
     min-height: 100vh;
     margin-left: 0;
     width: 100%;
-    overflow-x: hidden; /* Ensure content cannot force page scroll */
+    overflow-x: visible; /* Allow dropdowns/menus to overflow across the sidebar; global horizontal scroll is still prevented on body */
   }
 
   @media (min-width: 768px) {
