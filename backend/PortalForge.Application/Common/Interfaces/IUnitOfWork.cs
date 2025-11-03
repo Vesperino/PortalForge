@@ -20,6 +20,7 @@ public interface IUnitOfWork : IDisposable
     IPositionRepository PositionRepository { get; }
     IVacationScheduleRepository VacationScheduleRepository { get; }
     ISickLeaveRepository SickLeaveRepository { get; }
+    IRequestEditHistoryRepository RequestEditHistoryRepository { get; }
     IOrganizationalPermissionRepository OrganizationalPermissionRepository { get; }
     ICachedLocationRepository CachedLocationRepository { get; }
     ISystemSettingRepository SystemSettingRepository { get; }

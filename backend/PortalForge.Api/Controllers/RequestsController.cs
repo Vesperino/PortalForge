@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Api.DTOs.Requests.Requests;
 using PortalForge.Application.UseCases.Requests.Commands.ApproveRequestStep;
+using PortalForge.Application.UseCases.Requests.Commands.EditRequest;
 using PortalForge.Application.UseCases.Requests.Commands.RejectRequestStep;
 using PortalForge.Application.UseCases.Requests.Commands.SubmitRequest;
 using PortalForge.Application.UseCases.Requests.Queries.GetMyRequests;
@@ -93,8 +94,35 @@ public class RequestsController : BaseController
 
         command.SubmittedById = userGuid;
         var result = await _mediator.Send(command);
-        
+
         return CreatedAtAction(nameof(GetMyRequests), null, result);
+    }
+
+    /// <summary>
+    /// Edit an existing request (Draft or InReview only)
+    /// </summary>
+    [HttpPut("{requestId:guid}")]
+    [Authorize(Policy = "RequirePermission:requests.edit")]
+    public async Task<IActionResult> EditRequest(
+        Guid requestId,
+        [FromBody] EditRequestRequest request)
+    {
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
+        var command = new EditRequestCommand
+        {
+            RequestId = requestId,
+            EditedByUserId = userGuid,
+            NewFormData = request.FormData,
+            ChangeReason = request.ChangeReason
+        };
+
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     /// <summary>
