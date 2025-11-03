@@ -174,7 +174,13 @@ const openAddRootModal = () => {
   parentDepartmentId.value = null
   selectedDepartmentHead.value = null
   selectedDepartmentDirector.value = null
-  departmentForm.value = {}
+  departmentForm.value = {
+    name: '',
+    description: null,
+    parentDepartmentId: null,
+    departmentHeadId: null,
+    departmentDirectorId: null
+  }
   formErrors.value = {}
   showDepartmentModal.value = true
 }
@@ -185,7 +191,13 @@ const handleAddChild = (departmentId: string) => {
   parentDepartmentId.value = departmentId
   selectedDepartmentHead.value = null
   selectedDepartmentDirector.value = null
-  departmentForm.value = {}
+  departmentForm.value = {
+    name: '',
+    description: null,
+    parentDepartmentId: departmentId,
+    departmentHeadId: null,
+    departmentDirectorId: null
+  }
   formErrors.value = {}
   showDepartmentModal.value = true
 }
