@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Api.DTOs.Requests.Requests;
+using PortalForge.Application.UseCases.Requests.Commands.AddRequestComment;
 using PortalForge.Application.UseCases.Requests.Commands.ApproveRequestStep;
 using PortalForge.Application.UseCases.Requests.Commands.EditRequest;
 using PortalForge.Application.UseCases.Requests.Commands.RejectRequestStep;
@@ -123,6 +124,33 @@ public class RequestsController : BaseController
 
         await _mediator.Send(command);
         return NoContent();
+    }
+
+    /// <summary>
+    /// Add a comment to a request
+    /// </summary>
+    [HttpPost("{requestId:guid}/comments")]
+    [Authorize(Policy = "RequirePermission:requests.view")]
+    public async Task<ActionResult<Guid>> AddComment(
+        Guid requestId,
+        [FromBody] AddCommentRequest request)
+    {
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
+        var command = new AddRequestCommentCommand
+        {
+            RequestId = requestId,
+            UserId = userGuid,
+            Comment = request.Comment,
+            Attachments = request.Attachments
+        };
+
+        var commentId = await _mediator.Send(command);
+        return CreatedAtAction(nameof(GetMyRequests), null, commentId);
     }
 
     /// <summary>

@@ -15,6 +15,7 @@ public interface IUnitOfWork : IDisposable
     IHashtagRepository HashtagRepository { get; }
     IRequestTemplateRepository RequestTemplateRepository { get; }
     IRequestRepository RequestRepository { get; }
+    IRequestCommentRepository RequestCommentRepository { get; }
     INotificationRepository NotificationRepository { get; }
     IDepartmentRepository DepartmentRepository { get; }
     IPositionRepository PositionRepository { get; }
