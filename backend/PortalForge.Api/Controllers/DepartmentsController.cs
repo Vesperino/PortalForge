@@ -8,6 +8,7 @@ using PortalForge.Application.UseCases.Departments.Commands.UpdateDepartment;
 using PortalForge.Application.UseCases.Departments.Queries.GetDepartmentById;
 using PortalForge.Application.UseCases.Departments.Queries.GetDepartmentEmployees;
 using PortalForge.Application.UseCases.Departments.Queries.GetDepartmentTree;
+using PortalForge.Application.UseCases.Departments.Queries.GetDepartmentVacationCalendar;
 
 namespace PortalForge.Api.Controllers;
 
@@ -83,6 +84,31 @@ public class DepartmentsController : ControllerBase
             DepartmentId = id,
             IncludeInactive = includeInactive
         };
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Gets vacation calendar for a department.
+    /// </summary>
+    /// <param name="id">Department ID</param>
+    /// <param name="from">Start date for the calendar range</param>
+    /// <param name="to">End date for the calendar range</param>
+    /// <returns>List of vacation entries in the specified date range</returns>
+    [HttpGet("{id}/vacation-calendar")]
+    [Authorize]
+    public async Task<ActionResult<List<VacationCalendarEntryDto>>> GetVacationCalendar(
+        Guid id,
+        [FromQuery] DateTime? from = null,
+        [FromQuery] DateTime? to = null)
+    {
+        var query = new GetDepartmentVacationCalendarQuery
+        {
+            DepartmentId = id,
+            FromDate = from ?? DateTime.UtcNow.Date,
+            ToDate = to ?? DateTime.UtcNow.AddMonths(3).Date
+        };
+
         var result = await _mediator.Send(query);
         return Ok(result);
     }
