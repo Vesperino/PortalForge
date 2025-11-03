@@ -16,14 +16,23 @@ namespace PortalForge.Api.Controllers;
 public class VacationSchedulesController : ControllerBase
 {
     private readonly IVacationScheduleService _vacationService;
+    private readonly IMediator _mediator;
     private readonly ILogger<VacationSchedulesController> _logger;
 
     public VacationSchedulesController(
         IVacationScheduleService vacationService,
+        IMediator mediator,
         ILogger<VacationSchedulesController> logger)
     {
         _vacationService = vacationService;
+        _mediator = mediator;
         _logger = logger;
+    }
+
+    private Guid GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
     }
 
     /// <summary>
@@ -154,4 +163,40 @@ public class VacationSchedulesController : ControllerBase
             StatusCodes.Status501NotImplemented,
             new { message = "Excel export feature will be implemented in future release." });
     }
+
+    /// <summary>
+    /// Cancels an active vacation schedule.
+    /// Admin can cancel anytime. Approvers can cancel up to 1 day after vacation starts.
+    /// </summary>
+    /// <param name="vacationId">Vacation schedule ID</param>
+    /// <param name="request">Cancellation request with reason</param>
+    /// <returns>No content on success</returns>
+    [HttpDelete("{vacationId:guid}")]
+    [Authorize]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> CancelVacation(
+        Guid vacationId,
+        [FromBody] CancelVacationRequest request)
+    {
+        _logger.LogInformation(
+            "Cancelling vacation {VacationId} by user {UserId}",
+            vacationId, GetCurrentUserId());
+
+        var command = new Application.UseCases.Vacations.Commands.CancelVacation.CancelVacationCommand
+        {
+            VacationScheduleId = vacationId,
+            CancelledByUserId = GetCurrentUserId(),
+            Reason = request.Reason
+        };
+
+        await _mediator.Send(command);
+        return NoContent();
+    }
+}
+
+public class CancelVacationRequest
+{
+    public string Reason { get; set; } = string.Empty;
 }
