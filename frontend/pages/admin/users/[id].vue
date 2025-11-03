@@ -76,6 +76,7 @@
             </label>
             <select
               v-model="form.department"
+              @change="handleDepartmentChange"
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
@@ -236,6 +237,7 @@ const error = ref<string | null>(null)
 const departments = ref<DepartmentTreeDto[]>([])
 const positionId = ref<string | null>(null)
 const positionName = ref<string>('')
+const departmentId = ref<string | null>(null)
 
 const loadDepartments = async () => {
   try {
@@ -273,14 +275,18 @@ const loadUser = async () => {
 
     // Set position name for autocomplete
     positionName.value = user.position || ''
-    // positionId is optional - will be set if user selects from autocomplete
-    positionId.value = null
+    positionId.value = user.positionId || null
+
+    // Set department ID
+    departmentId.value = user.departmentId || null
 
     form.value = {
       firstName: user.firstName,
       lastName: user.lastName,
       department: user.department,
+      departmentId: user.departmentId || null,
       position: user.position,
+      positionId: user.positionId || null,
       phoneNumber: user.phoneNumber || '',
       role: user.role,
       roleGroupIds: roleGroupIds,
@@ -302,6 +308,10 @@ const handleSubmit = async () => {
   try {
     // Update position with the current value from autocomplete
     form.value.position = positionName.value
+    form.value.positionId = positionId.value
+
+    // Ensure departmentId is set
+    form.value.departmentId = departmentId.value
 
     await adminStore.updateUser(userId, form.value)
     await navigateTo('/admin/users')
@@ -321,6 +331,31 @@ const handlePositionNameUpdate = (name: string) => {
   positionName.value = name
   if (form.value) {
     form.value.position = name
+  }
+}
+
+// Handle department change
+const handleDepartmentChange = (event: Event) => {
+  const target = event.target as HTMLSelectElement
+  const selectedDeptName = target.value
+
+  // Find the department to get its ID
+  const findDeptByName = (depts: DepartmentTreeDto[], name: string): DepartmentTreeDto | null => {
+    for (const dept of depts) {
+      if (dept.name === name) return dept
+      if (dept.children && dept.children.length > 0) {
+        const found = findDeptByName(dept.children, name)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  const dept = findDeptByName(departments.value, selectedDeptName)
+  if (dept && form.value) {
+    departmentId.value = dept.id
+    form.value.department = dept.name
+    form.value.departmentId = dept.id
   }
 }
 

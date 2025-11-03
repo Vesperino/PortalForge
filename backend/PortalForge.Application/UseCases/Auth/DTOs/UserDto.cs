@@ -10,6 +10,7 @@ public class UserDto
     public string? Department { get; set; }
     public Guid? DepartmentId { get; set; }
     public string? Position { get; set; }
+    public Guid? PositionId { get; set; }
     public string Role { get; set; } = string.Empty;
     public bool IsEmailVerified { get; set; }
     public bool MustChangePassword { get; set; }

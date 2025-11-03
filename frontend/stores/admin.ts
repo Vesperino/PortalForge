@@ -6,7 +6,9 @@ export interface UserDto {
   firstName: string
   lastName: string
   department: string
+  departmentId?: string | null
   position: string
+  positionId?: string | null
   role: string
   isActive: boolean
   isEmailVerified: boolean
@@ -43,7 +45,9 @@ export interface UpdateUserRequest {
   firstName: string
   lastName: string
   department: string
+  departmentId?: string | null
   position: string
+  positionId?: string | null
   phoneNumber?: string
   role: string
   roleGroupIds: string[]

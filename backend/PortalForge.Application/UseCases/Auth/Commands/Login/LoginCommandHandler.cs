@@ -58,6 +58,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResult>
                 Department = user.Department,
                 DepartmentId = user.DepartmentId,
                 Position = user.Position,
+                PositionId = user.PositionId,
                 Role = user.Role.ToString().ToLower(),
                 IsEmailVerified = user.IsEmailVerified,
                 MustChangePassword = user.MustChangePassword,
