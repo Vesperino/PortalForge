@@ -39,7 +39,12 @@ public class ApplicationDbContext : DbContext
     public DbSet<Department> Departments { get; set; }
     public DbSet<Position> Positions { get; set; }
     public DbSet<VacationSchedule> VacationSchedules { get; set; }
+    public DbSet<SickLeave> SickLeaves { get; set; }
     public DbSet<OrganizationalPermission> OrganizationalPermissions { get; set; }
+
+    // Request Comments and History
+    public DbSet<RequestComment> RequestComments { get; set; }
+    public DbSet<RequestEditHistory> RequestEditHistories { get; set; }
 
     // Internal Services
     public DbSet<InternalService> InternalServices { get; set; }

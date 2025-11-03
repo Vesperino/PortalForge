@@ -167,7 +167,8 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
             Action = "CreateUser",
             EntityType = "User",
             EntityId = user.Id.ToString(),
-            Changes = System.Text.Json.JsonSerializer.Serialize(new
+            OldValue = null,
+            NewValue = System.Text.Json.JsonSerializer.Serialize(new
             {
                 Email = user.Email,
                 FirstName = user.FirstName,
@@ -177,7 +178,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
                 Role = user.Role.ToString(),
                 RoleGroups = request.RoleGroupIds
             }),
-            CreatedAt = DateTime.UtcNow
+            Timestamp = DateTime.UtcNow
         };
 
         await _unitOfWork.AuditLogRepository.CreateAsync(auditLog);

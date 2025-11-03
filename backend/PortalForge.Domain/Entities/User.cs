@@ -38,6 +38,75 @@ public class User
     public ICollection<User> Subordinates { get; set; } = new List<User>();
     public ICollection<UserRoleGroup> UserRoleGroups { get; set; } = new List<UserRoleGroup>();
 
-    // Full name computed property
+    // Vacation allowances - current year
+    /// <summary>
+    /// Annual vacation days entitlement (default: 26 days per Polish law)
+    /// </summary>
+    public int AnnualVacationDays { get; set; } = 26;
+
+    /// <summary>
+    /// Number of vacation days used in current year
+    /// </summary>
+    public int VacationDaysUsed { get; set; } = 0;
+
+    /// <summary>
+    /// Number of on-demand vacation days used (max 4 per Polish law)
+    /// </summary>
+    public int OnDemandVacationDaysUsed { get; set; } = 0;
+
+    /// <summary>
+    /// Number of circumstantial leave days used (for weddings, funerals, births)
+    /// </summary>
+    public int CircumstantialLeaveDaysUsed { get; set; } = 0;
+
+    // Vacation allowances - carried over from previous year
+    /// <summary>
+    /// Vacation days carried over from previous year (must be used by September 30)
+    /// </summary>
+    public int CarriedOverVacationDays { get; set; } = 0;
+
+    /// <summary>
+    /// Expiry date for carried over vacation days (September 30)
+    /// </summary>
+    public DateTime? CarriedOverExpiryDate { get; set; }
+
+    // Employment information
+    /// <summary>
+    /// Date when employee started working
+    /// </summary>
+    public DateTime? EmploymentStartDate { get; set; }
+
+    /// <summary>
+    /// Whether employee is currently on probation period
+    /// </summary>
+    public bool IsOnProbation { get; set; } = false;
+
+    /// <summary>
+    /// When probation period ends
+    /// </summary>
+    public DateTime? ProbationEndDate { get; set; }
+
+    // Notification settings
+    /// <summary>
+    /// Whether user wants to receive email notifications (can be disabled in profile)
+    /// </summary>
+    public bool EmailNotificationsEnabled { get; set; } = true;
+
+    // Computed properties
+    /// <summary>
+    /// Full name of the user
+    /// </summary>
     public string FullName => $"{FirstName} {LastName}";
+
+    /// <summary>
+    /// Total available vacation days (current year + carried over - used)
+    /// </summary>
+    public int TotalAvailableVacationDays => AnnualVacationDays + CarriedOverVacationDays - VacationDaysUsed;
+
+    /// <summary>
+    /// Number of years working in the company
+    /// </summary>
+    public int YearsOfService => EmploymentStartDate.HasValue
+        ? (DateTime.UtcNow.Year - EmploymentStartDate.Value.Year)
+        : 0;
 }

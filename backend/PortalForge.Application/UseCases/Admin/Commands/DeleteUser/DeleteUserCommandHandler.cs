@@ -56,8 +56,9 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, Delet
             Action = "DeleteUser",
             EntityType = "User",
             EntityId = user.Id.ToString(),
-            Changes = System.Text.Json.JsonSerializer.Serialize(userData),
-            CreatedAt = DateTime.UtcNow
+            OldValue = System.Text.Json.JsonSerializer.Serialize(userData),
+            NewValue = null,
+            Timestamp = DateTime.UtcNow
         };
 
         await _unitOfWork.AuditLogRepository.CreateAsync(auditLog);

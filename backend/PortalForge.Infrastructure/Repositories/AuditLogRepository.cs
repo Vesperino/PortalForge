@@ -25,7 +25,7 @@ public class AuditLogRepository : IAuditLogRepository
     {
         return await _context.AuditLogs
             .Include(al => al.User)
-            .OrderByDescending(al => al.CreatedAt)
+            .OrderByDescending(al => al.Timestamp)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -34,7 +34,7 @@ public class AuditLogRepository : IAuditLogRepository
     {
         return await _context.AuditLogs
             .Where(al => al.UserId == userId)
-            .OrderByDescending(al => al.CreatedAt)
+            .OrderByDescending(al => al.Timestamp)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -44,7 +44,7 @@ public class AuditLogRepository : IAuditLogRepository
         return await _context.AuditLogs
             .Include(al => al.User)
             .Where(al => al.Action == action)
-            .OrderByDescending(al => al.CreatedAt)
+            .OrderByDescending(al => al.Timestamp)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -53,8 +53,8 @@ public class AuditLogRepository : IAuditLogRepository
     {
         return await _context.AuditLogs
             .Include(al => al.User)
-            .Where(al => al.CreatedAt >= startDate && al.CreatedAt <= endDate)
-            .OrderByDescending(al => al.CreatedAt)
+            .Where(al => al.Timestamp >= startDate && al.Timestamp <= endDate)
+            .OrderByDescending(al => al.Timestamp)
             .AsNoTracking()
             .ToListAsync();
     }

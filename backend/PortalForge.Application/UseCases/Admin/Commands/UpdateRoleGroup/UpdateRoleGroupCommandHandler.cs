@@ -92,17 +92,14 @@ public class UpdateRoleGroupCommandHandler : IRequestHandler<UpdateRoleGroupComm
             Action = "UpdateRoleGroup",
             EntityType = "RoleGroup",
             EntityId = roleGroup.Id.ToString(),
-            Changes = System.Text.Json.JsonSerializer.Serialize(new
+            OldValue = System.Text.Json.JsonSerializer.Serialize(oldValues),
+            NewValue = System.Text.Json.JsonSerializer.Serialize(new
             {
-                Old = oldValues,
-                New = new
-                {
-                    roleGroup.Name,
-                    roleGroup.Description,
-                    PermissionIds = request.PermissionIds
-                }
+                roleGroup.Name,
+                roleGroup.Description,
+                PermissionIds = request.PermissionIds
             }),
-            CreatedAt = DateTime.UtcNow
+            Timestamp = DateTime.UtcNow
         };
 
         await _unitOfWork.AuditLogRepository.CreateAsync(auditLog);

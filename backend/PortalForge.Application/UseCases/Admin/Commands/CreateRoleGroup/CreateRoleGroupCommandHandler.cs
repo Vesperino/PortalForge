@@ -71,13 +71,14 @@ public class CreateRoleGroupCommandHandler : IRequestHandler<CreateRoleGroupComm
             Action = "CreateRoleGroup",
             EntityType = "RoleGroup",
             EntityId = roleGroup.Id.ToString(),
-            Changes = System.Text.Json.JsonSerializer.Serialize(new
+            OldValue = null,
+            NewValue = System.Text.Json.JsonSerializer.Serialize(new
             {
                 roleGroup.Name,
                 roleGroup.Description,
                 PermissionIds = request.PermissionIds
             }),
-            CreatedAt = DateTime.UtcNow
+            Timestamp = DateTime.UtcNow
         };
 
         await _unitOfWork.AuditLogRepository.CreateAsync(auditLog);

@@ -66,8 +66,9 @@ public class DeleteRoleGroupCommandHandler : IRequestHandler<DeleteRoleGroupComm
             Action = "DeleteRoleGroup",
             EntityType = "RoleGroup",
             EntityId = roleGroup.Id.ToString(),
-            Changes = System.Text.Json.JsonSerializer.Serialize(roleGroupData),
-            CreatedAt = DateTime.UtcNow
+            OldValue = System.Text.Json.JsonSerializer.Serialize(roleGroupData),
+            NewValue = null,
+            Timestamp = DateTime.UtcNow
         };
 
         await _unitOfWork.AuditLogRepository.CreateAsync(auditLog);

@@ -64,6 +64,26 @@ public class Department
     /// </summary>
     public User? Director { get; set; }
 
+    /// <summary>
+    /// User ID of the substitute for head of department (acts when head is unavailable).
+    /// </summary>
+    public Guid? HeadOfDepartmentSubstituteId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the user who is substitute for head of department.
+    /// </summary>
+    public User? HeadOfDepartmentSubstitute { get; set; }
+
+    /// <summary>
+    /// User ID of the substitute for director (acts when director is unavailable).
+    /// </summary>
+    public Guid? DirectorSubstituteId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the user who is substitute for director.
+    /// </summary>
+    public User? DirectorSubstitute { get; set; }
+
     // ===== STATUS =====
 
     /// <summary>

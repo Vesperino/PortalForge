@@ -65,8 +65,9 @@ public class DeleteRequestTemplateCommandHandler
             Action = "DeleteRequestTemplate",
             EntityType = "RequestTemplate",
             EntityId = template.Id.ToString(),
-            Changes = System.Text.Json.JsonSerializer.Serialize(templateData),
-            CreatedAt = DateTime.UtcNow
+            OldValue = System.Text.Json.JsonSerializer.Serialize(templateData),
+            NewValue = null,
+            Timestamp = DateTime.UtcNow
         };
 
         await _unitOfWork.AuditLogRepository.CreateAsync(auditLog);

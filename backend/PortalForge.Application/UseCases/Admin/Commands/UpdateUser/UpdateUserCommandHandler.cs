@@ -131,24 +131,21 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Updat
             Action = "UpdateUser",
             EntityType = "User",
             EntityId = user.Id.ToString(),
-            Changes = System.Text.Json.JsonSerializer.Serialize(new
+            OldValue = System.Text.Json.JsonSerializer.Serialize(oldValues),
+            NewValue = System.Text.Json.JsonSerializer.Serialize(new
             {
-                Old = oldValues,
-                New = new
-                {
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Department = user.Department,
-                    DepartmentId = user.DepartmentId,
-                    Position = user.Position,
-                    PositionId = user.PositionId,
-                    PhoneNumber = user.PhoneNumber,
-                    Role = user.Role.ToString(),
-                    IsActive = user.IsActive,
-                    RoleGroups = request.RoleGroupIds
-                }
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Department = user.Department,
+                DepartmentId = user.DepartmentId,
+                Position = user.Position,
+                PositionId = user.PositionId,
+                PhoneNumber = user.PhoneNumber,
+                Role = user.Role.ToString(),
+                IsActive = user.IsActive,
+                RoleGroups = request.RoleGroupIds
             }),
-            CreatedAt = DateTime.UtcNow
+            Timestamp = DateTime.UtcNow
         };
 
         await _unitOfWork.AuditLogRepository.CreateAsync(auditLog);
