@@ -53,7 +53,32 @@ public enum NotificationType
     /// <summary>
     /// User's vacation has ended, they're back from vacation.
     /// </summary>
-    VacationEnded
+    VacationEnded,
+
+    /// <summary>
+    /// Vacation request has been cancelled by user or supervisor.
+    /// </summary>
+    VacationRequestCancelled,
+
+    /// <summary>
+    /// Sick leave (L4) has been submitted and auto-approved.
+    /// </summary>
+    SickLeaveSubmitted,
+
+    /// <summary>
+    /// Request requires completion/additional information from submitter.
+    /// </summary>
+    RequestRequiresCompletion,
+
+    /// <summary>
+    /// Approval is overdue (SLA reminder for approver).
+    /// </summary>
+    ApprovalOverdue,
+
+    /// <summary>
+    /// Carried-over vacation days are expiring soon (before September 30).
+    /// </summary>
+    VacationExpiringSoon
 }
 
 

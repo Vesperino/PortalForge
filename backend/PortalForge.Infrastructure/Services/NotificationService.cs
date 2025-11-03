@@ -62,7 +62,12 @@ public class NotificationService : INotificationService
             NotificationType.RequestApproved,
             NotificationType.RequestRejected,
             NotificationType.VacationCoverageAssigned,
-            NotificationType.VacationCoverageStarted
+            NotificationType.VacationCoverageStarted,
+            NotificationType.VacationRequestCancelled,
+            NotificationType.SickLeaveSubmitted,
+            NotificationType.RequestRequiresCompletion,
+            NotificationType.ApprovalOverdue,
+            NotificationType.VacationExpiringSoon
         };
 
         if (!emailNotificationTypes.Contains(type))
@@ -106,6 +111,11 @@ public class NotificationService : INotificationService
             NotificationType.RequestRejected => "Zobacz szczegóły",
             NotificationType.VacationCoverageAssigned => "Zobacz zastępstwa",
             NotificationType.VacationCoverageStarted => "Zobacz zastępstwa",
+            NotificationType.VacationRequestCancelled => "Zobacz szczegóły",
+            NotificationType.SickLeaveSubmitted => "Zobacz L4",
+            NotificationType.RequestRequiresCompletion => "Uzupełnij wniosek",
+            NotificationType.ApprovalOverdue => "Zaakceptuj teraz",
+            NotificationType.VacationExpiringSoon => "Zaplanuj urlop",
             _ => null
         };
     }
@@ -212,6 +222,96 @@ public class NotificationService : INotificationService
             relatedEntityType: "VacationSchedule",
             relatedEntityId: schedule.Id.ToString(),
             actionUrl: $"/dashboard/vacations"
+        );
+    }
+
+    public async Task SendVacationNotificationAsync(Guid userId, NotificationType type, Request request)
+    {
+        var template = request.RequestTemplate;
+        var (title, message) = type switch
+        {
+            NotificationType.VacationRequestCancelled => (
+                "Urlop anulowany",
+                $"Twój wniosek urlopowy \"{template.Name}\" został anulowany."
+            ),
+            NotificationType.RequestApproved => (
+                "Urlop zatwierdzony",
+                $"Twój wniosek urlopowy \"{template.Name}\" został zatwierdzony."
+            ),
+            NotificationType.RequestRejected => (
+                "Urlop odrzucony",
+                $"Twój wniosek urlopowy \"{template.Name}\" został odrzucony."
+            ),
+            _ => ("Aktualizacja wniosku urlopowego", $"Status wniosku \"{template.Name}\" został zaktualizowany.")
+        };
+
+        await CreateNotificationAsync(
+            userId: userId,
+            type: type,
+            title: title,
+            message: message,
+            relatedEntityType: "Request",
+            relatedEntityId: request.Id.ToString(),
+            actionUrl: $"/dashboard/requests/{request.Id}"
+        );
+    }
+
+    public async Task SendSLAReminderAsync(Guid approverId, Request request, int daysOverdue)
+    {
+        var submitter = request.SubmittedBy;
+        var template = request.RequestTemplate;
+
+        await CreateNotificationAsync(
+            userId: approverId,
+            type: NotificationType.ApprovalOverdue,
+            title: "⚠️ Wniosek wymaga pilnej akceptacji",
+            message: $"Wniosek \"{template.Name}\" od {submitter.FirstName} {submitter.LastName} oczekuje już {daysOverdue} dni na Twoją akceptację. Proszę o szybkie rozpatrzenie.",
+            relatedEntityType: "Request",
+            relatedEntityId: request.Id.ToString(),
+            actionUrl: $"/dashboard/requests/{request.Id}"
+        );
+    }
+
+    public async Task SendRequestCompletionRequiredAsync(Guid userId, Request request, string reason)
+    {
+        var template = request.RequestTemplate;
+
+        await CreateNotificationAsync(
+            userId: userId,
+            type: NotificationType.RequestRequiresCompletion,
+            title: "Wniosek wymaga uzupełnienia",
+            message: $"Twój wniosek \"{template.Name}\" wymaga uzupełnienia: {reason}",
+            relatedEntityType: "Request",
+            relatedEntityId: request.Id.ToString(),
+            actionUrl: $"/dashboard/requests/{request.Id}/edit"
+        );
+    }
+
+    public async Task SendVacationExpiryWarningAsync(Guid userId, DateTime expiryDate, int daysRemaining)
+    {
+        await CreateNotificationAsync(
+            userId: userId,
+            type: NotificationType.VacationExpiringSoon,
+            title: "⚠️ Urlop zaległy wkrótce przepadnie",
+            message: $"Masz {daysRemaining} dni urlopu zaległego, które przepadną {expiryDate:yyyy-MM-dd}. Zaplanuj urlop, aby nie stracić tych dni!",
+            relatedEntityType: "User",
+            relatedEntityId: userId.ToString(),
+            actionUrl: "/dashboard/vacation/request"
+        );
+    }
+
+    public async Task SendSickLeaveNotificationAsync(Guid supervisorId, SickLeave sickLeave)
+    {
+        var user = sickLeave.User;
+
+        await CreateNotificationAsync(
+            userId: supervisorId,
+            type: NotificationType.SickLeaveSubmitted,
+            title: "Zgłoszenie L4 - informacja",
+            message: $"{user.FirstName} {user.LastName} zgłosił zwolnienie lekarskie (L4) od {sickLeave.StartDate:yyyy-MM-dd} do {sickLeave.EndDate:yyyy-MM-dd} ({sickLeave.DaysCount} dni). Wniosek został automatycznie zaakceptowany zgodnie z przepisami.",
+            relatedEntityType: "SickLeave",
+            relatedEntityId: sickLeave.Id.ToString(),
+            actionUrl: $"/dashboard/sick-leaves/{sickLeave.Id}"
         );
     }
 }
