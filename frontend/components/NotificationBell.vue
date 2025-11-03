@@ -2,12 +2,13 @@
   <div class="relative">
     <!-- Bell Icon Button -->
     <button
+      ref="buttonRef"
       @click.stop="toggleDropdown"
       class="relative p-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
       :class="{ 'text-blue-600 dark:text-blue-400': isOpen }"
     >
       <Icon name="heroicons:bell" class="w-6 h-6" />
-      
+
       <!-- Unread Badge -->
       <span
         v-if="unreadCount > 0"
@@ -17,21 +18,22 @@
       </span>
     </button>
 
-    <!-- Dropdown -->
-    <Transition
-      enter-active-class="transition ease-out duration-200"
-      enter-from-class="opacity-0 scale-95"
-      enter-to-class="opacity-100 scale-100"
-      leave-active-class="transition ease-in duration-150"
-      leave-from-class="opacity-100 scale-100"
-      leave-to-class="opacity-0 scale-95"
-    >
-      <div
-        v-if="isOpen"
-        v-click-outside="closeDropdown"
-        class="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
-        style="z-index: 9999;"
+    <!-- Dropdown with Teleport -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition ease-out duration-200"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition ease-in duration-150"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
       >
+        <div
+          v-if="isOpen"
+          v-click-outside="closeDropdown"
+          class="fixed w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+          :style="dropdownStyle"
+        >
         <!-- Header -->
         <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -122,8 +124,9 @@
             Zobacz wszystkie powiadomienia
           </NuxtLink>
         </div>
-      </div>
-    </Transition>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -137,7 +140,22 @@ const notificationsStore = useNotificationsStore()
 const { notifications, unreadCount, loading } = storeToRefs(notificationsStore)
 
 const isOpen = ref(false)
+const buttonRef = ref<HTMLElement | null>(null)
 let pollingInterval: NodeJS.Timeout | null = null
+
+// Calculate dropdown position
+const dropdownStyle = computed(() => {
+  if (!buttonRef.value) {
+    return { top: '0px', right: '0px', zIndex: 9999 }
+  }
+
+  const rect = buttonRef.value.getBoundingClientRect()
+  return {
+    top: `${rect.bottom + 8}px`,
+    right: `${window.innerWidth - rect.right}px`,
+    zIndex: 9999
+  }
+})
 
 // Group notifications by category
 const groupedNotifications = computed(() => {

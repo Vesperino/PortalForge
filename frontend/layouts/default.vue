@@ -9,6 +9,22 @@ const router = useRouter()
 const isUserMenuOpen = ref(false)
 const isMobileSidebarOpen = ref(false)
 const isLoggingOut = ref(false)
+const userMenuButtonRef = ref<HTMLElement | null>(null)
+
+// Calculate user dropdown position
+const userDropdownStyle = computed(() => {
+  if (!userMenuButtonRef.value) {
+    return { position: 'fixed', top: '0px', right: '0px', zIndex: 9999 }
+  }
+
+  const rect = userMenuButtonRef.value.getBoundingClientRect()
+  return {
+    position: 'fixed',
+    top: `${rect.bottom + 8}px`,
+    right: `${window.innerWidth - rect.right}px`,
+    zIndex: 9999
+  }
+})
 
 const isAdmin = computed(() => authStore.user?.role === UserRole.Admin)
 
@@ -182,7 +198,7 @@ onMounted(() => {
     documentClickHandler = (e: MouseEvent) => {
       const target = e.target as HTMLElement
       // Check if click is outside both the dropdown and the button that opens it
-      if (!target.closest('.user-menu') && isUserMenuOpen.value) {
+      if (!target.closest('.user-menu') && !target.closest('.user-dropdown-teleported') && isUserMenuOpen.value) {
         isUserMenuOpen.value = false
       }
     }
@@ -240,7 +256,7 @@ watch(
           </button>
 
           <div class="user-menu">
-            <button aria-label="User menu" class="user-menu-btn" @click="toggleUserMenu">
+            <button ref="userMenuButtonRef" aria-label="User menu" class="user-menu-btn" @click="toggleUserMenu">
               <div class="user-avatar">
                 {{ userInitials }}
               </div>
@@ -249,8 +265,9 @@ watch(
               </svg>
             </button>
 
-            <transition name="dropdown">
-              <div v-if="isUserMenuOpen" class="user-dropdown">
+            <Teleport to="body">
+              <transition name="dropdown">
+                <div v-if="isUserMenuOpen" class="user-dropdown-teleported" :style="userDropdownStyle">
                 <div class="user-dropdown-info">
                   <p class="user-dropdown-name">
                     {{ userDisplayName }}
@@ -273,8 +290,9 @@ watch(
                     Log out
                   </button>
                 </div>
-              </div>
-            </transition>
+                </div>
+              </transition>
+            </Teleport>
           </div>
         </div>
       </header>
