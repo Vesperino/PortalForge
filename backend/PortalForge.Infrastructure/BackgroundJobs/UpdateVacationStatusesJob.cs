@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Services;
 
@@ -8,8 +7,9 @@ namespace PortalForge.Infrastructure.BackgroundJobs;
 /// <summary>
 /// Background job that runs daily at 00:01 UTC to update vacation statuses.
 /// Activates scheduled vacations and completes finished vacations.
+/// Also processes approved sick leave (L4) requests.
 /// </summary>
-public class UpdateVacationStatusesJob : BackgroundService
+public class UpdateVacationStatusesJob
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<UpdateVacationStatusesJob> _logger;
@@ -22,57 +22,20 @@ public class UpdateVacationStatusesJob : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        _logger.LogInformation("UpdateVacationStatusesJob started");
-
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
-            {
-                var now = DateTime.UtcNow;
-                var tomorrow = now.Date.AddDays(1).AddMinutes(1); // 00:01 tomorrow UTC
-                var delay = tomorrow - now;
-
-                _logger.LogInformation(
-                    "Next vacation status update scheduled for {NextRun} (in {Delay})",
-                    tomorrow, delay
-                );
-
-                await Task.Delay(delay, stoppingToken);
-
-                if (stoppingToken.IsCancellationRequested)
-                {
-                    _logger.LogInformation("UpdateVacationStatusesJob stopping - cancellation requested");
-                    break;
-                }
-
-                // Execute vacation status update
-                await UpdateVacationStatusesAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in UpdateVacationStatusesJob - will retry tomorrow");
-                // Continue running even if error occurs
-            }
-        }
-
-        _logger.LogInformation("UpdateVacationStatusesJob stopped");
-    }
-
     /// <summary>
     /// Updates vacation statuses by activating scheduled vacations and completing active ones.
     /// Also processes approved sick leave requests to create SickLeave records.
     /// Uses scoped service to ensure proper DbContext lifecycle.
     /// </summary>
-    private async Task UpdateVacationStatusesAsync()
+    public async Task ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        using (var scope = _serviceProvider.CreateScope())
+        _logger.LogInformation("Starting vacation status update and sick leave processing");
+
+        try
         {
+            using var scope = _serviceProvider.CreateScope();
             var vacationService = scope.ServiceProvider
                 .GetRequiredService<IVacationScheduleService>();
-
-            _logger.LogInformation("Starting vacation status update and sick leave processing");
 
             // Update vacation statuses (Scheduled → Active, Active → Completed)
             await vacationService.UpdateVacationStatusesAsync();
@@ -80,7 +43,12 @@ public class UpdateVacationStatusesJob : BackgroundService
             // Process approved sick leave requests (create SickLeave records)
             await vacationService.ProcessApprovedSickLeaveRequestsAsync();
 
-            _logger.LogInformation("Vacation status update and sick leave processing completed");
+            _logger.LogInformation("Vacation status update and sick leave processing completed successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during vacation status update and sick leave processing");
+            throw;
         }
     }
 }

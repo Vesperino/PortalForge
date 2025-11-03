@@ -30,10 +30,6 @@ builder.Services.AddHangfire(configuration => configuration
 // Add Hangfire server
 builder.Services.AddHangfireServer();
 
-// Register background jobs (legacy HostedService pattern - still used for daily jobs)
-builder.Services.AddHostedService<UpdateVacationStatusesJob>();
-builder.Services.AddHostedService<PortalForge.Infrastructure.Services.VacationReminderBackgroundService>();
-
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -128,6 +124,18 @@ RecurringJob.AddOrUpdate<CheckApprovalDeadlinesJob>(
     "check-approval-deadlines",
     job => job.ExecuteAsync(),
     "0 9 * * *",  // Daily at 9:00 AM (UTC)
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+
+RecurringJob.AddOrUpdate<UpdateVacationStatusesJob>(
+    "update-vacation-statuses",
+    job => job.ExecuteAsync(default),
+    "1 0 * * *",  // Daily at 00:01 AM (UTC)
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+
+RecurringJob.AddOrUpdate<SendVacationRemindersJob>(
+    "send-vacation-reminders-daily",
+    job => job.ExecuteAsync(),
+    "0 8 * * *",  // Daily at 8:00 AM (UTC) - before work hours
     new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 
 // Health check endpoint
