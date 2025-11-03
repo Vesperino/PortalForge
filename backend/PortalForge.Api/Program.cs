@@ -4,6 +4,7 @@ using PortalForge.Api.Middleware;
 using PortalForge.Application;
 using PortalForge.Infrastructure;
 using PortalForge.Infrastructure.BackgroundJobs;
+using PortalForge.Infrastructure.Data.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Register seeders
+builder.Services.AddScoped<DefaultRequestTemplatesSeeder>();
+
 // Configure CORS for frontend
 builder.Services.AddCors(options =>
 {
@@ -63,6 +67,13 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 var app = builder.Build();
+
+// Seed default request templates
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<DefaultRequestTemplatesSeeder>();
+    await seeder.SeedAsync();
+}
 
 // Use custom error handling middleware (must be first)
 app.UseMiddleware<ErrorHandlingMiddleware>();
