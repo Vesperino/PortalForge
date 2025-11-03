@@ -7,6 +7,7 @@ using PortalForge.Application.UseCases.Admin.Commands.UpdateUser;
 using PortalForge.Application.UseCases.Admin.Queries.GetUserById;
 using PortalForge.Application.UseCases.Admin.Queries.GetUsers;
 using PortalForge.Application.UseCases.Users.Commands.BulkAssignDepartment;
+using PortalForge.Application.UseCases.Users.Commands.TransferDepartment;
 using System.Security.Claims;
 
 namespace PortalForge.Api.Controllers;
@@ -202,6 +203,33 @@ public class UsersController : ControllerBase
         await _mediator.Send(command);
         return NoContent();
     }
+
+    /// <summary>
+    /// Transfer employee to a different department (Admin/HR only).
+    /// Automatically reassigns pending requests to new supervisor.
+    /// </summary>
+    [HttpPost("{userId:guid}/transfer-department")]
+    [Authorize(Roles = "Admin,HR")]
+    public async Task<IActionResult> TransferDepartment(
+        Guid userId,
+        [FromBody] TransferDepartmentRequest request)
+    {
+        _logger.LogInformation(
+            "Transferring user {UserId} to department {DepartmentId}",
+            userId, request.NewDepartmentId);
+
+        var command = new TransferEmployeeToDepartmentCommand
+        {
+            UserId = userId,
+            NewDepartmentId = request.NewDepartmentId,
+            NewSupervisorId = request.NewSupervisorId,
+            TransferredByUserId = GetCurrentUserId(),
+            Reason = request.Reason
+        };
+
+        await _mediator.Send(command);
+        return NoContent();
+    }
 }
 
 public class BulkAssignDepartmentRequest
@@ -242,5 +270,12 @@ public class UpdateVacationAllowanceRequest
 {
     public int NewAnnualDays { get; set; }
     public string Reason { get; set; } = string.Empty;
+}
+
+public class TransferDepartmentRequest
+{
+    public Guid NewDepartmentId { get; set; }
+    public Guid? NewSupervisorId { get; set; }
+    public string? Reason { get; set; }
 }
 
