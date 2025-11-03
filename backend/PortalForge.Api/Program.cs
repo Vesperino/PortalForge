@@ -1,3 +1,5 @@
+using Hangfire;
+using Hangfire.PostgreSql;
 using PortalForge.Api.Middleware;
 using PortalForge.Application;
 using PortalForge.Infrastructure;
@@ -16,7 +18,19 @@ builder.Logging.AddDebug();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Register background jobs
+// Configure Hangfire with PostgreSQL storage
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(options =>
+        options.UseNpgsqlConnection(connectionString)));
+
+// Add Hangfire server
+builder.Services.AddHangfireServer();
+
+// Register background jobs (legacy HostedService pattern - still used for daily jobs)
 builder.Services.AddHostedService<UpdateVacationStatusesJob>();
 builder.Services.AddHostedService<PortalForge.Infrastructure.Services.VacationReminderBackgroundService>();
 
@@ -83,6 +97,38 @@ app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Configure Hangfire Dashboard (accessible at /hangfire)
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new HangfireDashboardAuthorizationFilter() },
+    DashboardTitle = "PortalForge Background Jobs"
+});
+
+// Register recurring jobs with cron schedules
+RecurringJob.AddOrUpdate<UpdateVacationAllowancesJob>(
+    "update-vacation-allowances",
+    job => job.ExecuteAsync(),
+    "0 0 1 1 *",  // January 1st, 00:00 (UTC)
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+
+RecurringJob.AddOrUpdate<ExpireCarriedOverVacationJob>(
+    "expire-carried-over-vacation",
+    job => job.ExecuteAsync(),
+    "59 23 30 9 *",  // September 30th, 23:59 (UTC)
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+
+RecurringJob.AddOrUpdate<SendCarriedOverVacationRemindersJob>(
+    "send-vacation-reminders",
+    job => job.ExecuteAsync(),
+    "0 0 1 9 *",  // September 1st, 00:00 (UTC)
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+
+RecurringJob.AddOrUpdate<CheckApprovalDeadlinesJob>(
+    "check-approval-deadlines",
+    job => job.ExecuteAsync(),
+    "0 9 * * *",  // Daily at 9:00 AM (UTC)
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new
