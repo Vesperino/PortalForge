@@ -2,7 +2,7 @@
   <div class="relative">
     <!-- Bell Icon Button -->
     <button
-      @click="toggleDropdown"
+      @click.stop="toggleDropdown"
       class="relative p-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
       :class="{ 'text-blue-600 dark:text-blue-400': isOpen }"
     >
@@ -29,7 +29,8 @@
       <div
         v-if="isOpen"
         v-click-outside="closeDropdown"
-        class="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+        class="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+        style="z-index: 9999;"
       >
         <!-- Header -->
         <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">

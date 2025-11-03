@@ -37,8 +37,7 @@ const departmentForm = ref<CreateDepartmentDto | UpdateDepartmentDto>({
   name: '',
   description: null,
   parentDepartmentId: null,
-    departmentHeadId: null,
-    departmentDirectorId: null,
+  departmentHeadId: null,
   departmentDirectorId: null
 })
 
