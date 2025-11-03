@@ -78,7 +78,22 @@ public enum NotificationType
     /// <summary>
     /// Carried-over vacation days are expiring soon (before September 30).
     /// </summary>
-    VacationExpiringSoon
+    VacationExpiringSoon,
+
+    /// <summary>
+    /// User's annual vacation allowance has been updated by HR/Admin.
+    /// </summary>
+    VacationAllowanceUpdated,
+
+    /// <summary>
+    /// A request has been edited by the submitter.
+    /// </summary>
+    RequestEdited,
+
+    /// <summary>
+    /// An active vacation schedule has been cancelled.
+    /// </summary>
+    VacationCancelled
 }
 
 

@@ -159,6 +159,49 @@ public class UsersController : ControllerBase
             Message = $"Successfully assigned {updatedCount} employees to department"
         });
     }
+
+    /// <summary>
+    /// Get user's vacation summary (allowance, used days, remaining days)
+    /// </summary>
+    [HttpGet("{userId:guid}/vacation-summary")]
+    public async Task<ActionResult<Application.UseCases.Users.Queries.GetUserVacationSummary.VacationSummaryDto>> GetVacationSummary(Guid userId)
+    {
+        _logger.LogInformation("Getting vacation summary for user {UserId}", userId);
+
+        var query = new Application.UseCases.Users.Queries.GetUserVacationSummary.GetUserVacationSummaryQuery
+        {
+            UserId = userId
+        };
+
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Update user's annual vacation allowance (Admin/HR only)
+    /// </summary>
+    [HttpPut("{userId:guid}/vacation-allowance")]
+    [Authorize(Roles = "Admin,HR")]
+    public async Task<IActionResult> UpdateVacationAllowance(
+        Guid userId,
+        [FromBody] UpdateVacationAllowanceRequest request)
+    {
+        _logger.LogInformation(
+            "Updating vacation allowance for user {UserId} to {NewDays} days",
+            userId, request.NewAnnualDays);
+
+        var command = new Application.UseCases.Users.Commands.UpdateVacationAllowance.UpdateUserVacationAllowanceCommand
+        {
+            UserId = userId,
+            NewAnnualDays = request.NewAnnualDays,
+            Reason = request.Reason,
+            RequestedByUserId = GetCurrentUserId(),
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+        };
+
+        await _mediator.Send(command);
+        return NoContent();
+    }
 }
 
 public class BulkAssignDepartmentRequest
@@ -193,5 +236,11 @@ public class UpdateUserRequest
     public string Role { get; set; } = string.Empty;
     public List<Guid> RoleGroupIds { get; set; } = new();
     public bool IsActive { get; set; }
+}
+
+public class UpdateVacationAllowanceRequest
+{
+    public int NewAnnualDays { get; set; }
+    public string Reason { get; set; } = string.Empty;
 }
 
