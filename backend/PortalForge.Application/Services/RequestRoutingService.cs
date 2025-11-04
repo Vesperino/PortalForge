@@ -259,17 +259,25 @@ public class RequestRoutingService : IRequestRoutingService
     /// </summary>
     private async Task<User?> ResolveByRoleAsync(DepartmentRole targetRole, User submitter)
     {
-        var currentUser = submitter;
+        var currentUserId = submitter.SupervisorId;
 
         _logger.LogDebug(
             "Walking supervisor chain to find role {TargetRole} starting from {UserId}",
             targetRole,
             submitter.Id);
 
-        // Walk up supervisor chain
-        while (currentUser.Supervisor != null)
+        // Walk up supervisor chain by loading each supervisor from DB
+        while (currentUserId.HasValue)
         {
-            currentUser = currentUser.Supervisor;
+            var currentUser = await _unitOfWork.UserRepository.GetByIdAsync(currentUserId.Value);
+
+            if (currentUser == null)
+            {
+                _logger.LogWarning(
+                    "Supervisor {SupervisorId} not found in database - broken supervisor chain",
+                    currentUserId.Value);
+                break;
+            }
 
             _logger.LogDebug(
                 "Checking supervisor {SupervisorId} with role {SupervisorRole}",
@@ -286,6 +294,9 @@ public class RequestRoutingService : IRequestRoutingService
 
                 return currentUser;
             }
+
+            // Move to next supervisor in chain
+            currentUserId = currentUser.SupervisorId;
         }
 
         _logger.LogWarning(

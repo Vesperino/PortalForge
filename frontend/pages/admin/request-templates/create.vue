@@ -278,6 +278,7 @@
               :step="step"
               :users="users"
               :role-groups="roleGroups"
+              @update:step="(updatedStep) => form.approvalStepTemplates[index] = updatedStep"
               @remove="removeApprovalStep(index)"
             />
           </div>
