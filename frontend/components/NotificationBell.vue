@@ -31,7 +31,7 @@
         <div
           v-if="isOpen"
           v-click-outside="closeDropdown"
-          class="fixed w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+          class="fixed bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 flex flex-col w-[90vw] sm:w-96 md:w-[28rem] lg:w-[32rem] xl:w-[36rem] max-w-2xl"
           :style="dropdownStyle"
         >
         <!-- Header -->
@@ -49,7 +49,7 @@
         </div>
 
         <!-- Notifications List -->
-        <div class="max-h-96 overflow-y-auto">
+        <div class="overflow-y-auto" style="max-height: calc(100% - 120px)">
           <div v-if="loading" class="p-8 text-center">
             <Icon name="svg-spinners:ring-resize" class="w-8 h-8 mx-auto text-blue-600" />
             <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Ładowanie...</p>
@@ -146,14 +146,51 @@ let pollingInterval: NodeJS.Timeout | null = null
 // Calculate dropdown position
 const dropdownStyle = computed(() => {
   if (!buttonRef.value) {
-    return { top: '0px', right: '0px', zIndex: 9999 }
+    return {
+      top: '0px',
+      right: '0px',
+      zIndex: 9999,
+      maxHeight: '80vh'
+    }
   }
 
   const rect = buttonRef.value.getBoundingClientRect()
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
+
+  const dropdownMaxHeight = 600
+  const spaceBelow = viewportHeight - rect.bottom - 8
+  const spaceAbove = rect.top - 8
+
+  // Horizontal positioning - prefer right alignment
+  const horizontalPosition = viewportWidth < 640 // sm breakpoint
+    ? { left: '5vw' } // On mobile, center with 5% margin on each side
+    : { right: `${Math.max(10, viewportWidth - rect.right)}px` } // On desktop, align to button
+
+  // Calculate max height to fit in viewport
+  const availableHeight = Math.min(
+    dropdownMaxHeight,
+    Math.max(spaceBelow - 20, 300)
+  )
+
+  // Vertical positioning
+  const shouldPositionAbove = spaceBelow < 400 && spaceAbove > spaceBelow
+
+  if (shouldPositionAbove) {
+    const maxHeightAbove = Math.min(dropdownMaxHeight, spaceAbove - 20)
+    return {
+      ...horizontalPosition,
+      bottom: `${viewportHeight - rect.top + 8}px`,
+      zIndex: 9999,
+      maxHeight: `${maxHeightAbove}px`
+    }
+  }
+
   return {
+    ...horizontalPosition,
     top: `${rect.bottom + 8}px`,
-    right: `${window.innerWidth - rect.right}px`,
-    zIndex: 9999
+    zIndex: 9999,
+    maxHeight: `${availableHeight}px`
   }
 })
 
@@ -288,10 +325,29 @@ const formatDate = (dateString: string) => {
   })
 }
 
+// Recalculate position on scroll or resize
+const handleScroll = () => {
+  if (isOpen.value) {
+    // Force recalculation by triggering reactive update
+    buttonRef.value?.getBoundingClientRect()
+  }
+}
+
+const handleResize = () => {
+  if (isOpen.value) {
+    // Close dropdown on resize to prevent positioning issues
+    closeDropdown()
+  }
+}
+
 // Start polling on mount
 onMounted(() => {
   notificationsStore.fetchUnreadCount()
   pollingInterval = notificationsStore.startPolling(30000) // Poll every 30 seconds
+
+  // Add event listeners
+  window.addEventListener('scroll', handleScroll, true)
+  window.addEventListener('resize', handleResize)
 })
 
 // Stop polling on unmount
@@ -299,6 +355,10 @@ onUnmounted(() => {
   if (pollingInterval) {
     clearInterval(pollingInterval)
   }
+
+  // Remove event listeners
+  window.removeEventListener('scroll', handleScroll, true)
+  window.removeEventListener('resize', handleResize)
 })
 
 // Click outside directive
