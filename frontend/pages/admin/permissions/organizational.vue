@@ -261,6 +261,7 @@ useHead({
 const config = useRuntimeConfig()
 const authStore = useAuthStore()
 const { getAuthHeaders } = useAuth()
+const toast = useNotificationToast()
 const apiUrl = config.public.apiUrl
 
 // State
@@ -421,11 +422,10 @@ const savePermissions = async (userId: string) => {
       }
     )
 
-    // Show success notification (you can add a toast notification library)
-    console.log('Permissions saved successfully')
+    toast.success('Uprawnienia zostały zapisane')
   } catch (err: any) {
     console.error('Error saving permissions:', err)
-    alert(err.message || 'Nie udało się zapisać uprawnień')
+    toast.error('Nie udało się zapisać uprawnień', err.message)
   } finally {
     savingUserId.value = null
   }

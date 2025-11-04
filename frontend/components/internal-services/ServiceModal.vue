@@ -206,6 +206,7 @@ const config = useRuntimeConfig()
 const apiUrl = config.public.apiUrl
 const authStore = useAuthStore()
 const { createService, updateService } = useInternalServicesApi()
+const toast = useNotificationToast()
 
 const isEditing = computed(() => !!props.service)
 const saving = ref(false)
@@ -264,12 +265,14 @@ async function handleSubmit() {
         id: props.service.id,
         ...form
       })
+      toast.success('Serwis został zaktualizowany')
     } else {
       await createService(form)
+      toast.success('Serwis został utworzony')
     }
     emit('saved')
   } catch (err: any) {
-    alert(`Błąd: ${err.message || 'Nie udało się zapisać serwisu'}`)
+    toast.error('Nie udało się zapisać serwisu', err.message)
   } finally {
     saving.value = false
   }

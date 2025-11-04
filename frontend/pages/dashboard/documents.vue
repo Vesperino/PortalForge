@@ -4,6 +4,8 @@ definePageMeta({
   middleware: ['auth', 'verified']
 })
 
+const toast = useNotificationToast()
+
 // TODO: Replace with real API calls when documents endpoint is available
 const selectedCategory = ref<string>('all')
 const searchQuery = ref<string>('')
@@ -102,7 +104,7 @@ const downloadDocument = (document: any) => {
   // TODO: Implement actual download functionality
   console.log('Downloading:', document.name)
   // In real implementation, this would trigger a file download
-  alert(`Pobieranie: ${document.name}`)
+  toast.info('Pobieranie dokumentu', document.name)
 }
 </script>
 

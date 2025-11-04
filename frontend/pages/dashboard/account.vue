@@ -8,6 +8,7 @@ definePageMeta({
 })
 
 const authStore = useAuthStore()
+const toast = useNotificationToast()
 
 // Use real user data from auth store
 const currentUser = computed(() => authStore.user as User)
@@ -28,16 +29,10 @@ const user = ref({
 
 const isEditing = ref(false)
 
-// User's activity - TODO: Replace with real API calls when endpoints are available
-const userNews = ref<any[]>([])
-const userDocuments = ref<any[]>([])
-
-// Calculate stats
+// Calculate stats from real user data
 const stats = computed(() => ({
-  newsPublished: userNews.value.length,
-  documentsUploaded: userDocuments.value.length,
-  teamMembers: 0, // TODO: Fetch from API when subordinates endpoint is available
-  lastLogin: new Date() // TODO: Track real last login
+  teamMembers: currentUser.value.subordinates?.length ?? 0,
+  lastLogin: currentUser.value.lastLoginAt ? new Date(currentUser.value.lastLoginAt) : null
 }))
 
 // Vacation API integration
@@ -68,7 +63,7 @@ onMounted(() => {
   fetchVacationData()
 })
 
-// Computed vacation data with fallbacks
+// Computed vacation data - all from real API
 const vacationData = computed(() => ({
   total: vacationSummary.value?.annualVacationDays ?? 0,
   used: vacationSummary.value?.vacationDaysUsed ?? 0,
@@ -77,53 +72,28 @@ const vacationData = computed(() => ({
   onDemandRemaining: vacationSummary.value?.onDemandVacationDaysRemaining ?? 0,
   carriedOver: vacationSummary.value?.carriedOverVacationDays ?? 0,
   carriedOverExpiry: vacationSummary.value?.carriedOverExpiryDate,
-  totalAvailable: vacationSummary.value?.totalAvailableVacationDays ?? 0,
-  // TODO: Fetch real vacation history from API when endpoint is available
-  history: [
-    {
-      id: 1,
-      startDate: new Date(2024, 6, 15),
-      endDate: new Date(2024, 6, 19),
-      days: 5,
-      type: 'Urlop wypoczynkowy',
-      status: 'Zatwierdzony'
-    },
-    {
-      id: 2,
-      startDate: new Date(2024, 4, 10),
-      endDate: new Date(2024, 4, 11),
-      days: 2,
-      type: 'Urlop na żądanie',
-      status: 'Zatwierdzony'
-    },
-    {
-      id: 3,
-      startDate: new Date(2024, 2, 20),
-      endDate: new Date(2024, 2, 20),
-      days: 1,
-      type: 'Urlop okolicznościowy',
-      status: 'Zatwierdzony'
-    }
-  ]
+  totalAvailable: vacationSummary.value?.totalAvailableVacationDays ?? 0
 }))
 
-// Sick leave data - TODO: Integrate with backend when endpoint is available
-const sickLeaveData = ref({
-  total: vacationSummary.value?.circumstantialLeaveDaysUsed ?? 0,
-  history: [
-    {
-      id: 1,
-      startDate: new Date(2024, 8, 5),
-      endDate: new Date(2024, 8, 7),
-      days: 3,
-      reason: 'Przeziębienie'
-    }
-  ]
-})
+// Sick leave data from API
+const sickLeaveData = computed(() => ({
+  total: vacationSummary.value?.circumstantialLeaveDaysUsed ?? 0
+}))
 
-const workData = ref({
-  startDate: new Date(2022, 0, 15),
-  yearsOfService: 2
+// Work experience calculated from user data
+const workData = computed(() => {
+  const employmentDate = currentUser.value.employmentStartDate
+    ? new Date(currentUser.value.employmentStartDate)
+    : null
+
+  const yearsOfService = employmentDate
+    ? Math.floor((Date.now() - employmentDate.getTime()) / (1000 * 60 * 60 * 24 * 365))
+    : 0
+
+  return {
+    startDate: employmentDate,
+    yearsOfService
+  }
 })
 
 const formatDate = (date: Date) => {
@@ -157,7 +127,7 @@ const toggleEdit = () => {
 const saveChanges = () => {
   // TODO: Save changes to backend
   isEditing.value = false
-  alert('Zmiany zostały zapisane!')
+  toast.success('Zmiany zostały zapisane!')
 }
 
 const logout = async () => {
@@ -276,23 +246,7 @@ const logout = async () => {
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
         Twoja aktywność
       </h3>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <p class="text-3xl font-bold text-blue-600 dark:text-blue-400">
-            {{ stats.newsPublished }}
-          </p>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Opublikowane aktualności
-          </p>
-        </div>
-        <div class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <p class="text-3xl font-bold text-green-600 dark:text-green-400">
-            {{ stats.documentsUploaded }}
-          </p>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Dodane dokumenty
-          </p>
-        </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
           <p class="text-3xl font-bold text-purple-600 dark:text-purple-400">
             {{ stats.teamMembers }}
@@ -302,12 +256,17 @@ const logout = async () => {
           </p>
         </div>
         <div class="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-          <p class="text-sm font-medium text-gray-900 dark:text-white">
-            Ostatnie logowanie
-          </p>
-          <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-            {{ formatDate(stats.lastLogin) }}
-          </p>
+          <div v-if="stats.lastLogin">
+            <p class="text-sm font-medium text-gray-900 dark:text-white">
+              Ostatnie logowanie
+            </p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+              {{ formatDate(stats.lastLogin) }}
+            </p>
+          </div>
+          <div v-else class="text-sm text-gray-500 dark:text-gray-400">
+            Brak danych o ostatnim logowaniu
+          </div>
         </div>
       </div>
     </div>
@@ -415,80 +374,8 @@ const logout = async () => {
         </div>
       </div>
 
-      <!-- Vacation and Sick Leave History -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Vacation History -->
-        <div>
-          <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            Historia urlopów ({{ vacationData.history.length }})
-          </h4>
-          <div class="space-y-2">
-            <div
-              v-for="vacation in vacationData.history"
-              :key="vacation.id"
-              class="p-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
-            >
-              <div class="flex items-start justify-between">
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">
-                      {{ vacation.type }}
-                    </span>
-                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                      {{ vacation.status }}
-                    </span>
-                  </div>
-                  <p class="text-xs text-gray-600 dark:text-gray-400">
-                    {{ formatDateRange(vacation.startDate, vacation.endDate) }}
-                  </p>
-                </div>
-                <span class="text-sm font-bold text-blue-600 dark:text-blue-400">
-                  {{ vacation.days }} {{ vacation.days === 1 ? 'dzień' : 'dni' }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sick Leave History -->
-        <div>
-          <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-            <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Historia L4 ({{ sickLeaveData.history.length }})
-          </h4>
-          <div class="space-y-2">
-            <div
-              v-for="leave in sickLeaveData.history"
-              :key="leave.id"
-              class="p-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
-            >
-              <div class="flex items-start justify-between">
-                <div class="flex-1">
-                  <div class="mb-1">
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">
-                      {{ leave.reason }}
-                    </span>
-                  </div>
-                  <p class="text-xs text-gray-600 dark:text-gray-400">
-                    {{ formatDateRange(leave.startDate, leave.endDate) }}
-                  </p>
-                </div>
-                <span class="text-sm font-bold text-red-600 dark:text-red-400">
-                  {{ leave.days }} {{ leave.days === 1 ? 'dzień' : 'dni' }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Work Experience -->
-        <div class="mt-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+      <!-- Work Experience (if available) -->
+        <div v-if="workData.startDate" class="mt-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
           <div class="flex items-center gap-3">
             <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -514,56 +401,6 @@ const logout = async () => {
       </template>
     </div>
 
-    <!-- Recent Activity -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Recent News -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Ostatnie aktualności
-        </h3>
-        <div v-if="userNews.length > 0" class="space-y-3">
-          <div
-            v-for="news in userNews.slice(0, 3)"
-            :key="news.id"
-            class="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-          >
-            <h4 class="font-medium text-gray-900 dark:text-white text-sm">
-              {{ news.title }}
-            </h4>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {{ formatDate(news.createdAt) }}
-            </p>
-          </div>
-        </div>
-        <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-          Nie masz jeszcze opublikowanych aktualności.
-        </p>
-      </div>
-
-      <!-- Recent Documents -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Ostatnie dokumenty
-        </h3>
-        <div v-if="userDocuments.length > 0" class="space-y-3">
-          <div
-            v-for="doc in userDocuments.slice(0, 3)"
-            :key="doc.id"
-            class="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-          >
-            <h4 class="font-medium text-gray-900 dark:text-white text-sm">
-              {{ doc.name }}
-            </h4>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {{ formatDate(doc.uploadedAt) }}
-            </p>
-          </div>
-        </div>
-        <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-          Nie masz jeszcze dodanych dokumentów.
-        </p>
-      </div>
-    </div>
 
     <!-- Team Members -->
     <div v-if="currentUser?.subordinates && currentUser.subordinates.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">

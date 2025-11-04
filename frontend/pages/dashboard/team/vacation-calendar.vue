@@ -20,6 +20,7 @@ useHead({
 const config = useRuntimeConfig()
 const authStore = useAuthStore()
 const { getAuthHeaders } = useAuth()
+const toast = useNotificationToast()
 
 // State
 const currentView = ref<ViewMode>('timeline')
@@ -184,9 +185,9 @@ const handleExportPdf = async () => {
   } catch (err: any) {
     console.error('Export PDF error:', err)
     if (err.statusCode === 501) {
-      alert('Eksport PDF będzie dostępny w przyszłej wersji. Użyj eksportu Excel jako alternatywy.')
+      toast.info('Eksport PDF będzie dostępny w przyszłej wersji', 'Użyj eksportu Excel jako alternatywy.')
     } else {
-      alert('Nie udało się wyeksportować do PDF')
+      toast.error('Nie udało się wyeksportować do PDF')
     }
   }
 }
@@ -217,9 +218,9 @@ const handleExportExcel = async () => {
   } catch (err: any) {
     console.error('Export Excel error:', err)
     if (err.statusCode === 501) {
-      alert('Eksport Excel będzie dostępny w przyszłej wersji.')
+      toast.info('Eksport Excel będzie dostępny w przyszłej wersji')
     } else {
-      alert('Nie udało się wyeksportować do Excel')
+      toast.error('Nie udało się wyeksportować do Excel')
     }
   }
 }

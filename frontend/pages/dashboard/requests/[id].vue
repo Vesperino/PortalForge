@@ -11,6 +11,7 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const { getRequestById } = useRequestsApi()
+const toast = useNotificationToast()
 
 const requestId = route.params.id as string
 
@@ -184,7 +185,7 @@ const handleReject = async () => {
   if (!currentStep.value) return
 
   if (!rejectComment.value.trim()) {
-    alert('Komentarz jest wymagany przy odrzuceniu wniosku')
+    toast.warning('Komentarz jest wymagany przy odrzuceniu wniosku')
     return
   }
 
@@ -227,7 +228,7 @@ const handleAddComment = async (commentText: string) => {
     await loadRequest()
   } catch (err: any) {
     console.error('Error adding comment:', err)
-    alert('Nie udało się dodać komentarza')
+    toast.error('Nie udało się dodać komentarza')
   }
 }
 

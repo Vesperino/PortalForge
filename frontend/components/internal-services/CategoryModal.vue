@@ -98,6 +98,8 @@ const emit = defineEmits<{
 }>()
 
 const { createCategory, deleteCategory } = useInternalServicesApi()
+const toast = useNotificationToast()
+const confirmModal = useConfirmModal()
 
 const newCategoryName = ref('')
 
@@ -111,19 +113,23 @@ async function handleAddCategory() {
       displayOrder: props.categories.length
     })
     newCategoryName.value = ''
+    toast.success('Kategoria została dodana')
     emit('saved')
   } catch (err: any) {
-    alert(`Błąd: ${err.message || 'Nie udało się dodać kategorii'}`)
+    toast.error('Nie udało się dodać kategorii', err.message)
   }
 }
 
 async function handleDeleteCategory(id: string) {
-  if (confirm('Czy na pewno chcesz usunąć tę kategorię?')) {
+  const confirmed = await confirmModal.confirmDelete('tę kategorię', 'Wszystkie serwisy w tej kategorii zostaną przeniesione do kategorii bez przypisania.')
+
+  if (confirmed) {
     try {
       await deleteCategory(id)
+      toast.success('Kategoria została usunięta')
       emit('saved')
     } catch (err: any) {
-      alert(`Błąd: ${err.message || 'Nie udało się usunąć kategorii'}`)
+      toast.error('Nie udało się usunąć kategorii', err.message)
     }
   }
 }

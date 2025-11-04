@@ -215,6 +215,8 @@ definePageMeta({
 })
 
 const { fetchAllServices, deleteService, fetchAllCategories } = useInternalServicesApi()
+const toast = useNotificationToast()
+const confirmModal = useConfirmModal()
 
 const services = ref<InternalService[]>([])
 const categories = ref<InternalServiceCategory[]>([])
@@ -276,12 +278,15 @@ function openEditModal(service: InternalService) {
 }
 
 async function confirmDelete(service: InternalService) {
-  if (confirm(`Czy na pewno chcesz usunąć serwis "${service.name}"?`)) {
+  const confirmed = await confirmModal.confirmDelete(`serwis "${service.name}"`)
+
+  if (confirmed) {
     try {
       await deleteService(service.id)
       await loadServices()
+      toast.success('Serwis został usunięty')
     } catch (err: any) {
-      alert(`Błąd: ${err.message || 'Nie udało się usunąć serwisu'}`)
+      toast.error('Nie udało się usunąć serwisu', err.message)
     }
   }
 }

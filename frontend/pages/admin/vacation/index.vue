@@ -23,6 +23,7 @@ interface User {
 const config = useRuntimeConfig()
 const { getAuthHeaders } = useAuth()
 const { getUserVacationSummary } = useVacations()
+const toast = useNotificationToast()
 
 // State
 const users = ref<User[]>([])
@@ -82,7 +83,7 @@ const openEditModal = (user: User) => {
 // Update vacation allowance
 const updateVacationAllowance = async () => {
   if (!selectedUser.value || !updateReason.value.trim()) {
-    alert('Powód zmiany jest wymagany')
+    toast.warning('Powód zmiany jest wymagany')
     return
   }
 
@@ -111,10 +112,10 @@ const updateVacationAllowance = async () => {
     showEditModal.value = false
     selectedUser.value = null
 
-    alert('Limit urlopów został zaktualizowany')
+    toast.success('Limit urlopów został zaktualizowany')
   } catch (err: any) {
     console.error('Error updating vacation allowance:', err)
-    alert('Nie udało się zaktualizować limitu urlopów')
+    toast.error('Nie udało się zaktualizować limitu urlopów')
   } finally {
     isUpdating.value = false
   }

@@ -233,6 +233,7 @@ definePageMeta({
 
 const { getAllTemplates, deleteTemplate } = useRequestsApi()
 const toast = useNotificationToast()
+const confirmModal = useConfirmModal()
 
 const templates = ref<RequestTemplate[]>([])
 const loading = ref(true)
@@ -315,11 +316,14 @@ const clearFilters = () => {
 }
 
 const confirmDelete = async (template: RequestTemplate) => {
-  if (!confirm(`Czy na pewno chcesz usunąć szablon "${template.name}"?\n\nTa operacja jest nieodwracalna.`)) {
-    return
-  }
+  const confirmed = await confirmModal.confirmDelete(
+    `szablon "${template.name}"`,
+    'Ta operacja jest nieodwracalna. Szablon zostanie usunięty z systemu.'
+  )
 
-  await handleDelete(template.id)
+  if (confirmed) {
+    await handleDelete(template.id)
+  }
 }
 
 const handleDelete = async (templateId: string) => {

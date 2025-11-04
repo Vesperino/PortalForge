@@ -240,6 +240,8 @@ useHead({
 })
 
 const adminStore = useAdminStore()
+const toast = useNotificationToast()
+const confirmModal = useConfirmModal()
 
 const filters = ref({
   searchTerm: '',
@@ -296,12 +298,19 @@ const getRoleBadgeClass = (role: string) => {
 }
 
 const confirmDelete = async (user: UserDto) => {
-  if (confirm(`Czy na pewno chcesz usunąć użytkownika ${user.firstName} ${user.lastName}?`)) {
+  const confirmed = await confirmModal.confirmDelete(
+    `użytkownika ${user.firstName} ${user.lastName}`,
+    'Ta operacja jest nieodwracalna i wszystkie dane użytkownika zostaną trwale usunięte.'
+  )
+
+  if (confirmed) {
     try {
       await adminStore.deleteUser(user.id)
       await fetchUsers()
+      toast.success('Użytkownik został usunięty', `${user.firstName} ${user.lastName}`)
     } catch (error) {
       console.error('Error deleting user:', error)
+      toast.error('Nie udało się usunąć użytkownika')
     }
   }
 }
