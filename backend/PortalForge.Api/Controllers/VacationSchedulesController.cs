@@ -1,12 +1,14 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.DTOs;
 using PortalForge.Application.Interfaces;
 using PortalForge.Application.Services;
 using PortalForge.Domain.Entities;
 using PortalForge.Domain.Enums;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace PortalForge.Api.Controllers;
 
@@ -21,23 +23,89 @@ public class VacationSchedulesController : ControllerBase
     private readonly IVacationCalculationService _vacationCalculationService;
     private readonly IMediator _mediator;
     private readonly ILogger<VacationSchedulesController> _logger;
+    private readonly IUnitOfWork _unitOfWork;
 
     public VacationSchedulesController(
         IVacationScheduleService vacationService,
         IVacationCalculationService vacationCalculationService,
         IMediator mediator,
-        ILogger<VacationSchedulesController> logger)
+        ILogger<VacationSchedulesController> logger,
+        IUnitOfWork unitOfWork)
     {
         _vacationService = vacationService;
         _vacationCalculationService = vacationCalculationService;
         _mediator = mediator;
         _logger = logger;
+        _unitOfWork = unitOfWork;
     }
 
     private Guid GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+    }
+
+    /// <summary>
+    /// Checks if current user has permission to view a specific department's data.
+    /// </summary>
+    private async Task<bool> CanViewDepartmentAsync(Guid departmentId)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
+        {
+            return false;
+        }
+
+        // Get user
+        var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+        if (user == null)
+        {
+            return false;
+        }
+
+        // Admin and HR can view all departments
+        if (user.Role == UserRole.Admin || user.Role == UserRole.HR)
+        {
+            _logger.LogInformation("User {UserId} with role {Role} granted access to department {DepartmentId}",
+                userId, user.Role, departmentId);
+            return true;
+        }
+
+        // User can always view their own department
+        if (user.DepartmentId == departmentId)
+        {
+            _logger.LogInformation("User {UserId} viewing their own department {DepartmentId}",
+                userId, departmentId);
+            return true;
+        }
+
+        // Check organizational permissions
+        var orgPermission = await _unitOfWork.OrganizationalPermissionRepository
+            .GetByUserIdAsync(userId);
+
+        if (orgPermission != null)
+        {
+            // User has permission to view all departments
+            if (orgPermission.CanViewAllDepartments)
+            {
+                _logger.LogInformation("User {UserId} has CanViewAllDepartments permission",
+                    userId);
+                return true;
+            }
+
+            // Check if department is in visible list
+            var visibleDepartmentIds = JsonSerializer.Deserialize<List<Guid>>(orgPermission.VisibleDepartmentIds);
+            if (visibleDepartmentIds != null && visibleDepartmentIds.Contains(departmentId))
+            {
+                _logger.LogInformation("User {UserId} has explicit permission to view department {DepartmentId}",
+                    userId, departmentId);
+                return true;
+            }
+        }
+
+        _logger.LogWarning("User {UserId} denied access to department {DepartmentId}",
+            userId, departmentId);
+        return false;
     }
 
     /// <summary>
@@ -106,6 +174,15 @@ public class VacationSchedulesController : ControllerBase
         if (!departmentId.HasValue)
         {
             return BadRequest("DepartmentId is required");
+        }
+
+        // Check if user has permission to view this department's calendar
+        if (!await CanViewDepartmentAsync(departmentId.Value))
+        {
+            _logger.LogWarning(
+                "User {UserId} attempted to access department {DepartmentId} calendar without permission",
+                GetCurrentUserId(), departmentId);
+            return Forbid();
         }
 
         // Calculate date range for the month

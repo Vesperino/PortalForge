@@ -95,9 +95,10 @@ public class RequestsController : BaseController
 
     /// <summary>
     /// Submit a new request
+    /// All authenticated users can submit requests - this is a basic employee function
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = "RequirePermission:requests.create")]
+    [Authorize]
     public async Task<ActionResult> SubmitRequest([FromBody] SubmitRequestCommand command)
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
