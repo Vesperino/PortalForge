@@ -36,12 +36,6 @@ public class DeleteRequestTemplateCommandHandler
 
         // Check if template is being used by any requests
         var requests = await _unitOfWork.RequestRepository.GetByTemplateIdAsync(request.Id);
-        if (requests.Any())
-        {
-            throw new ValidationException(
-                "Cannot delete template that is being used by requests", 
-                new List<string> { $"This template is used by {requests.Count()} request(s)" });
-        }
 
         // Store template data for audit
         var templateData = new
@@ -50,12 +44,33 @@ public class DeleteRequestTemplateCommandHandler
             Description = template.Description,
             Category = template.Category,
             FieldsCount = template.Fields.Count,
-            ApprovalStepsCount = template.ApprovalStepTemplates.Count
+            ApprovalStepsCount = template.ApprovalStepTemplates.Count,
+            HasAssociatedRequests = requests.Any(),
+            RequestCount = requests.Count()
         };
 
-        // Delete template (cascade delete will handle related entities)
-        await _unitOfWork.RequestTemplateRepository.DeleteAsync(request.Id);
-        await _unitOfWork.SaveChangesAsync();
+        // If template has associated requests, soft-delete it (set IsActive = false)
+        // Otherwise, hard-delete it
+        if (requests.Any())
+        {
+            _logger.LogInformation(
+                "Template has {Count} associated requests. Performing soft-delete (IsActive = false)",
+                requests.Count());
+
+            template.IsActive = false;
+            template.UpdatedAt = DateTime.UtcNow;
+
+            await _unitOfWork.RequestTemplateRepository.UpdateAsync(template);
+            await _unitOfWork.SaveChangesAsync();
+        }
+        else
+        {
+            _logger.LogInformation("Template has no associated requests. Performing hard-delete");
+
+            // Delete template (cascade delete will handle related entities)
+            await _unitOfWork.RequestTemplateRepository.DeleteAsync(request.Id);
+            await _unitOfWork.SaveChangesAsync();
+        }
 
         // Log audit
         var auditLog = new AuditLog
@@ -75,10 +90,14 @@ public class DeleteRequestTemplateCommandHandler
 
         _logger.LogInformation("Request template deleted successfully: {TemplateId}", request.Id);
 
+        var resultMessage = requests.Any()
+            ? $"Template deactivated successfully. It had {requests.Count()} associated request(s) and was soft-deleted."
+            : "Template deleted successfully";
+
         return new DeleteRequestTemplateResult
         {
             Success = true,
-            Message = "Template deleted successfully"
+            Message = resultMessage
         };
     }
 }

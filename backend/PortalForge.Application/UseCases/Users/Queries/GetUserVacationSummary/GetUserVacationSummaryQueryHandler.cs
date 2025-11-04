@@ -33,15 +33,21 @@ public class GetUserVacationSummaryQueryHandler : IRequestHandler<GetUserVacatio
         var user = await _unitOfWork.UserRepository.GetByIdAsync(request.UserId)
             ?? throw new NotFoundException($"User with ID {request.UserId} not found");
 
+        var annualDays = user.AnnualVacationDays ?? 26;
+        var usedDays = user.VacationDaysUsed ?? 0;
+        var onDemandUsed = user.OnDemandVacationDaysUsed ?? 0;
+        var circumstantialUsed = user.CircumstantialLeaveDaysUsed ?? 0;
+        var carriedOver = user.CarriedOverVacationDays ?? 0;
+
         return new VacationSummaryDto
         {
-            AnnualVacationDays = user.AnnualVacationDays,
-            VacationDaysUsed = user.VacationDaysUsed,
-            VacationDaysRemaining = user.AnnualVacationDays - user.VacationDaysUsed,
-            OnDemandVacationDaysUsed = user.OnDemandVacationDaysUsed,
-            OnDemandVacationDaysRemaining = 4 - user.OnDemandVacationDaysUsed,
-            CircumstantialLeaveDaysUsed = user.CircumstantialLeaveDaysUsed,
-            CarriedOverVacationDays = user.CarriedOverVacationDays,
+            AnnualVacationDays = annualDays,
+            VacationDaysUsed = usedDays,
+            VacationDaysRemaining = annualDays - usedDays,
+            OnDemandVacationDaysUsed = onDemandUsed,
+            OnDemandVacationDaysRemaining = 4 - onDemandUsed,
+            CircumstantialLeaveDaysUsed = circumstantialUsed,
+            CarriedOverVacationDays = carriedOver,
             CarriedOverExpiryDate = user.CarriedOverExpiryDate,
             TotalAvailableVacationDays = user.TotalAvailableVacationDays
         };

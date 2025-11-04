@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PortalForge.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using PortalForge.Infrastructure.Persistence;
 namespace PortalForge.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251104162839_MakeVacationFieldsNullable")]
+    partial class MakeVacationFieldsNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -920,7 +923,7 @@ namespace PortalForge.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RequestComments", (string)null);
+                    b.ToTable("RequestComments");
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.RequestEditHistory", b =>
@@ -958,7 +961,7 @@ namespace PortalForge.Infrastructure.Migrations
 
                     b.HasIndex("RequestId");
 
-                    b.ToTable("RequestEditHistories", (string)null);
+                    b.ToTable("RequestEditHistories");
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.RequestTemplate", b =>
@@ -1189,7 +1192,7 @@ namespace PortalForge.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SickLeaves", (string)null);
+                    b.ToTable("SickLeaves");
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.SystemSetting", b =>

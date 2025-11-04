@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Interfaces;
 using PortalForge.Application.Services;
 using PortalForge.Application.UseCases.Requests.Commands.SubmitRequest;
 using PortalForge.Domain.Entities;
@@ -18,6 +19,7 @@ public class SubmitRequestCommandHandlerTests
     private readonly Mock<IUserRepository> _mockUserRepo;
     private readonly Mock<INotificationService> _mockNotificationService;
     private readonly Mock<IRequestRoutingService> _mockRoutingService;
+    private readonly Mock<IVacationCalculationService> _mockVacationService;
     private readonly Mock<ILogger<SubmitRequestCommandHandler>> _mockLogger;
     private readonly SubmitRequestCommandHandler _handler;
 
@@ -29,6 +31,7 @@ public class SubmitRequestCommandHandlerTests
         _mockUserRepo = new Mock<IUserRepository>();
         _mockNotificationService = new Mock<INotificationService>();
         _mockRoutingService = new Mock<IRequestRoutingService>();
+        _mockVacationService = new Mock<IVacationCalculationService>();
         _mockLogger = new Mock<ILogger<SubmitRequestCommandHandler>>();
 
         _mockUnitOfWork.Setup(u => u.RequestTemplateRepository).Returns(_mockTemplateRepo.Object);
@@ -39,6 +42,7 @@ public class SubmitRequestCommandHandlerTests
             _mockUnitOfWork.Object,
             _mockNotificationService.Object,
             _mockRoutingService.Object,
+            _mockVacationService.Object,
             _mockLogger.Object);
     }
 

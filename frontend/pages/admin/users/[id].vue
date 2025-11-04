@@ -195,6 +195,89 @@
           </button>
         </div>
       </form>
+
+      <!-- Vacation Days Adjustment Section -->
+      <div v-if="currentUser" class="bg-white rounded-lg shadow-md p-6 mt-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+          Korekta Dni Urlopowych
+        </h2>
+
+        <!-- Current vacation info -->
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <p class="text-sm text-gray-600">Roczny przydział</p>
+              <p class="text-2xl font-bold text-blue-600">
+                {{ currentUser.annualVacationDays || 26 }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600">Wykorzystane</p>
+              <p class="text-2xl font-bold text-orange-600">
+                {{ currentUser.vacationDaysUsed || 0 }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600">Przeniesione</p>
+              <p class="text-2xl font-bold text-purple-600">
+                {{ currentUser.carriedOverVacationDays || 0 }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600">Pozostało</p>
+              <p class="text-2xl font-bold text-green-600">
+                {{ currentUser.totalAvailableVacationDays || 0 }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Adjustment form -->
+        <div class="space-y-4">
+          <div class="flex gap-4">
+            <div class="flex-1">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Ilość dni do dodania/odjęcia <span class="text-red-500">*</span>
+              </label>
+              <input
+                v-model.number="vacationAdjustment.amount"
+                type="number"
+                placeholder="Wpisz liczbę (dodatnia dodaje, ujemna odejmuje)"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p class="mt-1 text-sm text-gray-500">
+                Przykład: +5 (dodaje 5 dni) lub -3 (odejmuje 3 dni)
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Powód korekty <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              v-model="vacationAdjustment.reason"
+              rows="3"
+              placeholder="Opisz powód korekty (minimum 10 znaków)"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div v-if="vacationAdjustmentError" class="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p class="text-red-800">{{ vacationAdjustmentError }}</p>
+          </div>
+
+          <div class="flex justify-end">
+            <button
+              @click="handleVacationAdjustment"
+              :disabled="adjustingVacation || !vacationAdjustment.amount || !vacationAdjustment.reason || vacationAdjustment.reason.length < 10"
+              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {{ adjustingVacation ? 'Zapisywanie...' : 'Zapisz Korektę' }}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -238,6 +321,15 @@ const departments = ref<DepartmentTreeDto[]>([])
 const positionId = ref<string | null>(null)
 const positionName = ref<string>('')
 const departmentId = ref<string | null>(null)
+
+// Vacation adjustment state
+const vacationAdjustment = ref({
+  amount: 0,
+  reason: ''
+})
+const adjustingVacation = ref(false)
+const vacationAdjustmentError = ref<string | null>(null)
+const toast = useNotificationToast()
 
 const loadDepartments = async () => {
   try {
@@ -356,6 +448,41 @@ const handleDepartmentChange = (event: Event) => {
     departmentId.value = dept.id
     form.value.department = dept.name
     form.value.departmentId = dept.id
+  }
+}
+
+// Handle vacation adjustment
+const handleVacationAdjustment = async () => {
+  if (!vacationAdjustment.value.amount || !vacationAdjustment.value.reason || vacationAdjustment.value.reason.length < 10) {
+    return
+  }
+
+  adjustingVacation.value = true
+  vacationAdjustmentError.value = null
+
+  try {
+    const response = await $fetch(`${apiUrl}/api/admin/users/${userId}/adjust-vacation-days`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: {
+        adjustmentAmount: vacationAdjustment.value.amount,
+        reason: vacationAdjustment.value.reason
+      }
+    })
+
+    // Reset form
+    vacationAdjustment.value.amount = 0
+    vacationAdjustment.value.reason = ''
+
+    // Reload user to get updated vacation data
+    await loadUser()
+
+    toast.success('Sukces!', `Korekta zapisana pomyślnie. Zmieniono z ${response.oldValue} na ${response.newValue} dni.`)
+  } catch (err: any) {
+    console.error('Error adjusting vacation days:', err)
+    vacationAdjustmentError.value = err.data?.message || err.message || 'Nie udało się zapisać korekty'
+  } finally {
+    adjustingVacation.value = false
   }
 }
 

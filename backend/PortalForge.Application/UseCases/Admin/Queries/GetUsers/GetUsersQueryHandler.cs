@@ -108,10 +108,10 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, GetUsersResul
                 CreatedAt = user.CreatedAt,
                 LastLoginAt = user.LastLoginAt,
                 RoleGroups = roleGroups,
-                AnnualVacationDays = user.AnnualVacationDays,
-                VacationDaysUsed = user.VacationDaysUsed,
-                OnDemandVacationDaysUsed = user.OnDemandVacationDaysUsed,
-                CarriedOverVacationDays = user.CarriedOverVacationDays
+                AnnualVacationDays = user.AnnualVacationDays ?? 26,
+                VacationDaysUsed = user.VacationDaysUsed ?? 0,
+                OnDemandVacationDaysUsed = user.OnDemandVacationDaysUsed ?? 0,
+                CarriedOverVacationDays = user.CarriedOverVacationDays ?? 0
             });
         }
 

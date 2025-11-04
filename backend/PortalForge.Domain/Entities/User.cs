@@ -42,28 +42,28 @@ public class User
     /// <summary>
     /// Annual vacation days entitlement (default: 26 days per Polish law)
     /// </summary>
-    public int AnnualVacationDays { get; set; } = 26;
+    public int? AnnualVacationDays { get; set; } = 26;
 
     /// <summary>
     /// Number of vacation days used in current year
     /// </summary>
-    public int VacationDaysUsed { get; set; } = 0;
+    public int? VacationDaysUsed { get; set; } = 0;
 
     /// <summary>
     /// Number of on-demand vacation days used (max 4 per Polish law)
     /// </summary>
-    public int OnDemandVacationDaysUsed { get; set; } = 0;
+    public int? OnDemandVacationDaysUsed { get; set; } = 0;
 
     /// <summary>
     /// Number of circumstantial leave days used (for weddings, funerals, births)
     /// </summary>
-    public int CircumstantialLeaveDaysUsed { get; set; } = 0;
+    public int? CircumstantialLeaveDaysUsed { get; set; } = 0;
 
     // Vacation allowances - carried over from previous year
     /// <summary>
     /// Vacation days carried over from previous year (must be used by September 30)
     /// </summary>
-    public int CarriedOverVacationDays { get; set; } = 0;
+    public int? CarriedOverVacationDays { get; set; } = 0;
 
     /// <summary>
     /// Expiry date for carried over vacation days (September 30)
@@ -101,7 +101,8 @@ public class User
     /// <summary>
     /// Total available vacation days (current year + carried over - used)
     /// </summary>
-    public int TotalAvailableVacationDays => AnnualVacationDays + CarriedOverVacationDays - VacationDaysUsed;
+    public int TotalAvailableVacationDays =>
+        (AnnualVacationDays ?? 26) + (CarriedOverVacationDays ?? 0) - (VacationDaysUsed ?? 0);
 
     /// <summary>
     /// Number of years working in the company

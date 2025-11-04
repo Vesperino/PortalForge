@@ -4,7 +4,9 @@
       "Bash(npm install:*)",
       "Bash(npm run dev:*)",
       "Bash(git add:*)",
-      "Bash(dotnet run:*)"
+      "Bash(dotnet run:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet ef migrations add:*)"
     ],
     "defaultMode": "bypassPermissions"
   }

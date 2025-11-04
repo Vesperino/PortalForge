@@ -79,7 +79,6 @@ public class SubmitRequestCommandHandler
         if (template.RequiresApproval && template.ApprovalStepTemplates.Any())
         {
             var orderedSteps = template.ApprovalStepTemplates.OrderBy(ast => ast.StepOrder).ToList();
-            var lastCompletedStepOrder = 0;
 
             foreach (var stepTemplate in orderedSteps)
             {
@@ -88,49 +87,34 @@ public class SubmitRequestCommandHandler
 
                 if (approver == null)
                 {
-                    // No approver found - AUTO-APPROVE this step
-                    var autoApprovedStep = new RequestApprovalStep
-                    {
-                        Id = Guid.NewGuid(),
-                        RequestId = request.Id,
-                        StepOrder = stepTemplate.StepOrder,
-                        ApproverId = submitter.Id,
-                        Status = ApprovalStepStatus.Approved,
-                        RequiresQuiz = false,
-                        Comment = "Auto-approved - submitter has no higher supervisor for this approval level",
-                        StartedAt = DateTime.UtcNow,
-                        FinishedAt = DateTime.UtcNow
-                    };
-                    request.ApprovalSteps.Add(autoApprovedStep);
-                    lastCompletedStepOrder = stepTemplate.StepOrder;
-
-                    _logger.LogInformation(
-                        "Auto-approved step {StepOrder} for request {RequestId} - user {UserId} has no higher supervisor",
-                        stepTemplate.StepOrder, request.Id, submitter.Id);
+                    // This should never happen due to upfront validation, but throw exception as safety net
+                    _logger.LogError(
+                        "No approver found for step {StepOrder} after validation passed. This is a programming error.",
+                        stepTemplate.StepOrder);
+                    throw new Exception(
+                        $"Failed to resolve approver for step {stepTemplate.StepOrder}. Please contact HR.");
                 }
-                else
+
+                // Create approval step
+                var isFirstPendingStep = stepTemplate.StepOrder == 1;
+
+                var approvalStep = new RequestApprovalStep
                 {
-                    // Normal approval step
-                    var isFirstPendingStep = stepTemplate.StepOrder == lastCompletedStepOrder + 1;
+                    Id = Guid.NewGuid(),
+                    RequestId = request.Id,
+                    StepOrder = stepTemplate.StepOrder,
+                    ApproverId = approver.Id,
+                    Status = isFirstPendingStep
+                        ? ApprovalStepStatus.InReview
+                        : ApprovalStepStatus.Pending,
+                    RequiresQuiz = stepTemplate.RequiresQuiz,
+                    StartedAt = isFirstPendingStep ? DateTime.UtcNow : null
+                };
+                request.ApprovalSteps.Add(approvalStep);
 
-                    var approvalStep = new RequestApprovalStep
-                    {
-                        Id = Guid.NewGuid(),
-                        RequestId = request.Id,
-                        StepOrder = stepTemplate.StepOrder,
-                        ApproverId = approver.Id,
-                        Status = isFirstPendingStep
-                            ? ApprovalStepStatus.InReview
-                            : ApprovalStepStatus.Pending,
-                        RequiresQuiz = stepTemplate.RequiresQuiz,
-                        StartedAt = isFirstPendingStep ? DateTime.UtcNow : null
-                    };
-                    request.ApprovalSteps.Add(approvalStep);
-
-                    _logger.LogDebug(
-                        "Created approval step {StepOrder} for request {RequestId}, approver {ApproverId}, status {Status}",
-                        stepTemplate.StepOrder, request.Id, approver.Id, approvalStep.Status);
-                }
+                _logger.LogDebug(
+                    "Created approval step {StepOrder} for request {RequestId}, approver {ApproverId}, status {Status}",
+                    stepTemplate.StepOrder, request.Id, approver.Id, approvalStep.Status);
             }
         }
 

@@ -48,7 +48,7 @@ public class ExpireCarriedOverVacationJob
 
             foreach (var user in usersWithCarriedOver)
             {
-                var daysToExpire = user.CarriedOverVacationDays;
+                var daysToExpire = user.CarriedOverVacationDays ?? 0;
 
                 _logger.LogWarning(
                     "Expiring {Days} carried-over vacation days for user {UserId} ({Email}). Days not used by deadline.",

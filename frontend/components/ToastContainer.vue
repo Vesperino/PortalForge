@@ -1,5 +1,8 @@
 <template>
-  <div class="fixed top-4 right-4 z-[10001] space-y-2 max-w-md">
+  <div
+    class="toast-container fixed right-4 z-[10001] space-y-2 max-w-md"
+    :style="{ top: offsetTop }"
+  >
     <TransitionGroup
       name="toast"
       tag="div"
@@ -31,8 +34,8 @@
         
         <!-- Close button -->
         <button
-          @click="remove(toast.id)"
           class="flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+          @click="remove(toast.id)"
         >
           <Icon name="heroicons:x-mark" class="w-5 h-5" />
         </button>
@@ -45,6 +48,45 @@
 import type { ToastType } from '~/composables/useNotificationToast'
 
 const { toasts, remove } = useNotificationToast()
+const offsetTop = ref('1rem')
+
+const computeOffsetTop = () => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const header = document.querySelector<HTMLElement>('.app-header')
+  const safeMargin = 16
+
+  if (!header) {
+    offsetTop.value = `${safeMargin}px`
+    return
+  }
+
+  const { bottom } = header.getBoundingClientRect()
+  const totalOffset = Math.max(safeMargin, Math.round(bottom) + safeMargin)
+  offsetTop.value = `${totalOffset}px`
+}
+
+onMounted(() => {
+  computeOffsetTop()
+  window.addEventListener('resize', computeOffsetTop)
+})
+
+onBeforeUnmount(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', computeOffsetTop)
+  }
+})
+
+watch(
+  () => toasts.value.length,
+  (count) => {
+    if (count > 0) {
+      computeOffsetTop()
+    }
+  }
+)
 
 const getToastClasses = (type: ToastType) => {
   const classes = {
@@ -68,6 +110,20 @@ const getToastIcon = (type: ToastType) => {
 </script>
 
 <style scoped>
+.toast-container {
+  top: 1rem;
+}
+
+@media (max-width: 640px) {
+  .toast-container {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: calc(100vw - 2rem);
+    max-width: none;
+  }
+}
+
 .toast-enter-active,
 .toast-leave-active {
   transition: all 0.3s ease;

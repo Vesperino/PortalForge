@@ -90,7 +90,8 @@ public class VacationCalculationService : IVacationCalculationService
         {
             case LeaveType.OnDemand:
                 // On-demand vacation: max 4 days per year (Polish law)
-                if (user.OnDemandVacationDaysUsed >= 4)
+                var onDemandUsed = user.OnDemandVacationDaysUsed ?? 0;
+                if (onDemandUsed >= 4)
                 {
                     _logger.LogInformation(
                         "User {UserId} exhausted on-demand vacation (4/4 used)",
@@ -98,7 +99,7 @@ public class VacationCalculationService : IVacationCalculationService
                     return (false, "Wykorzystano już wszystkie 4 dni urlopu na żądanie w tym roku");
                 }
 
-                var remainingOnDemand = 4 - user.OnDemandVacationDaysUsed;
+                var remainingOnDemand = 4 - onDemandUsed;
                 if (requestedDays > remainingOnDemand)
                 {
                     _logger.LogInformation(
@@ -189,7 +190,7 @@ public class VacationCalculationService : IVacationCalculationService
 
         _logger.LogDebug(
             "User {UserId} has {Available} vacation days available (Annual: {Annual}, Used: {Used}, Carried: {Carried})",
-            userId, available, user.AnnualVacationDays, user.VacationDaysUsed, user.CarriedOverVacationDays);
+            userId, available, user.AnnualVacationDays ?? 26, user.VacationDaysUsed ?? 0, user.CarriedOverVacationDays ?? 0);
 
         return available;
     }

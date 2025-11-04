@@ -2,6 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Application.DTOs;
+using PortalForge.Application.UseCases.Admin.Commands.AdjustVacationDays;
+using PortalForge.Application.UseCases.Admin.Commands.ReseedRequestTemplates;
 using PortalForge.Application.UseCases.Admin.Commands.SeedAdminData;
 using PortalForge.Application.UseCases.Admin.Commands.SeedEmployees;
 using PortalForge.Application.UseCases.Admin.Queries.GetAuditLogs;
@@ -52,6 +54,69 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
+    /// Force reseed of default request templates (vacation, sick leave).
+    /// Removes old templates and creates new ones with updated structure.
+    /// </summary>
+    [HttpPost("reseed-request-templates")]
+    [AllowAnonymous] // Temporarily allow anonymous access for maintenance
+    public async Task<ActionResult<ReseedResult>> ReseedRequestTemplates()
+    {
+        _logger.LogInformation("Reseeding default request templates...");
+
+        var command = new ReseedRequestTemplatesCommand
+        {
+            ForceRecreate = true
+        };
+        var result = await _mediator.Send(command);
+
+        if (result.Success)
+        {
+            return Ok(result);
+        }
+
+        return BadRequest(result);
+    }
+
+    /// <summary>
+    /// Manually adjust user's vacation days allowance.
+    /// Used for corrections or special allowances.
+    /// All adjustments are audited.
+    /// </summary>
+    /// <param name="userId">User ID to adjust vacation days for</param>
+    /// <param name="adjustmentAmount">Amount to add (positive) or subtract (negative)</param>
+    /// <param name="reason">Reason for adjustment (required for audit)</param>
+    /// <returns>Result with old and new values</returns>
+    [HttpPost("users/{userId}/adjust-vacation-days")]
+    [Authorize(Roles = "Admin,HR")]
+    public async Task<ActionResult<AdjustVacationDaysResult>> AdjustVacationDays(
+        Guid userId,
+        [FromBody] AdjustVacationDaysRequest request)
+    {
+        var currentUserId = User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            return Unauthorized("User ID not found in token");
+        }
+
+        var command = new AdjustVacationDaysCommand
+        {
+            UserId = userId,
+            AdjustmentAmount = request.AdjustmentAmount,
+            Reason = request.Reason,
+            AdjustedBy = Guid.Parse(currentUserId)
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.Success)
+        {
+            return Ok(result);
+        }
+
+        return BadRequest(result);
+    }
+
+    /// <summary>
     /// Gets audit logs with filtering and pagination.
     /// </summary>
     /// <param name="entityType">Filter by entity type</param>
@@ -87,5 +152,14 @@ public class AdminController : ControllerBase
         var result = await _mediator.Send(query);
         return Ok(result);
     }
+}
+
+/// <summary>
+/// Request model for adjusting vacation days
+/// </summary>
+public class AdjustVacationDaysRequest
+{
+    public int AdjustmentAmount { get; set; }
+    public string Reason { get; set; } = string.Empty;
 }
 

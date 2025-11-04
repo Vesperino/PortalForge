@@ -86,7 +86,7 @@
                 <p class="text-2xl font-bold text-green-600 dark:text-green-400">
                   {{ vacationSummary.vacationDaysRemaining }}
                 </p>
-                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Pozostałe</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Pozostały urlop wypoczynkowy</p>
               </div>
             </div>
 

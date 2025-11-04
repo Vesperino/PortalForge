@@ -58,11 +58,11 @@ public class SendCarriedOverVacationRemindersJob
                     await _notificationService.SendVacationExpiryWarningAsync(
                         user.Id,
                         expiryDate,
-                        user.CarriedOverVacationDays);
+                        user.CarriedOverVacationDays ?? 0);
 
                     _logger.LogInformation(
                         "Sent expiry reminder to user {UserId} ({Email}) for {Days} carried-over days",
-                        user.Id, user.Email, user.CarriedOverVacationDays);
+                        user.Id, user.Email, user.CarriedOverVacationDays ?? 0);
                 }
                 catch (Exception ex)
                 {
