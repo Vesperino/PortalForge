@@ -93,20 +93,23 @@ public class VacationReminderBackgroundService : BackgroundService
                         actionUrl: "/dashboard/vacations"
                     );
 
-                    // Notify substitute
-                    await notificationService.CreateNotificationAsync(
-                        userId: schedule.SubstituteUserId,
-                        type: NotificationType.System,
-                        title: "Przypomnienie o zastępstwie",
-                        message: $"Od jutra ({schedule.StartDate:yyyy-MM-dd}) będziesz zastępcą dla {schedule.User.FirstName} {schedule.User.LastName}.",
-                        relatedEntityType: "VacationSchedule",
-                        relatedEntityId: schedule.Id.ToString(),
-                        actionUrl: "/dashboard/substitutions"
-                    );
+                    // Notify substitute if assigned
+                    if (schedule.SubstituteUserId.HasValue)
+                    {
+                        await notificationService.CreateNotificationAsync(
+                            userId: schedule.SubstituteUserId.Value,
+                            type: NotificationType.System,
+                            title: "Przypomnienie o zastępstwie",
+                            message: $"Od jutra ({schedule.StartDate:yyyy-MM-dd}) będziesz zastępcą dla {schedule.User.FirstName} {schedule.User.LastName}.",
+                            relatedEntityType: "VacationSchedule",
+                            relatedEntityId: schedule.Id.ToString(),
+                            actionUrl: "/dashboard/substitutions"
+                        );
+                    }
                 }
 
                 // Check if vacation starts today - notify substitute about active coverage
-                if (schedule.StartDate.Date == today)
+                if (schedule.StartDate.Date == today && schedule.SubstituteUserId.HasValue)
                 {
                     _logger.LogInformation(
                         "Notifying substitute {SubstituteId} about vacation coverage starting (vacation {ScheduleId})",
@@ -114,7 +117,7 @@ public class VacationReminderBackgroundService : BackgroundService
                         schedule.Id);
 
                     await notificationService.NotifyVacationStartedAsync(
-                        schedule.SubstituteUserId,
+                        schedule.SubstituteUserId.Value,
                         schedule);
                 }
 

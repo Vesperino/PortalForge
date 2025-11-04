@@ -158,15 +158,25 @@ public class VacationCalculationService : IVacationCalculationService
     {
         var allVacations = await _unitOfWork.VacationScheduleRepository.GetAllAsync();
 
-        var totalDays = allVacations
-            .Where(v => v.UserId == userId &&
-                       (v.StartDate.Year == year || v.EndDate.Year == year) &&
-                       (v.Status == Domain.Enums.VacationStatus.Completed ||
-                        v.Status == Domain.Enums.VacationStatus.Active))
-            .Sum(v => v.DaysCount);
+        // Sum BUSINESS days for active/completed vacations intersecting the selected year
+        int totalDays = 0;
+        foreach (var v in allVacations.Where(v => v.UserId == userId && (v.Status == Domain.Enums.VacationStatus.Completed || v.Status == Domain.Enums.VacationStatus.Active)))
+        {
+            // Consider only vacations that touch the given year
+            if (v.StartDate.Year > year || v.EndDate.Year < year) continue;
+
+            // Clamp range to selected year bounds
+            var rangeStart = new DateTime(year, 1, 1);
+            var rangeEnd = new DateTime(year, 12, 31);
+            var start = v.StartDate.Date < rangeStart ? rangeStart : v.StartDate.Date;
+            var end = v.EndDate.Date > rangeEnd ? rangeEnd : v.EndDate.Date;
+            if (end < start) continue;
+
+            totalDays += CalculateBusinessDays(start, end);
+        }
 
         _logger.LogDebug(
-            "Calculated vacation days used for user {UserId} in {Year}: {TotalDays} days",
+            "Calculated BUSINESS vacation days used for user {UserId} in {Year}: {TotalDays} days",
             userId, year, totalDays);
 
         return totalDays;

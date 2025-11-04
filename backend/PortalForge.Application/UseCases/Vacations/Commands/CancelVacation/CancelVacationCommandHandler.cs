@@ -102,10 +102,10 @@ public class CancelVacationCommandHandler : IRequestHandler<CancelVacationComman
             actionUrl: "/dashboard/account");
 
         // 8. Notify substitute if exists
-        if (vacation.SubstituteUserId != Guid.Empty)
+        if (vacation.SubstituteUserId.HasValue)
         {
             await _notificationService.CreateNotificationAsync(
-                userId: vacation.SubstituteUserId,
+                userId: vacation.SubstituteUserId.Value,
                 type: NotificationType.System,
                 title: "Urlop został anulowany",
                 message: $"Urlop {employee.FirstName} {employee.LastName}, dla którego byłeś/aś zastępcą, został anulowany.",

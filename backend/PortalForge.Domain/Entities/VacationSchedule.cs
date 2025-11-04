@@ -27,14 +27,14 @@ public class VacationSchedule
     public User User { get; set; } = null!;
 
     /// <summary>
-    /// User who substitutes during vacation (handles approvals, etc.).
+    /// User who substitutes during vacation (handles approvals, etc.). Optional.
     /// </summary>
-    public Guid SubstituteUserId { get; set; }
+    public Guid? SubstituteUserId { get; set; }
 
     /// <summary>
     /// Navigation property to the substitute user.
     /// </summary>
-    public User Substitute { get; set; } = null!;
+    public User? Substitute { get; set; }
 
     // ===== WHEN =====
 

@@ -188,6 +188,10 @@ const getVacationDuration = (vacation: VacationSchedule): number => {
             @mouseleave="hoveredVacation = null"
             @click="emit('vacation-click', vacation)"
           >
+            <!-- Inline day count label on bar -->
+            <span class="text-[10px] font-semibold text-white px-2 select-none">
+              {{ getVacationDuration(vacation) }}d
+            </span>
             <!-- Tooltip -->
             <div
               v-if="hoveredVacation === vacation.id"
@@ -205,7 +209,7 @@ const getVacationDuration = (vacation: VacationSchedule): number => {
               </div>
               <div>
                 <span class="text-gray-300">Zastępca:</span>
-                {{ vacation.substitute.firstName }} {{ vacation.substitute.lastName }}
+                {{ vacation.substitute ? `${vacation.substitute.firstName} ${vacation.substitute.lastName}` : '—' }}
               </div>
               <div>
                 <span class="text-gray-300">Status:</span> {{ getStatusLabel(vacation.status) }}

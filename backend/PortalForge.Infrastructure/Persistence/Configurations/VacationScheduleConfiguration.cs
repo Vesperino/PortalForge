@@ -20,7 +20,7 @@ public class VacationScheduleConfiguration : IEntityTypeConfiguration<VacationSc
             .IsRequired();
 
         builder.Property(v => v.SubstituteUserId)
-            .IsRequired();
+            .IsRequired(false);
 
         builder.Property(v => v.StartDate)
             .IsRequired()
@@ -50,7 +50,7 @@ public class VacationScheduleConfiguration : IEntityTypeConfiguration<VacationSc
         builder.HasOne(v => v.Substitute)
             .WithMany()
             .HasForeignKey(v => v.SubstituteUserId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(v => v.SourceRequest)
             .WithMany()

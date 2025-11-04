@@ -10,13 +10,14 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const { getRequestById } = useRequestsApi()
+const { getRequestById, getTemplateById } = useRequestsApi()
 const toast = useNotificationToast()
 
 const requestId = route.params.id as string
 
 // State
 const request = ref<any | null>(null)
+const template = ref<any | null>(null)
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 
@@ -56,13 +57,17 @@ const canAddComment = computed(() => {
 // Format form data for display
 const formattedFormData = computed(() => {
   if (!request.value?.formData) return []
-
   try {
     const data = JSON.parse(request.value.formData)
-    return Object.entries(data).map(([key, value]) => ({
-      key: formatFieldName(key),
-      value: formatFieldValue(value)
-    }))
+    const fields: Array<{ id?: string; label: string }> = template.value?.fields || []
+    const labelById = new Map<string, string>()
+    for (const f of fields) {
+      if (f.id) labelById.set(f.id, f.label)
+    }
+    return Object.entries(data).map(([key, value]) => {
+      const label = labelById.get(key) || formatFieldName(key)
+      return { key: label, value: formatFieldValue(value) }
+    })
   } catch (err) {
     console.error('Error parsing form data:', err)
     return []
@@ -140,6 +145,15 @@ const loadRequest = async () => {
   try {
     const data = await getRequestById(requestId)
     request.value = data
+    // Load template to map field IDs (GUID) to human labels
+    if (request.value?.requestTemplateId) {
+      try {
+        template.value = (await getTemplateById(request.value.requestTemplateId))
+      } catch (e) {
+        // Non-fatal for details page; fallback to camelCase label formatting
+        console.warn('Failed to load request template for details mapping', e)
+      }
+    }
   } catch (err: any) {
     if (err.statusCode === 404) {
       error.value = 'Wniosek nie został znaleziony'

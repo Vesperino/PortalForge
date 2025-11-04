@@ -143,9 +143,27 @@ public class ApproveRequestStepCommandHandler
                             }
                         }
                     }
+                    // Fallback: try to map localized labels if leave type not detected yet
+                    if (ltStr == null && dict != null)
+                    {
+                        foreach (var kv in dict)
+                        {
+                            var v = kv.Value;
+                            if (v.ValueKind == System.Text.Json.JsonValueKind.String)
+                            {
+                                var str = v.GetString()?.ToLowerInvariant();
+                                if (string.IsNullOrWhiteSpace(str)) continue;
+                                if (ltStr == null && (str.Contains("wypocz") || str.Contains("annual"))) ltStr = "Annual";
+                                else if (ltStr == null && (str.Contains("żąd") || str.Contains("zadanie") || str.Contains("on demand") || str.Contains("ondemand"))) ltStr = "OnDemand";
+                                else if (ltStr == null && (str.Contains("okolicz") || str.Contains("circumstantial"))) ltStr = "Circumstantial";
+                                else if (ltStr == null && (str.Contains("zwolnienie") || str.Contains("l4") || str.Contains("sick"))) ltStr = "Sick";
+                            }
+                        }
+                    }
+
                     if (ltStr != null && s.HasValue && e.HasValue && System.Enum.TryParse<PortalForge.Domain.Enums.LeaveType>(ltStr, out var lt))
                     {
-                        if (lt == PortalForge.Domain.Enums.LeaveType.Annual || lt == PortalForge.Domain.Enums.LeaveType.OnDemand)
+                        if (lt == PortalForge.Domain.Enums.LeaveType.Annual || lt == PortalForge.Domain.Enums.LeaveType.OnDemand || lt == PortalForge.Domain.Enums.LeaveType.Circumstantial)
                         {
                             int BusinessDays(System.DateTime start, System.DateTime end)
                             {
@@ -165,10 +183,14 @@ public class ApproveRequestStepCommandHandler
                                 {
                                     user.VacationDaysUsed = (user.VacationDaysUsed ?? 0) + used;
                                 }
-                                else // OnDemand
+                                else if (lt == PortalForge.Domain.Enums.LeaveType.OnDemand)
                                 {
                                     user.OnDemandVacationDaysUsed = (user.OnDemandVacationDaysUsed ?? 0) + used;
                                     user.VacationDaysUsed = (user.VacationDaysUsed ?? 0) + used;
+                                }
+                                else if (lt == PortalForge.Domain.Enums.LeaveType.Circumstantial)
+                                {
+                                    user.CircumstantialLeaveDaysUsed = (user.CircumstantialLeaveDaysUsed ?? 0) + used;
                                 }
                                 await _unitOfWork.UserRepository.UpdateAsync(user);
                             }

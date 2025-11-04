@@ -12,14 +12,16 @@ namespace PortalForge.Tests.Unit.Application.UseCases.Users.Queries.GetUserVacat
 public class GetUserVacationSummaryQueryHandlerTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<PortalForge.Application.Interfaces.IVacationCalculationService> _vacationServiceMock;
     private readonly Mock<ILogger<GetUserVacationSummaryQueryHandler>> _loggerMock;
     private readonly GetUserVacationSummaryQueryHandler _handler;
 
     public GetUserVacationSummaryQueryHandlerTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
+        _vacationServiceMock = new Mock<PortalForge.Application.Interfaces.IVacationCalculationService>();
         _loggerMock = new Mock<ILogger<GetUserVacationSummaryQueryHandler>>();
-        _handler = new GetUserVacationSummaryQueryHandler(_unitOfWorkMock.Object, _loggerMock.Object);
+        _handler = new GetUserVacationSummaryQueryHandler(_unitOfWorkMock.Object, _vacationServiceMock.Object, _loggerMock.Object);
     }
 
     [Fact]
@@ -67,6 +69,7 @@ public class GetUserVacationSummaryQueryHandlerTests
             .ReturnsAsync(user);
 
         // Act
+        _vacationServiceMock.Setup(x => x.CalculateVacationDaysUsedAsync(userId, It.IsAny<int>())).ReturnsAsync(user.VacationDaysUsed ?? 0);
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
@@ -107,6 +110,7 @@ public class GetUserVacationSummaryQueryHandlerTests
 
         _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
             .ReturnsAsync(user);
+        _vacationServiceMock.Setup(x => x.CalculateVacationDaysUsedAsync(userId, It.IsAny<int>())).ReturnsAsync(user.VacationDaysUsed ?? 0);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -144,6 +148,7 @@ public class GetUserVacationSummaryQueryHandlerTests
 
         _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
             .ReturnsAsync(user);
+        _vacationServiceMock.Setup(x => x.CalculateVacationDaysUsedAsync(userId, It.IsAny<int>())).ReturnsAsync(user.VacationDaysUsed ?? 0);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -177,6 +182,7 @@ public class GetUserVacationSummaryQueryHandlerTests
 
         _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
             .ReturnsAsync(user);
+        _vacationServiceMock.Setup(x => x.CalculateVacationDaysUsedAsync(userId, It.IsAny<int>())).ReturnsAsync(user.VacationDaysUsed ?? 0);
 
         // Act
         await _handler.Handle(query, CancellationToken.None);

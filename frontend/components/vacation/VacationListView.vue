@@ -55,14 +55,17 @@ const filteredVacations = computed(() => {
   // Apply search filter
   if (debouncedSearch.value) {
     const query = debouncedSearch.value.toLowerCase()
-    result = result.filter(
-      (v) =>
+    result = result.filter((v) => {
+      const subFirst = v.substitute?.firstName?.toLowerCase?.() || ''
+      const subLast = v.substitute?.lastName?.toLowerCase?.() || ''
+      return (
         v.user.firstName.toLowerCase().includes(query) ||
         v.user.lastName.toLowerCase().includes(query) ||
         v.user.email?.toLowerCase().includes(query) ||
-        v.substitute.firstName.toLowerCase().includes(query) ||
-        v.substitute.lastName.toLowerCase().includes(query)
-    )
+        subFirst.includes(query) ||
+        subLast.includes(query)
+      )
+    })
   }
 
   // Apply status filter
@@ -327,7 +330,7 @@ const goToPage = (page: number) => {
               {{ getVacationDuration(vacation) }}
             </td>
             <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-              {{ vacation.substitute.firstName }} {{ vacation.substitute.lastName }}
+              {{ vacation.substitute ? `${vacation.substitute.firstName} ${vacation.substitute.lastName}` : '—' }}
             </td>
             <td class="px-4 py-3">
               <span

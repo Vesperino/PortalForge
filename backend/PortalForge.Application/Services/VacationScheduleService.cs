@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.DTOs;
@@ -68,13 +68,11 @@ public class VacationScheduleService : IVacationScheduleService
         {
             throw new ValidationException("Brak dat urlopu w danych wniosku");
         }
-        if (!substituteId.HasValue)
-        {
-            throw new ValidationException("Nie wybrano zastępcy dla urlopu");
-        }
+        // substitute opcjonalny — brak nie blokuje tworzenia grafiku
+
 
         // 3. Validate substitute is not the user themselves
-        if (substituteId.Value == vacationRequest.SubmittedById)
+        if (substituteId.HasValue && substituteId.Value == vacationRequest.SubmittedById)
         {
             _logger.LogWarning(
                 "User {UserId} tried to set themselves as substitute",
@@ -82,14 +80,18 @@ public class VacationScheduleService : IVacationScheduleService
             throw new ValidationException("Nie możesz być własnym zastępcą");
         }
 
-        // 4. Check if substitute is active
-        var substitute = await _unitOfWork.UserRepository.GetByIdAsync(substituteId!.Value);
-        if (substitute == null || !substitute.IsActive)
+                // 4. Check if substitute is active
+        User? substitute = null;
+        if (substituteId.HasValue)
         {
-            throw new NotFoundException(
-                $"Zastępca {substituteId} nie istnieje lub jest nieaktywny");
+            substitute = await _unitOfWork.UserRepository.GetByIdAsync(substituteId.Value);
+            if (substitute == null || !substitute.IsActive)
+            {
+                // traktuj jak brak zastępcy
+                substituteId = null;
+                substitute = null;
+            }
         }
-
         // 5. Create vacation schedule
         var schedule = new VacationSchedule
         {
@@ -97,7 +99,7 @@ public class VacationScheduleService : IVacationScheduleService
             UserId = vacationRequest.SubmittedById,
             StartDate = startDate.Value.Date, // Ensure date only (no time)
             EndDate = endDate.Value.Date,
-            SubstituteUserId = substituteId!.Value,
+            SubstituteUserId = substituteId,
             SourceRequestId = vacationRequest.Id,
             Status = VacationStatus.Scheduled,
             CreatedAt = DateTime.UtcNow
@@ -112,7 +114,7 @@ public class VacationScheduleService : IVacationScheduleService
         );
 
         // 6. Send notification to substitute
-        await _notificationService.NotifySubstituteAsync(substituteId!.Value, schedule);
+        if (substituteId.HasValue) { await _notificationService.NotifySubstituteAsync(substituteId!.Value, schedule); }
     }
 
     public async Task<User?> GetActiveSubstituteAsync(Guid userId)
@@ -190,10 +192,13 @@ public class VacationScheduleService : IVacationScheduleService
                 updated++;
 
                 // Notify substitute
-                await _notificationService.NotifyVacationStartedAsync(
-                    vacation.SubstituteUserId,
-                    vacation
-                );
+                if (vacation.SubstituteUserId.HasValue)
+                {
+                    await _notificationService.NotifyVacationStartedAsync(
+                        vacation.SubstituteUserId.Value,
+                        vacation
+                    );
+                }
             }
 
             // 2. Complete active vacations (EndDate < today)

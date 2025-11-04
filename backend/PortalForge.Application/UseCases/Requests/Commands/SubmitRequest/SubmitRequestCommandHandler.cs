@@ -96,6 +96,15 @@ public class SubmitRequestCommandHandler
                                     request.LeaveType = lt;
                                 }
                             }
+                            else
+                            {
+                                // Fallback for localized labels
+                                var lower = str.ToLowerInvariant();
+                                if (lower.Contains("wypocz") || lower == "urlop") request.LeaveType = LeaveType.Annual;
+                                else if (lower.Contains("żąd") || lower.Contains("zadanie") || lower.Contains("on demand") || lower.Contains("ondemand")) request.LeaveType = LeaveType.OnDemand;
+                                else if (lower.Contains("okolicz")) request.LeaveType = LeaveType.Circumstantial;
+                                else if (lower.Contains("zwolnienie") || lower.Contains("l4")) request.LeaveType = LeaveType.Sick;
+                            }
                         }
                     }
                 }

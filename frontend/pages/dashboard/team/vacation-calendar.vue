@@ -66,8 +66,13 @@ const loadPermissions = async () => {
 
   try {
     // Check if user is Admin or HR - they should see all departments
+    // Be robust to different role shapes/cases (string enum vs array of roles)
     const userRole = authStore.user?.role
-    const isAdminOrHR = userRole === 'Admin' || userRole === 'HR'
+    const rolesArray = (authStore.user as any)?.roles as string[] | undefined
+    const hasRole = (r?: string) => !!r && (
+      r.toLowerCase() === 'admin' || r.toLowerCase() === 'hr'
+    )
+    const isAdminOrHR = hasRole(userRole) || (rolesArray?.some(x => hasRole(x)) ?? false)
 
     // Fetch organizational permissions
     const permissions = await $fetch(

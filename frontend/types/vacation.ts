@@ -6,8 +6,8 @@ export interface VacationSchedule {
   user: User
   startDate: string // ISO date string
   endDate: string // ISO date string
-  substituteUserId: string
-  substitute: User
+  substituteUserId?: string | null
+  substitute?: User | null
   sourceRequestId: string
   status: VacationStatus
   createdAt: string
