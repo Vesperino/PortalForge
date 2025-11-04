@@ -59,13 +59,22 @@ const formattedFormData = computed(() => {
   if (!request.value?.formData) return []
   try {
     const data = JSON.parse(request.value.formData)
-    const fields: Array<{ id?: string; label: string }> = template.value?.fields || []
+    const fields = template.value?.fields || []
     const labelById = new Map<string, string>()
+
+    // Map field IDs to labels - handle both string and Guid types
     for (const f of fields) {
-      if (f.id) labelById.set(f.id, f.label)
+      // Handle both `id` and `Id` properties (backend uses `Id`, frontend uses `id`)
+      const fieldId = (f.id || (f as any).Id)?.toString().toLowerCase()
+      if (fieldId) {
+        labelById.set(fieldId, f.label)
+      }
     }
+
     return Object.entries(data).map(([key, value]) => {
-      const label = labelById.get(key) || formatFieldName(key)
+      // Normalize key to lowercase for matching
+      const normalizedKey = key.toLowerCase()
+      const label = labelById.get(normalizedKey) || formatFieldName(key)
       return { key: label, value: formatFieldValue(value) }
     })
   } catch (err) {

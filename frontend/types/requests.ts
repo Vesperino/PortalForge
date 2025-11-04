@@ -23,7 +23,8 @@ export type NotificationType =
   | 'VacationEnded'
 
 export interface RequestTemplateField {
-  id?: string
+  id?: string // Frontend uses lowercase 'id'
+  Id?: string // Backend uses uppercase 'Id' (Guid as string)
   label: string
   fieldType: FieldType
   placeholder?: string
