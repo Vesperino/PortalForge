@@ -107,7 +107,11 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, GetUsersResul
                 ProfilePhotoUrl = user.ProfilePhotoUrl,
                 CreatedAt = user.CreatedAt,
                 LastLoginAt = user.LastLoginAt,
-                RoleGroups = roleGroups
+                RoleGroups = roleGroups,
+                AnnualVacationDays = user.AnnualVacationDays,
+                VacationDaysUsed = user.VacationDaysUsed,
+                OnDemandVacationDaysUsed = user.OnDemandVacationDaysUsed,
+                CarriedOverVacationDays = user.CarriedOverVacationDays
             });
         }
 

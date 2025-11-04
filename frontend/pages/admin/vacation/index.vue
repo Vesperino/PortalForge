@@ -90,7 +90,7 @@ const updateVacationAllowance = async () => {
 
   try {
     await $fetch(
-      `${config.public.apiUrl}/api/users/${selectedUser.value.id}/vacation-allowance`,
+      `${config.public.apiUrl}/api/admin/users/${selectedUser.value.id}/vacation-allowance`,
       {
         method: 'PUT',
         headers: getAuthHeaders(),
