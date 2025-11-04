@@ -1,15 +1,20 @@
 using FluentValidation;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Services;
 
 namespace PortalForge.Application.UseCases.Requests.Commands.SubmitRequest.Validation;
 
 public class SubmitRequestCommandValidator : AbstractValidator<SubmitRequestCommand>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IRequestRoutingService _routingService;
 
-    public SubmitRequestCommandValidator(IUnitOfWork unitOfWork)
+    public SubmitRequestCommandValidator(
+        IUnitOfWork unitOfWork,
+        IRequestRoutingService routingService)
     {
         _unitOfWork = unitOfWork;
+        _routingService = routingService;
 
         RuleFor(x => x.RequestTemplateId)
             .NotEmpty().WithMessage("Request template ID is required")
@@ -27,6 +32,11 @@ public class SubmitRequestCommandValidator : AbstractValidator<SubmitRequestComm
             .NotEmpty().WithMessage("Form data is required")
             .MaximumLength(10000).WithMessage("Form data cannot exceed 10000 characters")
             .Must(BeValidJson).WithMessage("Form data must be valid JSON");
+
+        // Validate approval structure
+        RuleFor(x => x)
+            .MustAsync(ValidateApprovalStructure)
+            .WithMessage("Cannot submit request: {ValidationErrors}");
     }
 
     private async Task<bool> RequestTemplateExists(Guid requestTemplateId, CancellationToken cancellationToken)
@@ -61,5 +71,31 @@ public class SubmitRequestCommandValidator : AbstractValidator<SubmitRequestComm
         {
             return false;
         }
+    }
+
+    private async Task<bool> ValidateApprovalStructure(
+        SubmitRequestCommand command,
+        CancellationToken cancellationToken)
+    {
+        // Get the template with approval steps
+        var template = await _unitOfWork.RequestTemplateRepository.GetByIdAsync(command.RequestTemplateId);
+        if (template == null || !template.RequiresApproval)
+        {
+            return true; // No approval required, validation passes
+        }
+
+        // Validate the approval structure
+        var (isValid, errors) = await _routingService.ValidateApprovalStructureAsync(
+            command.SubmittedById,
+            template.ApprovalStepTemplates);
+
+        if (!isValid)
+        {
+            // Store errors in the validation context for the error message
+            var errorMessage = string.Join("; ", errors);
+            throw new ValidationException($"Cannot submit request: {errorMessage}");
+        }
+
+        return true;
     }
 }

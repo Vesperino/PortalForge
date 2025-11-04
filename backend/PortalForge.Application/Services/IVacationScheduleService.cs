@@ -56,4 +56,12 @@ public interface IVacationScheduleService
     /// Sends notifications to substitutes when vacations start/end.
     /// </summary>
     Task UpdateVacationStatusesAsync();
+
+    /// <summary>
+    /// Processes approved sick leave (L4) requests by creating SickLeave records.
+    /// Called by background job to automatically convert approved sick leave requests
+    /// into SickLeave entities for tracking and compliance.
+    /// Sends notifications if ZUS documentation is required (>33 days).
+    /// </summary>
+    Task ProcessApprovedSickLeaveRequestsAsync();
 }

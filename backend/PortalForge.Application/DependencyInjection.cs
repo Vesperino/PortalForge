@@ -16,7 +16,8 @@ public static class DependencyInjection
         services.AddAutoMapper(assembly);
 
         // Add MediatR (v11.x syntax)
-        services.AddMediatR(assembly);
+        // Register handlers from both Application and Infrastructure assemblies
+        services.AddMediatR(assembly, Assembly.Load("PortalForge.Infrastructure"));
 
         // Register validators automatically
         services.AddValidators(assembly);

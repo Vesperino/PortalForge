@@ -25,6 +25,7 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+const promptModal = usePromptModal()
 
 const editor = useEditor({
   content: props.modelValue,
@@ -114,15 +115,23 @@ function setTextAlign(align: 'left' | 'center' | 'right' | 'justify') {
   editor.value?.chain().focus().setTextAlign(align).run()
 }
 
-function setTextColor() {
-  const color = window.prompt('Wprowadź kolor (np. #ff0000 lub red):')
+async function setTextColor() {
+  const color = await promptModal.show({
+    title: 'Kolor tekstu',
+    message: 'Wprowadź kolor tekstu',
+    placeholder: 'np. #ff0000 lub red'
+  })
   if (color) {
     editor.value?.chain().focus().setColor(color).run()
   }
 }
 
-function addLink() {
-  const url = window.prompt('Wprowadź URL:')
+async function addLink() {
+  const url = await promptModal.show({
+    title: 'Dodaj link',
+    message: 'Wprowadź adres URL',
+    placeholder: 'https://example.com'
+  })
   if (url) {
     editor.value?.chain().focus().setLink({ href: url }).run()
   }
@@ -132,15 +141,23 @@ function removeLink() {
   editor.value?.chain().focus().unsetLink().run()
 }
 
-function addImage() {
-  const url = window.prompt('Wprowadź URL obrazka:')
+async function addImage() {
+  const url = await promptModal.show({
+    title: 'Dodaj obrazek',
+    message: 'Wprowadź adres URL obrazka',
+    placeholder: 'https://example.com/image.jpg'
+  })
   if (url) {
     editor.value?.chain().focus().setImage({ src: url }).run()
   }
 }
 
-function addYoutube() {
-  const url = window.prompt('Wprowadź URL YouTube:')
+async function addYoutube() {
+  const url = await promptModal.show({
+    title: 'Dodaj wideo YouTube',
+    message: 'Wprowadź adres URL wideo z YouTube',
+    placeholder: 'https://www.youtube.com/watch?v=...'
+  })
   if (url) {
     editor.value?.chain().focus().setYoutubeVideo({ src: url }).run()
   }

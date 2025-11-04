@@ -208,11 +208,11 @@ public class DeleteRequestTemplateCommandHandlerTests
             a.Action == "DeleteRequestTemplate" &&
             a.EntityType == "RequestTemplate" &&
             a.EntityId == templateId.ToString() &&
-            a.Changes!.Contains("Test Template") &&
-            a.Changes.Contains("Test Description") &&
-            a.Changes.Contains("Test Category") &&
-            a.Changes.Contains("\"FieldsCount\":2") &&
-            a.Changes.Contains("\"ApprovalStepsCount\":1")
+            a.OldValue!.Contains("Test Template") &&
+            a.OldValue.Contains("Test Description") &&
+            a.OldValue.Contains("Test Category") &&
+            a.OldValue.Contains("\"FieldsCount\":2") &&
+            a.OldValue.Contains("\"ApprovalStepsCount\":1")
         )), Times.Once);
     }
 

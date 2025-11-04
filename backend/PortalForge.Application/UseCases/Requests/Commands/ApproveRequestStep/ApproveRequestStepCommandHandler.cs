@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Services;
 using PortalForge.Domain.Enums;
@@ -116,15 +116,107 @@ public class ApproveRequestStepCommandHandler
             request.Status = RequestStatus.Approved;
             request.CompletedAt = DateTime.UtcNow;
 
+            // Update user's vacation counters for Annual/OnDemand leave
+            try
+            {
+                if (request.RequestTemplate?.IsVacationRequest == true)
+                {
+                    var dict = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>>(request.FormData);
+                    string? ltStr = null; System.DateTime? s = null; System.DateTime? e = null;
+                    if (dict != null)
+                    {
+                        foreach (var kv in dict)
+                        {
+                            var v = kv.Value;
+                            if (v.ValueKind == System.Text.Json.JsonValueKind.String)
+                            {
+                                var str = v.GetString();
+                                if (str != null)
+                                {
+                                    if (ltStr == null && (str == "Annual" || str == "OnDemand" || str == "Circumstantial" || str == "Sick")) ltStr = str;
+                                    else if (System.Text.RegularExpressions.Regex.IsMatch(str, "^\\d{4}-\\d{2}-\\d{2}$"))
+                                    {
+                                        if (!s.HasValue) s = System.DateTime.Parse(str);
+                                        else if (!e.HasValue) e = System.DateTime.Parse(str);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // Fallback: try to map localized labels if leave type not detected yet
+                    if (ltStr == null && dict != null)
+                    {
+                        foreach (var kv in dict)
+                        {
+                            var v = kv.Value;
+                            if (v.ValueKind == System.Text.Json.JsonValueKind.String)
+                            {
+                                var str = v.GetString()?.ToLowerInvariant();
+                                if (string.IsNullOrWhiteSpace(str)) continue;
+                                if (ltStr == null && (str.Contains("wypocz") || str.Contains("annual"))) ltStr = "Annual";
+                                else if (ltStr == null && (str.Contains("żąd") || str.Contains("zadanie") || str.Contains("on demand") || str.Contains("ondemand"))) ltStr = "OnDemand";
+                                else if (ltStr == null && (str.Contains("okolicz") || str.Contains("circumstantial"))) ltStr = "Circumstantial";
+                                else if (ltStr == null && (str.Contains("zwolnienie") || str.Contains("l4") || str.Contains("sick"))) ltStr = "Sick";
+                            }
+                        }
+                    }
+
+                    if (ltStr != null && s.HasValue && e.HasValue && System.Enum.TryParse<PortalForge.Domain.Enums.LeaveType>(ltStr, out var lt))
+                    {
+                        if (lt == PortalForge.Domain.Enums.LeaveType.Annual || lt == PortalForge.Domain.Enums.LeaveType.OnDemand || lt == PortalForge.Domain.Enums.LeaveType.Circumstantial)
+                        {
+                            int BusinessDays(System.DateTime start, System.DateTime end)
+                            {
+                                int days = 0; var cur = start.Date; var last = end.Date;
+                                while (cur <= last)
+                                {
+                                    if (cur.DayOfWeek != System.DayOfWeek.Saturday && cur.DayOfWeek != System.DayOfWeek.Sunday) days++;
+                                    cur = cur.AddDays(1);
+                                }
+                                return days;
+                            }
+                            var used = BusinessDays(s.Value, e.Value);
+                            var user = await _unitOfWork.UserRepository.GetByIdAsync(request.SubmittedById);
+                            if (user != null)
+                            {
+                                if (lt == PortalForge.Domain.Enums.LeaveType.Annual)
+                                {
+                                    user.VacationDaysUsed = (user.VacationDaysUsed ?? 0) + used;
+                                }
+                                else if (lt == PortalForge.Domain.Enums.LeaveType.OnDemand)
+                                {
+                                    user.OnDemandVacationDaysUsed = (user.OnDemandVacationDaysUsed ?? 0) + used;
+                                    user.VacationDaysUsed = (user.VacationDaysUsed ?? 0) + used;
+                                }
+                                else if (lt == PortalForge.Domain.Enums.LeaveType.Circumstantial)
+                                {
+                                    user.CircumstantialLeaveDaysUsed = (user.CircumstantialLeaveDaysUsed ?? 0) + used;
+                                }
+                                await _unitOfWork.UserRepository.UpdateAsync(user);
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            // Create calendar entry for vacation requests
+            try
+            {
+                if (request.RequestTemplate?.IsVacationRequest == true)
+                {
+                    await _vacationService.CreateFromApprovedRequestAsync(request);
+                }
+            }
+            catch { }
+
             // Notify submitter of completion
             await _notificationService.NotifySubmitterAsync(
                 request,
-                "Twój wniosek został zatwierdzony i zakończony pomyślnie.",
+                "Wniosek został zatwierdzony i zakończony pomyślnie.",
                 NotificationType.RequestCompleted
             );
-        }
-
-        await _unitOfWork.RequestRepository.UpdateAsync(request);
+        }await _unitOfWork.RequestRepository.UpdateAsync(request);
         await _unitOfWork.SaveChangesAsync();
 
         return new ApproveRequestStepResult

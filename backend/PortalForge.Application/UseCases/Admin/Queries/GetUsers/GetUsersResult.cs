@@ -29,5 +29,11 @@ public class AdminUserDto
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
     public List<string> RoleGroups { get; set; } = new();
+
+    // Vacation data
+    public int AnnualVacationDays { get; set; }
+    public int VacationDaysUsed { get; set; }
+    public int OnDemandVacationDaysUsed { get; set; }
+    public int CarriedOverVacationDays { get; set; }
 }
 

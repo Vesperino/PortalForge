@@ -44,10 +44,19 @@ public static class DependencyInjection
         services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
 
         // Register File Storage Service
-        services.AddScoped<IFileStorageService, PortalForge.Infrastructure.Storage.LocalFileStorageService>();
+        services.AddScoped<PortalForge.Application.Interfaces.IFileStorageService, PortalForge.Infrastructure.Services.FileStorageService>();
+
+        // Register File Storage Service Adapter for Common.Interfaces (temporary solution until interfaces are unified)
+        services.AddScoped<PortalForge.Application.Common.Interfaces.IFileStorageService, PortalForge.Infrastructure.Services.FileStorageServiceAdapter>();
 
         // Register Notification Service
         services.AddScoped<PortalForge.Application.Services.INotificationService, PortalForge.Infrastructure.Services.NotificationService>();
+
+        // Register Vacation Calculation Service
+        services.AddScoped<PortalForge.Application.Interfaces.IVacationCalculationService, PortalForge.Infrastructure.Services.VacationCalculationService>();
+
+        // Register Audit Log Service
+        services.AddScoped<PortalForge.Application.Interfaces.IAuditLogService, PortalForge.Infrastructure.Services.AuditLogService>();
 
         // Register HttpClient for services that need it
         services.AddHttpClient();

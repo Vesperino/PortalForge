@@ -140,6 +140,8 @@ const userDisplayMeta = computed(() => {
 })
 
 const { logout: performLogout } = useAuth()
+const { modalState: confirmModalState, confirm: handleConfirm, cancel: handleCancel } = useConfirmModal()
+const { modalState: promptModalState, confirm: handlePromptConfirm, cancel: handlePromptCancel } = usePromptModal()
 
 function forceTextColorUpdate() {
   if (import.meta.client) {
@@ -312,6 +314,30 @@ watch(
 
     <!-- Toast Container -->
     <ToastContainer />
+
+    <!-- Confirm Modal -->
+    <ConfirmModal
+      :is-open="confirmModalState.isOpen"
+      :title="confirmModalState.title"
+      :message="confirmModalState.message"
+      :confirm-text="confirmModalState.confirmText"
+      :cancel-text="confirmModalState.cancelText"
+      :variant="confirmModalState.variant"
+      :hide-cancel="confirmModalState.hideCancel"
+      @confirm="handleConfirm"
+      @cancel="handleCancel"
+    />
+
+    <!-- Prompt Modal -->
+    <PromptModal
+      :is-open="promptModalState.isOpen"
+      :title="promptModalState.title"
+      :message="promptModalState.message"
+      :placeholder="promptModalState.placeholder"
+      :default-value="promptModalState.defaultValue"
+      @confirm="handlePromptConfirm"
+      @cancel="handlePromptCancel"
+    />
   </div>
 </template>
 

@@ -18,7 +18,17 @@ public class Request
     
     // JSON string with form field values
     public string FormData { get; set; } = string.Empty;
-    
+
+    /// <summary>
+    /// Type of leave if this is a vacation/sick leave request. Null for other request types.
+    /// </summary>
+    public LeaveType? LeaveType { get; set; }
+
+    /// <summary>
+    /// JSON array of attachment file paths/URLs. Used for supporting documents.
+    /// </summary>
+    public string? Attachments { get; set; }
+
     public RequestStatus Status { get; set; } = RequestStatus.Draft;
     public DateTime? CompletedAt { get; set; }
     

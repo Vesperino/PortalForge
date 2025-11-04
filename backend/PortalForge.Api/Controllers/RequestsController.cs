@@ -2,12 +2,16 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Api.DTOs.Requests.Requests;
+using PortalForge.Application.UseCases.Requests.Commands.AddRequestComment;
 using PortalForge.Application.UseCases.Requests.Commands.ApproveRequestStep;
+using PortalForge.Application.UseCases.Requests.Commands.EditRequest;
 using PortalForge.Application.UseCases.Requests.Commands.RejectRequestStep;
 using PortalForge.Application.UseCases.Requests.Commands.SubmitRequest;
 using PortalForge.Application.UseCases.Requests.Queries.GetMyRequests;
 using PortalForge.Application.UseCases.Requests.Queries.GetPendingApprovals;
+using PortalForge.Application.UseCases.Requests.Queries.GetRequestById;
 using PortalForge.Application.UseCases.Requests.Queries.GetRequestsToApprove;
+using PortalForge.Application.UseCases.Requests.Queries.GetApprovalsHistory;
 
 namespace PortalForge.Api.Controllers;
 
@@ -26,9 +30,10 @@ public class RequestsController : BaseController
 
     /// <summary>
     /// Get current user's requests
+    /// All authenticated users can view their own requests
     /// </summary>
     [HttpGet("my-requests")]
-    [Authorize(Policy = "RequirePermission:requests.view")]
+    [Authorize]
     public async Task<ActionResult> GetMyRequests()
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
@@ -79,10 +84,42 @@ public class RequestsController : BaseController
     }
 
     /// <summary>
+    /// Get approvals history (requests approved/rejected by current user)
+    /// </summary>
+    [HttpGet("approvals-history")]
+    [Authorize(Policy = "RequirePermission:requests.approve")]
+    public async Task<ActionResult> GetApprovalsHistory()
+    {
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
+        var query = new GetApprovalsHistoryQuery { UserId = userGuid };
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get request details by ID including comments and edit history
+    /// All authenticated users can view requests (handler checks ownership/approval rights)
+    /// </summary>
+    [HttpGet("{requestId:guid}")]
+    [Authorize]
+    public async Task<ActionResult> GetRequestById(Guid requestId)
+    {
+        var query = new GetRequestByIdQuery { RequestId = requestId };
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Submit a new request
+    /// All authenticated users can submit requests - this is a basic employee function
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = "RequirePermission:requests.create")]
+    [Authorize]
     public async Task<ActionResult> SubmitRequest([FromBody] SubmitRequestCommand command)
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
@@ -93,8 +130,63 @@ public class RequestsController : BaseController
 
         command.SubmittedById = userGuid;
         var result = await _mediator.Send(command);
-        
+
         return CreatedAtAction(nameof(GetMyRequests), null, result);
+    }
+
+    /// <summary>
+    /// Edit an existing request (Draft or InReview only)
+    /// </summary>
+    [HttpPut("{requestId:guid}")]
+    [Authorize(Policy = "RequirePermission:requests.edit")]
+    public async Task<IActionResult> EditRequest(
+        Guid requestId,
+        [FromBody] EditRequestRequest request)
+    {
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
+        var command = new EditRequestCommand
+        {
+            RequestId = requestId,
+            EditedByUserId = userGuid,
+            NewFormData = request.FormData,
+            ChangeReason = request.ChangeReason
+        };
+
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Add a comment to a request
+    /// All authenticated users can add comments (handler checks ownership/approval rights)
+    /// </summary>
+    [HttpPost("{requestId:guid}/comments")]
+    [Authorize]
+    public async Task<ActionResult<Guid>> AddComment(
+        Guid requestId,
+        [FromBody] AddCommentRequest request)
+    {
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
+        var command = new AddRequestCommentCommand
+        {
+            RequestId = requestId,
+            UserId = userGuid,
+            Comment = request.Comment,
+            Attachments = request.Attachments
+        };
+
+        var commentId = await _mediator.Send(command);
+        return CreatedAtAction(nameof(GetMyRequests), null, commentId);
     }
 
     /// <summary>

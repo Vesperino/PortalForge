@@ -3,9 +3,9 @@
     <!-- Bell Icon Button -->
     <button
       ref="buttonRef"
-      @click.stop="toggleDropdown"
       class="relative p-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
       :class="{ 'text-blue-600 dark:text-blue-400': isOpen }"
+      @click.stop="toggleDropdown"
     >
       <Icon name="heroicons:bell" class="w-6 h-6" />
 
@@ -31,7 +31,7 @@
         <div
           v-if="isOpen"
           v-click-outside="closeDropdown"
-          class="fixed w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+          class="fixed bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 flex flex-col w-[90vw] sm:w-96 md:w-[28rem] lg:w-[32rem] xl:w-[36rem] max-w-2xl"
           :style="dropdownStyle"
         >
         <!-- Header -->
@@ -41,15 +41,15 @@
           </h3>
           <button
             v-if="unreadCount > 0"
-            @click="handleMarkAllAsRead"
             class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            @click="handleMarkAllAsRead"
           >
             Oznacz wszystkie jako przeczytane
           </button>
         </div>
 
         <!-- Notifications List -->
-        <div class="max-h-96 overflow-y-auto">
+        <div class="overflow-y-auto" style="max-height: calc(100% - 120px)">
           <div v-if="loading" class="p-8 text-center">
             <Icon name="svg-spinners:ring-resize" class="w-8 h-8 mx-auto text-blue-600" />
             <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Ładowanie...</p>
@@ -77,9 +77,9 @@
               <div
                 v-for="notification in group"
                 :key="notification.id"
-                @click="handleNotificationClick(notification)"
                 class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                 :class="{ 'bg-blue-50 dark:bg-blue-900/20': !notification.isRead }"
+                @click="handleNotificationClick(notification)"
               >
                 <div class="flex items-start gap-3">
                   <!-- Icon based on type -->
@@ -106,7 +106,7 @@
 
                   <!-- Unread indicator -->
                   <div v-if="!notification.isRead" class="flex-shrink-0">
-                    <div class="w-2 h-2 bg-blue-600 rounded-full"></div>
+                    <div class="w-2 h-2 bg-blue-600 rounded-full" />
                   </div>
                 </div>
               </div>
@@ -132,6 +132,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import type { DirectiveBinding } from 'vue'
 import type { Notification, NotificationType } from '~/types/requests'
 
 type NotificationCategory = 'requests' | 'vacations' | 'system'
@@ -143,19 +144,109 @@ const isOpen = ref(false)
 const buttonRef = ref<HTMLElement | null>(null)
 let pollingInterval: NodeJS.Timeout | null = null
 
-// Calculate dropdown position
-const dropdownStyle = computed(() => {
+const dropdownStyle = ref<Record<string, string>>({
+  top: '16px',
+  right: '16px',
+  zIndex: '10001',
+  maxHeight: 'calc(100vh - 32px)'
+})
+
+const updateDropdownPosition = () => {
+  const safeMargin = 16
+
   if (!buttonRef.value) {
-    return { top: '0px', right: '0px', zIndex: 9999 }
+    dropdownStyle.value = {
+      top: `${safeMargin}px`,
+      left: 'auto',
+      right: `${safeMargin}px`,
+      zIndex: '10001',
+      maxHeight: `calc(100vh - ${safeMargin * 2}px)`,
+      width: `${Math.max(320, (typeof window !== 'undefined' ? Math.min(576, window.innerWidth - safeMargin * 2) : 576))}px`
+    }
+    return
   }
 
   const rect = buttonRef.value.getBoundingClientRect()
-  return {
-    top: `${rect.bottom + 8}px`,
-    right: `${window.innerWidth - rect.right}px`,
-    zIndex: 9999
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
+  const dropdownMaxHeight = Math.min(600, Math.max(0, viewportHeight - safeMargin * 2))
+
+  // Compute responsive width (px) with clamping to viewport
+  const baseWidth = viewportWidth < 640
+    ? Math.floor(viewportWidth * 0.9)
+    : viewportWidth < 768
+      ? 384
+      : viewportWidth < 1024
+        ? 448
+        : viewportWidth < 1280
+          ? 512
+          : 576
+  const panelWidth = Math.min(baseWidth, viewportWidth - safeMargin * 2)
+
+  // Horizontal positioning: keep within viewport, prefer aligning to button's right edge
+  const desiredLeft = rect.right - panelWidth
+  const minLeft = safeMargin
+  const maxLeft = viewportWidth - panelWidth - safeMargin
+  const clampedLeft = Math.max(minLeft, Math.min(desiredLeft, maxLeft))
+
+  const spaceBelow = viewportHeight - rect.bottom - safeMargin
+  const spaceAbove = rect.top - safeMargin
+  const repositionThreshold = Math.min((Math.min(600, Math.max(0, viewportHeight - safeMargin * 2))) * 0.6, 320)
+  const shouldPositionAbove = spaceBelow < repositionThreshold && spaceAbove > spaceBelow
+
+  const computeMaxHeight = (space) => {
+    if (space > safeMargin) {
+      return Math.min(dropdownMaxHeight, space)
+    }
+    return dropdownMaxHeight
   }
-})
+
+  if (shouldPositionAbove) {
+    const maxHeight = computeMaxHeight(spaceAbove)
+    const naturalTop = rect.top - safeMargin - maxHeight
+    const top = Math.max(naturalTop, safeMargin)
+
+    dropdownStyle.value = {
+      left: `${clampedLeft}px`,
+      right: 'auto',
+      top: `${top}px`,
+      zIndex: '10001',
+      maxHeight: `${maxHeight}px`,
+      width: `${panelWidth}px`
+    }
+    return
+  }
+
+  const maxHeight = computeMaxHeight(spaceBelow)
+  const naturalTop = rect.bottom + safeMargin
+  const maxAllowedTop = viewportHeight - safeMargin - maxHeight
+  const top = Math.max(Math.min(naturalTop, maxAllowedTop), safeMargin)
+
+  dropdownStyle.value = {
+    left: `${clampedLeft}px`,
+    right: 'auto',
+    top: `${top}px`,
+    zIndex: '10001',
+    maxHeight: `${maxHeight}px`,
+    width: `${panelWidth}px`
+  }
+}
+let positionUpdateFrame: number | null = null
+
+const scheduleDropdownUpdate = () => {
+  if (!isOpen.value) {
+    return
+  }
+
+  if (positionUpdateFrame !== null) {
+    cancelAnimationFrame(positionUpdateFrame)
+  }
+
+  positionUpdateFrame = requestAnimationFrame(() => {
+    updateDropdownPosition()
+    positionUpdateFrame = null
+  })
+}
 
 // Group notifications by category
 const groupedNotifications = computed(() => {
@@ -181,15 +272,43 @@ const groupedNotifications = computed(() => {
   return result
 })
 
+watch(isOpen, async (open) => {
+  if (open) {
+    await nextTick()
+    updateDropdownPosition()
+    return
+  }
+
+  if (positionUpdateFrame !== null) {
+    cancelAnimationFrame(positionUpdateFrame)
+    positionUpdateFrame = null
+  }
+})
+
+watch(() => notifications.value.length, () => {
+  if (isOpen.value) {
+    scheduleDropdownUpdate()
+  }
+})
+
 const toggleDropdown = async () => {
   isOpen.value = !isOpen.value
   if (isOpen.value) {
     await notificationsStore.fetchNotifications(false)
+    await nextTick()
+    updateDropdownPosition()
+  } else if (positionUpdateFrame !== null) {
+    cancelAnimationFrame(positionUpdateFrame)
+    positionUpdateFrame = null
   }
 }
 
 const closeDropdown = () => {
   isOpen.value = false
+  if (positionUpdateFrame !== null) {
+    cancelAnimationFrame(positionUpdateFrame)
+    positionUpdateFrame = null
+  }
 }
 
 const handleNotificationClick = async (notification: Notification) => {
@@ -288,16 +407,42 @@ const formatDate = (dateString: string) => {
   })
 }
 
+// Recalculate position on scroll or resize
+const handleScroll = () => {
+  if (isOpen.value) {
+    scheduleDropdownUpdate()
+  }
+}
+
+const handleResize = () => {
+  if (isOpen.value) {
+    scheduleDropdownUpdate()
+  }
+}
+
 // Start polling on mount
 onMounted(() => {
   notificationsStore.fetchUnreadCount()
   pollingInterval = notificationsStore.startPolling(30000) // Poll every 30 seconds
+
+  // Add event listeners
+  window.addEventListener('scroll', handleScroll, true)
+  window.addEventListener('resize', handleResize)
 })
 
 // Stop polling on unmount
 onUnmounted(() => {
   if (pollingInterval) {
     clearInterval(pollingInterval)
+  }
+
+  // Remove event listeners
+  window.removeEventListener('scroll', handleScroll, true)
+  window.removeEventListener('resize', handleResize)
+
+  if (positionUpdateFrame !== null) {
+    cancelAnimationFrame(positionUpdateFrame)
+    positionUpdateFrame = null
   }
 })
 
@@ -307,10 +452,15 @@ interface HTMLElementWithClickOutside extends HTMLElement {
 }
 
 const vClickOutside = {
-  mounted(el: HTMLElementWithClickOutside, binding: any) {
+  mounted(el: HTMLElementWithClickOutside, binding: DirectiveBinding<() => void>) {
+    const callback = typeof binding.value === 'function' ? binding.value : null
+    if (!callback) {
+      return
+    }
+
     el.clickOutsideEvent = (event: Event) => {
       if (!(el === event.target || el.contains(event.target as Node))) {
-        binding.value()
+        callback()
       }
     }
     document.addEventListener('click', el.clickOutsideEvent)

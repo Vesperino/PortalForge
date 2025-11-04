@@ -93,6 +93,16 @@ public class VacationScheduleRepository : IVacationScheduleRepository
             .ToListAsync();
     }
 
+    public async Task<List<VacationSchedule>> GetByUserAsync(Guid userId)
+    {
+        return await _context.VacationSchedules
+            .Include(v => v.User)
+            .Include(v => v.Substitute)
+            .Where(v => v.UserId == userId)
+            .OrderByDescending(v => v.StartDate)
+            .ToListAsync();
+    }
+
     public async Task<List<VacationSchedule>> GetScheduledToActivateAsync()
     {
         var now = DateTime.UtcNow.Date;

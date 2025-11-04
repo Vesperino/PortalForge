@@ -1,7 +1,6 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-vue-next'
-import type { Request } from '~/types/requests'
 
 definePageMeta({
   layout: 'default',
@@ -11,11 +10,14 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { getRequestById, getTemplateById } = useRequestsApi()
+const toast = useNotificationToast()
 
 const requestId = route.params.id as string
 
 // State
-const request = ref<Request | null>(null)
+const request = ref<any | null>(null)
+const template = ref<any | null>(null)
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 
@@ -30,26 +32,51 @@ const isSubmitting = ref(false)
 const isCurrentApprover = computed(() => {
   if (!request.value || !authStore.user) return false
 
-  const currentStep = request.value.approvalSteps.find(s => s.status === 'InReview')
+  const currentStep = request.value.approvalSteps.find((s: any) => s.status === 'InReview')
   return currentStep?.approverId === authStore.user.id
 })
 
 // Get current approval step
 const currentStep = computed(() => {
   if (!request.value) return null
-  return request.value.approvalSteps.find(s => s.status === 'InReview')
+  return request.value.approvalSteps.find((s: any) => s.status === 'InReview')
+})
+
+// Check if user can add comments (request submitter or approvers)
+const canAddComment = computed(() => {
+  if (!request.value || !authStore.user) return false
+
+  // Submitter can always comment
+  if (request.value.submittedById === authStore.user.id) return true
+
+  // Approvers can comment
+  const isApprover = request.value.approvalSteps.some((s: any) => s.approverId === authStore.user.id)
+  return isApprover
 })
 
 // Format form data for display
 const formattedFormData = computed(() => {
   if (!request.value?.formData) return []
-
   try {
     const data = JSON.parse(request.value.formData)
-    return Object.entries(data).map(([key, value]) => ({
-      key: formatFieldName(key),
-      value: formatFieldValue(value)
-    }))
+    const fields = template.value?.fields || []
+    const labelById = new Map<string, string>()
+
+    // Map field IDs to labels - handle both string and Guid types
+    for (const f of fields) {
+      // Handle both `id` and `Id` properties (backend uses `Id`, frontend uses `id`)
+      const fieldId = (f.id || (f as any).Id)?.toString().toLowerCase()
+      if (fieldId) {
+        labelById.set(fieldId, f.label)
+      }
+    }
+
+    return Object.entries(data).map(([key, value]) => {
+      // Normalize key to lowercase for matching
+      const normalizedKey = key.toLowerCase()
+      const label = labelById.get(normalizedKey) || formatFieldName(key)
+      return { key: label, value: formatFieldValue(value) }
+    })
   } catch (err) {
     console.error('Error parsing form data:', err)
     return []
@@ -58,7 +85,6 @@ const formattedFormData = computed(() => {
 
 // Format field name (camelCase to readable)
 const formatFieldName = (key: string): string => {
-  // Convert camelCase to Title Case with spaces
   return key
     .replace(/([A-Z])/g, ' $1')
     .replace(/^./, str => str.toUpperCase())
@@ -126,8 +152,17 @@ const loadRequest = async () => {
   error.value = null
 
   try {
-    const data = await $fetch(`/api/requests/${requestId}`) as Request
+    const data = await getRequestById(requestId)
     request.value = data
+    // Load template to map field IDs (GUID) to human labels
+    if (request.value?.requestTemplateId) {
+      try {
+        template.value = (await getTemplateById(request.value.requestTemplateId))
+      } catch (e) {
+        // Non-fatal for details page; fallback to camelCase label formatting
+        console.warn('Failed to load request template for details mapping', e)
+      }
+    }
   } catch (err: any) {
     if (err.statusCode === 404) {
       error.value = 'Wniosek nie został znaleziony'
@@ -147,11 +182,9 @@ const handleApprove = async () => {
   isSubmitting.value = true
 
   try {
-    await $fetch(`/api/requests/steps/${currentStep.value.id}/approve`, {
-      method: 'POST',
-      body: {
-        comment: approveComment.value || null
-      }
+    const { approveRequestStep } = useRequestsApi()
+    await approveRequestStep(requestId, currentStep.value.id, {
+      comment: approveComment.value || undefined
     })
 
     // Reload request data
@@ -173,18 +206,16 @@ const handleReject = async () => {
   if (!currentStep.value) return
 
   if (!rejectComment.value.trim()) {
-    alert('Komentarz jest wymagany przy odrzuceniu wniosku')
+    toast.warning('Komentarz jest wymagany przy odrzuceniu wniosku')
     return
   }
 
   isSubmitting.value = true
 
   try {
-    await $fetch(`/api/requests/steps/${currentStep.value.id}/reject`, {
-      method: 'POST',
-      body: {
-        comment: rejectComment.value
-      }
+    const { rejectRequestStep } = useRequestsApi()
+    await rejectRequestStep(requestId, currentStep.value.id, {
+      reason: rejectComment.value
     })
 
     // Reload request data
@@ -201,6 +232,25 @@ const handleReject = async () => {
   }
 }
 
+// Handle add comment
+const handleAddComment = async (commentText: string) => {
+  try {
+    await $fetch(`/api/requests/${requestId}/comments`, {
+      method: 'POST',
+      body: {
+        comment: commentText,
+        attachments: null
+      }
+    })
+
+    // Reload request to get new comment
+    await loadRequest()
+  } catch (err: any) {
+    console.error('Error adding comment:', err)
+    toast.error('Nie udało się dodać komentarza')
+  }
+}
+
 // Navigate back
 const goBack = () => {
   router.push('/dashboard/requests')
@@ -214,7 +264,7 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Back Button -->
       <button
         class="mb-6 flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
@@ -232,7 +282,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Error State (404 or other) -->
+      <!-- Error State -->
       <div v-else-if="error" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
         <svg
           class="w-16 h-16 text-red-400 mx-auto mb-4"
@@ -326,6 +376,25 @@ onMounted(() => {
           </div>
         </div>
 
+        <!-- Attachments -->
+        <div v-if="request.attachments && request.attachments.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <RequestAttachments :attachments="request.attachments" />
+        </div>
+
+        <!-- Comments -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <RequestComments
+            :comments="request.comments || []"
+            :can-add-comment="canAddComment"
+            @add-comment="handleAddComment"
+          />
+        </div>
+
+        <!-- Edit History -->
+        <div v-if="request.editHistory && request.editHistory.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <RequestEditHistory :edit-history="request.editHistory" />
+        </div>
+
         <!-- Action Buttons (only for current approver) -->
         <div v-if="isCurrentApprover" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -361,14 +430,12 @@ onMounted(() => {
       @click.self="showApproveModal = false"
     >
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
-        <!-- Modal Header -->
         <div class="p-6 border-b border-gray-200 dark:border-gray-700">
           <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
             Zatwierdź wniosek
           </h3>
         </div>
 
-        <!-- Modal Body -->
         <div class="p-6 space-y-4">
           <p class="text-sm text-gray-600 dark:text-gray-400">
             Czy na pewno chcesz zatwierdzić ten wniosek?
@@ -387,7 +454,6 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Modal Footer -->
         <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
           <button
             class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
@@ -414,14 +480,12 @@ onMounted(() => {
       @click.self="showRejectModal = false"
     >
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
-        <!-- Modal Header -->
         <div class="p-6 border-b border-gray-200 dark:border-gray-700">
           <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
             Odrzuć wniosek
           </h3>
         </div>
 
-        <!-- Modal Body -->
         <div class="p-6 space-y-4">
           <p class="text-sm text-gray-600 dark:text-gray-400">
             Czy na pewno chcesz odrzucić ten wniosek? Podaj powód odrzucenia.
@@ -441,7 +505,6 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Modal Footer -->
         <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
           <button
             class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
@@ -462,7 +525,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Additional styles if needed */
-</style>

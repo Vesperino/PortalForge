@@ -15,10 +15,13 @@ public interface IUnitOfWork : IDisposable
     IHashtagRepository HashtagRepository { get; }
     IRequestTemplateRepository RequestTemplateRepository { get; }
     IRequestRepository RequestRepository { get; }
+    IRequestCommentRepository RequestCommentRepository { get; }
     INotificationRepository NotificationRepository { get; }
     IDepartmentRepository DepartmentRepository { get; }
     IPositionRepository PositionRepository { get; }
     IVacationScheduleRepository VacationScheduleRepository { get; }
+    ISickLeaveRepository SickLeaveRepository { get; }
+    IRequestEditHistoryRepository RequestEditHistoryRepository { get; }
     IOrganizationalPermissionRepository OrganizationalPermissionRepository { get; }
     ICachedLocationRepository CachedLocationRepository { get; }
     ISystemSettingRepository SystemSettingRepository { get; }

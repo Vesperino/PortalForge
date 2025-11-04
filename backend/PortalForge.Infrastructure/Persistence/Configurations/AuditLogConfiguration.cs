@@ -22,16 +22,16 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(al => al.EntityId)
             .HasMaxLength(100);
 
-        builder.Property(al => al.Changes)
+        builder.Property(al => al.OldValue)
+            .HasColumnType("jsonb");
+
+        builder.Property(al => al.NewValue)
             .HasColumnType("jsonb");
 
         builder.Property(al => al.IpAddress)
             .HasMaxLength(50);
 
-        builder.Property(al => al.UserAgent)
-            .HasMaxLength(500);
-
-        builder.Property(al => al.CreatedAt)
+        builder.Property(al => al.Timestamp)
             .IsRequired();
 
         builder.HasOne(al => al.User)
@@ -41,7 +41,7 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
 
         builder.HasIndex(al => al.UserId);
         builder.HasIndex(al => al.Action);
-        builder.HasIndex(al => al.CreatedAt);
+        builder.HasIndex(al => al.Timestamp);
     }
 }
 

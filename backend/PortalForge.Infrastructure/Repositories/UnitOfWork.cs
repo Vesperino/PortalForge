@@ -25,6 +25,9 @@ public class UnitOfWork : IUnitOfWork
     private IDepartmentRepository? _departmentRepository;
     private IPositionRepository? _positionRepository;
     private IVacationScheduleRepository? _vacationScheduleRepository;
+    private ISickLeaveRepository? _sickLeaveRepository;
+    private IRequestEditHistoryRepository? _requestEditHistoryRepository;
+    private IRequestCommentRepository? _requestCommentRepository;
     private IOrganizationalPermissionRepository? _organizationalPermissionRepository;
     private ICachedLocationRepository? _cachedLocationRepository;
     private ISystemSettingRepository? _systemSettingRepository;
@@ -80,6 +83,15 @@ public class UnitOfWork : IUnitOfWork
 
     public IVacationScheduleRepository VacationScheduleRepository =>
         _vacationScheduleRepository ??= new VacationScheduleRepository(_context);
+
+    public ISickLeaveRepository SickLeaveRepository =>
+        _sickLeaveRepository ??= new SickLeaveRepository(_context);
+
+    public IRequestEditHistoryRepository RequestEditHistoryRepository =>
+        _requestEditHistoryRepository ??= new RequestEditHistoryRepository(_context);
+
+    public IRequestCommentRepository RequestCommentRepository =>
+        _requestCommentRepository ??= new RequestCommentRepository(_context);
 
     public IOrganizationalPermissionRepository OrganizationalPermissionRepository =>
         _organizationalPermissionRepository ??= new OrganizationalPermissionRepository(_context);

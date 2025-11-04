@@ -94,6 +94,20 @@ public class RequestRepository : IRequestRepository
             .FirstOrDefaultAsync(r => r.RequestNumber == requestNumber);
     }
 
+    public async Task<IEnumerable<Request>> GetPendingRequestsByUserAsync(Guid userId)
+    {
+        return await _context.Requests
+            .Include(r => r.RequestTemplate)
+            .Include(r => r.SubmittedBy)
+            .Include(r => r.ApprovalSteps.OrderBy(aps => aps.StepOrder))
+                .ThenInclude(aps => aps.Approver)
+            .Where(r => r.SubmittedById == userId &&
+                       (r.Status == RequestStatus.Draft ||
+                        r.Status == RequestStatus.InReview ||
+                        r.Status == RequestStatus.AwaitingSurvey))
+            .ToListAsync();
+    }
+
     public async Task<Guid> CreateAsync(Request request)
     {
         await _context.Requests.AddAsync(request);

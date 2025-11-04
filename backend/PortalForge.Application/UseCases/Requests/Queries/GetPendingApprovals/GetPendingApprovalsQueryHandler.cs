@@ -19,12 +19,12 @@ public class GetPendingApprovalsQueryHandler
         GetPendingApprovalsQuery query, 
         CancellationToken cancellationToken)
     {
-        // Get all requests where user is an approver with InReview status
-        var allRequests = await _unitOfWork.RequestRepository.GetAllAsync();
-        
-        var pendingRequests = allRequests
-            .Where(r => r.ApprovalSteps.Any(step => 
-                step.ApproverId == query.UserId && 
+        // Use repository scoped to approver to ensure ApprovalSteps are included
+        var approverRequests = await _unitOfWork.RequestRepository.GetByApproverAsync(query.UserId);
+
+        var pendingRequests = approverRequests
+            .Where(r => r.ApprovalSteps.Any(step =>
+                step.ApproverId == query.UserId &&
                 step.Status == ApprovalStepStatus.InReview))
             .OrderByDescending(r => r.SubmittedAt)
             .ToList();

@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.DTOs;
@@ -30,18 +30,59 @@ public class VacationScheduleService : IVacationScheduleService
 
     public async Task CreateFromApprovedRequestAsync(Request vacationRequest)
     {
-        // 1. Parse form data
+        // 1. Parse form data (form fields are stored as dictionary with GUID keys and string values)
         var formData = JsonSerializer.Deserialize<Dictionary<string, object>>(
             vacationRequest.FormData
         ) ?? throw new InvalidOperationException("Invalid form data");
 
-        // 2. Extract vacation details
-        var startDate = DateTime.Parse(formData["startDate"].ToString()!);
-        var endDate = DateTime.Parse(formData["endDate"].ToString()!);
-        var substituteId = Guid.Parse(formData["substitute"].ToString()!);
+        // 2. Extract vacation details by scanning values (not keys)
+        DateTime? startDate = null;
+        DateTime? endDate = null;
+        Guid? substituteId = null;
+
+        // Prefer well-known key first
+        if (formData.TryGetValue("substituteUserId", out var subRaw) && subRaw != null)
+        {
+            var str = subRaw.ToString();
+            if (!string.IsNullOrWhiteSpace(str) && Guid.TryParse(str, out var sid) && sid != vacationRequest.SubmittedById)
+            {
+                substituteId = sid;
+            }
+        }
+
+        foreach (var kv in formData)
+        {
+            var v = kv.Value?.ToString();
+            if (string.IsNullOrWhiteSpace(v)) continue;
+
+            // ISO date yyyy-MM-dd (first two dates => start, end)
+            if (System.Text.RegularExpressions.Regex.IsMatch(v, "^\\d{4}-\\d{2}-\\d{2}$"))
+            {
+                if (!startDate.HasValue) startDate = DateTime.Parse(v);
+                else if (!endDate.HasValue) endDate = DateTime.Parse(v);
+                continue;
+            }
+
+            // Potential substitute id (GUID)
+            if (!substituteId.HasValue && Guid.TryParse(v, out var gid))
+            {
+                // Don’t accept submitter as own substitute
+                if (gid != vacationRequest.SubmittedById)
+                {
+                    substituteId = gid;
+                }
+            }
+        }
+
+        if (!startDate.HasValue || !endDate.HasValue)
+        {
+            throw new ValidationException("Brak dat urlopu w danych wniosku");
+        }
+        // substitute opcjonalny — brak nie blokuje tworzenia grafiku
+
 
         // 3. Validate substitute is not the user themselves
-        if (substituteId == vacationRequest.SubmittedById)
+        if (substituteId.HasValue && substituteId.Value == vacationRequest.SubmittedById)
         {
             _logger.LogWarning(
                 "User {UserId} tried to set themselves as substitute",
@@ -49,21 +90,25 @@ public class VacationScheduleService : IVacationScheduleService
             throw new ValidationException("Nie możesz być własnym zastępcą");
         }
 
-        // 4. Check if substitute is active
-        var substitute = await _unitOfWork.UserRepository.GetByIdAsync(substituteId);
-        if (substitute == null || !substitute.IsActive)
+                // 4. Check if substitute is active
+        User? substitute = null;
+        if (substituteId.HasValue)
         {
-            throw new NotFoundException(
-                $"Zastępca {substituteId} nie istnieje lub jest nieaktywny");
+            substitute = await _unitOfWork.UserRepository.GetByIdAsync(substituteId.Value);
+            if (substitute == null || !substitute.IsActive)
+            {
+                // traktuj jak brak zastępcy
+                substituteId = null;
+                substitute = null;
+            }
         }
-
         // 5. Create vacation schedule
         var schedule = new VacationSchedule
         {
             Id = Guid.NewGuid(),
             UserId = vacationRequest.SubmittedById,
-            StartDate = startDate.Date, // Ensure date only (no time)
-            EndDate = endDate.Date,
+            StartDate = startDate.Value.Date, // Ensure date only (no time)
+            EndDate = endDate.Value.Date,
             SubstituteUserId = substituteId,
             SourceRequestId = vacationRequest.Id,
             Status = VacationStatus.Scheduled,
@@ -79,7 +124,7 @@ public class VacationScheduleService : IVacationScheduleService
         );
 
         // 6. Send notification to substitute
-        await _notificationService.NotifySubstituteAsync(substituteId, schedule);
+        if (substituteId.HasValue) { await _notificationService.NotifySubstituteAsync(substituteId!.Value, schedule); }
     }
 
     public async Task<User?> GetActiveSubstituteAsync(Guid userId)
@@ -157,10 +202,13 @@ public class VacationScheduleService : IVacationScheduleService
                 updated++;
 
                 // Notify substitute
-                await _notificationService.NotifyVacationStartedAsync(
-                    vacation.SubstituteUserId,
-                    vacation
-                );
+                if (vacation.SubstituteUserId.HasValue)
+                {
+                    await _notificationService.NotifyVacationStartedAsync(
+                        vacation.SubstituteUserId.Value,
+                        vacation
+                    );
+                }
             }
 
             // 2. Complete active vacations (EndDate < today)
@@ -193,6 +241,121 @@ public class VacationScheduleService : IVacationScheduleService
         {
             await _unitOfWork.RollbackTransactionAsync();
             _logger.LogError(ex, "Error updating vacation statuses");
+            throw;
+        }
+    }
+
+    public async Task ProcessApprovedSickLeaveRequestsAsync()
+    {
+        _logger.LogInformation("Processing approved sick leave requests");
+
+        var created = 0;
+
+        await _unitOfWork.BeginTransactionAsync();
+
+        try
+        {
+            // Get all approved sick leave requests that don't have a SickLeave record yet
+            var allRequests = await _unitOfWork.RequestRepository.GetAllAsync();
+            var allSickLeaves = await _unitOfWork.SickLeaveRepository.GetAllAsync();
+
+            var approvedSickLeaveRequests = allRequests
+                .Where(r => r.Status == RequestStatus.Approved &&
+                           r.RequestTemplate.Name.Contains("L4") && // Assuming sick leave templates contain "L4"
+                           !allSickLeaves.Any(sl => sl.SourceRequestId == r.Id))
+                .ToList();
+
+            _logger.LogInformation(
+                "Found {RequestCount} approved sick leave requests to process",
+                approvedSickLeaveRequests.Count);
+
+            foreach (var request in approvedSickLeaveRequests)
+            {
+                try
+                {
+                    // Parse form data
+                    var formData = JsonSerializer.Deserialize<Dictionary<string, object>>(
+                        request.FormData
+                    ) ?? throw new InvalidOperationException("Invalid form data");
+
+                    // Extract sick leave details
+                    var startDate = DateTime.Parse(formData["startDate"].ToString()!);
+                    var endDate = DateTime.Parse(formData["endDate"].ToString()!);
+
+                    // Calculate business days (sick leave is always consecutive calendar days)
+                    var daysCount = (endDate.Date - startDate.Date).Days + 1;
+
+                    // Check if ZUS documentation is required (>33 days)
+                    var requiresZusDocument = daysCount > 33;
+
+                    // Create SickLeave record
+                    var sickLeave = new SickLeave
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = request.SubmittedById,
+                        StartDate = startDate.Date,
+                        EndDate = endDate.Date,
+                        DaysCount = daysCount,
+                        SourceRequestId = request.Id,
+                        Status = SickLeaveStatus.Active,
+                        RequiresZusDocument = requiresZusDocument,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await _unitOfWork.SickLeaveRepository.CreateAsync(sickLeave);
+
+                    _logger.LogInformation(
+                        "Created SickLeave record for user {UserId} from {StartDate} to {EndDate} ({DaysCount} days, ZUS required: {RequiresZus})",
+                        sickLeave.UserId, sickLeave.StartDate, sickLeave.EndDate, sickLeave.DaysCount, requiresZusDocument);
+
+                    created++;
+
+                    // Send notification if ZUS documentation is required
+                    if (requiresZusDocument)
+                    {
+                        await _notificationService.CreateNotificationAsync(
+                            request.SubmittedById,
+                            NotificationType.System,
+                            "Wymagane zaświadczenie ZUS",
+                            $"Twoje zwolnienie lekarskie przekracza 33 dni ({daysCount} dni). Wymagane jest dostarczenie zaświadczenia ZUS do działu HR.",
+                            "SickLeave",
+                            sickLeave.Id.ToString(),
+                            $"/dashboard/sick-leaves/{sickLeave.Id}");
+
+                        _logger.LogInformation(
+                            "Sent ZUS documentation reminder to user {UserId} for sick leave {SickLeaveId}",
+                            sickLeave.UserId, sickLeave.Id);
+                    }
+
+                    // Notify supervisor about sick leave (informational)
+                    var user = await _unitOfWork.UserRepository.GetByIdAsync(request.SubmittedById);
+                    if (user?.SupervisorId.HasValue == true)
+                    {
+                        await _notificationService.SendSickLeaveNotificationAsync(
+                            user.SupervisorId.Value,
+                            sickLeave);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex,
+                        "Failed to process sick leave request {RequestId}",
+                        request.Id);
+                    // Continue with other requests even if one fails
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+
+            _logger.LogInformation(
+                "Processed {CreatedCount} sick leave requests successfully",
+                created);
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            _logger.LogError(ex, "Error processing approved sick leave requests");
             throw;
         }
     }

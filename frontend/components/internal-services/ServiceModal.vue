@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed inset-0 z-50 overflow-y-auto" @click.self="$emit('close')">
+  <div class="fixed inset-0 z-[10002] overflow-y-auto" @click.self="$emit('close')">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
       <!-- Background overlay -->
       <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75" @click="$emit('close')"></div>
@@ -206,6 +206,7 @@ const config = useRuntimeConfig()
 const apiUrl = config.public.apiUrl
 const authStore = useAuthStore()
 const { createService, updateService } = useInternalServicesApi()
+const toast = useNotificationToast()
 
 const isEditing = computed(() => !!props.service)
 const saving = ref(false)
@@ -264,12 +265,14 @@ async function handleSubmit() {
         id: props.service.id,
         ...form
       })
+      toast.success('Serwis został zaktualizowany')
     } else {
       await createService(form)
+      toast.success('Serwis został utworzony')
     }
     emit('saved')
   } catch (err: any) {
-    alert(`Błąd: ${err.message || 'Nie udało się zapisać serwisu'}`)
+    toast.error('Nie udało się zapisać serwisu', err.message)
   } finally {
     saving.value = false
   }

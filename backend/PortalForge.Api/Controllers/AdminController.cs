@@ -1,11 +1,18 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Application.DTOs;
+using PortalForge.Application.UseCases.Admin.Commands.AdjustVacationDays;
+using PortalForge.Application.UseCases.Admin.Commands.ReseedRequestTemplates;
 using PortalForge.Application.UseCases.Admin.Commands.SeedAdminData;
 using PortalForge.Application.UseCases.Admin.Commands.SeedEmployees;
+using PortalForge.Application.UseCases.Admin.Queries.GetAuditLogs;
 
 namespace PortalForge.Api.Controllers;
 
+/// <summary>
+/// Controller for administrative operations.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class AdminController : ControllerBase
@@ -45,5 +52,114 @@ public class AdminController : ControllerBase
 
         return Ok(result);
     }
+
+    /// <summary>
+    /// Force reseed of default request templates (vacation, sick leave).
+    /// Removes old templates and creates new ones with updated structure.
+    /// </summary>
+    [HttpPost("reseed-request-templates")]
+    [AllowAnonymous] // Temporarily allow anonymous access for maintenance
+    public async Task<ActionResult<ReseedResult>> ReseedRequestTemplates()
+    {
+        _logger.LogInformation("Reseeding default request templates...");
+
+        var command = new ReseedRequestTemplatesCommand
+        {
+            ForceRecreate = true
+        };
+        var result = await _mediator.Send(command);
+
+        if (result.Success)
+        {
+            return Ok(result);
+        }
+
+        return BadRequest(result);
+    }
+
+    /// <summary>
+    /// Manually adjust user's vacation days allowance.
+    /// Used for corrections or special allowances.
+    /// All adjustments are audited.
+    /// </summary>
+    /// <param name="userId">User ID to adjust vacation days for</param>
+    /// <param name="adjustmentAmount">Amount to add (positive) or subtract (negative)</param>
+    /// <param name="reason">Reason for adjustment (required for audit)</param>
+    /// <returns>Result with old and new values</returns>
+    [HttpPost("users/{userId}/adjust-vacation-days")]
+    [Authorize(Roles = "Admin,HR")]
+    public async Task<ActionResult<AdjustVacationDaysResult>> AdjustVacationDays(
+        Guid userId,
+        [FromBody] AdjustVacationDaysRequest request)
+    {
+        var currentUserId = User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            return Unauthorized(new { message = "User ID not found in token" });
+        }
+
+        var command = new AdjustVacationDaysCommand
+        {
+            UserId = userId,
+            AdjustmentAmount = request.AdjustmentAmount,
+            Reason = request.Reason,
+            AdjustedBy = Guid.Parse(currentUserId)
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.Success)
+        {
+            return Ok(result);
+        }
+
+        return BadRequest(result);
+    }
+
+    /// <summary>
+    /// Gets audit logs with filtering and pagination.
+    /// </summary>
+    /// <param name="entityType">Filter by entity type</param>
+    /// <param name="action">Filter by action</param>
+    /// <param name="userId">Filter by user ID</param>
+    /// <param name="fromDate">Filter by minimum timestamp</param>
+    /// <param name="toDate">Filter by maximum timestamp</param>
+    /// <param name="page">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 50, max: 100)</param>
+    /// <returns>Paginated audit log entries</returns>
+    [HttpGet("audit-logs")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<PagedResult<AuditLogDto>>> GetAuditLogs(
+        [FromQuery] string? entityType = null,
+        [FromQuery] string? action = null,
+        [FromQuery] Guid? userId = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        var query = new GetAuditLogsQuery
+        {
+            EntityType = entityType,
+            Action = action,
+            UserId = userId,
+            FromDate = fromDate,
+            ToDate = toDate,
+            Page = page,
+            PageSize = pageSize
+        };
+
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+}
+
+/// <summary>
+/// Request model for adjusting vacation days
+/// </summary>
+public class AdjustVacationDaysRequest
+{
+    public int AdjustmentAmount { get; set; }
+    public string Reason { get; set; } = string.Empty;
 }
 

@@ -7,6 +7,7 @@ using PortalForge.Application.UseCases.Admin.Commands.UpdateUser;
 using PortalForge.Application.UseCases.Admin.Queries.GetUserById;
 using PortalForge.Application.UseCases.Admin.Queries.GetUsers;
 using PortalForge.Application.UseCases.Users.Commands.BulkAssignDepartment;
+using PortalForge.Application.UseCases.Users.Commands.TransferDepartment;
 using System.Security.Claims;
 
 namespace PortalForge.Api.Controllers;
@@ -159,6 +160,108 @@ public class UsersController : ControllerBase
             Message = $"Successfully assigned {updatedCount} employees to department"
         });
     }
+
+    /// <summary>
+    /// Get user's vacation summary (allowance, used days, remaining days)
+    /// </summary>
+    [HttpGet("{userId:guid}/vacation-summary")]
+    public async Task<ActionResult<Application.UseCases.Users.Queries.GetUserVacationSummary.VacationSummaryDto>> GetVacationSummary(Guid userId)
+    {
+        _logger.LogInformation("Getting vacation summary for user {UserId}", userId);
+
+        var query = new Application.UseCases.Users.Queries.GetUserVacationSummary.GetUserVacationSummaryQuery
+        {
+            UserId = userId
+        };
+
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Update user's annual vacation allowance (Admin/HR only)
+    /// </summary>
+    [HttpPut("{userId:guid}/vacation-allowance")]
+    [Authorize(Roles = "Admin,HR")]
+    public async Task<IActionResult> UpdateVacationAllowance(
+        Guid userId,
+        [FromBody] UpdateVacationAllowanceRequest request)
+    {
+        _logger.LogInformation(
+            "Updating vacation allowance for user {UserId} to {NewDays} days",
+            userId, request.NewAnnualDays);
+
+        var command = new Application.UseCases.Users.Commands.UpdateVacationAllowance.UpdateUserVacationAllowanceCommand
+        {
+            UserId = userId,
+            NewAnnualDays = request.NewAnnualDays,
+            Reason = request.Reason,
+            RequestedByUserId = GetCurrentUserId(),
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+        };
+
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Update ALL vacation-related fields for a user (Admin/HR only).
+    /// Use this for migrations or manual corrections.
+    /// </summary>
+    [HttpPut("{userId:guid}/vacation-data")]
+    [Authorize(Roles = "Admin,HR")]
+    public async Task<IActionResult> UpdateFullVacationData(
+        Guid userId,
+        [FromBody] UpdateFullVacationDataRequest request)
+    {
+        _logger.LogInformation(
+            "Updating full vacation data for user {UserId}",
+            userId);
+
+        var command = new Application.UseCases.Users.Commands.UpdateFullVacationData.UpdateFullVacationDataCommand
+        {
+            UserId = userId,
+            AnnualVacationDays = request.AnnualVacationDays,
+            VacationDaysUsed = request.VacationDaysUsed,
+            OnDemandVacationDaysUsed = request.OnDemandVacationDaysUsed,
+            CircumstantialLeaveDaysUsed = request.CircumstantialLeaveDaysUsed,
+            CarriedOverVacationDays = request.CarriedOverVacationDays,
+            CarriedOverExpiryDate = request.CarriedOverExpiryDate,
+            Reason = request.Reason,
+            RequestedByUserId = GetCurrentUserId(),
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+        };
+
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Transfer employee to a different department (Admin/HR only).
+    /// Automatically reassigns pending requests to new supervisor.
+    /// </summary>
+    [HttpPost("{userId:guid}/transfer-department")]
+    [Authorize(Roles = "Admin,HR")]
+    public async Task<IActionResult> TransferDepartment(
+        Guid userId,
+        [FromBody] TransferDepartmentRequest request)
+    {
+        _logger.LogInformation(
+            "Transferring user {UserId} to department {DepartmentId}",
+            userId, request.NewDepartmentId);
+
+        var command = new TransferEmployeeToDepartmentCommand
+        {
+            UserId = userId,
+            NewDepartmentId = request.NewDepartmentId,
+            NewSupervisorId = request.NewSupervisorId,
+            TransferredByUserId = GetCurrentUserId(),
+            Reason = request.Reason
+        };
+
+        await _mediator.Send(command);
+        return NoContent();
+    }
 }
 
 public class BulkAssignDepartmentRequest
@@ -193,5 +296,56 @@ public class UpdateUserRequest
     public string Role { get; set; } = string.Empty;
     public List<Guid> RoleGroupIds { get; set; } = new();
     public bool IsActive { get; set; }
+}
+
+public class UpdateVacationAllowanceRequest
+{
+    public int NewAnnualDays { get; set; }
+    public string Reason { get; set; } = string.Empty;
+}
+
+public class UpdateFullVacationDataRequest
+{
+    /// <summary>
+    /// Annual vacation days entitlement (e.g., 26)
+    /// </summary>
+    public int AnnualVacationDays { get; set; } = 26;
+
+    /// <summary>
+    /// Number of vacation days already used this year
+    /// </summary>
+    public int VacationDaysUsed { get; set; } = 0;
+
+    /// <summary>
+    /// Number of on-demand vacation days already used (max 4)
+    /// </summary>
+    public int OnDemandVacationDaysUsed { get; set; } = 0;
+
+    /// <summary>
+    /// Number of circumstantial leave days used
+    /// </summary>
+    public int CircumstantialLeaveDaysUsed { get; set; } = 0;
+
+    /// <summary>
+    /// Vacation days carried over from previous year
+    /// </summary>
+    public int CarriedOverVacationDays { get; set; } = 0;
+
+    /// <summary>
+    /// Expiry date for carried over vacation days (typically September 30)
+    /// </summary>
+    public DateTime? CarriedOverExpiryDate { get; set; }
+
+    /// <summary>
+    /// Reason for the update (e.g., "Migration from old system", "Manual correction")
+    /// </summary>
+    public string Reason { get; set; } = string.Empty;
+}
+
+public class TransferDepartmentRequest
+{
+    public Guid NewDepartmentId { get; set; }
+    public Guid? NewSupervisorId { get; set; }
+    public string? Reason { get; set; }
 }
 
