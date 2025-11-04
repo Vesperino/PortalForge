@@ -24,6 +24,34 @@ export interface UpdateVacationAllowanceRequest {
 }
 
 /**
+ * Leave type enum matching backend
+ */
+export enum LeaveType {
+  Annual = 'Annual',
+  OnDemand = 'OnDemand',
+  Circumstantial = 'Circumstantial',
+  Sick = 'Sick'
+}
+
+/**
+ * Request body for validating vacation availability
+ */
+export interface ValidateVacationRequest {
+  startDate: string
+  endDate: string
+  leaveType: LeaveType
+}
+
+/**
+ * Response from vacation validation
+ */
+export interface ValidateVacationResponse {
+  canTake: boolean
+  errorMessage: string | null
+  requestedDays: number
+}
+
+/**
  * Composable for vacation management API calls
  */
 export function useVacations() {
@@ -68,8 +96,26 @@ export function useVacations() {
     })
   }
 
+  /**
+   * Validates if user can take vacation on specified dates
+   * Used for real-time validation before submitting request
+   * @param request - Vacation validation request with dates and leave type
+   * @returns Validation result with error message if invalid
+   */
+  async function validateVacation(
+    request: ValidateVacationRequest
+  ): Promise<ValidateVacationResponse> {
+    const headers = getAuthHeaders()
+    return await $fetch(`${apiUrl}/api/vacation-schedules/validate`, {
+      method: 'POST',
+      headers,
+      body: request
+    }) as ValidateVacationResponse
+  }
+
   return {
     getUserVacationSummary,
-    updateVacationAllowance
+    updateVacationAllowance,
+    validateVacation
   }
 }

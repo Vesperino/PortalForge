@@ -65,12 +65,18 @@ const loadPermissions = async () => {
   isLoadingPermissions.value = true
 
   try {
+    // Check if user is Admin or HR - they should see all departments
+    const userRole = authStore.user?.role
+    const isAdminOrHR = userRole === 'Admin' || userRole === 'HR'
+
+    // Fetch organizational permissions
     const permissions = await $fetch(
       `${config.public.apiUrl}/api/admin/permissions/organizational/${userId}`,
       { headers: getAuthHeaders() }
     ) as { canViewAllDepartments: boolean; visibleDepartmentIds: string[] }
 
-    canViewAllDepartments.value = permissions.canViewAllDepartments
+    // Grant full access to Admin and HR users regardless of organizational permissions
+    canViewAllDepartments.value = isAdminOrHR || permissions.canViewAllDepartments
 
     // Fetch department tree
     const allDepartments = await $fetch(
@@ -78,8 +84,8 @@ const loadPermissions = async () => {
       { headers: getAuthHeaders() }
     ) as DepartmentDto[]
 
-    if (permissions.canViewAllDepartments) {
-      // Admin can see all departments
+    if (canViewAllDepartments.value) {
+      // Admin/HR or users with full permissions can see all departments
       visibleDepartments.value = allDepartments
     } else if (permissions.visibleDepartmentIds.length > 0) {
       // User has specific department permissions

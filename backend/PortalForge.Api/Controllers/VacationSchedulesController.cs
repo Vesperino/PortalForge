@@ -2,8 +2,10 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Application.DTOs;
+using PortalForge.Application.Interfaces;
 using PortalForge.Application.Services;
 using PortalForge.Domain.Entities;
+using PortalForge.Domain.Enums;
 using System.Security.Claims;
 
 namespace PortalForge.Api.Controllers;
@@ -16,15 +18,18 @@ namespace PortalForge.Api.Controllers;
 public class VacationSchedulesController : ControllerBase
 {
     private readonly IVacationScheduleService _vacationService;
+    private readonly IVacationCalculationService _vacationCalculationService;
     private readonly IMediator _mediator;
     private readonly ILogger<VacationSchedulesController> _logger;
 
     public VacationSchedulesController(
         IVacationScheduleService vacationService,
+        IVacationCalculationService vacationCalculationService,
         IMediator mediator,
         ILogger<VacationSchedulesController> logger)
     {
         _vacationService = vacationService;
+        _vacationCalculationService = vacationCalculationService;
         _mediator = mediator;
         _logger = logger;
     }
@@ -33,6 +38,40 @@ public class VacationSchedulesController : ControllerBase
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+    }
+
+    /// <summary>
+    /// Validates if user can take vacation on specified dates.
+    /// Used by frontend to show real-time feedback before submitting request.
+    /// </summary>
+    /// <param name="request">Vacation validation request</param>
+    /// <returns>Validation result with error message if invalid</returns>
+    [HttpPost("validate")]
+    [Authorize]
+    [ProducesResponseType(typeof(ValidateVacationResponse), 200)]
+    public async Task<ActionResult<ValidateVacationResponse>> ValidateVacation(
+        [FromBody] ValidateVacationRequest request)
+    {
+        _logger.LogInformation(
+            "Validating vacation for user {UserId}: {LeaveType} from {StartDate} to {EndDate}",
+            GetCurrentUserId(), request.LeaveType, request.StartDate, request.EndDate);
+
+        var (canTake, errorMessage) = await _vacationCalculationService.CanTakeVacationAsync(
+            GetCurrentUserId(),
+            request.StartDate,
+            request.EndDate,
+            request.LeaveType);
+
+        var businessDays = _vacationCalculationService.CalculateBusinessDays(
+            request.StartDate,
+            request.EndDate);
+
+        return Ok(new ValidateVacationResponse
+        {
+            CanTake = canTake,
+            ErrorMessage = errorMessage,
+            RequestedDays = businessDays
+        });
     }
 
     /// <summary>
@@ -199,4 +238,18 @@ public class VacationSchedulesController : ControllerBase
 public class CancelVacationRequest
 {
     public string Reason { get; set; } = string.Empty;
+}
+
+public class ValidateVacationRequest
+{
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public LeaveType LeaveType { get; set; }
+}
+
+public class ValidateVacationResponse
+{
+    public bool CanTake { get; set; }
+    public string? ErrorMessage { get; set; }
+    public int RequestedDays { get; set; }
 }
