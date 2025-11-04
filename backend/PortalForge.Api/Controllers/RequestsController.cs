@@ -29,9 +29,10 @@ public class RequestsController : BaseController
 
     /// <summary>
     /// Get current user's requests
+    /// All authenticated users can view their own requests
     /// </summary>
     [HttpGet("my-requests")]
-    [Authorize(Policy = "RequirePermission:requests.view")]
+    [Authorize]
     public async Task<ActionResult> GetMyRequests()
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
@@ -83,9 +84,10 @@ public class RequestsController : BaseController
 
     /// <summary>
     /// Get request details by ID including comments and edit history
+    /// All authenticated users can view requests (handler checks ownership/approval rights)
     /// </summary>
     [HttpGet("{requestId:guid}")]
-    [Authorize(Policy = "RequirePermission:requests.view")]
+    [Authorize]
     public async Task<ActionResult> GetRequestById(Guid requestId)
     {
         var query = new GetRequestByIdQuery { RequestId = requestId };
@@ -142,9 +144,10 @@ public class RequestsController : BaseController
 
     /// <summary>
     /// Add a comment to a request
+    /// All authenticated users can add comments (handler checks ownership/approval rights)
     /// </summary>
     [HttpPost("{requestId:guid}/comments")]
-    [Authorize(Policy = "RequirePermission:requests.view")]
+    [Authorize]
     public async Task<ActionResult<Guid>> AddComment(
         Guid requestId,
         [FromBody] AddCommentRequest request)
