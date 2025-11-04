@@ -75,6 +75,55 @@ public class SubmitRequestCommandHandler
             Status = template.RequiresApproval ? RequestStatus.InReview : RequestStatus.Approved
         };
 
+        // Try to persist parsed metadata (leave type, attachments)
+        try
+        {
+            var formDict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(command.FormData);
+            if (formDict != null)
+            {
+                // Detect leave type if present in form data
+                foreach (var kv in formDict)
+                {
+                    if (kv.Value.ValueKind == JsonValueKind.String)
+                    {
+                        var str = kv.Value.GetString();
+                        if (!string.IsNullOrWhiteSpace(str))
+                        {
+                            if (str == "Annual" || str == "OnDemand" || str == "Circumstantial" || str == "Sick")
+                            {
+                                if (Enum.TryParse<LeaveType>(str, out var lt))
+                                {
+                                    request.LeaveType = lt;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Attachments (e.g., base64 images) if frontend provided under a common key
+                if (formDict.TryGetValue("attachments", out var attachmentsEl) && attachmentsEl.ValueKind == JsonValueKind.Array)
+                {
+                    var list = new List<string>();
+                    foreach (var item in attachmentsEl.EnumerateArray())
+                    {
+                        if (item.ValueKind == JsonValueKind.String)
+                        {
+                            var s = item.GetString();
+                            if (!string.IsNullOrWhiteSpace(s)) list.Add(s!);
+                        }
+                    }
+                    if (list.Count > 0)
+                    {
+                        request.Attachments = JsonSerializer.Serialize(list);
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Non-fatal – keep going if form data parsing fails here
+        }
+
         // Create approval steps based on template
         if (template.RequiresApproval && template.ApprovalStepTemplates.Any())
         {

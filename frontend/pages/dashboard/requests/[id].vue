@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-vue-next'
 
@@ -159,11 +159,9 @@ const handleApprove = async () => {
   isSubmitting.value = true
 
   try {
-    await $fetch(`/api/requests/steps/${currentStep.value.id}/approve`, {
-      method: 'POST',
-      body: {
-        comment: approveComment.value || null
-      }
+    const { approveRequestStep } = useRequestsApi()
+    await approveRequestStep(requestId, currentStep.value.id, {
+      comment: approveComment.value || undefined
     })
 
     // Reload request data
@@ -192,11 +190,9 @@ const handleReject = async () => {
   isSubmitting.value = true
 
   try {
-    await $fetch(`/api/requests/steps/${currentStep.value.id}/reject`, {
-      method: 'POST',
-      body: {
-        comment: rejectComment.value
-      }
+    const { rejectRequestStep } = useRequestsApi()
+    await rejectRequestStep(requestId, currentStep.value.id, {
+      reason: rejectComment.value
     })
 
     // Reload request data

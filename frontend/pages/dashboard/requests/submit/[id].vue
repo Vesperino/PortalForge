@@ -134,6 +134,15 @@
           </div>
         </div>
 
+        <!-- Circumstantial attachments (photos/scans) -->
+        <div v-if="template.isVacationRequest && currentLeaveType === 'Circumstantial'" class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Załączniki (zdjęcia/skan zaświadczenia)
+          </label>
+          <input type="file" multiple accept="image/*" @change="onAttachmentsChange" class="block w-full text-sm text-gray-700 dark:text-gray-300" />
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Do 5 plików, zostaną zapisane wraz z wnioskiem.</p>
+        </div>
+
         <!-- Form Fields -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
@@ -451,6 +460,35 @@ const performValidation = async (startDate: string, endDate: string, leaveType: 
   } finally {
     isValidating.value = false
   }
+}
+
+// Extract current leave type from form data
+const currentLeaveType = computed(() => {
+  for (const [, value] of Object.entries(formData.value)) {
+    if (value === 'Annual' || value === 'OnDemand' || value === 'Circumstantial' || value === 'Sick') {
+      return value as LeaveType
+    }
+  }
+  return null
+})
+
+// Handle attachments selection (base64 inline for backend to persist)
+const onAttachmentsChange = async (e: Event) => {
+  const input = e.target as HTMLInputElement
+  if (!input.files) return
+  const files = Array.from(input.files).slice(0, 5)
+  const encoded: string[] = []
+  for (const file of files) {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+    encoded.push(dataUrl)
+  }
+  // Persist under a well-known key so backend can pick it up
+  formData.value.attachments = encoded
 }
 
 const submitRequest = async () => {

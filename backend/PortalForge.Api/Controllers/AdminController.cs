@@ -95,7 +95,7 @@ public class AdminController : ControllerBase
         var currentUserId = User.FindFirst("sub")?.Value;
         if (string.IsNullOrEmpty(currentUserId))
         {
-            return Unauthorized("User ID not found in token");
+            return Unauthorized(new { message = "User ID not found in token" });
         }
 
         var command = new AdjustVacationDaysCommand

@@ -30,18 +30,51 @@ public class VacationScheduleService : IVacationScheduleService
 
     public async Task CreateFromApprovedRequestAsync(Request vacationRequest)
     {
-        // 1. Parse form data
+        // 1. Parse form data (form fields are stored as dictionary with GUID keys and string values)
         var formData = JsonSerializer.Deserialize<Dictionary<string, object>>(
             vacationRequest.FormData
         ) ?? throw new InvalidOperationException("Invalid form data");
 
-        // 2. Extract vacation details
-        var startDate = DateTime.Parse(formData["startDate"].ToString()!);
-        var endDate = DateTime.Parse(formData["endDate"].ToString()!);
-        var substituteId = Guid.Parse(formData["substitute"].ToString()!);
+        // 2. Extract vacation details by scanning values (not keys)
+        DateTime? startDate = null;
+        DateTime? endDate = null;
+        Guid? substituteId = null;
+
+        foreach (var kv in formData)
+        {
+            var v = kv.Value?.ToString();
+            if (string.IsNullOrWhiteSpace(v)) continue;
+
+            // ISO date yyyy-MM-dd (first two dates => start, end)
+            if (System.Text.RegularExpressions.Regex.IsMatch(v, "^\\d{4}-\\d{2}-\\d{2}$"))
+            {
+                if (!startDate.HasValue) startDate = DateTime.Parse(v);
+                else if (!endDate.HasValue) endDate = DateTime.Parse(v);
+                continue;
+            }
+
+            // Potential substitute id (GUID)
+            if (!substituteId.HasValue && Guid.TryParse(v, out var gid))
+            {
+                // Don’t accept submitter as own substitute
+                if (gid != vacationRequest.SubmittedById)
+                {
+                    substituteId = gid;
+                }
+            }
+        }
+
+        if (!startDate.HasValue || !endDate.HasValue)
+        {
+            throw new ValidationException("Brak dat urlopu w danych wniosku");
+        }
+        if (!substituteId.HasValue)
+        {
+            throw new ValidationException("Nie wybrano zastępcy dla urlopu");
+        }
 
         // 3. Validate substitute is not the user themselves
-        if (substituteId == vacationRequest.SubmittedById)
+        if (substituteId.Value == vacationRequest.SubmittedById)
         {
             _logger.LogWarning(
                 "User {UserId} tried to set themselves as substitute",
@@ -50,7 +83,7 @@ public class VacationScheduleService : IVacationScheduleService
         }
 
         // 4. Check if substitute is active
-        var substitute = await _unitOfWork.UserRepository.GetByIdAsync(substituteId);
+        var substitute = await _unitOfWork.UserRepository.GetByIdAsync(substituteId!.Value);
         if (substitute == null || !substitute.IsActive)
         {
             throw new NotFoundException(
@@ -62,9 +95,9 @@ public class VacationScheduleService : IVacationScheduleService
         {
             Id = Guid.NewGuid(),
             UserId = vacationRequest.SubmittedById,
-            StartDate = startDate.Date, // Ensure date only (no time)
-            EndDate = endDate.Date,
-            SubstituteUserId = substituteId,
+            StartDate = startDate.Value.Date, // Ensure date only (no time)
+            EndDate = endDate.Value.Date,
+            SubstituteUserId = substituteId!.Value,
             SourceRequestId = vacationRequest.Id,
             Status = VacationStatus.Scheduled,
             CreatedAt = DateTime.UtcNow
@@ -79,7 +112,7 @@ public class VacationScheduleService : IVacationScheduleService
         );
 
         // 6. Send notification to substitute
-        await _notificationService.NotifySubstituteAsync(substituteId, schedule);
+        await _notificationService.NotifySubstituteAsync(substituteId!.Value, schedule);
     }
 
     public async Task<User?> GetActiveSubstituteAsync(Guid userId)

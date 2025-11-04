@@ -225,6 +225,21 @@ export const useRequestsApi = () => {
     }
   }
 
+  const getApprovalsHistory = async () => {
+    try {
+      const response = await $fetch(
+        `${config.public.apiUrl}/api/requests/approvals-history`,
+        {
+          headers: getAuthHeaders()
+        }
+      ) as { items: Request[] }
+      return response.items
+    } catch (error) {
+      console.error('Error fetching approvals history:', error)
+      throw error
+    }
+  }
+
   const getRequestById = async (requestId: string) => {
     try {
       const response = await $fetch(
@@ -315,6 +330,7 @@ export const useRequestsApi = () => {
     getMyRequests,
     getRequestsToApprove,
     getPendingApprovals,
+    getApprovalsHistory,
     getRequestById,
     submitRequest,
     approveRequestStep,

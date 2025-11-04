@@ -35,19 +35,19 @@ public class RequestRoutingService : IRequestRoutingService
 
         User? approver = stepTemplate.ApproverType switch
         {
-            ApproverType.DirectSupervisor => ResolveByDirectSupervisor(submitter),
+            ApproverType.DirectSupervisor => await ResolveDirectSupervisorFromStructureAsync(submitter),
             ApproverType.Role => stepTemplate.ApproverRole.HasValue
                 ? await ResolveByRoleAsync(stepTemplate.ApproverRole.Value, submitter)
-                : throw new InvalidOperationException($"ApproverRole is required when ApproverType is Role (Step {stepTemplate.StepOrder})"),
+                : await ResolveDirectSupervisorFromStructureAsync(submitter),
             ApproverType.SpecificUser => stepTemplate.SpecificUser,
             ApproverType.UserGroup => stepTemplate.ApproverGroupId.HasValue
                 ? await ResolveByUserGroupAsync(stepTemplate.ApproverGroupId.Value)
-                : throw new InvalidOperationException($"ApproverGroupId is required when ApproverType is UserGroup (Step {stepTemplate.StepOrder})"),
+                : null,
             ApproverType.SpecificDepartment => stepTemplate.SpecificDepartmentId.HasValue
                 ? await ResolveBySpecificDepartmentAsync(stepTemplate.SpecificDepartmentId.Value)
-                : throw new InvalidOperationException($"SpecificDepartmentId is required when ApproverType is SpecificDepartment (Step {stepTemplate.StepOrder})"),
+                : null,
             ApproverType.Submitter => submitter,
-            _ => throw new InvalidOperationException($"Unknown ApproverType: {stepTemplate.ApproverType}")
+            _ => null
         };
 
         if (approver == null)
@@ -69,9 +69,10 @@ public class RequestRoutingService : IRequestRoutingService
     }
 
     /// <inheritdoc />
-    public Task<bool> HasHigherSupervisorAsync(User user)
+    public async Task<bool> HasHigherSupervisorAsync(User user)
     {
-        return Task.FromResult(user.Supervisor != null);
+        var sup = await ResolveDirectSupervisorFromStructureAsync(user);
+        return sup != null;
     }
 
     /// <inheritdoc />
@@ -308,6 +309,48 @@ public class RequestRoutingService : IRequestRoutingService
         }
 
         return submitter.Supervisor;
+    }
+
+    /// <summary>
+    /// Resolves direct supervisor using user->supervisor and department hierarchy fallback.
+    /// </summary>
+    private async Task<User?> ResolveDirectSupervisorFromStructureAsync(User submitter)
+    {
+        // Prefer explicitly assigned supervisor
+        if (submitter.Supervisor != null)
+        {
+            return submitter.Supervisor;
+        }
+
+        // Fallback: traverse department chain and use head of department
+        if (submitter.DepartmentId.HasValue)
+        {
+            var currentDeptId = submitter.DepartmentId.Value;
+            while (true)
+            {
+                var dept = await _unitOfWork.DepartmentRepository.GetByIdAsync(currentDeptId);
+                if (dept == null)
+                {
+                    break;
+                }
+
+                if (dept.HeadOfDepartment != null && dept.HeadOfDepartment.Id != submitter.Id)
+                {
+                    return dept.HeadOfDepartment;
+                }
+
+                if (dept.ParentDepartmentId.HasValue)
+                {
+                    currentDeptId = dept.ParentDepartmentId.Value;
+                    continue;
+                }
+
+                break;
+            }
+        }
+
+        _logger.LogWarning("User {UserId} has no supervisor assigned and no head found in department chain", submitter.Id);
+        return null;
     }
 
     /// <summary>

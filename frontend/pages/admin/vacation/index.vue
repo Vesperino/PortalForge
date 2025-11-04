@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Calendar, Users, Edit, X, Search, CheckCircle } from 'lucide-vue-next'
+import { Calendar, Users, Edit, Search, CheckCircle } from 'lucide-vue-next'
 import { useVacations } from '~/composables/useVacations'
 
 definePageMeta({
@@ -21,9 +21,13 @@ interface User {
 }
 
 const config = useRuntimeConfig()
-const { getAuthHeaders } = useAuth()
+const authStore = useAuthStore()
 const { getUserVacationSummary } = useVacations()
 const toast = useNotificationToast()
+
+const getAuthHeaders = () => ({
+  Authorization: `Bearer ${authStore.accessToken}`
+})
 
 // State
 const users = ref<User[]>([])
@@ -34,9 +38,12 @@ const searchQuery = ref('')
 // Selected user for editing
 const selectedUser = ref<User | null>(null)
 const showEditModal = ref(false)
-const newAllowance = ref(26)
+const adjustmentAmount = ref(0)
 const updateReason = ref('')
 const isUpdating = ref(false)
+// Mode: 'adjust' (delta +/-) or 'set' (absolute)
+const editMode = ref<'adjust' | 'set'>('adjust')
+const newAnnualLimit = ref<number | null>(null)
 
 // Computed
 const filteredUsers = computed(() => {
@@ -75,47 +82,133 @@ const fetchUsers = async () => {
 // Open edit modal
 const openEditModal = (user: User) => {
   selectedUser.value = user
-  newAllowance.value = user.annualVacationDays
+  adjustmentAmount.value = 0
+  newAnnualLimit.value = user.annualVacationDays
   updateReason.value = ''
+  editMode.value = 'adjust'
   showEditModal.value = true
 }
 
+// Computed new allowance after adjustment
+const computedNewAllowance = computed(() => {
+  if (!selectedUser.value) return 0
+  return editMode.value === 'set'
+    ? (typeof newAnnualLimit.value === 'number' ? newAnnualLimit.value : selectedUser.value.annualVacationDays)
+    : selectedUser.value.annualVacationDays + adjustmentAmount.value
+})
+
 // Update vacation allowance
-const updateVacationAllowance = async () => {
+const _updateVacationAllowance = async () => {
   if (!selectedUser.value || !updateReason.value.trim()) {
-    toast.warning('Powód zmiany jest wymagany')
+    toast.warning('Powód korekty jest wymagany', 'Powód musi mieć minimum 10 znaków')
+    return
+  }
+
+  if (updateReason.value.length < 10) {
+    toast.warning('Powód korekty musi mieć minimum 10 znaków')
+    return
+  }
+
+  if (adjustmentAmount.value === 0) {
+    toast.warning('Ilość dni do korekty nie może wynosić 0')
+    return
+  }
+
+  if (computedNewAllowance.value < 0) {
+    toast.error('Skorygowana wartość nie może być ujemna')
     return
   }
 
   isUpdating.value = true
 
   try {
-    await $fetch(
-      `${config.public.apiUrl}/api/admin/users/${selectedUser.value.id}/vacation-allowance`,
+    const response = await $fetch(
+      `${config.public.apiUrl}/api/admin/users/${selectedUser.value.id}/adjust-vacation-days`,
       {
-        method: 'PUT',
+        method: 'POST',
         headers: getAuthHeaders(),
         body: {
-          newAnnualDays: newAllowance.value,
+          adjustmentAmount: adjustmentAmount.value,
           reason: updateReason.value
         }
       }
-    )
+    ) as { success: boolean; message: string; oldValue: number; newValue: number }
 
     // Update local state
     const userIndex = users.value.findIndex(u => u.id === selectedUser.value!.id)
     if (userIndex !== -1) {
-      users.value[userIndex].annualVacationDays = newAllowance.value
+      users.value[userIndex].annualVacationDays = response.newValue
     }
 
     // Close modal
     showEditModal.value = false
     selectedUser.value = null
 
-    toast.success('Limit urlopów został zaktualizowany')
+    toast.success('Sukces!', `Dni urlopowe skorygowane z ${response.oldValue} na ${response.newValue}`)
   } catch (err: any) {
-    console.error('Error updating vacation allowance:', err)
+    console.error('Error adjusting vacation days:', err)
+    toast.error('Nie udało się skorygować dni urlopowych')
+  } finally {
+  isUpdating.value = false
+  }
+}
+
+// New unified save handler supporting both adjust and set modes
+const saveVacation = async () => {
+  if (!selectedUser.value || !updateReason.value.trim()) {
+    toast.warning('Powód korekty jest wymagany', 'Powód musi mieć minimum 10 znaków')
+    return
+  }
+  if (updateReason.value.length < 10) {
+    toast.warning('Powód korekty musi mieć minimum 10 znaków')
+    return
+  }
+  if (computedNewAllowance.value < 0) {
+    toast.error('Skorygowana wartość nie może być ujemna')
+    return
+  }
+
+  isUpdating.value = true
+  try {
+    let newValue: number
+    if (editMode.value === 'set') {
+      if (typeof newAnnualLimit.value !== 'number') {
+        toast.warning('Podaj nowy limit roczny')
+        return
+      }
+      await $fetch(`${config.public.apiUrl}/api/admin/users/${selectedUser.value.id}/vacation-allowance`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: { newAnnualDays: newAnnualLimit.value, reason: updateReason.value }
+      })
+      newValue = newAnnualLimit.value
+    } else {
+      if (adjustmentAmount.value === 0) {
+        toast.warning('Ilość dni do korekty nie może wynosić 0')
+        return
+      }
+      const response = await $fetch(`${config.public.apiUrl}/api/admin/users/${selectedUser.value.id}/adjust-vacation-days`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: { adjustmentAmount: adjustmentAmount.value, reason: updateReason.value }
+      }) as { success: boolean; message: string; oldValue: number; newValue: number }
+      newValue = response.newValue
+    }
+
+    const summary = await getUserVacationSummary(selectedUser.value.id)
+    const idx = users.value.findIndex(u => u.id === selectedUser.value!.id)
+    if (idx !== -1) {
+      users.value[idx].annualVacationDays = newValue
+      users.value[idx].vacationDaysUsed = summary.vacationDaysUsed
+      users.value[idx].onDemandVacationDaysUsed = summary.onDemandVacationDaysUsed
+      users.value[idx].carriedOverVacationDays = summary.carriedOverVacationDays
+    }
+    selectedUser.value!.annualVacationDays = newValue
+    toast.success('Limit urlopów został zaktualizowany (zapisano w audycie)')
+    showEditModal.value = false
+  } catch (err: any) {
     toast.error('Nie udało się zaktualizować limitu urlopów')
+    console.error('Error updating vacation allowance:', err)
   } finally {
     isUpdating.value = false
   }
@@ -178,7 +271,7 @@ onMounted(() => {
             type="text"
             placeholder="Szukaj użytkownika po imieniu, nazwisku, emailu lub dziale..."
             class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-          />
+          >
         </div>
       </div>
 
@@ -316,39 +409,81 @@ onMounted(() => {
 
         <!-- Modal Body -->
         <div class="p-6 space-y-4">
-          <!-- Current Allowance -->
-          <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Obecny limit roczny:</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">
-              {{ selectedUser.annualVacationDays }} dni
+          <!-- Current Stats -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+              <p class="text-sm text-blue-600 dark:text-blue-400 mb-1">Obecny limit</p>
+              <p class="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                {{ selectedUser.annualVacationDays }}
+              </p>
+            </div>
+            <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+              <p class="text-sm text-green-600 dark:text-green-400 mb-1">Po korekcie</p>
+              <p class="text-2xl font-bold" :class="computedNewAllowance < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-900 dark:text-green-100'">
+                {{ computedNewAllowance }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Edit Mode Switch -->
+          <div class="flex items-center gap-4">
+            <label class="inline-flex items-center gap-2">
+              <input v-model="editMode" type="radio" value="adjust" >
+              <span class="text-sm">Korekta (+/-)</span>
+            </label>
+            <label class="inline-flex items-center gap-2">
+              <input v-model="editMode" type="radio" value="set" >
+              <span class="text-sm">Ustaw nowy limit</span>
+            </label>
+          </div>
+
+          <!-- Adjustment Amount -->
+          <div v-if="editMode === 'adjust'">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Korekta dni urlopowych <span class="text-red-500">*</span>
+            </label>
+            <input
+              v-model.number="adjustmentAmount"
+              type="number"
+              placeholder="np. +5 (dodaj) lub -3 (odejmij)"
+              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+            >
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Wpisz liczbę dodatnią aby dodać dni, lub ujemną aby odjąć
             </p>
           </div>
 
-          <!-- New Allowance -->
-          <div>
+          <!-- Set New Limit -->
+          <div v-else>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Nowy limit roczny <span class="text-red-500">*</span>
             </label>
             <input
-              v-model.number="newAllowance"
+              v-model.number="newAnnualLimit"
               type="number"
               min="0"
-              max="50"
+              placeholder="np. 26"
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-            />
+            >
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Ustaw bezwzględną wartość limitu rocznego dla użytkownika
+            </p>
           </div>
 
           <!-- Reason -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Powód zmiany <span class="text-red-500">*</span>
+              Powód korekty <span class="text-red-500">*</span>
             </label>
             <textarea
               v-model="updateReason"
               rows="3"
-              placeholder="np. Zmiana umowy, dodatkowe dni za staż pracy..."
+              placeholder="Opisz powód korekty (minimum 10 znaków)..."
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
             />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {{ updateReason.length }}/10 znaków
+            </p>
           </div>
         </div>
 
@@ -363,11 +498,11 @@ onMounted(() => {
           </button>
           <button
             class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            :disabled="isUpdating || !updateReason.trim() || newAllowance === selectedUser.annualVacationDays"
-            @click="updateVacationAllowance"
+            :disabled="isUpdating || !updateReason.trim() || updateReason.length < 10 || computedNewAllowance < 0 || (editMode === 'adjust' && adjustmentAmount === 0) || (editMode === 'set' && (newAnnualLimit === null || newAnnualLimit < 0))"
+            @click="saveVacation"
           >
             <CheckCircle v-if="!isUpdating" class="w-4 h-4" />
-            {{ isUpdating ? 'Aktualizowanie...' : 'Zapisz zmiany' }}
+            {{ isUpdating ? 'Zapisywanie...' : 'Zapisz korektę' }}
           </button>
         </div>
       </div>
