@@ -1,0 +1,112 @@
+using MediatR;
+using Microsoft.Extensions.Logging;
+using PortalForge.Application.Exceptions;
+using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.UseCases.Requests.DTOs;
+
+namespace PortalForge.Application.UseCases.Requests.Queries.GetRequestById;
+
+public class GetRequestByIdQueryHandler : IRequestHandler<GetRequestByIdQuery, RequestDetailDto>
+{
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<GetRequestByIdQueryHandler> _logger;
+
+    public GetRequestByIdQueryHandler(
+        IUnitOfWork unitOfWork,
+        ILogger<GetRequestByIdQueryHandler> logger)
+    {
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
+
+    public async Task<RequestDetailDto> Handle(GetRequestByIdQuery request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Fetching request details for RequestId: {RequestId}", request.RequestId);
+
+        var req = await _unitOfWork.RequestRepository.GetByIdAsync(request.RequestId);
+
+        if (req == null)
+        {
+            _logger.LogWarning("Request not found: {RequestId}", request.RequestId);
+            throw new NotFoundException($"Request with ID {request.RequestId} not found");
+        }
+
+        // Get comments
+        var comments = await _unitOfWork.RequestCommentRepository.GetByRequestIdAsync(request.RequestId);
+
+        // Get edit history
+        var editHistory = await _unitOfWork.RequestEditHistoryRepository.GetByRequestIdAsync(request.RequestId);
+
+        // Map to DTO
+        var dto = new RequestDetailDto
+        {
+            Id = req.Id,
+            RequestNumber = req.RequestNumber,
+            RequestTemplateId = req.RequestTemplateId,
+            RequestTemplateName = req.RequestTemplate?.Name ?? string.Empty,
+            RequestTemplateIcon = req.RequestTemplate?.Icon ?? string.Empty,
+            SubmittedById = req.SubmittedById,
+            SubmittedByName = $"{req.SubmittedBy.FirstName} {req.SubmittedBy.LastName}",
+            SubmittedAt = req.SubmittedAt,
+            Priority = req.Priority.ToString(),
+            FormData = req.FormData,
+            LeaveType = req.LeaveType?.ToString(),
+            Attachments = ParseAttachments(req.Attachments),
+            Status = req.Status.ToString(),
+            CompletedAt = req.CompletedAt,
+            ApprovalSteps = req.ApprovalSteps.Select(s => new ApprovalStepDto
+            {
+                Id = s.Id,
+                StepOrder = s.StepOrder,
+                ApproverId = s.ApproverId,
+                ApproverName = s.Approver != null ? $"{s.Approver.FirstName} {s.Approver.LastName}" : "Unknown",
+                Status = s.Status.ToString(),
+                Comment = s.Comment,
+                FinishedAt = s.FinishedAt,
+                RequiresQuiz = s.RequiresQuiz
+            }).OrderBy(s => s.StepOrder).ToList(),
+            Comments = comments.Select(c => new RequestCommentDto
+            {
+                Id = c.Id,
+                RequestId = c.RequestId,
+                UserId = c.UserId,
+                UserName = c.User != null ? $"{c.User.FirstName} {c.User.LastName}" : "Unknown",
+                Comment = c.Comment,
+                Attachments = ParseAttachments(c.Attachments),
+                CreatedAt = c.CreatedAt
+            }).OrderBy(c => c.CreatedAt).ToList(),
+            EditHistory = editHistory.Select(h => new RequestEditHistoryDto
+            {
+                Id = h.Id,
+                RequestId = h.RequestId,
+                EditedByUserId = h.EditedByUserId,
+                EditedByUserName = h.EditedBy != null ? $"{h.EditedBy.FirstName} {h.EditedBy.LastName}" : "Unknown",
+                EditedAt = h.EditedAt,
+                OldFormData = h.OldFormData,
+                NewFormData = h.NewFormData,
+                ChangeReason = h.ChangeReason
+            }).OrderByDescending(h => h.EditedAt).ToList()
+        };
+
+        _logger.LogInformation(
+            "Successfully fetched request details: {RequestNumber} with {CommentCount} comments and {HistoryCount} edits",
+            req.RequestNumber, dto.Comments.Count, dto.EditHistory.Count);
+
+        return dto;
+    }
+
+    private List<string> ParseAttachments(string? attachmentsJson)
+    {
+        if (string.IsNullOrWhiteSpace(attachmentsJson))
+            return new List<string>();
+
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<List<string>>(attachmentsJson) ?? new List<string>();
+        }
+        catch
+        {
+            return new List<string>();
+        }
+    }
+}

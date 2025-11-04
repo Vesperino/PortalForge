@@ -225,6 +225,21 @@ export const useRequestsApi = () => {
     }
   }
 
+  const getRequestById = async (requestId: string) => {
+    try {
+      const response = await $fetch(
+        `${config.public.apiUrl}/api/requests/${requestId}`,
+        {
+          headers: getAuthHeaders()
+        }
+      )
+      return response
+    } catch (error) {
+      console.error('Error fetching request details:', error)
+      throw error
+    }
+  }
+
   // Notifications
   const getNotifications = async (unreadOnly = false, pageNumber = 1, pageSize = 20) => {
     try {
@@ -300,6 +315,7 @@ export const useRequestsApi = () => {
     getMyRequests,
     getRequestsToApprove,
     getPendingApprovals,
+    getRequestById,
     submitRequest,
     approveRequestStep,
     rejectRequestStep,

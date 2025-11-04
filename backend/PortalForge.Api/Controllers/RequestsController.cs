@@ -9,6 +9,7 @@ using PortalForge.Application.UseCases.Requests.Commands.RejectRequestStep;
 using PortalForge.Application.UseCases.Requests.Commands.SubmitRequest;
 using PortalForge.Application.UseCases.Requests.Queries.GetMyRequests;
 using PortalForge.Application.UseCases.Requests.Queries.GetPendingApprovals;
+using PortalForge.Application.UseCases.Requests.Queries.GetRequestById;
 using PortalForge.Application.UseCases.Requests.Queries.GetRequestsToApprove;
 
 namespace PortalForge.Api.Controllers;
@@ -76,6 +77,18 @@ public class RequestsController : BaseController
         }
 
         var query = new GetPendingApprovalsQuery { UserId = userGuid };
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get request details by ID including comments and edit history
+    /// </summary>
+    [HttpGet("{requestId:guid}")]
+    [Authorize(Policy = "RequirePermission:requests.view")]
+    public async Task<ActionResult> GetRequestById(Guid requestId)
+    {
+        var query = new GetRequestByIdQuery { RequestId = requestId };
         var result = await _mediator.Send(query);
         return Ok(result);
     }
