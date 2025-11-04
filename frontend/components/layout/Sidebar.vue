@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const route = useRoute()
+const authStore = useAuthStore()
 
 interface Props {
   isOpen?: boolean
@@ -16,20 +17,37 @@ interface NavItem {
   label: string
   icon: string
   path: string
+  requiresAdmin?: boolean
 }
 
 const navItems: NavItem[] = [
   { name: 'home', label: 'Strona główna', icon: 'home', path: '/dashboard' },
-  { name: 'calendar', label: 'Kalendarz', icon: 'calendar', path: '/dashboard/calendar' },
+  { name: 'calendar', label: 'Kalendarz wydarzeń', icon: 'calendar', path: '/dashboard/calendar' },
+  { name: 'vacation-calendar', label: 'Kalendarz urlopów', icon: 'vacation', path: '/dashboard/team/vacation-calendar' },
   { name: 'news', label: 'Aktualności', icon: 'news', path: '/dashboard/news' },
   { name: 'account', label: 'Moje konto', icon: 'account', path: '/dashboard/account' },
   { name: 'organization', label: 'Struktura organizacyjna', icon: 'org', path: '/dashboard/organization' },
   { name: 'documents', label: 'Dokumenty', icon: 'documents', path: '/dashboard/documents' },
   { name: 'requests', label: 'Wnioski', icon: 'requests', path: '/dashboard/requests' },
-  { name: 'services', label: 'Serwisy wewnętrzne', icon: 'services', path: '/dashboard/services' }
+  { name: 'services', label: 'Serwisy wewnętrzne', icon: 'services', path: '/dashboard/services' },
+  { name: 'audit-logs', label: 'Logi audytu', icon: 'audit', path: '/admin/audit-logs', requiresAdmin: true },
+  { name: 'vacation-mgmt', label: 'Zarządzanie urlopami', icon: 'admin-vacation', path: '/admin/vacation-management', requiresAdmin: true }
 ]
 
 const isActive = (path: string) => route.path === path
+
+const isAdmin = computed(() => {
+  return authStore.user?.roles?.includes('Admin') || authStore.user?.roles?.includes('HR')
+})
+
+const filteredNavItems = computed(() => {
+  return navItems.filter(item => {
+    if (item.requiresAdmin) {
+      return isAdmin.value
+    }
+    return true
+  })
+})
 </script>
 
 <template>
@@ -45,7 +63,7 @@ const isActive = (path: string) => route.path === path
 
     <nav class="sidebar-nav">
       <NuxtLink
-        v-for="item in navItems"
+        v-for="item in filteredNavItems"
         :key="item.name"
         :to="item.path"
         class="sidebar-nav-item"
@@ -58,6 +76,9 @@ const isActive = (path: string) => route.path === path
           </svg>
           <svg v-else-if="item.icon === 'calendar'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <svg v-else-if="item.icon === 'vacation'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z M9 11h6m-6 4h3" />
           </svg>
           <svg v-else-if="item.icon === 'news'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
@@ -76,6 +97,12 @@ const isActive = (path: string) => route.path === path
           </svg>
           <svg v-else-if="item.icon === 'services'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+          </svg>
+          <svg v-else-if="item.icon === 'audit'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <svg v-else-if="item.icon === 'admin-vacation'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </span>
         <span class="nav-label">{{ item.label }}</span>
