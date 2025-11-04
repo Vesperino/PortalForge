@@ -30,8 +30,8 @@ const navItems: NavItem[] = [
   { name: 'documents', label: 'Dokumenty', icon: 'documents', path: '/dashboard/documents' },
   { name: 'requests', label: 'Wnioski', icon: 'requests', path: '/dashboard/requests' },
   { name: 'services', label: 'Serwisy wewnętrzne', icon: 'services', path: '/dashboard/services' },
-  { name: 'audit-logs', label: 'Logi audytu', icon: 'audit', path: '/admin/audit-logs', requiresAdmin: true },
-  { name: 'vacation-mgmt', label: 'Zarządzanie urlopami', icon: 'admin-vacation', path: '/admin/vacation-management', requiresAdmin: true }
+  { name: 'audit-logs', label: 'Logi audytu', icon: 'audit', path: '/admin/audit', requiresAdmin: true },
+  { name: 'vacation-mgmt', label: 'Zarządzanie urlopami', icon: 'admin-vacation', path: '/admin/vacation', requiresAdmin: true }
 ]
 
 const isActive = (path: string) => route.path === path
