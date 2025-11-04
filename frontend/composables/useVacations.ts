@@ -97,6 +97,15 @@ export function useVacations() {
   }
 
   /**
+   * Get my vacations (all statuses), optional year filter
+   */
+  async function getMyVacations(year?: number) {
+    const headers = getAuthHeaders()
+    const q = year ? `?year=${year}` : ''
+    return await $fetch(`${apiUrl}/api/vacation-schedules/my${q}`, { headers }) as any[]
+  }
+
+  /**
    * Validates if user can take vacation on specified dates
    * Used for real-time validation before submitting request
    * @param request - Vacation validation request with dates and leave type
@@ -116,6 +125,7 @@ export function useVacations() {
   return {
     getUserVacationSummary,
     updateVacationAllowance,
-    validateVacation
+    validateVacation,
+    getMyVacations
   }
 }

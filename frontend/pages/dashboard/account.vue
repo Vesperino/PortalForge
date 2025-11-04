@@ -36,8 +36,29 @@ const stats = computed(() => ({
 }))
 
 // Vacation API integration
-const { getUserVacationSummary } = useVacations()
+const { getUserVacationSummary, getMyVacations } = useVacations()
 const vacationSummary = ref<VacationSummary | null>(null)
+const myVacations = ref<any[]>([])
+const selectedYear = ref<number>(new Date().getFullYear())
+const availableYears = computed<number[]>(() => {
+  const y = new Date().getFullYear()
+  return [y - 1, y, y + 1]
+})
+
+// Vacation details modal
+const showVacationModal = ref(false)
+const selectedVacation = ref<any | null>(null)
+const openVacationDetails = (id: string | number) => {
+  const found = myVacations.value.find(v => v.id === id)
+  if (found) {
+    selectedVacation.value = found
+    showVacationModal.value = true
+  }
+}
+const closeVacationDetails = () => {
+  showVacationModal.value = false
+  selectedVacation.value = null
+}
 const isLoadingVacation = ref(false)
 const vacationError = ref<string | null>(null)
 
@@ -50,6 +71,8 @@ const fetchVacationData = async () => {
 
   try {
     vacationSummary.value = await getUserVacationSummary(currentUser.value.id)
+    // Load my vacations for history (selected year)
+    myVacations.value = await getMyVacations(selectedYear.value)
   } catch (error: any) {
     console.error('Error fetching vacation data:', error)
     vacationError.value = error.message || 'Nie udało się pobrać danych urlopowych'
@@ -397,6 +420,69 @@ const logout = async () => {
               </p>
             </div>
           </div>
+        </div>
+
+        <!-- Vacation History -->
+        <div class="mt-6 space-y-4">
+          <div class="flex items-center gap-3">
+            <label class="text-sm text-gray-700 dark:text-gray-300">Rok:</label>
+            <select
+              v-model.number="selectedYear"
+              @change="fetchVacationData"
+              class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            >
+              <option v-for="y in availableYears" :key="y" :value="y">{{ y }}</option>
+            </select>
+          </div>
+
+          <VacationHistory
+            :entries="myVacations.map(v => ({ id: v.id, startDate: new Date(v.startDate), endDate: new Date(v.endDate), days: Math.ceil((new Date(v.endDate).getTime() - new Date(v.startDate).getTime())/(1000*60*60*24)) + 1, type: 'Urlop', status: v.status }))"
+            title="Historia urlopów"
+            empty-message="Brak historii urlopów w tym roku"
+            @view-details="openVacationDetails"
+          />
+
+          <!-- Vacation Details Modal -->
+          <Teleport to="body">
+            <div
+              v-if="showVacationModal && selectedVacation"
+              class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+              @click.self="closeVacationDetails"
+            >
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full p-6">
+                <div class="flex items-start justify-between mb-4">
+                  <h3 class="text-xl font-bold text-gray-900 dark:text-white">Szczegóły urlopu</h3>
+                  <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" @click="closeVacationDetails">✕</button>
+                </div>
+                <div class="space-y-3 text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-gray-500 dark:text-gray-400">Zakres</span>
+                    <span class="font-medium text-gray-900 dark:text-white">{{ new Date(selectedVacation.startDate).toLocaleDateString('pl-PL') }} – {{ new Date(selectedVacation.endDate).toLocaleDateString('pl-PL') }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-500 dark:text-gray-400">Dni</span>
+                    <span class="font-medium">{{ Math.ceil((new Date(selectedVacation.endDate).getTime() - new Date(selectedVacation.startDate).getTime())/(1000*60*60*24)) + 1 }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-500 dark:text-gray-400">Status</span>
+                    <span class="font-medium">{{ selectedVacation.status }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-500 dark:text-gray-400">Zastępca</span>
+                    <span class="font-medium">{{ selectedVacation.substitute ? `${selectedVacation.substitute.firstName} ${selectedVacation.substitute.lastName}` : '—' }}</span>
+                  </div>
+                  <div class="flex justify-between" v-if="selectedVacation.createdAt">
+                    <span class="text-gray-500 dark:text-gray-400">Utworzone</span>
+                    <span class="font-medium">{{ new Date(selectedVacation.createdAt).toLocaleString('pl-PL') }}</span>
+                  </div>
+                </div>
+                <div class="mt-6 flex justify-end gap-2">
+                  <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded" @click="$router.push('/dashboard/team/vacation-calendar')">Przejdź do kalendarza</button>
+                  <button class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded" @click="closeVacationDetails">Zamknij</button>
+                </div>
+              </div>
+            </div>
+          </Teleport>
         </div>
       </template>
     </div>

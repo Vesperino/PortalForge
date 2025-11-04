@@ -40,6 +40,16 @@ public class VacationScheduleService : IVacationScheduleService
         DateTime? endDate = null;
         Guid? substituteId = null;
 
+        // Prefer well-known key first
+        if (formData.TryGetValue("substituteUserId", out var subRaw) && subRaw != null)
+        {
+            var str = subRaw.ToString();
+            if (!string.IsNullOrWhiteSpace(str) && Guid.TryParse(str, out var sid) && sid != vacationRequest.SubmittedById)
+            {
+                substituteId = sid;
+            }
+        }
+
         foreach (var kv in formData)
         {
             var v = kv.Value?.ToString();

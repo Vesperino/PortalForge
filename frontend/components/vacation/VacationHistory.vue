@@ -43,16 +43,31 @@ const formatDateRange = (startDate: Date, endDate: Date) => {
   return start === end ? start : `${start} - ${end}`
 }
 
-const getStatusColor = (status: string) => {
-  const statusLower = status.toLowerCase()
+const getStatusColor = (status: any) => {
+  const statusLower = String(status ?? '').toLowerCase()
 
+  // Generic statuses used in requests
   if (statusLower.includes('zatwierdzony') || statusLower.includes('approved')) {
     return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-  } else if (statusLower.includes('odrzucony') || statusLower.includes('rejected')) {
+  }
+  if (statusLower.includes('odrzucony') || statusLower.includes('rejected')) {
     return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-  } else if (statusLower.includes('oczekuje') || statusLower.includes('pending') || statusLower.includes('w trakcie')) {
+  }
+  if (statusLower.includes('oczekuje') || statusLower.includes('pending') || statusLower.includes('w trakcie')) {
     return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-  } else if (statusLower.includes('anulowany') || statusLower.includes('cancelled')) {
+  }
+  if (statusLower.includes('anulowany') || statusLower.includes('cancelled')) {
+    return 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200'
+  }
+
+  // Vacation-specific statuses
+  if (statusLower.includes('scheduled')) {
+    return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+  }
+  if (statusLower.includes('active')) {
+    return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+  }
+  if (statusLower.includes('completed')) {
     return 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200'
   }
 

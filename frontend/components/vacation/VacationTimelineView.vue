@@ -60,41 +60,54 @@ const timelineRows = computed<TimelineRow[]>(() => {
 // Calculate vacation bar position and width
 const getVacationBarStyle = (vacation: VacationSchedule): VacationBarStyle => {
   const totalDays = daysInRange.value.length
+  if (totalDays === 0) {
+    console.warn('Timeline: No days in range')
+    return { left: '0%', width: '0%', backgroundColor: 'bg-gray-400' }
+  }
+
   const rangeStart = props.startDate.getTime()
+  const rangeEnd = props.endDate.getTime()
   const dayMs = 1000 * 60 * 60 * 24
 
-  const vacationStart = Math.max(
-    new Date(vacation.startDate).getTime(),
-    rangeStart
-  )
-  const vacationEnd = Math.min(
-    new Date(vacation.endDate).getTime(),
-    props.endDate.getTime()
-  )
+  const vacationStartTime = new Date(vacation.startDate).getTime()
+  const vacationEndTime = new Date(vacation.endDate).getTime()
+
+  // Clamp vacation dates to visible range
+  const vacationStart = Math.max(vacationStartTime, rangeStart)
+  const vacationEnd = Math.min(vacationEndTime, rangeEnd)
+
+  // If vacation is completely outside the range, don't display
+  if (vacationStart > rangeEnd || vacationEnd < rangeStart) {
+    return { left: '0%', width: '0%', backgroundColor: 'bg-gray-400' }
+  }
 
   const daysFromStart = Math.floor((vacationStart - rangeStart) / dayMs)
   const vacationDays = Math.floor((vacationEnd - vacationStart) / dayMs) + 1
 
-  // Color by status
-  let backgroundColor = ''
+  // Ensure positive values
+  const leftPercent = Math.max(0, Math.min(100, (daysFromStart / totalDays) * 100))
+  const widthPercent = Math.max(0, Math.min(100, (vacationDays / totalDays) * 100))
+
+  // Color by status - use actual colors, not Tailwind classes
+  let backgroundColor = '#9ca3af' // gray-400
   switch (vacation.status) {
     case VacationStatus.Scheduled:
-      backgroundColor = 'bg-green-500'
+      backgroundColor = '#10b981' // green-500
       break
     case VacationStatus.Active:
-      backgroundColor = 'bg-blue-500'
+      backgroundColor = '#3b82f6' // blue-500
       break
     case VacationStatus.Completed:
-      backgroundColor = 'bg-gray-400'
+      backgroundColor = '#9ca3af' // gray-400
       break
     case VacationStatus.Cancelled:
-      backgroundColor = 'bg-red-400'
+      backgroundColor = '#f87171' // red-400
       break
   }
 
   return {
-    left: `${(daysFromStart / totalDays) * 100}%`,
-    width: `${(vacationDays / totalDays) * 100}%`,
+    left: `${leftPercent}%`,
+    width: `${widthPercent}%`,
     backgroundColor
   }
 }
@@ -174,24 +187,24 @@ const getVacationDuration = (vacation: VacationSchedule): number => {
 
         <!-- Timeline bars container -->
         <div class="flex-1 relative h-16 p-2">
-          <div
-            v-for="vacation in row.vacations"
-            :key="vacation.id"
-            class="absolute h-8 rounded cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-offset-1 hover:ring-blue-500 hover:z-10"
-            :class="getVacationBarStyle(vacation).backgroundColor"
-            :style="{
-              left: getVacationBarStyle(vacation).left,
-              width: getVacationBarStyle(vacation).width,
-              top: '8px'
-            }"
-            @mouseenter="hoveredVacation = vacation.id"
-            @mouseleave="hoveredVacation = null"
-            @click="emit('vacation-click', vacation)"
-          >
-            <!-- Inline day count label on bar -->
-            <span class="text-[10px] font-semibold text-white px-2 select-none">
-              {{ getVacationDuration(vacation) }}d
-            </span>
+          <template v-for="vacation in row.vacations" :key="vacation.id">
+            <div
+              v-if="getVacationBarStyle(vacation).width !== '0%'"
+              class="absolute h-8 rounded cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-offset-1 hover:ring-blue-500 hover:z-10"
+              :style="{
+                left: getVacationBarStyle(vacation).left,
+                width: getVacationBarStyle(vacation).width,
+                backgroundColor: getVacationBarStyle(vacation).backgroundColor,
+                top: '8px'
+              }"
+              @mouseenter="hoveredVacation = vacation.id"
+              @mouseleave="hoveredVacation = null"
+              @click="emit('vacation-click', vacation)"
+            >
+              <!-- Inline day count label on bar -->
+              <span class="text-[10px] font-semibold text-white px-2 select-none">
+                {{ getVacationDuration(vacation) }}d
+              </span>
             <!-- Tooltip -->
             <div
               v-if="hoveredVacation === vacation.id"
@@ -217,7 +230,8 @@ const getVacationDuration = (vacation: VacationSchedule): number => {
               <!-- Arrow pointing down -->
               <div class="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
             </div>
-          </div>
+            </div>
+          </template>
         </div>
       </div>
 

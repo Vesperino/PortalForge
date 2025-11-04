@@ -30,6 +30,11 @@ public interface IVacationScheduleRepository
     Task<List<VacationSchedule>> GetSubstitutionsAsync(Guid substituteId);
 
     /// <summary>
+    /// Gets all vacations for a given user (any status), ordered by StartDate desc.
+    /// </summary>
+    Task<List<VacationSchedule>> GetByUserAsync(Guid userId);
+
+    /// <summary>
     /// Gets scheduled vacations that should be activated (StartDate &lt;= today).
     /// </summary>
     Task<List<VacationSchedule>> GetScheduledToActivateAsync();

@@ -225,6 +225,32 @@ public class VacationSchedulesController : ControllerBase
     }
 
     /// <summary>
+    /// Gets vacations for the current user (all statuses), optionally filtered by year.
+    /// </summary>
+    [HttpGet("my")]
+    [Authorize]
+    [ProducesResponseType(typeof(List<VacationSchedule>), 200)]
+    public async Task<ActionResult<List<VacationSchedule>>> GetMyVacations([FromQuery] int? year)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
+        {
+            return Unauthorized("User ID not found in token");
+        }
+
+        _logger.LogInformation("Getting my vacations for user {UserId} (year={Year})", userId, year);
+        var all = await _unitOfWork.VacationScheduleRepository.GetByUserAsync(userId);
+
+        if (year.HasValue)
+        {
+            var y = year.Value;
+            all = all.Where(v => v.StartDate.Year == y || v.EndDate.Year == y).ToList();
+        }
+
+        return Ok(all);
+    }
+
+    /// <summary>
     /// Exports team vacation calendar to PDF.
     /// </summary>
     /// <param name="departmentId">Department ID</param>
@@ -310,6 +336,31 @@ public class VacationSchedulesController : ControllerBase
         await _mediator.Send(command);
         return NoContent();
     }
+
+    /// <summary>
+    /// Manually triggers vacation status updates (Scheduled → Active, Active → Completed).
+    /// Admin only endpoint for maintenance purposes.
+    /// </summary>
+    /// <returns>Number of vacations updated</returns>
+    [HttpPost("update-statuses")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(UpdateStatusesResponse), 200)]
+    public async Task<ActionResult<UpdateStatusesResponse>> UpdateVacationStatuses()
+    {
+        _logger.LogInformation("Manual vacation status update triggered by user {UserId}", GetCurrentUserId());
+
+        await _vacationService.UpdateVacationStatusesAsync();
+
+        return Ok(new UpdateStatusesResponse
+        {
+            Message = "Vacation statuses updated successfully"
+        });
+    }
+}
+
+public class UpdateStatusesResponse
+{
+    public string Message { get; set; } = string.Empty;
 }
 
 public class CancelVacationRequest

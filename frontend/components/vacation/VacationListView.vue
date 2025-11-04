@@ -56,12 +56,13 @@ const filteredVacations = computed(() => {
   if (debouncedSearch.value) {
     const query = debouncedSearch.value.toLowerCase()
     result = result.filter((v) => {
-      const subFirst = v.substitute?.firstName?.toLowerCase?.() || ''
-      const subLast = v.substitute?.lastName?.toLowerCase?.() || ''
+      const subFirst = v.substitute?.firstName?.toLowerCase() || ''
+      const subLast = v.substitute?.lastName?.toLowerCase() || ''
+      const userEmail = v.user.email?.toLowerCase() || ''
       return (
         v.user.firstName.toLowerCase().includes(query) ||
         v.user.lastName.toLowerCase().includes(query) ||
-        v.user.email?.toLowerCase().includes(query) ||
+        userEmail.includes(query) ||
         subFirst.includes(query) ||
         subLast.includes(query)
       )

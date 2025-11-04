@@ -920,7 +920,7 @@ namespace PortalForge.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RequestComments");
+                    b.ToTable("RequestComments", (string)null);
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.RequestEditHistory", b =>
@@ -958,7 +958,7 @@ namespace PortalForge.Infrastructure.Migrations
 
                     b.HasIndex("RequestId");
 
-                    b.ToTable("RequestEditHistories");
+                    b.ToTable("RequestEditHistories", (string)null);
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.RequestTemplate", b =>
@@ -1189,7 +1189,7 @@ namespace PortalForge.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SickLeaves");
+                    b.ToTable("SickLeaves", (string)null);
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.SystemSetting", b =>
