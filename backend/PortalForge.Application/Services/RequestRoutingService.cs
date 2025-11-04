@@ -36,10 +36,16 @@ public class RequestRoutingService : IRequestRoutingService
         User? approver = stepTemplate.ApproverType switch
         {
             ApproverType.DirectSupervisor => ResolveByDirectSupervisor(submitter),
-            ApproverType.Role => await ResolveByRoleAsync(stepTemplate.ApproverRole!.Value, submitter),
+            ApproverType.Role => stepTemplate.ApproverRole.HasValue
+                ? await ResolveByRoleAsync(stepTemplate.ApproverRole.Value, submitter)
+                : throw new InvalidOperationException($"ApproverRole is required when ApproverType is Role (Step {stepTemplate.StepOrder})"),
             ApproverType.SpecificUser => stepTemplate.SpecificUser,
-            ApproverType.UserGroup => await ResolveByUserGroupAsync(stepTemplate.ApproverGroupId!.Value),
-            ApproverType.SpecificDepartment => await ResolveBySpecificDepartmentAsync(stepTemplate.SpecificDepartmentId!.Value),
+            ApproverType.UserGroup => stepTemplate.ApproverGroupId.HasValue
+                ? await ResolveByUserGroupAsync(stepTemplate.ApproverGroupId.Value)
+                : throw new InvalidOperationException($"ApproverGroupId is required when ApproverType is UserGroup (Step {stepTemplate.StepOrder})"),
+            ApproverType.SpecificDepartment => stepTemplate.SpecificDepartmentId.HasValue
+                ? await ResolveBySpecificDepartmentAsync(stepTemplate.SpecificDepartmentId.Value)
+                : throw new InvalidOperationException($"SpecificDepartmentId is required when ApproverType is SpecificDepartment (Step {stepTemplate.StepOrder})"),
             ApproverType.Submitter => submitter,
             _ => throw new InvalidOperationException($"Unknown ApproverType: {stepTemplate.ApproverType}")
         };
@@ -201,22 +207,28 @@ public class RequestRoutingService : IRequestRoutingService
 
             case ApproverType.SpecificDepartment:
                 // For specific department, use department's substitute
-                var targetDepartment = await _unitOfWork.DepartmentRepository
-                    .GetByIdAsync(stepTemplate.SpecificDepartmentId!.Value);
-                substitute = targetDepartment?.HeadOfDepartmentSubstitute;
+                if (stepTemplate.SpecificDepartmentId.HasValue)
+                {
+                    var targetDepartment = await _unitOfWork.DepartmentRepository
+                        .GetByIdAsync(stepTemplate.SpecificDepartmentId.Value);
+                    substitute = targetDepartment?.HeadOfDepartmentSubstitute;
+                }
                 break;
 
             case ApproverType.UserGroup:
                 // For user group, try to find another member who is not on vacation
-                var groupUsers = await _unitOfWork.RoleGroupRepository
-                    .GetUsersInGroupAsync(stepTemplate.ApproverGroupId!.Value);
-
-                foreach (var groupUser in groupUsers)
+                if (stepTemplate.ApproverGroupId.HasValue)
                 {
-                    if (groupUser.Id != primaryApprover.Id && !await IsUserOnVacationAsync(groupUser.Id))
+                    var groupUsers = await _unitOfWork.RoleGroupRepository
+                        .GetUsersInGroupAsync(stepTemplate.ApproverGroupId.Value);
+
+                    foreach (var groupUser in groupUsers)
                     {
-                        substitute = groupUser;
-                        break;
+                        if (groupUser.Id != primaryApprover.Id && !await IsUserOnVacationAsync(groupUser.Id))
+                        {
+                            substitute = groupUser;
+                            break;
+                        }
                     }
                 }
                 break;
