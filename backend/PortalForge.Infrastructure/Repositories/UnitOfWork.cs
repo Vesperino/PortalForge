@@ -33,6 +33,11 @@ public class UnitOfWork : IUnitOfWork
     private ISystemSettingRepository? _systemSettingRepository;
     private IInternalServiceRepository? _internalServiceRepository;
     private IInternalServiceCategoryRepository? _internalServiceCategoryRepository;
+    private IApprovalDelegationRepository? _approvalDelegationRepository;
+    private IRequestApprovalStepRepository? _requestApprovalStepRepository;
+    private INotificationPreferencesRepository? _notificationPreferencesRepository;
+    private INotificationTemplateRepository? _notificationTemplateRepository;
+    private IRequestAnalyticsRepository? _requestAnalyticsRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -107,6 +112,21 @@ public class UnitOfWork : IUnitOfWork
 
     public IInternalServiceCategoryRepository InternalServiceCategoryRepository =>
         _internalServiceCategoryRepository ??= new InternalServiceCategoryRepository(_context);
+
+    public IApprovalDelegationRepository ApprovalDelegationRepository =>
+        _approvalDelegationRepository ??= new ApprovalDelegationRepository(_context);
+
+    public IRequestApprovalStepRepository RequestApprovalStepRepository =>
+        _requestApprovalStepRepository ??= new RequestApprovalStepRepository(_context);
+
+    public INotificationPreferencesRepository NotificationPreferencesRepository =>
+        _notificationPreferencesRepository ??= new NotificationPreferencesRepository(_context);
+
+    public INotificationTemplateRepository NotificationTemplateRepository =>
+        _notificationTemplateRepository ??= new NotificationTemplateRepository(_context);
+
+    public IRequestAnalyticsRepository RequestAnalyticsRepository =>
+        _requestAnalyticsRepository ??= new RequestAnalyticsRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {

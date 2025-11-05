@@ -6,25 +6,25 @@ namespace PortalForge.Application.Interfaces;
 public interface IOpenAIService
 {
     /// <summary>
-    /// Sends a translation request to OpenAI and streams the response.
+    /// Sends a translation request to OpenAI and returns the complete response.
     /// </summary>
     /// <param name="textToTranslate">The text to translate.</param>
     /// <param name="targetLanguage">The target language for translation.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An async enumerable stream of response chunks.</returns>
-    IAsyncEnumerable<string> TranslateTextStreamAsync(
+    /// <returns>The translated text.</returns>
+    Task<string> TranslateTextAsync(
         string textToTranslate,
         string targetLanguage,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Sends a chat message to OpenAI and streams the response.
+    /// Sends a chat message to OpenAI and returns the complete response.
     /// </summary>
     /// <param name="message">The user's message.</param>
     /// <param name="conversationHistory">Optional previous messages for context.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An async enumerable stream of response chunks.</returns>
-    IAsyncEnumerable<string> ChatStreamAsync(
+    /// <returns>The AI response message.</returns>
+    Task<string> ChatAsync(
         string message,
         IEnumerable<ChatMessage>? conversationHistory = null,
         CancellationToken cancellationToken = default);

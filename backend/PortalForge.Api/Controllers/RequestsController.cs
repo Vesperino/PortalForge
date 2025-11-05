@@ -12,6 +12,11 @@ using PortalForge.Application.UseCases.Requests.Queries.GetPendingApprovals;
 using PortalForge.Application.UseCases.Requests.Queries.GetRequestById;
 using PortalForge.Application.UseCases.Requests.Queries.GetRequestsToApprove;
 using PortalForge.Application.UseCases.Requests.Queries.GetApprovalsHistory;
+using PortalForge.Application.UseCases.Requests.Commands.CloneRequest;
+using PortalForge.Application.UseCases.Requests.Commands.BulkApproveRequests;
+using PortalForge.Application.UseCases.Requests.Queries.GetPersonalAnalytics;
+using PortalForge.Application.UseCases.Requests.Queries.GetProcessingTimeAnalytics;
+using PortalForge.Application.Interfaces;
 
 namespace PortalForge.Api.Controllers;
 
@@ -21,11 +26,16 @@ public class RequestsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<RequestsController> _logger;
+    private readonly IServiceRequestHandler _serviceRequestHandler;
 
-    public RequestsController(IMediator mediator, ILogger<RequestsController> logger)
+    public RequestsController(
+        IMediator mediator, 
+        ILogger<RequestsController> logger,
+        IServiceRequestHandler serviceRequestHandler)
     {
         _mediator = mediator;
         _logger = logger;
+        _serviceRequestHandler = serviceRequestHandler;
     }
 
     /// <summary>
@@ -248,6 +258,136 @@ public class RequestsController : BaseController
             return BadRequest(result.Message);
         }
 
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Clone an existing request
+    /// </summary>
+    [HttpPost("{requestId:guid}/clone")]
+    [Authorize]
+    public async Task<ActionResult> CloneRequest(Guid requestId, [FromBody] CloneRequestDto dto)
+    {
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
+        var command = new CloneRequestCommand
+        {
+            OriginalRequestId = requestId,
+            ClonedById = userGuid,
+            ModifiedFormData = dto.ModifiedFormData,
+            CreateAsTemplate = dto.CreateAsTemplate
+        };
+
+        var result = await _mediator.Send(command);
+        return CreatedAtAction(nameof(GetRequestById), new { requestId = result.Id }, result);
+    }
+
+    /// <summary>
+    /// Bulk approve multiple request steps
+    /// </summary>
+    [HttpPost("bulk-approve")]
+    [Authorize(Policy = "RequirePermission:requests.approve")]
+    public async Task<ActionResult> BulkApproveRequests([FromBody] BulkApproveRequestsDto dto)
+    {
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
+        var command = new BulkApproveRequestsCommand
+        {
+            RequestStepIds = dto.RequestStepIds,
+            ApproverId = userGuid,
+            Comment = dto.Comment,
+            SkipValidation = dto.SkipValidation
+        };
+
+        var result = await _mediator.Send(command);
+        
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Update service task status for a request
+    /// </summary>
+    [HttpPut("{requestId:guid}/service-status")]
+    [Authorize(Policy = "RequirePermission:service.manage")]
+    public async Task<ActionResult> UpdateServiceTaskStatus(
+        Guid requestId, 
+        [FromBody] UpdateServiceTaskStatusDto dto)
+    {
+        try
+        {
+            await _serviceRequestHandler.UpdateServiceTaskStatusAsync(
+                requestId, 
+                dto.Status, 
+                dto.Notes ?? string.Empty);
+
+            return Ok(new { Message = "Service task status updated successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating service task status for request {RequestId}", requestId);
+            return BadRequest(new { Message = "Failed to update service task status" });
+        }
+    }
+
+    /// <summary>
+    /// Get personal analytics for current user
+    /// </summary>
+    [HttpGet("analytics/personal")]
+    [Authorize]
+    public async Task<ActionResult> GetPersonalAnalytics([FromQuery] int year = 0)
+    {
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
+        var query = new GetPersonalAnalyticsQuery 
+        { 
+            UserId = userGuid,
+            Year = year == 0 ? DateTime.UtcNow.Year : year
+        };
+
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get processing time analytics for current user
+    /// </summary>
+    [HttpGet("analytics/processing-time")]
+    [Authorize]
+    public async Task<ActionResult> GetProcessingTimeAnalytics(
+        [FromQuery] int year = 0, 
+        [FromQuery] int? month = null)
+    {
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
+        var query = new GetProcessingTimeAnalyticsQuery 
+        { 
+            UserId = userGuid,
+            Year = year == 0 ? DateTime.UtcNow.Year : year,
+            Month = month
+        };
+
+        var result = await _mediator.Send(query);
         return Ok(result);
     }
 }

@@ -28,6 +28,19 @@ public class RequestApprovalStepConfiguration : IEntityTypeConfiguration<Request
             .IsRequired()
             .HasDefaultValue(false);
 
+        builder.Property(ras => ras.CreatedAt)
+            .IsRequired();
+
+        builder.Property(ras => ras.StartedAt);
+
+        builder.Property(ras => ras.FinishedAt);
+
+        builder.Property(ras => ras.EscalatedAt);
+
+        builder.Property(ras => ras.AssignedToUserId);
+
+        builder.Property(ras => ras.StepTemplateId);
+
         // Relationships
         builder.HasOne(ras => ras.Request)
             .WithMany(r => r.ApprovalSteps)
@@ -39,6 +52,16 @@ public class RequestApprovalStepConfiguration : IEntityTypeConfiguration<Request
             .HasForeignKey(ras => ras.ApproverId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(ras => ras.AssignedToUser)
+            .WithMany()
+            .HasForeignKey(ras => ras.AssignedToUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(ras => ras.StepTemplate)
+            .WithMany()
+            .HasForeignKey(ras => ras.StepTemplateId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasMany(ras => ras.QuizAnswers)
             .WithOne(qa => qa.RequestApprovalStep)
             .HasForeignKey(qa => qa.RequestApprovalStepId)
@@ -47,7 +70,9 @@ public class RequestApprovalStepConfiguration : IEntityTypeConfiguration<Request
         // Indexes
         builder.HasIndex(ras => new { ras.RequestId, ras.StepOrder });
         builder.HasIndex(ras => ras.ApproverId);
+        builder.HasIndex(ras => ras.AssignedToUserId);
         builder.HasIndex(ras => ras.Status);
+        builder.HasIndex(ras => ras.StepTemplateId);
     }
 }
 

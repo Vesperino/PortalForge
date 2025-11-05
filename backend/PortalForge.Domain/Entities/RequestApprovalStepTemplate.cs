@@ -54,6 +54,36 @@ public class RequestApprovalStepTemplate
     /// </summary>
     public bool RequiresQuiz { get; set; } = false;
 
+    /// <summary>
+    /// Whether this approval step can be processed in parallel with other steps in the same group.
+    /// </summary>
+    public bool IsParallel { get; set; } = false;
+
+    /// <summary>
+    /// Groups parallel approval steps together. Steps with the same ParallelGroupId can be processed simultaneously.
+    /// Null for sequential steps.
+    /// </summary>
+    public string? ParallelGroupId { get; set; }
+
+    /// <summary>
+    /// For parallel approval groups, the minimum number of approvals required to proceed.
+    /// Default is 1 (any one approver can approve for the group).
+    /// </summary>
+    public int MinimumApprovals { get; set; } = 1;
+
+    /// <summary>
+    /// Time limit for this approval step before escalation occurs.
+    /// Null means no escalation timeout.
+    /// </summary>
+    public TimeSpan? EscalationTimeout { get; set; }
+
+    /// <summary>
+    /// User to escalate to if EscalationTimeout is exceeded.
+    /// Null means no escalation user defined.
+    /// </summary>
+    public Guid? EscalationUserId { get; set; }
+    public User? EscalationUser { get; set; }
+
     public DateTime CreatedAt { get; set; }
 }
 

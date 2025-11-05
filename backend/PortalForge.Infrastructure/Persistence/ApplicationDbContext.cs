@@ -34,6 +34,8 @@ public class ApplicationDbContext : DbContext
 
     // Notifications
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<NotificationPreferences> NotificationPreferences { get; set; }
+    public DbSet<NotificationTemplate> NotificationTemplates { get; set; }
 
     // Organizational Structure
     public DbSet<Department> Departments { get; set; }
@@ -50,6 +52,12 @@ public class ApplicationDbContext : DbContext
     public DbSet<InternalService> InternalServices { get; set; }
     public DbSet<InternalServiceCategory> InternalServiceCategories { get; set; }
     public DbSet<InternalServiceDepartment> InternalServiceDepartments { get; set; }
+
+    // Approval Delegations
+    public DbSet<ApprovalDelegation> ApprovalDelegations { get; set; }
+
+    // Request Analytics
+    public DbSet<RequestAnalytics> RequestAnalytics { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -74,6 +82,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new QuizQuestionConfiguration());
         modelBuilder.ApplyConfiguration(new QuizAnswerConfiguration());
         modelBuilder.ApplyConfiguration(new NotificationConfiguration());
+        modelBuilder.ApplyConfiguration(new NotificationPreferencesConfiguration());
+        modelBuilder.ApplyConfiguration(new NotificationTemplateConfiguration());
 
         // Organizational Structure
         modelBuilder.ApplyConfiguration(new DepartmentConfiguration());
@@ -85,6 +95,12 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new InternalServiceConfiguration());
         modelBuilder.ApplyConfiguration(new InternalServiceCategoryConfiguration());
         modelBuilder.ApplyConfiguration(new InternalServiceDepartmentConfiguration());
+
+        // Approval Delegations
+        modelBuilder.ApplyConfiguration(new ApprovalDelegationConfiguration());
+
+        // Request Analytics
+        modelBuilder.ApplyConfiguration(new RequestAnalyticsConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }

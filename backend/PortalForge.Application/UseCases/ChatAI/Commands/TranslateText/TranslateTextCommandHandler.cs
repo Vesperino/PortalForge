@@ -7,7 +7,7 @@ namespace PortalForge.Application.UseCases.ChatAI.Commands.TranslateText;
 /// <summary>
 /// Handler for translating text using OpenAI.
 /// </summary>
-public class TranslateTextCommandHandler : IRequestHandler<TranslateTextCommand, IAsyncEnumerable<string>>
+public class TranslateTextCommandHandler : IRequestHandler<TranslateTextCommand, string>
 {
     private readonly IOpenAIService _openAIService;
     private readonly IUnifiedValidatorService _validatorService;
@@ -20,15 +20,15 @@ public class TranslateTextCommandHandler : IRequestHandler<TranslateTextCommand,
         _validatorService = validatorService;
     }
 
-    public async Task<IAsyncEnumerable<string>> Handle(
+    public async Task<string> Handle(
         TranslateTextCommand request,
         CancellationToken cancellationToken)
     {
         // Validate the request
         await _validatorService.ValidateAsync(request);
 
-        // Stream translation from OpenAI
-        return _openAIService.TranslateTextStreamAsync(
+        // Get translation from OpenAI
+        return await _openAIService.TranslateTextAsync(
             request.TextToTranslate,
             request.TargetLanguage,
             cancellationToken);

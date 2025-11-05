@@ -7,6 +7,14 @@ public enum FieldType
     Number,
     Select,
     Date,
-    Checkbox
+    Checkbox,
+    FileUpload,
+    MultiSelect,
+    DateRange,
+    Rating,
+    Signature,
+    ConditionalField,
+    UserPicker,
+    DepartmentPicker
 }
 
