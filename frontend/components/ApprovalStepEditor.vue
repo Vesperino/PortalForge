@@ -25,22 +25,6 @@
           </select>
         </div>
 
-        <!-- DirectSupervisor Info -->
-        <div v-if="step.approverType === 'DirectSupervisor'" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <p class="text-sm text-blue-800 dark:text-blue-200">
-            <Icon name="heroicons:information-circle" class="w-4 h-4 inline mr-1" />
-            Wniosek zostanie przekazany do kierownika działu wnioskodawcy (Department.HeadOfDepartmentId).
-          </p>
-        </div>
-
-        <!-- DepartmentDirector Info -->
-        <div v-if="step.approverType === 'DepartmentDirector'" class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-          <p class="text-sm text-purple-800 dark:text-purple-200">
-            <Icon name="heroicons:information-circle" class="w-4 h-4 inline mr-1" />
-            Wniosek zostanie przekazany do dyrektora działu wnioskodawcy (Department.DirectorId).
-          </p>
-        </div>
-
         <!-- Department Selection (when ApproverType = SpecificDepartment) -->
         <div v-if="step.approverType === 'SpecificDepartment'">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -149,7 +133,7 @@
         </div>
 
         <!-- Requires Quiz Checkbox -->
-        <div class="flex items-center">
+        <div class="space-y-2">
           <label class="flex items-center">
             <input
               :checked="step.requiresQuiz"
@@ -161,6 +145,15 @@
               Wymaga quizu
             </span>
           </label>
+
+          <!-- Quiz Info -->
+          <div v-if="step.requiresQuiz" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <p class="text-sm text-blue-800 dark:text-blue-200">
+              <Icon name="heroicons:information-circle" class="w-4 h-4 inline mr-1" />
+              Pytania quizu są konfigurowane w zakładce <strong>"Quiz"</strong> na końcu formularza.
+              Zatwierdzający będzie musiał odpowiedzieć na pytania quizu przed zatwierdzeniem tego kroku.
+            </p>
+          </div>
         </div>
       </div>
 

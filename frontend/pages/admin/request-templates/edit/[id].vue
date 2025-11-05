@@ -332,6 +332,7 @@
                 :step="step"
                 :users="users"
                 :role-groups="roleGroups"
+                :departments="departments"
                 @update:step="(updatedStep) => form.approvalStepTemplates[index] = updatedStep"
                 @remove="removeApprovalStep(index)"
               />
@@ -489,12 +490,14 @@ const router = useRouter()
 const { getTemplateById, updateTemplate } = useRequestsApi()
 const { getUsers } = useUsersApi()
 const { getAllRoleGroups } = useRoleGroupApi()
+const { getDepartments } = useDepartmentsApi()
 
 const templateId = computed(() => route.params.id as string)
 
-// Load users and role groups
+// Load users, role groups, and departments
 const users = ref<UserDto[]>([])
 const roleGroups = ref<RoleGroupDto[]>([])
+const departments = ref<any[]>([])
 const loadingData = ref(true)
 
 const loading = ref(true)
@@ -567,13 +570,15 @@ const loadTemplate = async () => {
       }))
     }
 
-    // Load users and role groups in parallel
-    const [usersResult, groupsResult] = await Promise.all([
+    // Load users, role groups, and departments in parallel
+    const [usersResult, groupsResult, departmentsResult] = await Promise.all([
       getUsers({ isActive: true, pageSize: 1000 }),
-      getAllRoleGroups(false)
+      getAllRoleGroups(false),
+      getDepartments()
     ])
     users.value = usersResult.users
     roleGroups.value = groupsResult
+    departments.value = departmentsResult
 
   } catch (err: any) {
     console.error('Error loading template:', err)

@@ -69,8 +69,12 @@ public class UpdateRequestTemplateCommandHandler
         // Update fields if provided
         if (request.Fields != null)
         {
-            // Remove existing fields
-            template.Fields.Clear();
+            // Get existing fields to remove
+            var existingFields = template.Fields.ToList();
+            foreach (var field in existingFields)
+            {
+                template.Fields.Remove(field);
+            }
 
             // Add new fields
             foreach (var fieldDto in request.Fields)
@@ -96,8 +100,12 @@ public class UpdateRequestTemplateCommandHandler
         // Update approval steps if provided
         if (request.ApprovalStepTemplates != null)
         {
-            // Remove existing approval steps
-            template.ApprovalStepTemplates.Clear();
+            // Get existing approval steps to remove
+            var existingSteps = template.ApprovalStepTemplates.ToList();
+            foreach (var step in existingSteps)
+            {
+                template.ApprovalStepTemplates.Remove(step);
+            }
 
             // Add new approval steps
             foreach (var stepDto in request.ApprovalStepTemplates)
@@ -121,8 +129,12 @@ public class UpdateRequestTemplateCommandHandler
         // Update quiz questions if provided
         if (request.QuizQuestions != null)
         {
-            // Remove existing quiz questions
-            template.QuizQuestions.Clear();
+            // Get existing quiz questions to remove
+            var existingQuestions = template.QuizQuestions.ToList();
+            foreach (var question in existingQuestions)
+            {
+                template.QuizQuestions.Remove(question);
+            }
 
             // Add new quiz questions
             foreach (var questionDto in request.QuizQuestions)
