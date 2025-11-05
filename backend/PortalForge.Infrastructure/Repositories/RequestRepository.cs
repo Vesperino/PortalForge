@@ -120,6 +120,115 @@ public class RequestRepository : IRequestRepository
         await Task.CompletedTask;
     }
 
+    public async Task<IEnumerable<Request>> GetByServiceCategoryAsync(string serviceCategory)
+    {
+        return await _context.Requests
+            .Include(r => r.RequestTemplate)
+            .Include(r => r.SubmittedBy)
+            .Include(r => r.ApprovalSteps.OrderBy(aps => aps.StepOrder))
+                .ThenInclude(aps => aps.Approver)
+            .Where(r => r.ServiceCategory == serviceCategory)
+            .OrderByDescending(r => r.SubmittedAt)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Request>> GetTemplateRequestsAsync(Guid? userId = null)
+    {
+        var query = _context.Requests
+            .Include(r => r.RequestTemplate)
+            .Include(r => r.SubmittedBy)
+            .Where(r => r.IsTemplate);
+
+        if (userId.HasValue)
+        {
+            query = query.Where(r => r.SubmittedById == userId.Value);
+        }
+
+        return await query
+            .OrderByDescending(r => r.SubmittedAt)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Request>> GetClonedRequestsAsync(Guid originalRequestId)
+    {
+        return await _context.Requests
+            .Include(r => r.RequestTemplate)
+            .Include(r => r.SubmittedBy)
+            .Include(r => r.ApprovalSteps.OrderBy(aps => aps.StepOrder))
+                .ThenInclude(aps => aps.Approver)
+            .Where(r => r.ClonedFromId == originalRequestId)
+            .OrderByDescending(r => r.SubmittedAt)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Request>> GetByTagsAsync(List<string> tags)
+    {
+        return await _context.Requests
+            .Include(r => r.RequestTemplate)
+            .Include(r => r.SubmittedBy)
+            .Where(r => r.Tags != null && tags.Any(tag => r.Tags.Contains(tag)))
+            .OrderByDescending(r => r.SubmittedAt)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Request>> SearchRequestsAsync(
+        string? searchTerm = null,
+        List<RequestStatus>? statusFilter = null,
+        List<Guid>? templateIds = null,
+        DateTime? submittedAfter = null,
+        DateTime? submittedBefore = null)
+    {
+        var query = _context.Requests
+            .Include(r => r.RequestTemplate)
+            .Include(r => r.SubmittedBy)
+            .Include(r => r.ApprovalSteps.OrderBy(aps => aps.StepOrder))
+                .ThenInclude(aps => aps.Approver)
+            .AsQueryable();
+
+        // Apply search term filter
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var lowerSearchTerm = searchTerm.ToLowerInvariant();
+            query = query.Where(r => 
+                r.RequestNumber.ToLower().Contains(lowerSearchTerm) ||
+                (r.RequestTemplate != null && r.RequestTemplate.Name.ToLower().Contains(lowerSearchTerm)) ||
+                r.FormData.ToLower().Contains(lowerSearchTerm) ||
+                (r.ServiceNotes != null && r.ServiceNotes.ToLower().Contains(lowerSearchTerm)));
+        }
+
+        // Apply status filter
+        if (statusFilter?.Any() == true)
+        {
+            query = query.Where(r => statusFilter.Contains(r.Status));
+        }
+
+        // Apply template IDs filter
+        if (templateIds?.Any() == true)
+        {
+            query = query.Where(r => templateIds.Contains(r.RequestTemplateId));
+        }
+
+        // Apply date filters
+        if (submittedAfter.HasValue)
+        {
+            query = query.Where(r => r.SubmittedAt >= submittedAfter.Value);
+        }
+
+        if (submittedBefore.HasValue)
+        {
+            query = query.Where(r => r.SubmittedAt <= submittedBefore.Value);
+        }
+
+        return await query
+            .OrderByDescending(r => r.SubmittedAt)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public async Task DeleteAsync(Guid id)
     {
         var request = await _context.Requests.FindAsync(id);

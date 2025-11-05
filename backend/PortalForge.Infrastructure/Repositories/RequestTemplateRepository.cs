@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Domain.Entities;
+using PortalForge.Domain.Enums;
 using PortalForge.Infrastructure.Persistence;
 
 namespace PortalForge.Infrastructure.Repositories;
@@ -84,6 +85,43 @@ public class RequestTemplateRepository : IRequestTemplateRepository
     {
         _context.RequestTemplates.Update(template);
         await Task.CompletedTask;
+    }
+
+    public async Task<IEnumerable<RequestTemplate>> GetByServiceCategoryAsync(string serviceCategory)
+    {
+        return await _context.RequestTemplates
+            .Include(rt => rt.CreatedBy)
+            .Include(rt => rt.Fields.OrderBy(f => f.Order))
+            .Where(rt => rt.IsActive && rt.ServiceCategory == serviceCategory)
+            .OrderBy(rt => rt.Name)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<RequestTemplate>> GetByFieldTypesAsync(List<FieldType> fieldTypes)
+    {
+        return await _context.RequestTemplates
+            .Include(rt => rt.CreatedBy)
+            .Include(rt => rt.Fields.OrderBy(f => f.Order))
+            .Where(rt => rt.IsActive && rt.Fields.Any(f => fieldTypes.Contains(f.FieldType)))
+            .OrderBy(rt => rt.Name)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<RequestTemplate>> GetAdvancedTemplatesAsync()
+    {
+        return await _context.RequestTemplates
+            .Include(rt => rt.CreatedBy)
+            .Include(rt => rt.Fields.OrderBy(f => f.Order))
+            .Where(rt => rt.IsActive && rt.Fields.Any(f => 
+                f.ValidationRules != null || 
+                f.ConditionalLogic != null || 
+                f.IsConditional ||
+                f.AutoCompleteSource != null))
+            .OrderBy(rt => rt.Name)
+            .AsNoTracking()
+            .ToListAsync();
     }
 
     public async Task DeleteAsync(Guid id)
