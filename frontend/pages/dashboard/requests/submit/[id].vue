@@ -396,29 +396,8 @@ const sortedFields = computed(() => {
   return [...template.value.fields].sort((a, b) => a.order - b.order)
 })
 
-// Icon mapping for curated icon set
-const iconMapping: Record<string, string> = {
-  'beach-umbrella': 'fluent-emoji-flat:beach-with-umbrella',
-  plane: 'fluent-emoji-flat:airplane',
-  calendar: 'heroicons:calendar-days',
-  laptop: 'heroicons:computer-desktop',
-  toolbox: 'heroicons:wrench-screwdriver',
-  document: 'heroicons:document-text',
-  folder: 'heroicons:folder',
-  clipboard: 'heroicons:clipboard-document-list',
-  shield: 'heroicons:shield-check',
-  warning: 'heroicons:exclamation-triangle',
-  graduation: 'heroicons:academic-cap',
-  book: 'heroicons:book-open',
-  users: 'heroicons:user-group',
-  bell: 'heroicons:bell',
-  check: 'heroicons:check-circle',
-  'medical-bag': 'heroicons:briefcase'
-}
-
-const getIconifyName = (iconName: string) => {
-  return iconMapping[iconName] || 'heroicons:question-mark-circle'
-}
+// Icon mapping
+const { getIconifyName } = useIconMapping()
 
 const parseOptions = (optionsJson: string | undefined) => {
   if (!optionsJson) return []
@@ -561,7 +540,11 @@ const submitRequest = async () => {
     console.error('Error submitting request:', err)
 
     // Show specific error message if available
-    const errorMessage = err?.data?.message || err?.message || 'Błąd podczas składania wniosku'
+    // Backend can return error in different formats:
+    // - err?.data?.error (from global error handler)
+    // - err?.data?.message (from validation errors)
+    // - err?.message (from network/client errors)
+    const errorMessage = err?.data?.error || err?.data?.message || err?.message || 'Błąd podczas składania wniosku'
     toast.error('Błąd podczas składania wniosku', errorMessage)
   } finally {
     submitting.value = false

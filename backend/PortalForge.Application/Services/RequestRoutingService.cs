@@ -39,7 +39,9 @@ public class RequestRoutingService : IRequestRoutingService
             ApproverType.Role => stepTemplate.ApproverRole.HasValue
                 ? await ResolveByRoleAsync(stepTemplate.ApproverRole.Value, submitter)
                 : await ResolveDirectSupervisorFromStructureAsync(submitter),
-            ApproverType.SpecificUser => stepTemplate.SpecificUser,
+            ApproverType.SpecificUser => stepTemplate.SpecificUserId.HasValue
+                ? await _unitOfWork.UserRepository.GetByIdAsync(stepTemplate.SpecificUserId.Value)
+                : null,
             ApproverType.UserGroup => stepTemplate.ApproverGroupId.HasValue
                 ? await ResolveByUserGroupAsync(stepTemplate.ApproverGroupId.Value)
                 : null,

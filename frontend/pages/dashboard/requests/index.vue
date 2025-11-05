@@ -631,28 +631,8 @@ const canApproveRequests = computed(() => {
   return ['admin', 'hr', 'manager'].includes(user.role)
 })
 
-// Icon mapping - maps icon names to Iconify icon names
-const iconMapping: Record<string, string> = {
-  'beach-umbrella': 'fluent-emoji-flat:beach-with-umbrella',
-  plane: 'fluent-emoji-flat:airplane',
-  calendar: 'heroicons:calendar-days',
-  laptop: 'heroicons:computer-desktop',
-  toolbox: 'heroicons:wrench-screwdriver',
-  document: 'heroicons:document-text',
-  folder: 'heroicons:folder',
-  clipboard: 'heroicons:clipboard-document-list',
-  shield: 'heroicons:shield-check',
-  warning: 'heroicons:exclamation-triangle',
-  graduation: 'heroicons:academic-cap',
-  book: 'heroicons:book-open',
-  users: 'heroicons:user-group',
-  bell: 'heroicons:bell',
-  check: 'heroicons:check-circle'
-}
-
-const getIconifyName = (iconName: string) => {
-  return iconMapping[iconName] || 'heroicons:question-mark-circle'
-}
+// Icon mapping
+const { getIconifyName } = useIconMapping()
 
 const getStatusBadgeClass = (status: string) => {
   const classes: Record<string, string> = {

@@ -92,40 +92,84 @@ const selectedCategory = ref('all')
 const categories = [
   { id: 'all', label: 'Wszystkie' },
   { id: 'vacation', label: 'Urlopy' },
-  { id: 'equipment', label: 'Sprzet' },
-  { id: 'documents', label: 'Dokumenty' },
-  { id: 'safety', label: 'BHP' },
+  { id: 'equipment', label: 'Sprzęt IT' },
+  { id: 'hr', label: 'HR/Kadry' },
+  { id: 'finance', label: 'Finanse' },
+  { id: 'office', label: 'Biuro' },
+  { id: 'health', label: 'Zdrowie' },
   { id: 'training', label: 'Szkolenia' },
-  { id: 'general', label: 'Pozostale' }
+  { id: 'documents', label: 'Dokumenty' },
+  { id: 'general', label: 'Pozostałe' }
 ]
 
 const icons: IconDefinition[] = [
-  // Urlopy
-  { name: 'beach-umbrella', label: 'Urlop na plazy', iconifyName: 'fluent-emoji-flat:beach-with-umbrella', category: 'vacation', keywords: ['urlop', 'wakacje', 'plaza', 'odpoczynek'] },
-  { name: 'plane', label: 'Delegacja', iconifyName: 'fluent-emoji-flat:airplane', category: 'vacation', keywords: ['delegacja', 'podroz', 'samolot'] },
-  { name: 'calendar', label: 'Plan urlopow', iconifyName: 'heroicons:calendar-days', category: 'vacation', keywords: ['kalendarz', 'termin', 'plan'] },
+  // Urlopy i czas wolny (10)
+  { name: 'beach-umbrella', label: 'Urlop wypoczynkowy', iconifyName: 'fluent-emoji-flat:beach-with-umbrella', category: 'vacation', keywords: ['urlop', 'wakacje', 'plaża', 'odpoczynek'] },
+  { name: 'plane', label: 'Delegacja', iconifyName: 'fluent-emoji-flat:airplane', category: 'vacation', keywords: ['delegacja', 'podróż', 'samolot', 'wyjazd'] },
+  { name: 'palm-tree', label: 'Urlop zagraniczny', iconifyName: 'fluent-emoji-flat:palm-tree', category: 'vacation', keywords: ['urlop', 'tropiki', 'wyjazd'] },
+  { name: 'tent', label: 'Urlop okolicznościowy', iconifyName: 'fluent-emoji-flat:camping', category: 'vacation', keywords: ['okolicznościowy', 'urlop', 'camping'] },
+  { name: 'bed', label: 'Urlop na żądanie', iconifyName: 'fluent-emoji-flat:bed', category: 'vacation', keywords: ['na żądanie', 'ondemand', 'odpoczynek'] },
+  { name: 'calendar', label: 'Plan urlopów', iconifyName: 'fluent-emoji-flat:calendar', category: 'vacation', keywords: ['kalendarz', 'termin', 'plan', 'harmonogram'] },
+  { name: 'sunglasses', label: 'Wolne', iconifyName: 'fluent-emoji-flat:sunglasses', category: 'vacation', keywords: ['wolne', 'odpoczynek', 'relaks'] },
+  { name: 'mountain', label: 'Wyjazd górski', iconifyName: 'fluent-emoji-flat:mountain', category: 'vacation', keywords: ['góry', 'urlop', 'wyjazd'] },
+  { name: 'home-office', label: 'Praca zdalna', iconifyName: 'fluent-emoji-flat:house', category: 'vacation', keywords: ['home office', 'praca zdalna', 'dom'] },
+  { name: 'clock', label: 'Urlop bezpłatny', iconifyName: 'fluent-emoji-flat:clock', category: 'vacation', keywords: ['bezpłatny', 'czas', 'urlop'] },
 
-  // Sprzet i IT
-  { name: 'laptop', label: 'Sprzet IT', iconifyName: 'heroicons:computer-desktop', category: 'equipment', keywords: ['sprzet', 'laptop', 'komputer'] },
-  { name: 'toolbox', label: 'Narzędzia', iconifyName: 'heroicons:wrench-screwdriver', category: 'equipment', keywords: ['narzedzia', 'serwis', 'naprawa'] },
+  // Sprzęt IT i technologia (8)
+  { name: 'laptop', label: 'Laptop', iconifyName: 'fluent-emoji-flat:laptop', category: 'equipment', keywords: ['laptop', 'komputer', 'sprzęt IT'] },
+  { name: 'computer', label: 'Komputer stacjonarny', iconifyName: 'fluent-emoji-flat:desktop-computer', category: 'equipment', keywords: ['komputer', 'desktop', 'PC', 'stacjonarny'] },
+  { name: 'phone', label: 'Telefon służbowy', iconifyName: 'fluent-emoji-flat:mobile-phone', category: 'equipment', keywords: ['telefon', 'smartfon', 'komórka'] },
+  { name: 'printer', label: 'Drukarka', iconifyName: 'fluent-emoji-flat:printer', category: 'equipment', keywords: ['drukarka', 'drukowanie', 'wydruk'] },
+  { name: 'keyboard', label: 'Klawiatura', iconifyName: 'fluent-emoji-flat:keyboard', category: 'equipment', keywords: ['klawiatura', 'akcesoria', 'mysz'] },
+  { name: 'monitor', label: 'Monitor', iconifyName: 'fluent-emoji-flat:desktop-computer', category: 'equipment', keywords: ['monitor', 'ekran', 'wyświetlacz'] },
+  { name: 'toolbox', label: 'Narzędzia IT', iconifyName: 'fluent-emoji-flat:toolbox', category: 'equipment', keywords: ['narzędzia', 'serwis', 'naprawa', 'IT'] },
+  { name: 'battery', label: 'Akcesoria', iconifyName: 'fluent-emoji-flat:battery', category: 'equipment', keywords: ['akcesoria', 'zasilacz', 'bateria'] },
 
-  // Dokumenty i administracja
-  { name: 'document', label: 'Dokument', iconifyName: 'heroicons:document-text', category: 'documents', keywords: ['dokument', 'wniosek', 'formularz'] },
-  { name: 'folder', label: 'Folder', iconifyName: 'heroicons:folder', category: 'documents', keywords: ['folder', 'archiwum', 'dokumenty'] },
-  { name: 'clipboard', label: 'Lista dokumentow', iconifyName: 'heroicons:clipboard-document-list', category: 'documents', keywords: ['lista', 'kroki', 'formularz'] },
+  // HR i Kadry (5)
+  { name: 'briefcase', label: 'Zatrudnienie', iconifyName: 'fluent-emoji-flat:briefcase', category: 'hr', keywords: ['zatrudnienie', 'praca', 'umowa'] },
+  { name: 'id-card', label: 'Dane osobowe', iconifyName: 'fluent-emoji-flat:identification-card', category: 'hr', keywords: ['dane', 'karta', 'identyfikacja', 'dokumenty'] },
+  { name: 'family', label: 'Sprawy rodzinne', iconifyName: 'fluent-emoji-flat:family', category: 'hr', keywords: ['rodzina', 'opieka', 'dziecko'] },
+  { name: 'handshake', label: 'Onboarding', iconifyName: 'fluent-emoji-flat:handshake', category: 'hr', keywords: ['wdrożenie', 'onboarding', 'powitanie'] },
+  { name: 'clipboard-hr', label: 'Ankiety HR', iconifyName: 'fluent-emoji-flat:clipboard', category: 'hr', keywords: ['ankieta', 'formularz', 'badanie'] },
 
-  // BHP i bezpieczenstwo
-  { name: 'shield', label: 'Bezpieczenstwo', iconifyName: 'heroicons:shield-check', category: 'safety', keywords: ['bhp', 'bezpieczenstwo', 'ochrona'] },
-  { name: 'warning', label: 'Zgloszenie zagrozenia', iconifyName: 'heroicons:exclamation-triangle', category: 'safety', keywords: ['zagrozenie', 'incydent', 'alert'] },
+  // Finanse i budżet (5)
+  { name: 'money-bag', label: 'Budżet', iconifyName: 'fluent-emoji-flat:money-bag', category: 'finance', keywords: ['budżet', 'pieniądze', 'finanse'] },
+  { name: 'credit-card', label: 'Karta płatnicza', iconifyName: 'fluent-emoji-flat:credit-card', category: 'finance', keywords: ['karta', 'płatność', 'wydatek'] },
+  { name: 'dollar', label: 'Zwrot kosztów', iconifyName: 'fluent-emoji-flat:dollar-banknote', category: 'finance', keywords: ['zwrot', 'koszty', 'refundacja', 'pieniądze'] },
+  { name: 'chart', label: 'Raport finansowy', iconifyName: 'fluent-emoji-flat:chart-increasing', category: 'finance', keywords: ['raport', 'wykres', 'analiza'] },
+  { name: 'receipt', label: 'Faktura', iconifyName: 'fluent-emoji-flat:receipt', category: 'finance', keywords: ['faktura', 'paragon', 'dokument'] },
 
-  // Szkolenia i wiedza
-  { name: 'graduation', label: 'Szkolenie', iconifyName: 'heroicons:academic-cap', category: 'training', keywords: ['szkolenie', 'kurs', 'nauka'] },
-  { name: 'book', label: 'Materialy szkoleniowe', iconifyName: 'heroicons:book-open', category: 'training', keywords: ['materialy', 'nauka', 'wiedza'] },
+  // Biuro i infrastruktura (5)
+  { name: 'office', label: 'Biuro', iconifyName: 'fluent-emoji-flat:office-building', category: 'office', keywords: ['biuro', 'budynek', 'siedziba'] },
+  { name: 'desk', label: 'Miejsce pracy', iconifyName: 'fluent-emoji-flat:desk', category: 'office', keywords: ['biurko', 'miejsce', 'stanowisko'] },
+  { name: 'key', label: 'Dostęp', iconifyName: 'fluent-emoji-flat:key', category: 'office', keywords: ['klucz', 'dostęp', 'uprawnienia'] },
+  { name: 'parking', label: 'Parking', iconifyName: 'fluent-emoji-flat:automobile', category: 'office', keywords: ['parking', 'samochód', 'miejsce parkingowe'] },
+  { name: 'light-bulb', label: 'Pomysł/Zgłoszenie', iconifyName: 'fluent-emoji-flat:light-bulb', category: 'office', keywords: ['pomysł', 'innowacja', 'sugestia'] },
 
-  // Ogolne
-  { name: 'users', label: 'Zespol', iconifyName: 'heroicons:user-group', category: 'general', keywords: ['zespol', 'ludzie', 'dzial'] },
-  { name: 'bell', label: 'Powiadomienia', iconifyName: 'heroicons:bell', category: 'general', keywords: ['powiadomienia', 'alarm', 'komunikaty'] },
-  { name: 'check', label: 'Zatwierdzone', iconifyName: 'heroicons:check-circle', category: 'general', keywords: ['zatwierdzone', 'akceptacja', 'status'] }
+  // Zdrowie i bezpieczeństwo (5)
+  { name: 'medical', label: 'Opieka medyczna', iconifyName: 'fluent-emoji-flat:hospital', category: 'health', keywords: ['zdrowie', 'medycyna', 'lekarz', 'szpital'] },
+  { name: 'first-aid', label: 'Pierwsza pomoc', iconifyName: 'fluent-emoji-flat:adhesive-bandage', category: 'health', keywords: ['BHP', 'bezpieczeństwo', 'wypadek'] },
+  { name: 'sick', label: 'Zwolnienie lekarskie', iconifyName: 'fluent-emoji-flat:face-with-thermometer', category: 'health', keywords: ['choroba', 'L4', 'zwolnienie'] },
+  { name: 'shield', label: 'Bezpieczeństwo', iconifyName: 'fluent-emoji-flat:shield', category: 'health', keywords: ['bezpieczeństwo', 'ochrona', 'BHP'] },
+  { name: 'warning', label: 'Zgłoszenie incydentu', iconifyName: 'fluent-emoji-flat:warning', category: 'health', keywords: ['incydent', 'zagrożenie', 'alarm'] },
+
+  // Szkolenia i rozwój (5)
+  { name: 'graduation', label: 'Szkolenie', iconifyName: 'fluent-emoji-flat:graduation-cap', category: 'training', keywords: ['szkolenie', 'kurs', 'nauka', 'certyfikat'] },
+  { name: 'books', label: 'Materiały', iconifyName: 'fluent-emoji-flat:books', category: 'training', keywords: ['materiały', 'wiedza', 'dokumentacja'] },
+  { name: 'trophy', label: 'Certyfikacja', iconifyName: 'fluent-emoji-flat:trophy', category: 'training', keywords: ['certyfikat', 'osiągnięcie', 'sukces'] },
+  { name: 'teacher', label: 'Mentor', iconifyName: 'fluent-emoji-flat:teacher', category: 'training', keywords: ['mentor', 'nauczyciel', 'szkoleniowiec'] },
+  { name: 'rocket', label: 'Rozwój', iconifyName: 'fluent-emoji-flat:rocket', category: 'training', keywords: ['rozwój', 'kariera', 'awans'] },
+
+  // Dokumenty (4)
+  { name: 'document', label: 'Dokument', iconifyName: 'fluent-emoji-flat:page-facing-up', category: 'documents', keywords: ['dokument', 'plik', 'formularz'] },
+  { name: 'folder', label: 'Folder', iconifyName: 'fluent-emoji-flat:file-folder', category: 'documents', keywords: ['folder', 'teczka', 'archiwum'] },
+  { name: 'memo', label: 'Notatka', iconifyName: 'fluent-emoji-flat:memo', category: 'documents', keywords: ['notatka', 'memo', 'informacja'] },
+  { name: 'signature', label: 'Podpis', iconifyName: 'fluent-emoji-flat:pen', category: 'documents', keywords: ['podpis', 'zatwierdzenie', 'podpisanie'] },
+
+  // Ogólne (3)
+  { name: 'checkmark', label: 'Zatwierdzenie', iconifyName: 'fluent-emoji-flat:check-mark-button', category: 'general', keywords: ['zatwierdzenie', 'akceptacja', 'OK'] },
+  { name: 'bell', label: 'Powiadomienie', iconifyName: 'fluent-emoji-flat:bell', category: 'general', keywords: ['powiadomienie', 'alert', 'komunikat'] },
+  { name: 'megaphone', label: 'Ogłoszenie', iconifyName: 'fluent-emoji-flat:megaphone', category: 'general', keywords: ['ogłoszenie', 'komunikat', 'informacja'] }
 ]
 
 const filteredIcons = computed(() => {
