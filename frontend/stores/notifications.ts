@@ -34,7 +34,8 @@ export const useNotificationsStore = defineStore('notifications', {
         const { getUnreadCount } = useRequestsApi()
         this.unreadCount = await getUnreadCount()
       } catch (error: any) {
-        console.error('Error fetching unread count:', error)
+        // Silently handle - errors are already logged in the API layer
+        this.unreadCount = 0
       }
     },
 

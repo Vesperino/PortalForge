@@ -227,15 +227,52 @@
                         </div>
                       </div>
 
-                      <div>
+                      <div v-if="field.fieldType !== 'Select' && field.fieldType !== 'Checkbox'">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Placeholder
                         </label>
                         <input
                           v-model="field.placeholder"
                           type="text"
+                          :placeholder="field.fieldType === 'Date' ? 'np. Wybierz datę' : 'Wpisz tekst pomocniczy...'"
                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                         >
+                      </div>
+
+                      <!-- Options for Select and Checkbox -->
+                      <div v-if="field.fieldType === 'Select' || field.fieldType === 'Checkbox'" class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Opcje do wyboru
+                        </label>
+                        <div v-if="!field.options || field.options.length === 0" class="text-sm text-gray-500">
+                          Brak opcji. Dodaj opcje poniżej.
+                        </div>
+                        <div v-for="(option, optIndex) in field.options || []" :key="optIndex" class="flex items-center gap-2">
+                          <input
+                            v-model="option.label"
+                            type="text"
+                            placeholder="Etykieta opcji"
+                            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm"
+                          >
+                          <input
+                            v-model="option.value"
+                            type="text"
+                            placeholder="Wartość"
+                            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm"
+                          >
+                          <button
+                            @click="removeFieldOption(index, optIndex)"
+                            class="text-red-600 hover:text-red-700"
+                          >
+                            <X class="w-4 h-4" />
+                          </button>
+                        </div>
+                        <button
+                          @click="addFieldOption(index)"
+                          class="text-sm text-blue-600 hover:text-blue-700"
+                        >
+                          + Dodaj opcję
+                        </button>
                       </div>
 
                       <div class="flex items-center gap-4">
@@ -501,7 +538,12 @@ const loadTemplate = async () => {
       return
     }
 
-    // Populate form with template data
+    // Populate form with template data and deserialize field options
+    const fields = (template.fields || []).map(field => ({
+      ...field,
+      options: field.options ? (typeof field.options === 'string' ? JSON.parse(field.options) : field.options) : []
+    }))
+
     form.value = {
       name: template.name,
       description: template.description,
@@ -512,7 +554,7 @@ const loadTemplate = async () => {
       estimatedProcessingDays: template.estimatedProcessingDays,
       passingScore: template.passingScore || 80,
       isActive: template.isActive ?? true,
-      fields: template.fields || [],
+      fields: fields,
       approvalStepTemplates: template.approvalStepTemplates || [],
     }
 
@@ -548,7 +590,8 @@ const addField = () => {
     fieldType: 'Text',
     placeholder: '',
     isRequired: false,
-    order: form.value.fields.length + 1
+    order: form.value.fields.length + 1,
+    options: []
   })
 }
 
@@ -556,6 +599,24 @@ const removeField = (index: number) => {
   form.value.fields.splice(index, 1)
   // Reorder
   form.value.fields.forEach((f, i) => f.order = i + 1)
+}
+
+const addFieldOption = (fieldIndex: number) => {
+  const field = form.value.fields[fieldIndex]
+  if (!field.options) {
+    field.options = []
+  }
+  field.options.push({
+    label: '',
+    value: ''
+  })
+}
+
+const removeFieldOption = (fieldIndex: number, optionIndex: number) => {
+  const field = form.value.fields[fieldIndex]
+  if (field.options) {
+    field.options.splice(optionIndex, 1)
+  }
 }
 
 const addApprovalStep = () => {
@@ -642,6 +703,12 @@ const saveTemplate = async () => {
       order: q.order
     }))
 
+    // Serialize field options
+    const fieldsToSubmit = form.value.fields.map(field => ({
+      ...field,
+      options: field.options && field.options.length > 0 ? JSON.stringify(field.options) : undefined
+    }))
+
     await updateTemplate(templateId.value, {
       name: form.value.name,
       description: form.value.description,
@@ -652,7 +719,7 @@ const saveTemplate = async () => {
       estimatedProcessingDays: form.value.estimatedProcessingDays,
       passingScore: form.value.passingScore,
       isActive: form.value.isActive,
-      fields: form.value.fields,
+      fields: fieldsToSubmit,
       approvalStepTemplates: form.value.approvalStepTemplates,
       quizQuestions: quizQuestionsFormatted
     })

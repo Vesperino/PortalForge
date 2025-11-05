@@ -13,7 +13,7 @@
           </label>
           <select
             :value="step.approverType"
-            @change="(e) => { updateStep({ approverType: (e.target as HTMLSelectElement).value as any }); onApproverTypeChange(); }"
+            @change="(e) => { const newType = (e.target as HTMLSelectElement).value as any; onApproverTypeChange(newType); updateStep({ approverType: newType }); }"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
           >
             <option value="Role">Rola hierarchiczna</option>
@@ -193,17 +193,18 @@ const updateStep = (updates: Partial<RequestApprovalStepTemplate>) => {
   emit('update:step', { ...props.step, ...updates })
 }
 
-const onApproverTypeChange = () => {
+const onApproverTypeChange = (newType: string) => {
   // Clear selections when type changes
   const updates: Partial<RequestApprovalStepTemplate> = {}
-  if (props.step.approverType !== 'Role') {
+  if (newType !== 'Role') {
     updates.approverRole = undefined
   }
-  if (props.step.approverType !== 'SpecificUser') {
+  if (newType !== 'SpecificUser') {
     updates.specificUserId = undefined
     selectedUser.value = null
+    userSearchTerm.value = ''
   }
-  if (props.step.approverType !== 'UserGroup') {
+  if (newType !== 'UserGroup') {
     updates.approverGroupId = undefined
   }
   if (Object.keys(updates).length > 0) {
