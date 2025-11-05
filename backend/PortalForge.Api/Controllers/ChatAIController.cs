@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,50 +30,42 @@ public class ChatAIController : BaseController
     /// <param name="command">Translation request containing text and target language.</param>
     /// <returns>Streamed translation response.</returns>
     [HttpPost("translate")]
-    [Produces("text/plain")]
-    public async IAsyncEnumerable<string> TranslateText(
+    public async Task TranslateText(
         [FromBody] TranslateTextCommand command,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         if (GetUserIdOrUnauthorized(out var userId) is ActionResult errorResult)
         {
             _logger.LogWarning("Unauthorized translation attempt");
-            yield return "Error: Unauthorized";
-            yield break;
+            Response.StatusCode = 401;
+            await Response.WriteAsync("Error: Unauthorized", cancellationToken);
+            return;
         }
 
         _logger.LogInformation(
             "User {UserId} initiating translation to {Language}. Text length: {Length}",
             userId, command.TargetLanguage, command.TextToTranslate.Length);
 
-        IAsyncEnumerable<string>? stream = null;
-        Exception? exception = null;
+        Response.ContentType = "text/plain; charset=utf-8";
+        await Response.Body.FlushAsync(cancellationToken);
 
         try
         {
-            stream = await _mediator.Send(command, cancellationToken);
+            var stream = await _mediator.Send(command, cancellationToken);
+
+            await foreach (var chunk in stream.WithCancellation(cancellationToken))
+            {
+                await Response.WriteAsync(chunk, cancellationToken);
+                await Response.Body.FlushAsync(cancellationToken);
+            }
+
+            _logger.LogInformation("Translation completed for user {UserId}", userId);
         }
         catch (Exception ex)
         {
-            exception = ex;
+            _logger.LogError(ex, "Error during translation for user {UserId}", userId);
+            await Response.WriteAsync($"\n\nError: {ex.Message}", cancellationToken);
         }
-
-        if (exception != null)
-        {
-            _logger.LogError(exception, "Error initiating translation for user {UserId}", userId);
-            yield return $"Error: {exception.Message}";
-            yield break;
-        }
-
-        if (stream != null)
-        {
-            await foreach (var chunk in stream.WithCancellation(cancellationToken))
-            {
-                yield return chunk;
-            }
-        }
-
-        _logger.LogInformation("Translation completed for user {UserId}", userId);
     }
 
     /// <summary>
@@ -83,50 +74,42 @@ public class ChatAIController : BaseController
     /// <param name="command">Chat request containing message and optional conversation history.</param>
     /// <returns>Streamed chat response.</returns>
     [HttpPost("chat")]
-    [Produces("text/plain")]
-    public async IAsyncEnumerable<string> SendChatMessage(
+    public async Task SendChatMessage(
         [FromBody] SendChatMessageCommand command,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         if (GetUserIdOrUnauthorized(out var userId) is ActionResult errorResult)
         {
             _logger.LogWarning("Unauthorized chat attempt");
-            yield return "Error: Unauthorized";
-            yield break;
+            Response.StatusCode = 401;
+            await Response.WriteAsync("Error: Unauthorized", cancellationToken);
+            return;
         }
 
         _logger.LogInformation(
             "User {UserId} sending chat message. Message length: {Length}, History count: {HistoryCount}",
             userId, command.Message.Length, command.ConversationHistory?.Count ?? 0);
 
-        IAsyncEnumerable<string>? stream = null;
-        Exception? exception = null;
+        Response.ContentType = "text/plain; charset=utf-8";
+        await Response.Body.FlushAsync(cancellationToken);
 
         try
         {
-            stream = await _mediator.Send(command, cancellationToken);
+            var stream = await _mediator.Send(command, cancellationToken);
+
+            await foreach (var chunk in stream.WithCancellation(cancellationToken))
+            {
+                await Response.WriteAsync(chunk, cancellationToken);
+                await Response.Body.FlushAsync(cancellationToken);
+            }
+
+            _logger.LogInformation("Chat response completed for user {UserId}", userId);
         }
         catch (Exception ex)
         {
-            exception = ex;
+            _logger.LogError(ex, "Error during chat for user {UserId}", userId);
+            await Response.WriteAsync($"\n\nError: {ex.Message}", cancellationToken);
         }
-
-        if (exception != null)
-        {
-            _logger.LogError(exception, "Error initiating chat for user {UserId}", userId);
-            yield return $"Error: {exception.Message}";
-            yield break;
-        }
-
-        if (stream != null)
-        {
-            await foreach (var chunk in stream.WithCancellation(cancellationToken))
-            {
-                yield return chunk;
-            }
-        }
-
-        _logger.LogInformation("Chat response completed for user {UserId}", userId);
     }
 
     /// <summary>
