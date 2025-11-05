@@ -82,8 +82,8 @@ public class LocalFileStorageService : IFileStorageService
     {
         // This method is synchronous for performance in controllers
         // Use cached settings if available
-        var basePath = _cachedSettings?.GetValueOrDefault("Storage:BasePath", "C:\\PortalForge\\Storage") 
-                       ?? "C:\\PortalForge\\Storage";
+        var basePath = _cachedSettings?.GetValueOrDefault("Storage:BasePath", GetDefaultBasePath())
+                       ?? GetDefaultBasePath();
 
         return CombineWithBasePath(basePath, relativePath);
     }
