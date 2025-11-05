@@ -67,6 +67,12 @@ public static class DependencyInjection
         // Register Storage Testing Service
         services.AddScoped<PortalForge.Application.Interfaces.IStorageTestingService, PortalForge.Infrastructure.Services.StorageTestingService>();
 
+        // Register Encryption Service
+        services.AddScoped<PortalForge.Application.Interfaces.IEncryptionService, PortalForge.Infrastructure.Services.EncryptionService>();
+
+        // Register OpenAI Service
+        services.AddScoped<PortalForge.Application.Interfaces.IOpenAIService, PortalForge.Infrastructure.Services.OpenAIService>();
+
         // Register Unit of Work and Repositories
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -179,7 +185,8 @@ public static class DependencyInjection
                 "admin.roles.manage",
                 "admin.settings.view",
                 "admin.settings.manage",
-                "internal_services.manage"
+                "internal_services.manage",
+                "chatai.use"
             };
 
             foreach (var permission in permissions)
