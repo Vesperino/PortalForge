@@ -69,85 +69,157 @@ public class UpdateRequestTemplateCommandHandler
         // Update fields if provided
         if (request.Fields != null)
         {
-            // Get existing fields to remove
-            var existingFields = template.Fields.ToList();
-            foreach (var field in existingFields)
+            var requestFieldIds = request.Fields
+                .Where(f => f.Id != Guid.Empty)
+                .Select(f => f.Id)
+                .ToList();
+
+            // Remove fields that are no longer in the request
+            var fieldsToRemove = template.Fields
+                .Where(f => !requestFieldIds.Contains(f.Id))
+                .ToList();
+
+            foreach (var field in fieldsToRemove)
             {
                 template.Fields.Remove(field);
             }
 
-            // Add new fields
+            // Update or add fields
             foreach (var fieldDto in request.Fields)
             {
-                var field = new RequestTemplateField
+                var existingField = template.Fields.FirstOrDefault(f => f.Id == fieldDto.Id && fieldDto.Id != Guid.Empty);
+
+                if (existingField != null)
                 {
-                    Id = fieldDto.Id != Guid.Empty ? fieldDto.Id : Guid.NewGuid(),
-                    RequestTemplateId = template.Id,
-                    Label = fieldDto.Label,
-                    FieldType = Enum.Parse<FieldType>(fieldDto.FieldType),
-                    Placeholder = fieldDto.Placeholder,
-                    IsRequired = fieldDto.IsRequired,
-                    Options = fieldDto.Options,
-                    MinValue = fieldDto.MinValue,
-                    MaxValue = fieldDto.MaxValue,
-                    HelpText = fieldDto.HelpText,
-                    Order = fieldDto.Order
-                };
-                template.Fields.Add(field);
+                    // Update existing field
+                    existingField.Label = fieldDto.Label;
+                    existingField.FieldType = Enum.Parse<FieldType>(fieldDto.FieldType);
+                    existingField.Placeholder = fieldDto.Placeholder;
+                    existingField.IsRequired = fieldDto.IsRequired;
+                    existingField.Options = fieldDto.Options;
+                    existingField.MinValue = fieldDto.MinValue;
+                    existingField.MaxValue = fieldDto.MaxValue;
+                    existingField.HelpText = fieldDto.HelpText;
+                    existingField.Order = fieldDto.Order;
+                }
+                else
+                {
+                    // Add new field
+                    var newField = new RequestTemplateField
+                    {
+                        Id = Guid.NewGuid(),
+                        RequestTemplateId = template.Id,
+                        Label = fieldDto.Label,
+                        FieldType = Enum.Parse<FieldType>(fieldDto.FieldType),
+                        Placeholder = fieldDto.Placeholder,
+                        IsRequired = fieldDto.IsRequired,
+                        Options = fieldDto.Options,
+                        MinValue = fieldDto.MinValue,
+                        MaxValue = fieldDto.MaxValue,
+                        HelpText = fieldDto.HelpText,
+                        Order = fieldDto.Order
+                    };
+                    template.Fields.Add(newField);
+                }
             }
         }
 
         // Update approval steps if provided
         if (request.ApprovalStepTemplates != null)
         {
-            // Get existing approval steps to remove
-            var existingSteps = template.ApprovalStepTemplates.ToList();
-            foreach (var step in existingSteps)
+            var requestStepIds = request.ApprovalStepTemplates
+                .Where(s => s.Id != Guid.Empty)
+                .Select(s => s.Id)
+                .ToList();
+
+            // Remove steps that are no longer in the request
+            var stepsToRemove = template.ApprovalStepTemplates
+                .Where(s => !requestStepIds.Contains(s.Id))
+                .ToList();
+
+            foreach (var step in stepsToRemove)
             {
                 template.ApprovalStepTemplates.Remove(step);
             }
 
-            // Add new approval steps
+            // Update or add approval steps
             foreach (var stepDto in request.ApprovalStepTemplates)
             {
-                var step = new RequestApprovalStepTemplate
+                var existingStep = template.ApprovalStepTemplates.FirstOrDefault(s => s.Id == stepDto.Id && stepDto.Id != Guid.Empty);
+
+                if (existingStep != null)
                 {
-                    Id = stepDto.Id != Guid.Empty ? stepDto.Id : Guid.NewGuid(),
-                    RequestTemplateId = template.Id,
-                    StepOrder = stepDto.StepOrder,
-                    ApproverType = Enum.Parse<ApproverType>(stepDto.ApproverType),
-                    SpecificUserId = stepDto.SpecificUserId,
-                    SpecificDepartmentId = stepDto.SpecificDepartmentId,
-                    ApproverGroupId = stepDto.ApproverGroupId,
-                    RequiresQuiz = stepDto.RequiresQuiz,
-                    CreatedAt = DateTime.UtcNow
-                };
-                template.ApprovalStepTemplates.Add(step);
+                    // Update existing step
+                    existingStep.StepOrder = stepDto.StepOrder;
+                    existingStep.ApproverType = Enum.Parse<ApproverType>(stepDto.ApproverType);
+                    existingStep.SpecificUserId = stepDto.SpecificUserId;
+                    existingStep.SpecificDepartmentId = stepDto.SpecificDepartmentId;
+                    existingStep.ApproverGroupId = stepDto.ApproverGroupId;
+                    existingStep.RequiresQuiz = stepDto.RequiresQuiz;
+                }
+                else
+                {
+                    // Add new step
+                    var newStep = new RequestApprovalStepTemplate
+                    {
+                        Id = Guid.NewGuid(),
+                        RequestTemplateId = template.Id,
+                        StepOrder = stepDto.StepOrder,
+                        ApproverType = Enum.Parse<ApproverType>(stepDto.ApproverType),
+                        SpecificUserId = stepDto.SpecificUserId,
+                        SpecificDepartmentId = stepDto.SpecificDepartmentId,
+                        ApproverGroupId = stepDto.ApproverGroupId,
+                        RequiresQuiz = stepDto.RequiresQuiz,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    template.ApprovalStepTemplates.Add(newStep);
+                }
             }
         }
 
         // Update quiz questions if provided
         if (request.QuizQuestions != null)
         {
-            // Get existing quiz questions to remove
-            var existingQuestions = template.QuizQuestions.ToList();
-            foreach (var question in existingQuestions)
+            var requestQuestionIds = request.QuizQuestions
+                .Where(q => q.Id != Guid.Empty)
+                .Select(q => q.Id)
+                .ToList();
+
+            // Remove questions that are no longer in the request
+            var questionsToRemove = template.QuizQuestions
+                .Where(q => !requestQuestionIds.Contains(q.Id))
+                .ToList();
+
+            foreach (var question in questionsToRemove)
             {
                 template.QuizQuestions.Remove(question);
             }
 
-            // Add new quiz questions
+            // Update or add quiz questions
             foreach (var questionDto in request.QuizQuestions)
             {
-                var question = new QuizQuestion
+                var existingQuestion = template.QuizQuestions.FirstOrDefault(q => q.Id == questionDto.Id && questionDto.Id != Guid.Empty);
+
+                if (existingQuestion != null)
                 {
-                    Id = questionDto.Id != Guid.Empty ? questionDto.Id : Guid.NewGuid(),
-                    RequestTemplateId = template.Id,
-                    Question = questionDto.Question,
-                    Options = questionDto.Options,
-                    Order = questionDto.Order
-                };
-                template.QuizQuestions.Add(question);
+                    // Update existing question
+                    existingQuestion.Question = questionDto.Question;
+                    existingQuestion.Options = questionDto.Options;
+                    existingQuestion.Order = questionDto.Order;
+                }
+                else
+                {
+                    // Add new question
+                    var newQuestion = new QuizQuestion
+                    {
+                        Id = Guid.NewGuid(),
+                        RequestTemplateId = template.Id,
+                        Question = questionDto.Question,
+                        Options = questionDto.Options,
+                        Order = questionDto.Order
+                    };
+                    template.QuizQuestions.Add(newQuestion);
+                }
             }
         }
 
