@@ -731,12 +731,18 @@ namespace PortalForge.Infrastructure.Migrations
                     b.Property<string>("Attachments")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("ClonedFromId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("FormData")
                         .IsRequired()
                         .HasColumnType("jsonb");
+
+                    b.Property<bool>("IsTemplate")
+                        .HasColumnType("boolean");
 
                     b.Property<int?>("LeaveType")
                         .HasColumnType("integer");
@@ -756,6 +762,18 @@ namespace PortalForge.Infrastructure.Migrations
                     b.Property<Guid>("RequestTemplateId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ServiceCategory")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ServiceCompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ServiceNotes")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("ServiceStatus")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -769,7 +787,12 @@ namespace PortalForge.Infrastructure.Migrations
                     b.Property<Guid>("SubmittedById")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Tags")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ClonedFromId");
 
                     b.HasIndex("RequestNumber")
                         .IsUnique();
@@ -862,6 +885,26 @@ namespace PortalForge.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<TimeSpan?>("EscalationTimeout")
+                        .HasColumnType("interval");
+
+                    b.Property<Guid?>("EscalationUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsParallel")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("MinimumApprovals")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("ParallelGroupId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<Guid>("RequestTemplateId")
                         .HasColumnType("uuid");
 
@@ -882,6 +925,10 @@ namespace PortalForge.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ApproverGroupId");
+
+                    b.HasIndex("EscalationUserId");
+
+                    b.HasIndex("ParallelGroupId");
 
                     b.HasIndex("SpecificDepartmentId");
 
@@ -1030,6 +1077,9 @@ namespace PortalForge.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<string>("ServiceCategory")
+                        .HasColumnType("text");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1052,14 +1102,32 @@ namespace PortalForge.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AllowedFileTypes")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AutoCompleteSource")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ConditionalLogic")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DefaultValue")
+                        .HasColumnType("text");
+
                     b.Property<string>("FieldType")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<int?>("FileMaxSize")
+                        .HasColumnType("integer");
+
                     b.Property<string>("HelpText")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsConditional")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsRequired")
                         .ValueGeneratedOnAdd()
@@ -1089,6 +1157,9 @@ namespace PortalForge.Infrastructure.Migrations
 
                     b.Property<Guid>("RequestTemplateId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationRules")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -1663,6 +1734,10 @@ namespace PortalForge.Infrastructure.Migrations
 
             modelBuilder.Entity("PortalForge.Domain.Entities.Request", b =>
                 {
+                    b.HasOne("PortalForge.Domain.Entities.Request", "ClonedFrom")
+                        .WithMany("ClonedRequests")
+                        .HasForeignKey("ClonedFromId");
+
                     b.HasOne("PortalForge.Domain.Entities.RequestTemplate", "RequestTemplate")
                         .WithMany("Requests")
                         .HasForeignKey("RequestTemplateId")
@@ -1674,6 +1749,8 @@ namespace PortalForge.Infrastructure.Migrations
                         .HasForeignKey("SubmittedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("ClonedFrom");
 
                     b.Navigation("RequestTemplate");
 
@@ -1706,6 +1783,11 @@ namespace PortalForge.Infrastructure.Migrations
                         .HasForeignKey("ApproverGroupId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("PortalForge.Domain.Entities.User", "EscalationUser")
+                        .WithMany()
+                        .HasForeignKey("EscalationUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("PortalForge.Domain.Entities.RequestTemplate", "RequestTemplate")
                         .WithMany("ApprovalStepTemplates")
                         .HasForeignKey("RequestTemplateId")
@@ -1723,6 +1805,8 @@ namespace PortalForge.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("ApproverGroup");
+
+                    b.Navigation("EscalationUser");
 
                     b.Navigation("RequestTemplate");
 
@@ -1957,6 +2041,8 @@ namespace PortalForge.Infrastructure.Migrations
             modelBuilder.Entity("PortalForge.Domain.Entities.Request", b =>
                 {
                     b.Navigation("ApprovalSteps");
+
+                    b.Navigation("ClonedRequests");
                 });
 
             modelBuilder.Entity("PortalForge.Domain.Entities.RequestApprovalStep", b =>

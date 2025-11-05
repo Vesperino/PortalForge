@@ -33,6 +33,21 @@ public class RequestApprovalStepTemplateConfiguration : IEntityTypeConfiguration
             .IsRequired()
             .HasDefaultValue(false);
 
+        builder.Property(ast => ast.IsParallel)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(ast => ast.ParallelGroupId)
+            .HasMaxLength(100);
+
+        builder.Property(ast => ast.MinimumApprovals)
+            .IsRequired()
+            .HasDefaultValue(1);
+
+        builder.Property(ast => ast.EscalationTimeout);
+
+        builder.Property(ast => ast.EscalationUserId);
+
         builder.Property(ast => ast.CreatedAt)
             .IsRequired();
 
@@ -57,9 +72,16 @@ public class RequestApprovalStepTemplateConfiguration : IEntityTypeConfiguration
             .HasForeignKey(ast => ast.SpecificDepartmentId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.HasOne(ast => ast.EscalationUser)
+            .WithMany()
+            .HasForeignKey(ast => ast.EscalationUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Indexes
         builder.HasIndex(ast => new { ast.RequestTemplateId, ast.StepOrder });
         builder.HasIndex(ast => ast.SpecificDepartmentId);
+        builder.HasIndex(ast => ast.ParallelGroupId);
+        builder.HasIndex(ast => ast.EscalationUserId);
     }
 }
 

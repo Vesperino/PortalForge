@@ -27,6 +27,11 @@ public interface IUnitOfWork : IDisposable
     ISystemSettingRepository SystemSettingRepository { get; }
     IInternalServiceRepository InternalServiceRepository { get; }
     IInternalServiceCategoryRepository InternalServiceCategoryRepository { get; }
+    IApprovalDelegationRepository ApprovalDelegationRepository { get; }
+    IRequestApprovalStepRepository RequestApprovalStepRepository { get; }
+    INotificationPreferencesRepository NotificationPreferencesRepository { get; }
+    INotificationTemplateRepository NotificationTemplateRepository { get; }
+    IRequestAnalyticsRepository RequestAnalyticsRepository { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

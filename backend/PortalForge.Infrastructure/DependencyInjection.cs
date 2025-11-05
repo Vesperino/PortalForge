@@ -51,9 +51,18 @@ public static class DependencyInjection
 
         // Register Notification Service
         services.AddScoped<PortalForge.Application.Services.INotificationService, PortalForge.Infrastructure.Services.NotificationService>();
+        
+        // Register Smart Notification Service
+        services.AddScoped<PortalForge.Application.Services.ISmartNotificationService, PortalForge.Infrastructure.Services.SmartNotificationService>();
+        
+        // Register Notification Template Service
+        services.AddScoped<PortalForge.Application.Services.INotificationTemplateService, PortalForge.Infrastructure.Services.NotificationTemplateService>();
 
         // Register Vacation Calculation Service
         services.AddScoped<PortalForge.Application.Interfaces.IVacationCalculationService, PortalForge.Infrastructure.Services.VacationCalculationService>();
+        
+        // Register Enhanced Vacation Calculation Service
+        services.AddScoped<PortalForge.Application.Interfaces.IEnhancedVacationCalculationService, PortalForge.Infrastructure.Services.EnhancedVacationCalculationService>();
 
         // Register Audit Log Service
         services.AddScoped<PortalForge.Application.Interfaces.IAuditLogService, PortalForge.Infrastructure.Services.AuditLogService>();
