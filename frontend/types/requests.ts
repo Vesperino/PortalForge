@@ -6,7 +6,7 @@ export type ApprovalStepStatus = 'Pending' | 'InReview' | 'Approved' | 'Rejected
 
 export type RequestPriority = 'Standard' | 'Urgent'
 
-export type FieldType = 'Text' | 'Textarea' | 'Number' | 'Select' | 'Date' | 'Checkbox'
+export type FieldType = 'Text' | 'Textarea' | 'Number' | 'Select' | 'Date' | 'Checkbox' | 'UserSelect'
 
 export type ApproverType = 'Role' | 'SpecificUser' | 'UserGroup' | 'Submitter'
 
@@ -68,6 +68,7 @@ export interface RequestTemplate {
   departmentId?: string
   isActive: boolean
   requiresApproval: boolean
+  requiresSubstituteSelection?: boolean
   estimatedProcessingDays?: number
   passingScore?: number
   createdById: string
@@ -116,6 +117,7 @@ export interface CreateRequestTemplateDto {
   category: string
   departmentId?: string
   requiresApproval: boolean
+  requiresSubstituteSelection?: boolean
   estimatedProcessingDays?: number
   passingScore?: number
   isActive?: boolean
