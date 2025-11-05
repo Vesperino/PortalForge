@@ -82,12 +82,20 @@ export function useSystemSettings() {
     }
   }
 
-  const storageSettings = computed(() => 
+  const storageSettings = computed(() =>
     settings.value.filter(s => s.category === 'Storage')
+  )
+
+  const aiSettings = computed(() =>
+    settings.value.filter(s => s.category === 'AI')
   )
 
   const getSettingValue = (key: string, defaultValue: string = '') => {
     return settings.value.find(s => s.key === key)?.value || defaultValue
+  }
+
+  const getSettingsByCategory = (category: string) => {
+    return settings.value.filter(s => s.category === category)
   }
 
   return {
@@ -98,7 +106,9 @@ export function useSystemSettings() {
     updateSettings,
     testStorage,
     storageSettings,
-    getSettingValue
+    aiSettings,
+    getSettingValue,
+    getSettingsByCategory
   }
 }
 
