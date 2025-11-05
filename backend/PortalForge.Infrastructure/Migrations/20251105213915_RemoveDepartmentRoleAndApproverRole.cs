@@ -10,6 +10,13 @@ namespace PortalForge.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Update existing 'Role' values to 'DirectSupervisor' before dropping ApproverRole column
+            migrationBuilder.Sql(@"
+                UPDATE ""public"".""RequestApprovalStepTemplates""
+                SET ""ApproverType"" = 'DirectSupervisor'
+                WHERE ""ApproverType"" = 'Role';
+            ");
+
             migrationBuilder.DropColumn(
                 name: "DepartmentRole",
                 schema: "public",
