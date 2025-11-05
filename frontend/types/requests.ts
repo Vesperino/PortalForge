@@ -1,5 +1,3 @@
-export type DepartmentRole = 'Employee' | 'Manager' | 'Director'
-
 export type RequestStatus = 'Draft' | 'InReview' | 'Approved' | 'Rejected' | 'AwaitingSurvey'
 
 export type ApprovalStepStatus = 'Pending' | 'InReview' | 'Approved' | 'Rejected' | 'RequiresSurvey' | 'SurveyFailed'
@@ -8,7 +6,7 @@ export type RequestPriority = 'Standard' | 'Urgent'
 
 export type FieldType = 'Text' | 'Textarea' | 'Number' | 'Select' | 'Date' | 'Checkbox' | 'UserSelect'
 
-export type ApproverType = 'Role' | 'SpecificUser' | 'UserGroup' | 'Submitter'
+export type ApproverType = 'DirectSupervisor' | 'SpecificUser' | 'SpecificDepartment' | 'UserGroup' | 'Submitter'
 
 export type NotificationType =
   | 'RequestPendingApproval'
@@ -40,8 +38,8 @@ export interface RequestApprovalStepTemplate {
   id?: string
   stepOrder: number
   approverType: ApproverType
-  approverRole?: DepartmentRole
   specificUserId?: string
+  specificDepartmentId?: string
   approverGroupId?: string
   requiresQuiz: boolean
 }

@@ -42,9 +42,9 @@ public class RequestApprovalStepTemplateDto
 {
     public Guid Id { get; set; }
     public int StepOrder { get; set; }
-    public string ApproverType { get; set; } = "Role"; // Role, SpecificUser, UserGroup, Submitter
-    public string? ApproverRole { get; set; } // For ApproverType = Role
+    public string ApproverType { get; set; } = "DirectSupervisor"; // DirectSupervisor, SpecificUser, SpecificDepartment, UserGroup, Submitter
     public Guid? SpecificUserId { get; set; } // For ApproverType = SpecificUser
+    public Guid? SpecificDepartmentId { get; set; } // For ApproverType = SpecificDepartment
     public Guid? ApproverGroupId { get; set; } // For ApproverType = UserGroup
     public bool RequiresQuiz { get; set; }
 }

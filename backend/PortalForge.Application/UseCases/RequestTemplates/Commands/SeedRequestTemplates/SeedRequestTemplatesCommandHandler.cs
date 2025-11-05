@@ -96,17 +96,7 @@ public class SeedRequestTemplatesCommandHandler
             Id = Guid.NewGuid(),
             RequestTemplateId = itEquipmentTemplate.Id,
             StepOrder = 1,
-            ApproverRole = DepartmentRole.Manager,
-            RequiresQuiz = false,
-            CreatedAt = DateTime.UtcNow
-        });
-
-        itEquipmentTemplate.ApprovalStepTemplates.Add(new RequestApprovalStepTemplate
-        {
-            Id = Guid.NewGuid(),
-            RequestTemplateId = itEquipmentTemplate.Id,
-            StepOrder = 2,
-            ApproverRole = DepartmentRole.Director,
+            ApproverType = ApproverType.DirectSupervisor,
             RequiresQuiz = false,
             CreatedAt = DateTime.UtcNow
         });
@@ -188,17 +178,7 @@ public class SeedRequestTemplatesCommandHandler
             Id = Guid.NewGuid(),
             RequestTemplateId = trainingTemplate.Id,
             StepOrder = 1,
-            ApproverRole = DepartmentRole.Manager,
-            RequiresQuiz = false,
-            CreatedAt = DateTime.UtcNow
-        });
-
-        trainingTemplate.ApprovalStepTemplates.Add(new RequestApprovalStepTemplate
-        {
-            Id = Guid.NewGuid(),
-            RequestTemplateId = trainingTemplate.Id,
-            StepOrder = 2,
-            ApproverRole = DepartmentRole.Director,
+            ApproverType = ApproverType.DirectSupervisor,
             RequiresQuiz = true,
             CreatedAt = DateTime.UtcNow
         });
@@ -277,17 +257,7 @@ public class SeedRequestTemplatesCommandHandler
             Id = Guid.NewGuid(),
             RequestTemplateId = rdAccessTemplate.Id,
             StepOrder = 1,
-            ApproverRole = DepartmentRole.Manager,
-            RequiresQuiz = false,
-            CreatedAt = DateTime.UtcNow
-        });
-
-        rdAccessTemplate.ApprovalStepTemplates.Add(new RequestApprovalStepTemplate
-        {
-            Id = Guid.NewGuid(),
-            RequestTemplateId = rdAccessTemplate.Id,
-            StepOrder = 2,
-            ApproverRole = DepartmentRole.Director,
+            ApproverType = ApproverType.DirectSupervisor,
             RequiresQuiz = true,
             CreatedAt = DateTime.UtcNow
         });
@@ -384,7 +354,7 @@ public class SeedRequestTemplatesCommandHandler
             Id = Guid.NewGuid(),
             RequestTemplateId = vacationTemplate.Id,
             StepOrder = 1,
-            ApproverRole = DepartmentRole.Manager,
+            ApproverType = ApproverType.DirectSupervisor,
             RequiresQuiz = false,
             CreatedAt = DateTime.UtcNow
         });
@@ -455,17 +425,7 @@ public class SeedRequestTemplatesCommandHandler
             Id = Guid.NewGuid(),
             RequestTemplateId = softwareLicenseTemplate.Id,
             StepOrder = 1,
-            ApproverRole = DepartmentRole.Manager,
-            RequiresQuiz = false,
-            CreatedAt = DateTime.UtcNow
-        });
-
-        softwareLicenseTemplate.ApprovalStepTemplates.Add(new RequestApprovalStepTemplate
-        {
-            Id = Guid.NewGuid(),
-            RequestTemplateId = softwareLicenseTemplate.Id,
-            StepOrder = 2,
-            ApproverRole = DepartmentRole.Director,
+            ApproverType = ApproverType.DirectSupervisor,
             RequiresQuiz = false,
             CreatedAt = DateTime.UtcNow
         });

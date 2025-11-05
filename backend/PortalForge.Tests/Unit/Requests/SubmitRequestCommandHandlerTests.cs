@@ -143,8 +143,7 @@ public class SubmitRequestCommandHandlerTests
         {
             Id = managerId,
             FirstName = "Jane",
-            LastName = "Manager",
-            DepartmentRole = DepartmentRole.Manager
+            LastName = "Manager"
         };
 
         var employee = new User
@@ -152,7 +151,6 @@ public class SubmitRequestCommandHandlerTests
             Id = employeeId,
             FirstName = "Bob",
             LastName = "Employee",
-            DepartmentRole = DepartmentRole.Employee,
             Supervisor = manager,
             SupervisorId = managerId
         };

@@ -19,9 +19,8 @@ public class User
 
     public string Department { get; set; } = string.Empty;
     public string Position { get; set; } = string.Empty;
-    public DepartmentRole DepartmentRole { get; set; } = DepartmentRole.Employee;
 
-    // NEW: Link to Department entity
+    // Link to Department entity
     public Guid? DepartmentId { get; set; }
     public Department? DepartmentEntity { get; set; }
 

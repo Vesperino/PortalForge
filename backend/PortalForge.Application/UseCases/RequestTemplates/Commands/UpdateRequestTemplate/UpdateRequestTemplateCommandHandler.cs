@@ -108,10 +108,8 @@ public class UpdateRequestTemplateCommandHandler
                     RequestTemplateId = template.Id,
                     StepOrder = stepDto.StepOrder,
                     ApproverType = Enum.Parse<ApproverType>(stepDto.ApproverType),
-                    ApproverRole = !string.IsNullOrEmpty(stepDto.ApproverRole)
-                        ? Enum.Parse<DepartmentRole>(stepDto.ApproverRole)
-                        : null,
                     SpecificUserId = stepDto.SpecificUserId,
+                    SpecificDepartmentId = stepDto.SpecificDepartmentId,
                     ApproverGroupId = stepDto.ApproverGroupId,
                     RequiresQuiz = stepDto.RequiresQuiz,
                     CreatedAt = DateTime.UtcNow

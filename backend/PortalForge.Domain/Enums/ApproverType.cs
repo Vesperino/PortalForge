@@ -2,20 +2,16 @@ namespace PortalForge.Domain.Enums;
 
 /// <summary>
 /// Defines how approvers are assigned to an approval step.
+/// Simplified to use only organizational structure (supervisors and department heads).
 /// </summary>
 public enum ApproverType
 {
     /// <summary>
     /// Approver is the direct supervisor of the submitter.
-    /// Most common approval type - routes to immediate manager.
+    /// Most common approval type - routes to immediate manager via SupervisorId.
+    /// Falls back to department head if no supervisor is assigned.
     /// </summary>
     DirectSupervisor,
-
-    /// <summary>
-    /// Approver is determined by hierarchical role (Manager, Director).
-    /// Uses the submitter's organizational hierarchy.
-    /// </summary>
-    Role,
 
     /// <summary>
     /// Approver is a specific user selected by ID.

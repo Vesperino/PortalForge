@@ -215,19 +215,19 @@ public class UpdateRequestTemplateCommandHandlerTests
             Fields = new List<RequestTemplateField>(),
             ApprovalStepTemplates = new List<RequestApprovalStepTemplate>
             {
-                new RequestApprovalStepTemplate 
-                { 
+                new RequestApprovalStepTemplate
+                {
                     Id = Guid.NewGuid(),
-                    StepOrder = 1, 
-                    ApproverRole = DepartmentRole.Manager,
-                    RequiresQuiz = false 
+                    StepOrder = 1,
+                    ApproverType = ApproverType.DirectSupervisor,
+                    RequiresQuiz = false
                 },
-                new RequestApprovalStepTemplate 
-                { 
+                new RequestApprovalStepTemplate
+                {
                     Id = Guid.NewGuid(),
-                    StepOrder = 2, 
-                    ApproverRole = DepartmentRole.Director,
-                    RequiresQuiz = false 
+                    StepOrder = 2,
+                    ApproverType = ApproverType.DirectSupervisor,
+                    RequiresQuiz = false
                 }
             },
             CreatedAt = DateTime.UtcNow.AddDays(-10)
@@ -248,8 +248,7 @@ public class UpdateRequestTemplateCommandHandlerTests
         // Assert
         result.Success.Should().BeTrue();
         existingTemplate.ApprovalStepTemplates.Should().HaveCount(1);
-        existingTemplate.ApprovalStepTemplates.First().ApproverType.Should().Be(ApproverType.Role);
-        existingTemplate.ApprovalStepTemplates.First().ApproverRole.Should().Be(DepartmentRole.Director);
+        existingTemplate.ApprovalStepTemplates.First().ApproverType.Should().Be(ApproverType.DirectSupervisor);
         existingTemplate.ApprovalStepTemplates.First().RequiresQuiz.Should().BeTrue();
     }
 

@@ -279,9 +279,9 @@ public class CreateRequestTemplateCommandHandlerTests
         capturedTemplate.Should().NotBeNull();
         capturedTemplate!.ApprovalStepTemplates.Should().HaveCount(3);
         capturedTemplate.ApprovalStepTemplates.Should().BeInAscendingOrder(s => s.StepOrder);
-        capturedTemplate.ApprovalStepTemplates.ElementAt(0).ApproverRole.Should().Be(DepartmentRole.Manager);
-        capturedTemplate.ApprovalStepTemplates.ElementAt(1).ApproverRole.Should().Be(DepartmentRole.Director);
-        capturedTemplate.ApprovalStepTemplates.ElementAt(2).ApproverRole.Should().Be(DepartmentRole.Employee);
+        capturedTemplate.ApprovalStepTemplates.ElementAt(0).ApproverType.Should().Be(ApproverType.DirectSupervisor);
+        capturedTemplate.ApprovalStepTemplates.ElementAt(1).ApproverType.Should().Be(ApproverType.DirectSupervisor);
+        capturedTemplate.ApprovalStepTemplates.ElementAt(2).ApproverType.Should().Be(ApproverType.DirectSupervisor);
         capturedTemplate.ApprovalStepTemplates.ElementAt(2).RequiresQuiz.Should().BeTrue();
     }
 }

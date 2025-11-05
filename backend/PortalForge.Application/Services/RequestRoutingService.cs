@@ -36,9 +36,6 @@ public class RequestRoutingService : IRequestRoutingService
         User? approver = stepTemplate.ApproverType switch
         {
             ApproverType.DirectSupervisor => await ResolveDirectSupervisorFromStructureAsync(submitter),
-            ApproverType.Role => stepTemplate.ApproverRole.HasValue
-                ? await ResolveByRoleAsync(stepTemplate.ApproverRole.Value, submitter)
-                : await ResolveDirectSupervisorFromStructureAsync(submitter),
             ApproverType.SpecificUser => stepTemplate.SpecificUserId.HasValue
                 ? await _unitOfWork.UserRepository.GetByIdAsync(stepTemplate.SpecificUserId.Value)
                 : null,
@@ -106,9 +103,6 @@ public class RequestRoutingService : IRequestRoutingService
                 {
                     ApproverType.DirectSupervisor =>
                         "You do not have a direct supervisor assigned. Please contact HR to resolve this before submitting requests.",
-
-                    ApproverType.Role =>
-                        $"No supervisor found with the required role '{stepTemplate.ApproverRole}' in your reporting chain. Please contact HR.",
 
                     ApproverType.SpecificDepartment =>
                         $"The target department has no head assigned. Please contact HR.",
@@ -188,26 +182,6 @@ public class RequestRoutingService : IRequestRoutingService
                 substitute = primaryApprover.Supervisor;
                 break;
 
-            case ApproverType.Role:
-                // For role-based, check if primary approver's department has a substitute
-                if (primaryApprover.DepartmentRole == DepartmentRole.Manager)
-                {
-                    if (primaryApprover.DepartmentId.HasValue)
-                    {
-                        var department = await _unitOfWork.DepartmentRepository.GetByIdAsync(primaryApprover.DepartmentId.Value);
-                        substitute = department?.HeadOfDepartmentSubstitute;
-                    }
-                }
-                else if (primaryApprover.DepartmentRole == DepartmentRole.Director)
-                {
-                    if (primaryApprover.DepartmentId.HasValue)
-                    {
-                        var department = await _unitOfWork.DepartmentRepository.GetByIdAsync(primaryApprover.DepartmentId.Value);
-                        substitute = department?.DirectorSubstitute;
-                    }
-                }
-                break;
-
             case ApproverType.SpecificDepartment:
                 // For specific department, use department's substitute
                 if (stepTemplate.SpecificDepartmentId.HasValue)
@@ -255,74 +229,6 @@ public class RequestRoutingService : IRequestRoutingService
     }
 
     #region Private Resolution Methods
-
-    /// <summary>
-    /// Resolves approver by walking up the supervisor hierarchy to find a user with the target role.
-    /// </summary>
-    private async Task<User?> ResolveByRoleAsync(DepartmentRole targetRole, User submitter)
-    {
-        var currentUserId = submitter.SupervisorId;
-
-        _logger.LogDebug(
-            "Walking supervisor chain to find role {TargetRole} starting from {UserId}",
-            targetRole,
-            submitter.Id);
-
-        // Walk up supervisor chain by loading each supervisor from DB
-        while (currentUserId.HasValue)
-        {
-            var currentUser = await _unitOfWork.UserRepository.GetByIdAsync(currentUserId.Value);
-
-            if (currentUser == null)
-            {
-                _logger.LogWarning(
-                    "Supervisor {SupervisorId} not found in database - broken supervisor chain",
-                    currentUserId.Value);
-                break;
-            }
-
-            _logger.LogDebug(
-                "Checking supervisor {SupervisorId} with role {SupervisorRole}",
-                currentUser.Id,
-                currentUser.DepartmentRole);
-
-            // Check if this supervisor has the target role or higher
-            if (currentUser.DepartmentRole >= targetRole)
-            {
-                _logger.LogDebug(
-                    "Found supervisor {SupervisorId} with sufficient role {Role}",
-                    currentUser.Id,
-                    currentUser.DepartmentRole);
-
-                return currentUser;
-            }
-
-            // Move to next supervisor in chain
-            currentUserId = currentUser.SupervisorId;
-        }
-
-        _logger.LogWarning(
-            "No supervisor found with role {TargetRole} for submitter {SubmitterId}",
-            targetRole,
-            submitter.Id);
-
-        return null; // No supervisor with target role found
-    }
-
-    /// <summary>
-    /// Resolves approver as the direct supervisor of the submitter.
-    /// </summary>
-    private User? ResolveByDirectSupervisor(User submitter)
-    {
-        if (submitter.Supervisor == null)
-        {
-            _logger.LogWarning(
-                "User {UserId} has no direct supervisor",
-                submitter.Id);
-        }
-
-        return submitter.Supervisor;
-    }
 
     /// <summary>
     /// Resolves direct supervisor using user->supervisor and department hierarchy fallback.

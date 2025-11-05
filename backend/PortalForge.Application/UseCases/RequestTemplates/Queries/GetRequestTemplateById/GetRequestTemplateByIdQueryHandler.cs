@@ -59,8 +59,8 @@ public class GetRequestTemplateByIdQueryHandler
                 Id = ast.Id,
                 StepOrder = ast.StepOrder,
                 ApproverType = ast.ApproverType.ToString(),
-                ApproverRole = ast.ApproverRole?.ToString(),
                 SpecificUserId = ast.SpecificUserId,
+                SpecificDepartmentId = ast.SpecificDepartmentId,
                 ApproverGroupId = ast.ApproverGroupId,
                 RequiresQuiz = ast.RequiresQuiz
             }).ToList(),

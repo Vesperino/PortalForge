@@ -19,11 +19,7 @@ public class RequestApprovalStepTemplateConfiguration : IEntityTypeConfiguration
             .IsRequired()
             .HasConversion<string>()
             .HasMaxLength(50)
-            .HasDefaultValue(Domain.Enums.ApproverType.Role);
-
-        builder.Property(ast => ast.ApproverRole)
-            .HasConversion<string>()
-            .HasMaxLength(50);
+            .HasDefaultValue(Domain.Enums.ApproverType.DirectSupervisor);
 
         builder.Property(ast => ast.SpecificUserId);
 

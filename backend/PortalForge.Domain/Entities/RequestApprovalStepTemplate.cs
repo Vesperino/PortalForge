@@ -20,13 +20,7 @@ public class RequestApprovalStepTemplate
     /// <summary>
     /// How the approver(s) should be determined.
     /// </summary>
-    public ApproverType ApproverType { get; set; } = ApproverType.Role;
-
-    /// <summary>
-    /// For ApproverType.Role: The hierarchical role (Manager, Director).
-    /// Null for other approver types.
-    /// </summary>
-    public DepartmentRole? ApproverRole { get; set; }
+    public ApproverType ApproverType { get; set; } = ApproverType.DirectSupervisor;
 
     /// <summary>
     /// For ApproverType.SpecificUser: The specific user who must approve.
