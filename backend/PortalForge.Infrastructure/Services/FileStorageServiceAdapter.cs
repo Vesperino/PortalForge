@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using PortalForge.Application.Common.Interfaces;
 
 namespace PortalForge.Infrastructure.Services;
@@ -9,10 +10,18 @@ namespace PortalForge.Infrastructure.Services;
 public class FileStorageServiceAdapter : IFileStorageService
 {
     private readonly PortalForge.Application.Interfaces.IFileStorageService _fileStorageService;
+    private readonly IConfiguration _configuration;
+    private readonly string _uploadsPath;
 
-    public FileStorageServiceAdapter(PortalForge.Application.Interfaces.IFileStorageService fileStorageService)
+    public FileStorageServiceAdapter(
+        PortalForge.Application.Interfaces.IFileStorageService fileStorageService,
+        IConfiguration configuration)
     {
         _fileStorageService = fileStorageService;
+        _configuration = configuration;
+
+        // Get uploads path from configuration (same as FileStorageService)
+        _uploadsPath = _configuration["FileStorage:UploadsPath"] ?? "wwwroot/uploads";
     }
 
     public async Task<string> SaveFileAsync(Stream fileStream, string fileName, string category)
@@ -32,8 +41,9 @@ public class FileStorageServiceAdapter : IFileStorageService
 
     public string GetFullPath(string relativePath)
     {
-        // FileStorageService doesn't have GetFullPath, return URL instead as fallback
-        return _fileStorageService.GetFileUrl(relativePath);
+        // Build full file system path (same logic as FileStorageService)
+        var normalizedPath = relativePath.Replace("/", Path.DirectorySeparatorChar.ToString());
+        return Path.Combine(_uploadsPath, normalizedPath);
     }
 
     public Task<Dictionary<string, string>> GetStorageSettingsAsync()
