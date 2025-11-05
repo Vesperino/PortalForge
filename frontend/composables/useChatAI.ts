@@ -8,7 +8,7 @@ export function useChatAI() {
   const error = ref<string | null>(null)
 
   /**
-   * Translates text with streaming response
+   * Translates text using OpenAI API
    */
   async function translateText(text: string, targetLanguage: string) {
     isTranslating.value = true
@@ -29,26 +29,12 @@ export function useChatAI() {
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.error || `HTTP error! status: ${response.status}`)
       }
 
-      if (!response.body) {
-        throw new Error('No response body')
-      }
-
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-
-      while (true) {
-        const { done, value } = await reader.read()
-
-        if (done) {
-          break
-        }
-
-        const chunk = decoder.decode(value, { stream: true })
-        translationResult.value += chunk
-      }
+      const data = await response.json()
+      translationResult.value = data.translatedText
     }
     catch (err: any) {
       error.value = err?.message || 'Translation failed'
@@ -60,7 +46,7 @@ export function useChatAI() {
   }
 
   /**
-   * Sends chat message with streaming response
+   * Sends chat message to OpenAI API
    */
   async function sendChatMessage(message: string, conversationHistory?: any[]) {
     isChatting.value = true
@@ -81,26 +67,12 @@ export function useChatAI() {
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.error || `HTTP error! status: ${response.status}`)
       }
 
-      if (!response.body) {
-        throw new Error('No response body')
-      }
-
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-
-      while (true) {
-        const { done, value } = await reader.read()
-
-        if (done) {
-          break
-        }
-
-        const chunk = decoder.decode(value, { stream: true })
-        chatResult.value += chunk
-      }
+      const data = await response.json()
+      chatResult.value = data.message
     }
     catch (err: any) {
       error.value = err?.message || 'Chat failed'
