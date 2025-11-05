@@ -150,9 +150,7 @@ public class SubmitRequestCommandHandlerTests
         {
             Id = employeeId,
             FirstName = "Bob",
-            LastName = "Employee",
-            Supervisor = manager,
-            SupervisorId = managerId
+            LastName = "Employee"
         };
 
         _mockTemplateRepo.Setup(r => r.GetByIdAsync(templateId))

@@ -43,8 +43,6 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
         var userId = Guid.NewGuid();
         var oldDepartmentId = Guid.NewGuid();
         var newDepartmentId = Guid.NewGuid();
-        var oldSupervisorId = Guid.NewGuid();
-        var newSupervisorId = Guid.NewGuid();
         var transferredByUserId = Guid.NewGuid();
 
         var user = new User
@@ -54,7 +52,6 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             LastName = "Doe",
             Email = "john.doe@test.com",
             DepartmentId = oldDepartmentId,
-            SupervisorId = oldSupervisorId,
             Role = UserRole.Employee
         };
 
@@ -65,20 +62,11 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             IsActive = true
         };
 
-        var newSupervisor = new User
-        {
-            Id = newSupervisorId,
-            FirstName = "Jane",
-            LastName = "Smith",
-            Email = "jane.smith@test.com",
-            Role = UserRole.Manager
-        };
-
         var command = new TransferEmployeeToDepartmentCommand
         {
             UserId = userId,
             NewDepartmentId = newDepartmentId,
-            NewSupervisorId = newSupervisorId,
+            NewSupervisorId = null,
             TransferredByUserId = transferredByUserId,
             Reason = "Organizational restructuring"
         };
@@ -93,12 +81,6 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(newDepartmentId))
             .ReturnsAsync(newDepartment);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(newSupervisorId))
-            .ReturnsAsync(newSupervisor);
-
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetPendingRequestsByUserAsync(userId))
-            .ReturnsAsync(new List<Request>());
-
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -106,7 +88,6 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
         result.Should().Be(MediatR.Unit.Value);
 
         user.DepartmentId.Should().Be(newDepartmentId);
-        user.SupervisorId.Should().Be(newSupervisorId);
 
         _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(user), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Once);
@@ -246,13 +227,16 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
         _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(It.IsAny<User>()), Times.Never);
     }
 
+    // NOTE: This test has been removed because pending requests are no longer reassigned during department transfers.
+    // Approvers are determined by department structure (HeadOfDepartmentId, DirectorId) dynamically.
+
     [Fact]
-    public async Task Handle_WithPendingRequests_ReassignsApprovalSteps()
+    public async Task Handle_SendsNotificationToOldDepartmentHead()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var oldSupervisorId = Guid.NewGuid();
-        var newSupervisorId = Guid.NewGuid();
+        var oldDepartmentId = Guid.NewGuid();
+        var oldDepartmentHeadId = Guid.NewGuid();
         var newDepartmentId = Guid.NewGuid();
 
         var user = new User
@@ -261,40 +245,21 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             FirstName = "John",
             LastName = "Doe",
             Email = "john.doe@test.com",
-            DepartmentId = Guid.NewGuid(),
-            SupervisorId = oldSupervisorId,
+            DepartmentId = oldDepartmentId,
             Role = UserRole.Employee
         };
 
-        var pendingRequest = new Request
+        var oldDepartment = new Department
         {
-            Id = Guid.NewGuid(),
-            SubmittedById = userId,
-            Status = RequestStatus.InReview,
-            ApprovalSteps = new List<RequestApprovalStep>
-            {
-                new RequestApprovalStep
-                {
-                    Id = Guid.NewGuid(),
-                    ApproverId = oldSupervisorId,
-                    Status = ApprovalStepStatus.InReview,
-                    StepOrder = 1
-                },
-                new RequestApprovalStep
-                {
-                    Id = Guid.NewGuid(),
-                    ApproverId = Guid.NewGuid(), // Different approver
-                    Status = ApprovalStepStatus.Pending,
-                    StepOrder = 2
-                }
-            }
+            Id = oldDepartmentId,
+            Name = "Old Department",
+            HeadOfDepartmentId = oldDepartmentHeadId
         };
 
         var command = new TransferEmployeeToDepartmentCommand
         {
             UserId = userId,
             NewDepartmentId = newDepartmentId,
-            NewSupervisorId = newSupervisorId,
             TransferredByUserId = Guid.NewGuid()
         };
 
@@ -305,66 +270,18 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
         _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
             .ReturnsAsync(user);
 
+        _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(oldDepartmentId))
+            .ReturnsAsync(oldDepartment);
+
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(newDepartmentId))
             .ReturnsAsync(new Department { Id = newDepartmentId, Name = "New Dept" });
-
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(newSupervisorId))
-            .ReturnsAsync(new User { Id = newSupervisorId, Role = UserRole.Manager });
-
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetPendingRequestsByUserAsync(userId))
-            .ReturnsAsync(new List<Request> { pendingRequest });
-
-        // Act
-        await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        var firstStep = pendingRequest.ApprovalSteps.First();
-        firstStep.ApproverId.Should().Be(newSupervisorId, "the old supervisor's step should be reassigned");
-
-        var secondStep = pendingRequest.ApprovalSteps.Last();
-        secondStep.ApproverId.Should().NotBe(newSupervisorId, "other approvers should remain unchanged");
-
-        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Once);
-    }
-
-    [Fact]
-    public async Task Handle_SendsNotificationToOldSupervisor()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var oldSupervisorId = Guid.NewGuid();
-        var newDepartmentId = Guid.NewGuid();
-
-        var user = new User
-        {
-            Id = userId,
-            FirstName = "John",
-            LastName = "Doe",
-            Email = "john.doe@test.com",
-            DepartmentId = Guid.NewGuid(),
-            SupervisorId = oldSupervisorId,
-            Role = UserRole.Employee
-        };
-
-        var command = new TransferEmployeeToDepartmentCommand
-        {
-            UserId = userId,
-            NewDepartmentId = newDepartmentId,
-            NewSupervisorId = Guid.NewGuid(),
-            TransferredByUserId = Guid.NewGuid()
-        };
-
-        SetupValidCommand(command, user, newDepartmentId);
-
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetPendingRequestsByUserAsync(userId))
-            .ReturnsAsync(new List<Request>());
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         _notificationServiceMock.Verify(x => x.CreateNotificationAsync(
-            oldSupervisorId,
+            oldDepartmentHeadId,
             NotificationType.System,
             "Pracownik przeniesiony",
             It.Is<string>(s => s.Contains("John Doe") && s.Contains("przeniesiony do innego działu")),
@@ -374,13 +291,12 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_SendsNotificationToNewSupervisor()
+    public async Task Handle_SendsNotificationToNewDepartmentHead()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var oldSupervisorId = Guid.NewGuid();
-        var newSupervisorId = Guid.NewGuid();
         var newDepartmentId = Guid.NewGuid();
+        var newDepartmentHeadId = Guid.NewGuid();
 
         var user = new User
         {
@@ -389,60 +305,20 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             LastName = "Doe",
             Email = "john.doe@test.com",
             DepartmentId = Guid.NewGuid(),
-            SupervisorId = oldSupervisorId,
             Role = UserRole.Employee
+        };
+
+        var newDepartment = new Department
+        {
+            Id = newDepartmentId,
+            Name = "New Department",
+            HeadOfDepartmentId = newDepartmentHeadId
         };
 
         var command = new TransferEmployeeToDepartmentCommand
         {
             UserId = userId,
             NewDepartmentId = newDepartmentId,
-            NewSupervisorId = newSupervisorId,
-            TransferredByUserId = Guid.NewGuid()
-        };
-
-        SetupValidCommand(command, user, newDepartmentId);
-
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetPendingRequestsByUserAsync(userId))
-            .ReturnsAsync(new List<Request>());
-
-        // Act
-        await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        _notificationServiceMock.Verify(x => x.CreateNotificationAsync(
-            newSupervisorId,
-            NotificationType.System,
-            "Nowy pracownik",
-            It.Is<string>(s => s.Contains("John Doe") && s.Contains("przeniesiony do Twojego działu")),
-            "User",
-            userId.ToString(),
-            $"/dashboard/users/{userId}"), Times.Once);
-    }
-
-    [Fact]
-    public async Task Handle_WithoutSupervisorChange_DoesNotReassignRequests()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var newDepartmentId = Guid.NewGuid();
-
-        var user = new User
-        {
-            Id = userId,
-            FirstName = "John",
-            LastName = "Doe",
-            Email = "john.doe@test.com",
-            DepartmentId = Guid.NewGuid(),
-            SupervisorId = null, // No supervisor
-            Role = UserRole.Employee
-        };
-
-        var command = new TransferEmployeeToDepartmentCommand
-        {
-            UserId = userId,
-            NewDepartmentId = newDepartmentId,
-            NewSupervisorId = null, // Not changing supervisor
             TransferredByUserId = Guid.NewGuid()
         };
 
@@ -454,15 +330,24 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             .ReturnsAsync(user);
 
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(newDepartmentId))
-            .ReturnsAsync(new Department { Id = newDepartmentId, Name = "New Dept" });
+            .ReturnsAsync(newDepartment);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        _unitOfWorkMock.Verify(x => x.RequestRepository.GetPendingRequestsByUserAsync(It.IsAny<Guid>()), Times.Never);
-        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Never, "SaveChanges should not be called for request reassignment");
+        _notificationServiceMock.Verify(x => x.CreateNotificationAsync(
+            newDepartmentHeadId,
+            NotificationType.System,
+            "Nowy pracownik",
+            It.Is<string>(s => s.Contains("John Doe") && s.Contains("przeniesiony do Twojego działu")),
+            "User",
+            userId.ToString(),
+            $"/dashboard/users/{userId}"), Times.Once);
     }
+
+    // NOTE: This test has been removed because pending requests are no longer reassigned during department transfers.
+    // The handler does not interact with RequestRepository at all.
 
     [Fact]
     public async Task Handle_CallsValidatorService()
@@ -502,8 +387,6 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
         var userId = Guid.NewGuid();
         var oldDepartmentId = Guid.NewGuid();
         var newDepartmentId = Guid.NewGuid();
-        var oldSupervisorId = Guid.NewGuid();
-        var newSupervisorId = Guid.NewGuid();
         var transferredByUserId = Guid.NewGuid();
 
         var user = new User
@@ -511,7 +394,6 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             Id = userId,
             Email = "john.doe@test.com",
             DepartmentId = oldDepartmentId,
-            SupervisorId = oldSupervisorId,
             Role = UserRole.Employee
         };
 
@@ -519,15 +401,11 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
         {
             UserId = userId,
             NewDepartmentId = newDepartmentId,
-            NewSupervisorId = newSupervisorId,
             TransferredByUserId = transferredByUserId,
             Reason = "Organizational restructuring"
         };
 
         SetupValidCommand(command, user, newDepartmentId);
-
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetPendingRequestsByUserAsync(userId))
-            .ReturnsAsync(new List<Request>());
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -538,8 +416,8 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             userId.ToString(),
             "DepartmentTransfer",
             transferredByUserId,
-            It.Is<string>(s => s.Contains(oldDepartmentId.ToString()) && s.Contains(oldSupervisorId.ToString())),
-            It.Is<string>(s => s.Contains(newDepartmentId.ToString()) && s.Contains(newSupervisorId.ToString())),
+            It.Is<string>(s => s.Contains(oldDepartmentId.ToString())),
+            It.Is<string>(s => s.Contains(newDepartmentId.ToString())),
             "Organizational restructuring",
             null), Times.Once);
     }
