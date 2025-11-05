@@ -42,15 +42,24 @@ public class DepartmentsControllerTests : IClassFixture<WebApplicationFactory<Pr
         {
             builder.ConfigureAppConfiguration((context, config) =>
             {
-                // Add test configuration for Supabase JWT secret
+                // Add test configuration for Supabase JWT secret and connection string
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["Supabase:JwtSecret"] = "test-jwt-secret-for-integration-tests-only-not-for-production-use"
+                    ["Supabase:JwtSecret"] = "test-jwt-secret-for-integration-tests-only-not-for-production-use",
+                    ["ConnectionStrings:DefaultConnection"] = "Host=localhost;Database=test;Username=test;Password=test"
                 });
             });
 
             builder.ConfigureTestServices(services =>
             {
+                // Remove Hangfire services (not needed in tests)
+                var hangfireDescriptors = services.Where(d =>
+                    d.ServiceType.FullName?.Contains("Hangfire") == true).ToList();
+                foreach (var descriptor in hangfireDescriptors)
+                {
+                    services.Remove(descriptor);
+                }
+
                 // Remove the production DbContext registration
                 var descriptorContext = services.SingleOrDefault(
                     d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
