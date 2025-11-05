@@ -25,81 +25,90 @@ public class ChatAIController : BaseController
     }
 
     /// <summary>
-    /// Translates text to the specified language using AI.
+    /// Translates text to the specified language using AI (streaming response).
     /// </summary>
     /// <param name="command">Translation request containing text and target language.</param>
-    /// <returns>Translation response.</returns>
+    /// <returns>Streamed translation response.</returns>
     [HttpPost("translate")]
-    public async Task<ActionResult<TranslationResponse>> TranslateText(
+    public async Task TranslateText(
         [FromBody] TranslateTextCommand command,
         CancellationToken cancellationToken)
     {
         if (GetUserIdOrUnauthorized(out var userId) is ActionResult errorResult)
         {
             _logger.LogWarning("Unauthorized translation attempt");
-            return Unauthorized(new { error = "Unauthorized" });
+            Response.StatusCode = 401;
+            await Response.WriteAsync("Error: Unauthorized", cancellationToken);
+            return;
         }
 
         _logger.LogInformation(
             "User {UserId} initiating translation to {Language}. Text length: {Length}",
             userId, command.TargetLanguage, command.TextToTranslate.Length);
 
+        Response.ContentType = "text/plain; charset=utf-8";
+        await Response.Body.FlushAsync(cancellationToken);
+
         try
         {
-            var translatedText = await _mediator.Send(command, cancellationToken);
+            var stream = await _mediator.Send(command, cancellationToken);
+
+            await foreach (var chunk in stream.WithCancellation(cancellationToken))
+            {
+                await Response.WriteAsync(chunk, cancellationToken);
+                await Response.Body.FlushAsync(cancellationToken);
+            }
 
             _logger.LogInformation("Translation completed for user {UserId}", userId);
-
-            return Ok(new TranslationResponse
-            {
-                TranslatedText = translatedText,
-                SourceLanguage = "auto",
-                TargetLanguage = command.TargetLanguage
-            });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during translation for user {UserId}", userId);
-            return StatusCode(500, new { error = ex.Message });
+            await Response.WriteAsync($"\n\nError: {ex.Message}", cancellationToken);
         }
     }
 
     /// <summary>
-    /// Sends a chat message to AI and receives a response.
+    /// Sends a chat message to AI and receives a streaming response.
     /// </summary>
     /// <param name="command">Chat request containing message and optional conversation history.</param>
-    /// <returns>Chat response.</returns>
+    /// <returns>Streamed chat response.</returns>
     [HttpPost("chat")]
-    public async Task<ActionResult<ChatResponse>> SendChatMessage(
+    public async Task SendChatMessage(
         [FromBody] SendChatMessageCommand command,
         CancellationToken cancellationToken)
     {
         if (GetUserIdOrUnauthorized(out var userId) is ActionResult errorResult)
         {
             _logger.LogWarning("Unauthorized chat attempt");
-            return Unauthorized(new { error = "Unauthorized" });
+            Response.StatusCode = 401;
+            await Response.WriteAsync("Error: Unauthorized", cancellationToken);
+            return;
         }
 
         _logger.LogInformation(
             "User {UserId} sending chat message. Message length: {Length}, History count: {HistoryCount}",
             userId, command.Message.Length, command.ConversationHistory?.Count ?? 0);
 
+        Response.ContentType = "text/plain; charset=utf-8";
+        await Response.Body.FlushAsync(cancellationToken);
+
         try
         {
-            var responseMessage = await _mediator.Send(command, cancellationToken);
+            var stream = await _mediator.Send(command, cancellationToken);
+
+            await foreach (var chunk in stream.WithCancellation(cancellationToken))
+            {
+                await Response.WriteAsync(chunk, cancellationToken);
+                await Response.Body.FlushAsync(cancellationToken);
+            }
 
             _logger.LogInformation("Chat response completed for user {UserId}", userId);
-
-            return Ok(new ChatResponse
-            {
-                Message = responseMessage,
-                Role = "assistant"
-            });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during chat for user {UserId}", userId);
-            return StatusCode(500, new { error = ex.Message });
+            await Response.WriteAsync($"\n\nError: {ex.Message}", cancellationToken);
         }
     }
 
@@ -139,23 +148,4 @@ public class ChatAIController : BaseController
             return Ok(false);
         }
     }
-}
-
-/// <summary>
-/// Response model for translation requests.
-/// </summary>
-public class TranslationResponse
-{
-    public string TranslatedText { get; set; } = string.Empty;
-    public string SourceLanguage { get; set; } = string.Empty;
-    public string TargetLanguage { get; set; } = string.Empty;
-}
-
-/// <summary>
-/// Response model for chat requests.
-/// </summary>
-public class ChatResponse
-{
-    public string Message { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty;
 }

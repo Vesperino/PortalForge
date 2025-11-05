@@ -6,9 +6,7 @@ export type ApprovalStepStatus = 'Pending' | 'InReview' | 'Approved' | 'Rejected
 
 export type RequestPriority = 'Standard' | 'Urgent'
 
-export type FieldType = 'Text' | 'Textarea' | 'Number' | 'Select' | 'Date' | 'Checkbox' | 'FileUpload' | 'MultiSelect' | 'DateRange' | 'Rating' | 'Signature' | 'ConditionalField' | 'UserPicker' | 'DepartmentPicker'
-
-export type ValidationType = 'Required' | 'MinLength' | 'MaxLength' | 'Regex' | 'Custom' | 'Conditional' | 'Range' | 'FileSize' | 'FileType'
+export type FieldType = 'Text' | 'Textarea' | 'Number' | 'Select' | 'Date' | 'Checkbox'
 
 export type ApproverType = 'Role' | 'SpecificUser' | 'UserGroup' | 'Submitter'
 
@@ -36,14 +34,6 @@ export interface RequestTemplateField {
   maxValue?: number
   helpText?: string
   order: number
-  // Enhanced properties for new functionality
-  validationRules?: string // JSON configuration
-  conditionalLogic?: string // JSON rules for showing/hiding
-  isConditional?: boolean
-  defaultValue?: string
-  autoCompleteSource?: string // API endpoint for suggestions
-  fileMaxSize?: number // For file uploads
-  allowedFileTypes?: string // JSON array
 }
 
 export interface RequestApprovalStepTemplate {

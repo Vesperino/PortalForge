@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using PortalForge.Application.Extensions;
-using PortalForge.Application.Interfaces;
 using PortalForge.Application.Services;
 using System.Reflection;
 
@@ -24,12 +23,8 @@ public static class DependencyInjection
         services.AddValidators(assembly);
 
         // Register application services
-        services.AddScoped<IRequestRoutingService, EnhancedRequestRoutingService>();
-        services.AddScoped<IEnhancedRequestRoutingService, EnhancedRequestRoutingService>();
+        services.AddScoped<IRequestRoutingService, RequestRoutingService>();
         services.AddScoped<IVacationScheduleService, VacationScheduleService>();
-        services.AddScoped<IFormBuilderService, FormBuilderService>();
-        services.AddScoped<IServiceRequestHandler, ServiceRequestHandler>();
-        services.AddScoped<IServiceCategoryConfigService, ServiceCategoryConfigService>();
 
         return services;
     }

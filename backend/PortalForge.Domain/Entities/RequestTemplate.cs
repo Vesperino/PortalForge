@@ -37,12 +37,6 @@ public class RequestTemplate
     /// </summary>
     public bool IsSickLeaveRequest { get; set; } = false;
 
-    /// <summary>
-    /// Service category for automatic routing to service teams (e.g., "IT", "HR", "Facilities").
-    /// Null for non-service request templates.
-    /// </summary>
-    public string? ServiceCategory { get; set; }
-
     // Quiz passing score (0-100)
     public int? PassingScore { get; set; }
     

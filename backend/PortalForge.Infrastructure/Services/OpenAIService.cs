@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using OpenAI.Chat;
 using PortalForge.Application.Common.Interfaces;
@@ -27,12 +28,12 @@ public class OpenAIService : IOpenAIService
     }
 
     /// <summary>
-    /// Sends a translation request to OpenAI and returns the complete response.
+    /// Sends a translation request to OpenAI and streams the response.
     /// </summary>
-    public async Task<string> TranslateTextAsync(
+    public async IAsyncEnumerable<string> TranslateTextStreamAsync(
         string textToTranslate,
         string targetLanguage,
-        CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var apiKey = await GetDecryptedApiKeyAsync();
         var model = await GetTranslationModelAsync();
@@ -50,18 +51,25 @@ If the text contains technical terms, preserve them accurately.";
             new UserChatMessage(textToTranslate)
         };
 
-        var response = await client.CompleteChatAsync(messages, cancellationToken: cancellationToken);
-
-        return response.Value.Content[0].Text;
+        await foreach (var update in client.CompleteChatStreamingAsync(messages, cancellationToken: cancellationToken))
+        {
+            foreach (var part in update.ContentUpdate)
+            {
+                if (!string.IsNullOrEmpty(part.Text))
+                {
+                    yield return part.Text;
+                }
+            }
+        }
     }
 
     /// <summary>
-    /// Sends a chat message to OpenAI and returns the complete response.
+    /// Sends a chat message to OpenAI and streams the response.
     /// </summary>
-    public async Task<string> ChatAsync(
+    public async IAsyncEnumerable<string> ChatStreamAsync(
         string message,
         IEnumerable<AppChatMessage>? conversationHistory = null,
-        CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var apiKey = await GetDecryptedApiKeyAsync();
         var model = await GetChatModelAsync();
@@ -88,9 +96,16 @@ If the text contains technical terms, preserve them accurately.";
         // Add current user message
         messages.Add(new UserChatMessage(message));
 
-        var response = await client.CompleteChatAsync(messages, cancellationToken: cancellationToken);
-
-        return response.Value.Content[0].Text;
+        await foreach (var update in client.CompleteChatStreamingAsync(messages, cancellationToken: cancellationToken))
+        {
+            foreach (var part in update.ContentUpdate)
+            {
+                if (!string.IsNullOrEmpty(part.Text))
+                {
+                    yield return part.Text;
+                }
+            }
+        }
     }
 
     /// <summary>

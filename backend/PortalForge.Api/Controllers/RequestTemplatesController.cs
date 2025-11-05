@@ -8,7 +8,6 @@ using PortalForge.Application.UseCases.RequestTemplates.Commands.UpdateRequestTe
 using PortalForge.Application.UseCases.RequestTemplates.Queries.GetAvailableRequestTemplates;
 using PortalForge.Application.UseCases.RequestTemplates.Queries.GetRequestTemplateById;
 using PortalForge.Application.UseCases.RequestTemplates.Queries.GetRequestTemplates;
-using PortalForge.Application.Interfaces;
 
 namespace PortalForge.Api.Controllers;
 
@@ -18,16 +17,11 @@ public class RequestTemplatesController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<RequestTemplatesController> _logger;
-    private readonly IFormBuilderService _formBuilderService;
 
-    public RequestTemplatesController(
-        IMediator mediator, 
-        ILogger<RequestTemplatesController> logger,
-        IFormBuilderService formBuilderService)
+    public RequestTemplatesController(IMediator mediator, ILogger<RequestTemplatesController> logger)
     {
         _mediator = mediator;
         _logger = logger;
-        _formBuilderService = formBuilderService;
     }
 
     /// <summary>
@@ -152,25 +146,6 @@ public class RequestTemplatesController : BaseController
         var command = new SeedRequestTemplatesCommand();
         var result = await _mediator.Send(command);
         return Ok(result);
-    }
-
-    /// <summary>
-    /// Get form definition for template (for form builder preview)
-    /// </summary>
-    [HttpGet("{id}/form-definition")]
-    [Authorize(Policy = "RequirePermission:requests.manage_templates")]
-    public async Task<ActionResult> GetFormDefinition(Guid id)
-    {
-        try
-        {
-            var result = await _formBuilderService.BuildFormAsync(id);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting form definition for template {TemplateId}", id);
-            return BadRequest(new { Message = "Failed to get form definition" });
-        }
     }
 }
 
