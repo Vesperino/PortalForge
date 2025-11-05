@@ -37,6 +37,7 @@ jobs:
           EmailSettings__Password=${{ secrets.SMTP_PASSWORD }}
           EmailSettings__FromEmail=${{ secrets.SMTP_FROM_EMAIL }}
           EmailSettings__FromName=${{ secrets.SMTP_FROM_NAME }}
+          FileStorage__UploadsPath=/app/storage
           Serilog__MinimumLevel__Default=Information
           Serilog__MinimumLevel__Override__Microsoft=Warning
           Serilog__MinimumLevel__Override__System=Warning

@@ -25,9 +25,14 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 # Copy published app
 COPY --from=publish /app/publish .
 
-# Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+# Create storage directory and non-root user
+RUN useradd -m -u 1000 appuser && \
+    mkdir -p /app/storage && \
+    chown -R appuser:appuser /app
 USER appuser
+
+# Create volume mount point for persistent storage
+VOLUME ["/app/storage"]
 
 # Expose port
 EXPOSE 5000
