@@ -121,36 +121,41 @@ public class StorageController : ControllerBase
 
     /// <summary>
     /// Serves files from local storage with authorization
+    /// Supports full relative paths including date-based subfolders (e.g., new-images/2025-11-05/file.png)
     /// </summary>
-    [HttpGet("files/{category}/{fileName}")]
+    [HttpGet("files/{**relativePath}")]
     [AllowAnonymous] // Allow anonymous for now - can be restricted based on category
-    public async Task<IActionResult> GetFile(string category, string fileName)
+    public async Task<IActionResult> GetFile(string relativePath)
     {
         try
         {
             // Validate inputs to prevent path traversal attacks
-            if (string.IsNullOrWhiteSpace(category) || string.IsNullOrWhiteSpace(fileName))
+            if (string.IsNullOrWhiteSpace(relativePath))
             {
                 return BadRequest(new { message = "Invalid file path" });
             }
 
-            if (category.Contains("..") || fileName.Contains("..") || 
-                category.Contains("/") || category.Contains("\\") ||
-                fileName.Contains("/") || fileName.Contains("\\"))
+            // Check for path traversal attempts
+            if (relativePath.Contains("..") || relativePath.Contains("\\"))
             {
-                _logger.LogWarning("Path traversal attempt detected: {Category}/{FileName}", category, fileName);
+                _logger.LogWarning("Path traversal attempt detected: {RelativePath}", relativePath);
                 return BadRequest(new { message = "Invalid file path" });
             }
 
-            var relativePath = $"{category}/{fileName}";
-            
+            // Normalize path separators
+            relativePath = relativePath.Replace("\\", "/");
+
             // Check if file exists
             if (!await _fileStorageService.FileExistsAsync(relativePath))
             {
+                _logger.LogWarning("File not found: {RelativePath}", relativePath);
                 return NotFound(new { message = "File not found" });
             }
 
             var fullPath = _fileStorageService.GetFullPath(relativePath);
+
+            // Extract filename for content type detection
+            var fileName = Path.GetFileName(fullPath);
 
             // Determine content type
             var provider = new FileExtensionContentTypeProvider();
@@ -161,12 +166,12 @@ public class StorageController : ControllerBase
 
             // Return file with proper headers
             var fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            
+
             return File(fileStream, contentType, fileName, enableRangeProcessing: true);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error serving file: {Category}/{FileName}", category, fileName);
+            _logger.LogError(ex, "Error serving file: {RelativePath}", relativePath);
             return StatusCode(500, new { message = "Error serving file" });
         }
     }
