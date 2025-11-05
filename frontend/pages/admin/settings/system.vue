@@ -375,9 +375,7 @@ const documentsFullPath = computed(() => {
               v-model="localSettings['AI:TranslationModel']"
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
-              <option value="gpt-4">GPT-4</option>
-              <option value="gpt-4-turbo">GPT-4 Turbo</option>
-              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+              <option value="gpt-5-mini-2025-08-07">GPT-5 Mini</option>
             </select>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Model OpenAI używany do tłumaczenia tekstów
@@ -393,9 +391,9 @@ const documentsFullPath = computed(() => {
               v-model="localSettings['AI:ChatModel']"
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
-              <option value="gpt-4">GPT-4</option>
-              <option value="gpt-4-turbo">GPT-4 Turbo</option>
-              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+              <option value="gpt-5-2025-08-07">GPT-5</option>
+              <option value="gpt-5-mini-2025-08-07">GPT-5 Mini</option>
+              <option value="gpt-4.1-nano-2025-04-14">GPT-4.1 Nano</option>
             </select>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Model OpenAI używany do standardowego czatu
