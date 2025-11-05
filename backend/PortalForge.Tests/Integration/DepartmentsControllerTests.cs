@@ -39,6 +39,15 @@ public class DepartmentsControllerTests : IClassFixture<WebApplicationFactory<Pr
         // Create a new factory with in-memory database
         _customFactory = _factory.WithWebHostBuilder(builder =>
         {
+            builder.ConfigureAppConfiguration((context, config) =>
+            {
+                // Add test configuration for Supabase JWT secret
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Supabase:JwtSecret"] = "test-jwt-secret-for-integration-tests-only-not-for-production-use"
+                });
+            });
+
             builder.ConfigureTestServices(services =>
             {
                 // Remove the production DbContext registration

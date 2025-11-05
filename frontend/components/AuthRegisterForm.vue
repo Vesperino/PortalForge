@@ -36,7 +36,7 @@ async function handleSubmit() {
   error.value = null
 
   try {
-    const response = await $fetch(`${config.public.apiUrl}/api/auth/register`, {
+    await $fetch(`${config.public.apiUrl}/api/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -51,9 +51,10 @@ async function handleSubmit() {
 
     // Registration successful - redirect to verify email page
     await router.push('/auth/verify-email?email=' + encodeURIComponent(form.value.email))
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Registration error:', err)
-    error.value = err.data?.errors?.[0] || err.data?.error || 'Błąd rejestracji. Spróbuj ponownie.'
+    const errorData = err as { data?: { errors?: string[]; error?: string } }
+    error.value = errorData.data?.errors?.[0] || errorData.data?.error || 'Błąd rejestracji. Spróbuj ponownie.'
   } finally {
     isLoading.value = false
   }

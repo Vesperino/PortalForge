@@ -677,10 +677,6 @@ const selectTemplate = (template: RequestTemplate) => {
   navigateTo(`/dashboard/requests/submit/${template.id}`)
 }
 
-const viewRequestDetails = (request: Request) => {
-  selectedRequest.value = request
-}
-
 const closeRequestDetails = () => {
   selectedRequest.value = null
 }

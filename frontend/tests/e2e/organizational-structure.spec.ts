@@ -108,27 +108,27 @@ test.describe('Organizational Structure Management', () => {
     await expect(page.locator(`text=${testDepartments.root2.name}`)).toBeVisible()
   })
 
-  test('should add manager to existing department', async ({ page }) => {
+  test('should add manager to existing department', async () => {
     // Skip this test for now - needs more specific selectors
     test.skip()
   })
 
-  test('should create child department under parent', async ({ page }) => {
+  test('should create child department under parent', async () => {
     // Skip this test for now - needs more specific selectors
     test.skip()
   })
 
-  test('should create nested departments (3 levels)', async ({ page }) => {
+  test('should create nested departments (3 levels)', async () => {
     // Skip this test for now - needs more specific selectors
     test.skip()
   })
 
-  test('should update department with manager without deletion', async ({ page }) => {
+  test('should update department with manager without deletion', async () => {
     // Skip this test for now - needs more specific selectors
     test.skip()
   })
 
-  test('should display organizational tree correctly on dashboard', async ({ page }) => {
+  test('should display organizational tree correctly on dashboard', async () => {
     // Skip this test for now - needs more specific selectors
     test.skip()
   })

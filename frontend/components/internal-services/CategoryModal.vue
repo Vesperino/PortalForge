@@ -93,8 +93,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'close'): void
-  (e: 'saved'): void
+  'close': []
+  'saved': []
 }>()
 
 const { createCategory, deleteCategory } = useInternalServicesApi()

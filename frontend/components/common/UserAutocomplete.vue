@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { X, ChevronDown } from 'lucide-vue-next'
 
 interface User {
@@ -28,13 +28,11 @@ const props = withDefaults(defineProps<Props>(), {
   required: false
 })
 
-interface Emits {
-  (e: 'update:modelValue', userId: string | null): void
-  (e: 'update:selectedUser', user: User | null): void
-  (e: 'select', user: User | null): void
-}
-
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{
+  'update:modelValue': [userId: string | null]
+  'update:selectedUser': [user: User | null]
+  'select': [user: User | null]
+}>()
 
 // Get API URL
 const config = useRuntimeConfig()

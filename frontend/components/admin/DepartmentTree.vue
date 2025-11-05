@@ -13,15 +13,13 @@ const props = withDefaults(defineProps<Props>(), {
   selectable: false
 })
 
-interface Emits {
-  (e: 'add-child', departmentId: string): void
-  (e: 'edit', departmentId: string): void
-  (e: 'delete', departmentId: string): void
-  (e: 'select', departmentId: string): void
-  (e: 'employee-click', employeeId: string): void
-}
-
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{
+  'add-child': [departmentId: string]
+  'edit': [departmentId: string]
+  'delete': [departmentId: string]
+  'select': [departmentId: string]
+  'employee-click': [employeeId: string]
+}>()
 
 // Expand/collapse state
 const isExpanded = ref(true)

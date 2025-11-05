@@ -22,7 +22,7 @@ const chatMessagesContainer = ref<HTMLElement | null>(null)
 onMounted(async () => {
   await getSettings()
   const maxCharsStr = getSettingValue('AI:TranslationMaxCharacters', '8000')
-  maxChars.value = parseInt(maxCharsStr) || 8000
+  maxChars.value = Number.parseInt(maxCharsStr) || 8000
 })
 
 async function handleTranslate() {

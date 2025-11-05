@@ -76,7 +76,7 @@ const quickLinks = [
 
 const formatDate = (date: Date | string) => {
   const dateObj = typeof date === 'string' ? new Date(date) : date
-  if (isNaN(dateObj.getTime())) {
+  if (Number.isNaN(dateObj.getTime())) {
     return 'Nieprawidłowa data'
   }
   return new Intl.DateTimeFormat('pl-PL', {
@@ -88,7 +88,7 @@ const formatDate = (date: Date | string) => {
 
 const formatEventDate = (date: Date | string) => {
   const dateObj = typeof date === 'string' ? new Date(date) : date
-  if (isNaN(dateObj.getTime())) {
+  if (Number.isNaN(dateObj.getTime())) {
     return 'Nieprawidłowa data'
   }
   return new Intl.DateTimeFormat('pl-PL', {

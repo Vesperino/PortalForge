@@ -119,17 +119,6 @@ const getEmployeesByDepartment = (departmentId: string) => {
   return allEmployees.value.filter((e: any) => e.departmentId === departmentId)
 }
 
-const getDepartmentEmployees = (dept: DepartmentTreeDto): any[] => {
-  const employees = getEmployeesByDepartment(dept.id)
-  // Recursively get employees from child departments
-  if (dept.children && dept.children.length > 0) {
-    dept.children.forEach(child => {
-      employees.push(...getDepartmentEmployees(child))
-    })
-  }
-  return employees
-}
-
 const getManagerByDepartment = (dept: DepartmentTreeDto): any | null => {
   if (!dept.departmentHeadId) return null
   return allEmployees.value.find((e: any) => e.id === dept.departmentHeadId) || null

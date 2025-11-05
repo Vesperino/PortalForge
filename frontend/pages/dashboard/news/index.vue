@@ -170,8 +170,8 @@ const visiblePages = computed(() => {
     pages.push(1)
 
     // Oblicz zakres stron wokół bieżącej
-    let startPage = Math.max(2, current - 1)
-    let endPage = Math.min(total - 1, current + 1)
+    const startPage = Math.max(2, current - 1)
+    const endPage = Math.min(total - 1, current + 1)
 
     // Dodaj "..." jeśli jest luka po lewej
     if (startPage > 2) {

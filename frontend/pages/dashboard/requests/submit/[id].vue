@@ -338,10 +338,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ArrowLeft, Clock } from 'lucide-vue-next'
 import type { RequestTemplate, RequestPriority } from '~/types/requests'
-import { type VacationSummary, type ValidateVacationResponse, LeaveType } from '~/composables/useVacations'
+import type { VacationSummary, ValidateVacationResponse } from '~/composables/useVacations'
+import { LeaveType } from '~/composables/useVacations'
 
 definePageMeta({
   layout: 'default',
@@ -380,7 +381,7 @@ const vacationSummaryLoading = ref(false)
       const config = useRuntimeConfig()
       const res = await $fetch(`${config.public.apiUrl}/api/users/search?q=${encodeURIComponent(q)}`, { headers }) as Array<{ id: string; firstName: string; lastName: string; email: string }>
       subResults.value = res
-    } catch (e) {
+    } catch {
       subResults.value = []
     }
   }
