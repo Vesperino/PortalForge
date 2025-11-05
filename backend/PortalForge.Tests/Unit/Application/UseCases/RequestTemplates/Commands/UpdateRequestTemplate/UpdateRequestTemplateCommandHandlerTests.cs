@@ -195,12 +195,11 @@ public class UpdateRequestTemplateCommandHandlerTests
             Description = "Description",
             ApprovalStepTemplates = new List<RequestApprovalStepTemplateDto>
             {
-                new RequestApprovalStepTemplateDto 
-                { 
+                new RequestApprovalStepTemplateDto
+                {
                     StepOrder = 1,
-                    ApproverType = "Role",
-                    ApproverRole = "Director",
-                    RequiresQuiz = true 
+                    ApproverType = "DirectSupervisor",
+                    RequiresQuiz = true
                 }
             }
         };

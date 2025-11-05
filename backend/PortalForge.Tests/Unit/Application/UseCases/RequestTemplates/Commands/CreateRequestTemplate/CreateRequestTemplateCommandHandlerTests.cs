@@ -54,8 +54,7 @@ public class CreateRequestTemplateCommandHandlerTests
                 new RequestApprovalStepTemplateDto
                 {
                     StepOrder = 1,
-                    ApproverType = "Role",
-                    ApproverRole = "Manager",
+                    ApproverType = "DirectSupervisor",
                     RequiresQuiz = false
                 }
             }
@@ -113,8 +112,7 @@ public class CreateRequestTemplateCommandHandlerTests
                 new RequestApprovalStepTemplateDto
                 {
                     StepOrder = 1,
-                    ApproverType = "Role",
-                    ApproverRole = "Manager",
+                    ApproverType = "DirectSupervisor",
                     RequiresQuiz = true
                 }
             },
@@ -240,26 +238,23 @@ public class CreateRequestTemplateCommandHandlerTests
             Fields = new List<RequestTemplateFieldDto>(),
             ApprovalStepTemplates = new List<RequestApprovalStepTemplateDto>
             {
-                new RequestApprovalStepTemplateDto 
-                { 
+                new RequestApprovalStepTemplateDto
+                {
                     StepOrder = 1,
-                    ApproverType = "Role",
-                    ApproverRole = "Manager",
-                    RequiresQuiz = false 
+                    ApproverType = "DirectSupervisor",
+                    RequiresQuiz = false
                 },
-                new RequestApprovalStepTemplateDto 
-                { 
+                new RequestApprovalStepTemplateDto
+                {
                     StepOrder = 2,
-                    ApproverType = "Role",
-                    ApproverRole = "Director",
-                    RequiresQuiz = false 
+                    ApproverType = "DirectSupervisor",
+                    RequiresQuiz = false
                 },
-                new RequestApprovalStepTemplateDto 
-                { 
+                new RequestApprovalStepTemplateDto
+                {
                     StepOrder = 3,
-                    ApproverType = "Role",
-                    ApproverRole = "Employee",
-                    RequiresQuiz = true 
+                    ApproverType = "DirectSupervisor",
+                    RequiresQuiz = true
                 }
             }
         };
