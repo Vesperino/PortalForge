@@ -29,7 +29,8 @@ public class GetAllSettingsQueryHandler : IRequestHandler<GetAllSettingsQuery, G
             {
                 Id = s.Id,
                 Key = s.Key,
-                Value = s.Value,
+                // Don't expose encrypted API key in responses - return empty string for security
+                Value = s.Key == "AI:OpenAIApiKey" ? string.Empty : s.Value,
                 Category = s.Category,
                 Description = s.Description,
                 UpdatedAt = s.UpdatedAt

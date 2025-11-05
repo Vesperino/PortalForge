@@ -44,13 +44,19 @@ async function handleSave() {
   saveError.value = null
 
   try {
-    const updates = Object.entries(localSettings.value).map(([key, value]) => ({
-      key,
-      value
-    }))
+    const updates = Object.entries(localSettings.value)
+      // Filter out empty API key (don't update if user didn't enter new one)
+      .filter(([key, value]) => !(key === 'AI:OpenAIApiKey' && !value))
+      .map(([key, value]) => ({
+        key,
+        value
+      }))
 
     await updateSettings(updates)
     saveMessage.value = 'Ustawienia zapisane pomyślnie!'
+
+    // Clear API key field after successful save
+    localSettings.value['AI:OpenAIApiKey'] = ''
 
     setTimeout(() => {
       saveMessage.value = null
@@ -354,14 +360,14 @@ const documentsFullPath = computed(() => {
               v-model="localSettings['AI:OpenAIApiKey']"
               type="password"
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
-              placeholder="sk-..."
+              placeholder="Wpisz nowy klucz API (zostanie zaszyfrowany)"
             >
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Klucz API z platformy OpenAI. Będzie automatycznie zaszyfrowany podczas zapisu.
+              Klucz API z platformy OpenAI. Pozostaw puste aby zachować obecny klucz.
             </p>
             <div class="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
               <p class="text-xs text-yellow-800 dark:text-yellow-200">
-                <strong>⚠️ Bezpieczeństwo:</strong> Klucz jest szyfrowany AES-256 i przechowywany w bazie danych.
+                <strong>🔒 Bezpieczeństwo:</strong> Klucz jest szyfrowany AES-256 przed zapisem. Z powodów bezpieczeństwa obecny klucz nie jest wyświetlany.
               </p>
             </div>
           </div>

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Interfaces;
 
 namespace PortalForge.Application.UseCases.SystemSettings.Commands.UpdateSettings;
 
@@ -8,15 +9,18 @@ public class UpdateSettingsCommandHandler : IRequestHandler<UpdateSettingsComman
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUnifiedValidatorService _validatorService;
+    private readonly IEncryptionService _encryptionService;
     private readonly ILogger<UpdateSettingsCommandHandler> _logger;
 
     public UpdateSettingsCommandHandler(
         IUnitOfWork unitOfWork,
         IUnifiedValidatorService validatorService,
+        IEncryptionService encryptionService,
         ILogger<UpdateSettingsCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _validatorService = validatorService;
+        _encryptionService = encryptionService;
         _logger = logger;
     }
 
@@ -35,7 +39,17 @@ public class UpdateSettingsCommandHandler : IRequestHandler<UpdateSettingsComman
 
             if (setting != null)
             {
-                setting.Value = updateDto.Value;
+                // Encrypt OpenAI API Key before saving
+                if (updateDto.Key == "AI:OpenAIApiKey" && !string.IsNullOrWhiteSpace(updateDto.Value))
+                {
+                    _logger.LogInformation("Encrypting OpenAI API key before saving");
+                    setting.Value = _encryptionService.Encrypt(updateDto.Value);
+                }
+                else
+                {
+                    setting.Value = updateDto.Value;
+                }
+
                 setting.UpdatedAt = DateTime.UtcNow;
                 setting.UpdatedBy = request.UpdatedBy;
 
