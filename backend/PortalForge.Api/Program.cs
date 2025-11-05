@@ -132,7 +132,12 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "swagger"; // Access at /portalforge/be/swagger
 });
 
-app.UseHttpsRedirection();
+// Only use HTTPS redirection in Development
+// In Production, the reverse proxy (Caddy) handles SSL termination
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors();
 
