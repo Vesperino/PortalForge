@@ -58,39 +58,16 @@ public class TransferEmployeeToDepartmentCommandHandler : IRequestHandler<Transf
 
         // 5. Store old values for audit
         var oldDepartmentId = user.DepartmentId;
-        var oldSupervisorId = user.SupervisorId;
 
-        // 6. Update user department and supervisor
+        // 6. Update user department
         user.DepartmentId = request.NewDepartmentId;
-        user.SupervisorId = request.NewSupervisorId;
         await _unitOfWork.UserRepository.UpdateAsync(user);
 
-        // 7. Reassign pending requests to new supervisor
-        if (request.NewSupervisorId.HasValue && oldSupervisorId.HasValue)
-        {
-            var pendingRequests = await _unitOfWork.RequestRepository
-                .GetPendingRequestsByUserAsync(request.UserId);
+        // Note: Pending requests are NOT automatically reassigned when changing departments.
+        // Approvers are determined by department structure (HeadOfDepartmentId, DirectorId).
+        // If department structure changes, requests will route to new department heads automatically.
 
-            foreach (var req in pendingRequests)
-            {
-                var pendingSteps = req.ApprovalSteps
-                    .Where(s => s.Status == ApprovalStepStatus.InReview ||
-                               s.Status == ApprovalStepStatus.Pending);
-
-                foreach (var step in pendingSteps)
-                {
-                    if (step.ApproverId == oldSupervisorId.Value)
-                    {
-                        step.ApproverId = request.NewSupervisorId.Value;
-                        _logger.LogInformation(
-                            "Reassigned approval step in request {RequestId} from {OldSupervisor} to {NewSupervisor}",
-                            req.Id, oldSupervisorId.Value, request.NewSupervisorId.Value);
-                    }
-                }
-            }
-
-            await _unitOfWork.SaveChangesAsync();
-        }
+        await _unitOfWork.SaveChangesAsync();
 
         // 8. Create audit log
         await _auditLogService.LogActionAsync(
@@ -98,28 +75,32 @@ public class TransferEmployeeToDepartmentCommandHandler : IRequestHandler<Transf
             entityId: user.Id.ToString(),
             action: "DepartmentTransfer",
             userId: request.TransferredByUserId,
-            oldValue: $"Department: {oldDepartmentId}, Supervisor: {oldSupervisorId}",
-            newValue: $"Department: {request.NewDepartmentId}, Supervisor: {request.NewSupervisorId}",
+            oldValue: $"Department: {oldDepartmentId}",
+            newValue: $"Department: {request.NewDepartmentId}",
             reason: request.Reason);
 
-        // 9. Send notifications to old supervisor
-        if (oldSupervisorId.HasValue)
+        // 9. Send notification to old department head
+        if (oldDepartmentId.HasValue)
         {
-            await _notificationService.CreateNotificationAsync(
-                userId: oldSupervisorId.Value,
-                type: NotificationType.System,
-                title: "Pracownik przeniesiony",
-                message: $"{user.FirstName} {user.LastName} został przeniesiony do innego działu",
-                relatedEntityType: null,
-                relatedEntityId: null,
-                actionUrl: null);
+            var oldDepartment = await _unitOfWork.DepartmentRepository.GetByIdAsync(oldDepartmentId.Value);
+            if (oldDepartment?.HeadOfDepartmentId.HasValue == true)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    userId: oldDepartment.HeadOfDepartmentId.Value,
+                    type: NotificationType.System,
+                    title: "Pracownik przeniesiony",
+                    message: $"{user.FirstName} {user.LastName} został przeniesiony do innego działu",
+                    relatedEntityType: null,
+                    relatedEntityId: null,
+                    actionUrl: null);
+            }
         }
 
-        // 10. Send notifications to new supervisor
-        if (request.NewSupervisorId.HasValue)
+        // 10. Send notification to new department head
+        if (newDepartment?.HeadOfDepartmentId.HasValue == true)
         {
             await _notificationService.CreateNotificationAsync(
-                userId: request.NewSupervisorId.Value,
+                userId: newDepartment.HeadOfDepartmentId.Value,
                 type: NotificationType.System,
                 title: "Nowy pracownik",
                 message: $"{user.FirstName} {user.LastName} został przeniesiony do Twojego działu",

@@ -16,26 +16,45 @@
             @change="(e) => { const newType = (e.target as HTMLSelectElement).value as any; onApproverTypeChange(newType); updateStep({ approverType: newType }); }"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
           >
-            <option value="Role">Rola hierarchiczna</option>
+            <option value="DirectSupervisor">Kierownik działu (HeadOfDepartment)</option>
+            <option value="DepartmentDirector">Dyrektor działu (Director)</option>
             <option value="SpecificUser">Konkretny użytkownik</option>
+            <option value="SpecificDepartment">Szef konkretnego działu</option>
             <option value="UserGroup">Grupa użytkowników</option>
             <option value="Submitter">Wnioskodawca (self-approval)</option>
           </select>
         </div>
 
-        <!-- Role Selection (when ApproverType = Role) -->
-        <div v-if="step.approverType === 'Role'">
+        <!-- DirectSupervisor Info -->
+        <div v-if="step.approverType === 'DirectSupervisor'" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <p class="text-sm text-blue-800 dark:text-blue-200">
+            <Icon name="heroicons:information-circle" class="w-4 h-4 inline mr-1" />
+            Wniosek zostanie przekazany do kierownika działu wnioskodawcy (Department.HeadOfDepartmentId).
+          </p>
+        </div>
+
+        <!-- DepartmentDirector Info -->
+        <div v-if="step.approverType === 'DepartmentDirector'" class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+          <p class="text-sm text-purple-800 dark:text-purple-200">
+            <Icon name="heroicons:information-circle" class="w-4 h-4 inline mr-1" />
+            Wniosek zostanie przekazany do dyrektora działu wnioskodawcy (Department.DirectorId).
+          </p>
+        </div>
+
+        <!-- Department Selection (when ApproverType = SpecificDepartment) -->
+        <div v-if="step.approverType === 'SpecificDepartment'">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Rola zatwierdzającego
+            Wybierz dział
           </label>
           <select
-            :value="step.approverRole || ''"
-            @change="(e) => updateStep({ approverRole: (e.target as HTMLSelectElement).value || undefined as any })"
+            :value="step.specificDepartmentId"
+            @change="(e) => updateStep({ specificDepartmentId: (e.target as HTMLSelectElement).value })"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
           >
-            <option value="">Dowolny przełożony (pierwszy dostępny w hierarchii)</option>
-            <option value="Manager">Kierownik (bezpośredni przełożony)</option>
-            <option value="Director">Dyrektor (przełożony przełożonego)</option>
+            <option value="">-- Wybierz dział --</option>
+            <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+              {{ dept.name }}
+            </option>
           </select>
         </div>
 
@@ -160,10 +179,16 @@ import type { RequestApprovalStepTemplate } from '~/types/requests'
 import type { UserDto } from '~/stores/admin'
 import type { RoleGroupDto } from '~/stores/roleGroups'
 
+interface DepartmentDto {
+  id: string
+  name: string
+}
+
 const props = defineProps<{
   step: RequestApprovalStepTemplate
   roleGroups: RoleGroupDto[]
   users: UserDto[]
+  departments: DepartmentDto[]
 }>()
 
 const emit = defineEmits<{
@@ -196,17 +221,19 @@ const updateStep = (updates: Partial<RequestApprovalStepTemplate>) => {
 const onApproverTypeChange = (newType: string) => {
   // Clear selections when type changes
   const updates: Partial<RequestApprovalStepTemplate> = {}
-  if (newType !== 'Role') {
-    updates.approverRole = undefined
-  }
+
   if (newType !== 'SpecificUser') {
     updates.specificUserId = undefined
     selectedUser.value = null
     userSearchTerm.value = ''
   }
+  if (newType !== 'SpecificDepartment') {
+    updates.specificDepartmentId = undefined
+  }
   if (newType !== 'UserGroup') {
     updates.approverGroupId = undefined
   }
+
   if (Object.keys(updates).length > 0) {
     updateStep(updates)
   }

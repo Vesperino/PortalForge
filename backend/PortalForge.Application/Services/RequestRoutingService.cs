@@ -35,7 +35,8 @@ public class RequestRoutingService : IRequestRoutingService
 
         User? approver = stepTemplate.ApproverType switch
         {
-            ApproverType.DirectSupervisor => await ResolveDirectSupervisorFromStructureAsync(submitter),
+            ApproverType.DirectSupervisor => await ResolveDepartmentHeadAsync(submitter),
+            ApproverType.DepartmentDirector => await ResolveDepartmentDirectorAsync(submitter),
             ApproverType.SpecificUser => stepTemplate.SpecificUserId.HasValue
                 ? await _unitOfWork.UserRepository.GetByIdAsync(stepTemplate.SpecificUserId.Value)
                 : null,
@@ -70,7 +71,7 @@ public class RequestRoutingService : IRequestRoutingService
     /// <inheritdoc />
     public async Task<bool> HasHigherSupervisorAsync(User user)
     {
-        var sup = await ResolveDirectSupervisorFromStructureAsync(user);
+        var sup = await ResolveDepartmentHeadAsync(user);
         return sup != null;
     }
 
@@ -102,7 +103,10 @@ public class RequestRoutingService : IRequestRoutingService
                 var errorMessage = stepTemplate.ApproverType switch
                 {
                     ApproverType.DirectSupervisor =>
-                        "You do not have a direct supervisor assigned. Please contact HR to resolve this before submitting requests.",
+                        "Your department does not have a head (manager) assigned. Please contact HR to resolve this before submitting requests.",
+
+                    ApproverType.DepartmentDirector =>
+                        "Your department does not have a director assigned. Please contact HR to resolve this before submitting requests.",
 
                     ApproverType.SpecificDepartment =>
                         $"The target department has no head assigned. Please contact HR.",
@@ -178,8 +182,10 @@ public class RequestRoutingService : IRequestRoutingService
         switch (stepTemplate.ApproverType)
         {
             case ApproverType.DirectSupervisor:
-                // For direct supervisor, look for the supervisor's supervisor
-                substitute = primaryApprover.Supervisor;
+            case ApproverType.DepartmentDirector:
+                // For department-based approvers, no automatic substitute
+                // Substitute must be manually assigned in department settings
+                substitute = null;
                 break;
 
             case ApproverType.SpecificDepartment:
@@ -231,45 +237,69 @@ public class RequestRoutingService : IRequestRoutingService
     #region Private Resolution Methods
 
     /// <summary>
-    /// Resolves direct supervisor using user->supervisor and department hierarchy fallback.
+    /// Resolves department head (manager) from submitter's department.
     /// </summary>
-    private async Task<User?> ResolveDirectSupervisorFromStructureAsync(User submitter)
+    private async Task<User?> ResolveDepartmentHeadAsync(User submitter)
     {
-        // Prefer explicitly assigned supervisor
-        if (submitter.Supervisor != null)
+        if (!submitter.DepartmentId.HasValue)
         {
-            return submitter.Supervisor;
+            _logger.LogWarning("User {UserId} has no department assigned", submitter.Id);
+            return null;
         }
 
-        // Fallback: traverse department chain and use head of department
-        if (submitter.DepartmentId.HasValue)
+        var dept = await _unitOfWork.DepartmentRepository.GetByIdAsync(submitter.DepartmentId.Value);
+        if (dept == null)
         {
-            var currentDeptId = submitter.DepartmentId.Value;
-            while (true)
-            {
-                var dept = await _unitOfWork.DepartmentRepository.GetByIdAsync(currentDeptId);
-                if (dept == null)
-                {
-                    break;
-                }
-
-                if (dept.HeadOfDepartment != null && dept.HeadOfDepartment.Id != submitter.Id)
-                {
-                    return dept.HeadOfDepartment;
-                }
-
-                if (dept.ParentDepartmentId.HasValue)
-                {
-                    currentDeptId = dept.ParentDepartmentId.Value;
-                    continue;
-                }
-
-                break;
-            }
+            _logger.LogWarning("Department {DepartmentId} not found for user {UserId}", submitter.DepartmentId.Value, submitter.Id);
+            return null;
         }
 
-        _logger.LogWarning("User {UserId} has no supervisor assigned and no head found in department chain", submitter.Id);
-        return null;
+        if (dept.HeadOfDepartment == null)
+        {
+            _logger.LogWarning("Department {DepartmentId} has no head assigned", dept.Id);
+            return null;
+        }
+
+        if (dept.HeadOfDepartment.Id == submitter.Id)
+        {
+            _logger.LogWarning("User {UserId} is the head of their own department - cannot approve own request", submitter.Id);
+            return null;
+        }
+
+        return dept.HeadOfDepartment;
+    }
+
+    /// <summary>
+    /// Resolves department director from submitter's department.
+    /// </summary>
+    private async Task<User?> ResolveDepartmentDirectorAsync(User submitter)
+    {
+        if (!submitter.DepartmentId.HasValue)
+        {
+            _logger.LogWarning("User {UserId} has no department assigned", submitter.Id);
+            return null;
+        }
+
+        var dept = await _unitOfWork.DepartmentRepository.GetByIdAsync(submitter.DepartmentId.Value);
+        if (dept == null)
+        {
+            _logger.LogWarning("Department {DepartmentId} not found for user {UserId}", submitter.DepartmentId.Value, submitter.Id);
+            return null;
+        }
+
+        if (dept.Director == null)
+        {
+            _logger.LogWarning("Department {DepartmentId} has no director assigned", dept.Id);
+            return null;
+        }
+
+        if (dept.Director.Id == submitter.Id)
+        {
+            _logger.LogWarning("User {UserId} is the director of their own department - cannot approve own request", submitter.Id);
+            return null;
+        }
+
+        return dept.Director;
     }
 
     /// <summary>

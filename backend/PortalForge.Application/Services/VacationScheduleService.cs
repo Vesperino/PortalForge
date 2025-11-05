@@ -327,13 +327,17 @@ public class VacationScheduleService : IVacationScheduleService
                             sickLeave.UserId, sickLeave.Id);
                     }
 
-                    // Notify supervisor about sick leave (informational)
+                    // Notify department head about sick leave (informational)
                     var user = await _unitOfWork.UserRepository.GetByIdAsync(request.SubmittedById);
-                    if (user?.SupervisorId.HasValue == true)
+                    if (user?.DepartmentId.HasValue == true)
                     {
-                        await _notificationService.SendSickLeaveNotificationAsync(
-                            user.SupervisorId.Value,
-                            sickLeave);
+                        var department = await _unitOfWork.DepartmentRepository.GetByIdAsync(user.DepartmentId.Value);
+                        if (department?.HeadOfDepartmentId.HasValue == true)
+                        {
+                            await _notificationService.SendSickLeaveNotificationAsync(
+                                department.HeadOfDepartmentId.Value,
+                                sickLeave);
+                        }
                     }
                 }
                 catch (Exception ex)

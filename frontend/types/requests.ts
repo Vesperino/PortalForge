@@ -6,7 +6,7 @@ export type RequestPriority = 'Standard' | 'Urgent'
 
 export type FieldType = 'Text' | 'Textarea' | 'Number' | 'Select' | 'Date' | 'Checkbox' | 'UserSelect'
 
-export type ApproverType = 'DirectSupervisor' | 'SpecificUser' | 'SpecificDepartment' | 'UserGroup' | 'Submitter'
+export type ApproverType = 'DirectSupervisor' | 'DepartmentDirector' | 'SpecificUser' | 'SpecificDepartment' | 'UserGroup' | 'Submitter'
 
 export type NotificationType =
   | 'RequestPendingApproval'

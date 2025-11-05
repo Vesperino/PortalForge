@@ -31,10 +31,6 @@ public class User
     public string? PhoneNumber { get; set; }
     public string? ProfilePhotoUrl { get; set; }
 
-    public Guid? SupervisorId { get; set; }
-    public User? Supervisor { get; set; }
-
-    public ICollection<User> Subordinates { get; set; } = new List<User>();
     public ICollection<UserRoleGroup> UserRoleGroups { get; set; } = new List<UserRoleGroup>();
 
     // Vacation allowances - current year

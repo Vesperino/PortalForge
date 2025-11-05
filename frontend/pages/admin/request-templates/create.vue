@@ -315,6 +315,7 @@
               :step="step"
               :users="users"
               :role-groups="roleGroups"
+              :departments="departments"
               @update:step="(updatedStep) => form.approvalStepTemplates[index] = updatedStep"
               @remove="removeApprovalStep(index)"
             />
@@ -460,6 +461,7 @@ import draggable from 'vuedraggable'
 import type { RequestTemplateField, RequestApprovalStepTemplate, QuizOption } from '~/types/requests'
 import type { UserDto } from '~/stores/admin'
 import type { RoleGroupDto } from '~/stores/roleGroups'
+import type { DepartmentDto } from '~/composables/useDepartmentsApi'
 
 definePageMeta({
   layout: 'default',
@@ -469,20 +471,24 @@ definePageMeta({
 const { createTemplate } = useRequestsApi()
 const { getUsers } = useUsersApi()
 const { getAllRoleGroups } = useRoleGroupApi()
+const { getDepartments } = useDepartmentsApi()
 
-// Load users and role groups
+// Load users, role groups, and departments
 const users = ref<UserDto[]>([])
 const roleGroups = ref<RoleGroupDto[]>([])
+const departments = ref<DepartmentDto[]>([])
 const loadingData = ref(true)
 
 onMounted(async () => {
   try {
-    const [usersResult, groupsResult] = await Promise.all([
+    const [usersResult, groupsResult, departmentsResult] = await Promise.all([
       getUsers({ isActive: true, pageSize: 1000 }),
-      getAllRoleGroups(false)
+      getAllRoleGroups(false),
+      getDepartments()
     ])
     users.value = usersResult.users
     roleGroups.value = groupsResult
+    departments.value = departmentsResult
   } catch (error) {
     console.error('Error loading users and groups:', error)
   } finally {

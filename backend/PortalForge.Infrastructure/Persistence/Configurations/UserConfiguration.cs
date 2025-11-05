@@ -65,12 +65,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.ProfilePhotoUrl)
             .HasMaxLength(500);
 
-        // Supervisor relationship (self-referencing)
-        builder.HasOne(u => u.Supervisor)
-            .WithMany(u => u.Subordinates)
-            .HasForeignKey(u => u.SupervisorId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         // Department relationship
         builder.HasOne(u => u.DepartmentEntity)
             .WithMany(d => d.Employees)
