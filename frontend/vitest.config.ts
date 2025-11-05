@@ -7,10 +7,23 @@ export default defineConfig({
   plugins: [vue()],
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'happy-dom',
     include: ['tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: ['tests/e2e/**', 'node_modules/**', 'dist/**', '.nuxt/**', '.output/**'],
     setupFiles: ['./tests/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'json-summary', 'html'],
+      exclude: [
+        'node_modules/**',
+        'tests/**',
+        '.nuxt/**',
+        '.output/**',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/mockData.ts',
+      ],
+    },
   },
   resolve: {
     alias: {

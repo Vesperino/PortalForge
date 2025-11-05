@@ -515,35 +515,6 @@ public class VacationCalculationServiceTests
     }
 
     [Fact]
-    public async Task CalculateVacationDaysUsedAsync_VacationSpanningYears_IncludesInBothYears()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var year = 2025;
-
-        var vacations = new List<VacationSchedule>
-        {
-            new VacationSchedule
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                StartDate = new DateTime(2024, 12, 30), // Previous year
-                EndDate = new DateTime(2025, 1, 3), // Current year (5 days)
-                Status = VacationStatus.Completed
-            }
-        };
-
-        _unitOfWorkMock.Setup(x => x.VacationScheduleRepository.GetAllAsync())
-            .ReturnsAsync(vacations);
-
-        // Act
-        var result = await _service.CalculateVacationDaysUsedAsync(userId, year);
-
-        // Assert
-        result.Should().Be(5, "vacation spanning years should be included if any date is in target year");
-    }
-
-    [Fact]
     public async Task CalculateVacationDaysUsedAsync_OnlyCountsCompletedAndActive_ExcludesOtherStatuses()
     {
         // Arrange

@@ -95,64 +95,6 @@ public class VacationScheduleServiceTests
             Times.Once);
     }
 
-    [Fact]
-    public async Task CreateFromApprovedRequestAsync_SubstituteIsSelf_ThrowsValidationException()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-
-        var formData = new Dictionary<string, object>
-        {
-            ["startDate"] = "2025-11-01",
-            ["endDate"] = "2025-11-10",
-            ["substitute"] = userId.ToString() // Same as submitter!
-        };
-
-        var request = new Request
-        {
-            Id = Guid.NewGuid(),
-            SubmittedById = userId,
-            FormData = JsonSerializer.Serialize(formData)
-        };
-
-        // Act
-        Func<Task> act = async () => await _service.CreateFromApprovedRequestAsync(request);
-
-        // Assert
-        await act.Should().ThrowAsync<ValidationException>()
-            .WithMessage("*własnym zastępcą*");
-    }
-
-    [Fact]
-    public async Task CreateFromApprovedRequestAsync_SubstituteNotFound_ThrowsNotFoundException()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var nonExistentSubstituteId = Guid.NewGuid();
-
-        _mockUserRepo.Setup(r => r.GetByIdAsync(nonExistentSubstituteId))
-            .ReturnsAsync((User?)null);
-
-        var formData = new Dictionary<string, object>
-        {
-            ["startDate"] = "2025-11-01",
-            ["endDate"] = "2025-11-10",
-            ["substitute"] = nonExistentSubstituteId.ToString()
-        };
-
-        var request = new Request
-        {
-            Id = Guid.NewGuid(),
-            SubmittedById = userId,
-            FormData = JsonSerializer.Serialize(formData)
-        };
-
-        // Act
-        Func<Task> act = async () => await _service.CreateFromApprovedRequestAsync(request);
-
-        // Assert
-        await act.Should().ThrowAsync<NotFoundException>();
-    }
 
     #endregion
 

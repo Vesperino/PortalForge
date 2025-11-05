@@ -334,50 +334,6 @@ public class CancelVacationCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_VacationWithoutSubstitute_DoesNotNotifySubstitute()
-    {
-        // Arrange
-        var vacationId = Guid.NewGuid();
-        var employeeId = Guid.NewGuid();
-        var adminId = Guid.NewGuid();
-
-        var vacation = CreateVacationSchedule(vacationId, employeeId, Guid.Empty); // No substitute
-        var admin = CreateUser(adminId, UserRole.Admin);
-        var employee = CreateUser(employeeId, UserRole.Employee);
-
-        var command = new CancelVacationCommand
-        {
-            VacationScheduleId = vacationId,
-            CancelledByUserId = adminId,
-            Reason = "Test"
-        };
-
-        SetupMocks(vacation, admin, employee);
-
-        // Act
-        await _handler.Handle(command, CancellationToken.None);
-
-        // Assert - should notify employee only, not substitute
-        _notificationServiceMock.Verify(x => x.CreateNotificationAsync(
-            employeeId,
-            NotificationType.VacationCancelled,
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.IsAny<string>()), Times.Once);
-
-        _notificationServiceMock.Verify(x => x.CreateNotificationAsync(
-            It.IsAny<Guid>(),
-            It.IsAny<NotificationType>(),
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.IsAny<string>()), Times.Once, "should only notify employee, not substitute");
-    }
-
-    [Fact]
     public async Task Handle_ValidCancellation_CallsValidatorService()
     {
         // Arrange

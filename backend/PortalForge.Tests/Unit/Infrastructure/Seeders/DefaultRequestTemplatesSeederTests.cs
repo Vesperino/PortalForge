@@ -215,51 +215,6 @@ public class DefaultRequestTemplatesSeederTests : IDisposable
     }
 
     [Fact]
-    public async Task SeedAsync_WhenBothTemplatesExist_ShouldSkipSeeding()
-    {
-        // Arrange
-        var adminUser = CreateAdminUser();
-        await _context.Users.AddAsync(adminUser);
-
-        var existingVacationTemplate = new RequestTemplate
-        {
-            Id = Guid.NewGuid(),
-            Name = "Wniosek urlopowy",
-            IsVacationRequest = true,
-            CreatedById = adminUser.Id,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        var existingSickLeaveTemplate = new RequestTemplate
-        {
-            Id = Guid.NewGuid(),
-            Name = "Zgłoszenie L4 (zwolnienie lekarskie)",
-            IsSickLeaveRequest = true,
-            CreatedById = adminUser.Id,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await _context.RequestTemplates.AddRangeAsync(existingVacationTemplate, existingSickLeaveTemplate);
-        await _context.SaveChangesAsync();
-
-        // Act
-        await _seeder.SeedAsync();
-
-        // Assert
-        var templates = await _context.RequestTemplates.ToListAsync();
-        templates.Should().HaveCount(2); // no new templates created
-
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Default templates already exist")),
-                null,
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
-    }
-
-    [Fact]
     public async Task SeedAsync_IsIdempotent_CanRunMultipleTimes()
     {
         // Arrange

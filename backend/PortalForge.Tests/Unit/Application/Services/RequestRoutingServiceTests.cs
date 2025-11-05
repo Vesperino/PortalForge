@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Interfaces;
 using PortalForge.Application.Services;
 using PortalForge.Domain.Entities;
 using PortalForge.Domain.Enums;
@@ -16,13 +17,24 @@ namespace PortalForge.Tests.Unit.Application.Services;
 public class RequestRoutingServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<IUserRepository> _userRepositoryMock;
+    private readonly Mock<IDepartmentRepository> _departmentRepositoryMock;
+    private readonly Mock<IRoleGroupRepository> _roleGroupRepositoryMock;
     private readonly Mock<ILogger<RequestRoutingService>> _loggerMock;
     private readonly IRequestRoutingService _service;
 
     public RequestRoutingServiceTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
+        _userRepositoryMock = new Mock<IUserRepository>();
+        _departmentRepositoryMock = new Mock<IDepartmentRepository>();
+        _roleGroupRepositoryMock = new Mock<IRoleGroupRepository>();
         _loggerMock = new Mock<ILogger<RequestRoutingService>>();
+
+        _unitOfWorkMock.Setup(x => x.UserRepository).Returns(_userRepositoryMock.Object);
+        _unitOfWorkMock.Setup(x => x.DepartmentRepository).Returns(_departmentRepositoryMock.Object);
+        _unitOfWorkMock.Setup(x => x.RoleGroupRepository).Returns(_roleGroupRepositoryMock.Object);
+
         _service = new RequestRoutingService(_unitOfWorkMock.Object, _loggerMock.Object);
     }
 
@@ -55,6 +67,10 @@ public class RequestRoutingServiceTests
             ApproverType = ApproverType.Role,
             ApproverRole = DepartmentRole.Manager
         };
+
+        // Setup mock to return manager when loading by ID
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(manager.Id))
+            .ReturnsAsync(manager);
 
         // Act
         var approver = await _service.ResolveApproverAsync(stepTemplate, submitter);
@@ -96,6 +112,12 @@ public class RequestRoutingServiceTests
             ApproverType = ApproverType.Role,
             ApproverRole = DepartmentRole.Director
         };
+
+        // Setup mocks for the supervisor chain
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(manager.Id))
+            .ReturnsAsync(manager);
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(director.Id))
+            .ReturnsAsync(director);
 
         // Act
         var approver = await _service.ResolveApproverAsync(stepTemplate, submitter);
@@ -154,6 +176,10 @@ public class RequestRoutingServiceTests
             ApproverType = ApproverType.Role,
             ApproverRole = DepartmentRole.Director // Requires Director but chain stops at TeamLead
         };
+
+        // Setup mock to return team lead (who doesn't have Director role)
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(teamLead.Id))
+            .ReturnsAsync(teamLead);
 
         // Act
         var approver = await _service.ResolveApproverAsync(stepTemplate, submitter);
@@ -254,7 +280,7 @@ public class RequestRoutingServiceTests
 
         var submitter = new User { Id = Guid.NewGuid() };
 
-        _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(department.Id))
+        _departmentRepositoryMock.Setup(x => x.GetByIdAsync(department.Id))
             .ReturnsAsync(department);
 
         // Act
@@ -286,7 +312,7 @@ public class RequestRoutingServiceTests
 
         var submitter = new User { Id = Guid.NewGuid() };
 
-        _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(department.Id))
+        _departmentRepositoryMock.Setup(x => x.GetByIdAsync(department.Id))
             .ReturnsAsync(department);
 
         // Act
@@ -319,6 +345,10 @@ public class RequestRoutingServiceTests
         };
 
         var submitter = new User { Id = Guid.NewGuid() };
+
+        // Setup mock to return specific user
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(specificUser.Id))
+            .ReturnsAsync(specificUser);
 
         // Act
         var approver = await _service.ResolveApproverAsync(stepTemplate, submitter);
@@ -358,7 +388,7 @@ public class RequestRoutingServiceTests
 
         var submitter = new User { Id = Guid.NewGuid() };
 
-        _unitOfWorkMock.Setup(x => x.RoleGroupRepository.GetUsersInGroupAsync(roleGroup.Id))
+        _roleGroupRepositoryMock.Setup(x => x.GetUsersInGroupAsync(roleGroup.Id))
             .ReturnsAsync(new List<User> { groupUser });
 
         // Act
@@ -388,7 +418,7 @@ public class RequestRoutingServiceTests
 
         var submitter = new User { Id = Guid.NewGuid() };
 
-        _unitOfWorkMock.Setup(x => x.RoleGroupRepository.GetUsersInGroupAsync(roleGroup.Id))
+        _roleGroupRepositoryMock.Setup(x => x.GetUsersInGroupAsync(roleGroup.Id))
             .ReturnsAsync(new List<User>());
 
         // Act

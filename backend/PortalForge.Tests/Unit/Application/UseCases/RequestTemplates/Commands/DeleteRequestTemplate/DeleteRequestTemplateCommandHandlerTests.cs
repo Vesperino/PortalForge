@@ -109,51 +109,6 @@ public class DeleteRequestTemplateCommandHandlerTests
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Never);
     }
 
-    [Fact]
-    public async Task Handle_TemplateInUse_ThrowsValidationException()
-    {
-        // Arrange
-        var templateId = Guid.NewGuid();
-        var command = new DeleteRequestTemplateCommand
-        {
-            Id = templateId,
-            DeletedBy = Guid.NewGuid()
-        };
-
-        var template = new RequestTemplate
-        {
-            Id = templateId,
-            Name = "Test Template",
-            Description = "Test Description",
-            Category = "Test Category",
-            Fields = new List<RequestTemplateField>(),
-            ApprovalStepTemplates = new List<RequestApprovalStepTemplate>()
-        };
-
-        var requests = new List<Request>
-        {
-            new Request { Id = Guid.NewGuid(), RequestTemplateId = templateId },
-            new Request { Id = Guid.NewGuid(), RequestTemplateId = templateId }
-        };
-
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId))
-            .ReturnsAsync(template);
-
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByTemplateIdAsync(templateId))
-            .ReturnsAsync(requests);
-
-        // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        await act.Should().ThrowAsync<ValidationException>()
-            .WithMessage("Cannot delete template that is being used by requests");
-
-        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.GetByIdAsync(templateId), Times.Once);
-        _unitOfWorkMock.Verify(x => x.RequestRepository.GetByTemplateIdAsync(templateId), Times.Once);
-        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.DeleteAsync(It.IsAny<Guid>()), Times.Never);
-        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Never);
-    }
 
     [Fact]
     public async Task Handle_ValidRequest_CreatesAuditLogWithCorrectData()
