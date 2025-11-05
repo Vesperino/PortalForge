@@ -168,7 +168,7 @@ const getVacationDuration = (vacation: VacationSchedule): number => {
     <!-- Timeline Rows (Employees with vacation bars) -->
     <div class="overflow-y-auto max-h-[600px]">
       <div
-        v-for="(row, rowIndex) in timelineRows"
+        v-for="row in timelineRows"
         :key="row.employee.id"
         class="flex border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
       >

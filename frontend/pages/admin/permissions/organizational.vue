@@ -259,7 +259,6 @@ useHead({
 })
 
 const config = useRuntimeConfig()
-const authStore = useAuthStore()
 const { getAuthHeaders } = useAuth()
 const toast = useNotificationToast()
 const apiUrl = config.public.apiUrl
@@ -301,15 +300,36 @@ const filteredUsers = computed(() => {
     filtered = filtered.filter((user) => user.department?.toLowerCase().includes(deptSearch))
   }
 
-  totalUsers.value = filtered.length
-
   // Apply pagination
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
   return filtered.slice(start, end)
 })
 
-const totalPages = computed(() => Math.ceil(totalUsers.value / pageSize.value))
+const totalFilteredUsers = computed(() => {
+  let filtered = users.value
+
+  // Apply search filter
+  if (searchTerm.value) {
+    const search = searchTerm.value.toLowerCase()
+    filtered = filtered.filter(
+      (user) =>
+        user.email.toLowerCase().includes(search) ||
+        user.firstName?.toLowerCase().includes(search) ||
+        user.lastName?.toLowerCase().includes(search)
+    )
+  }
+
+  // Apply department filter
+  if (departmentFilter.value) {
+    const deptSearch = departmentFilter.value.toLowerCase()
+    filtered = filtered.filter((user) => user.department?.toLowerCase().includes(deptSearch))
+  }
+
+  return filtered.length
+})
+
+const totalPages = computed(() => Math.ceil(totalFilteredUsers.value / pageSize.value))
 
 // Methods
 const fetchUsers = async () => {

@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { Paperclip, Download, FileText, Image, File } from 'lucide-vue-next'
 
 interface Props {
   attachments: string[]
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const getFileExtension = (url: string): string => {
   const parts = url.split('.')
@@ -40,12 +39,6 @@ const getFileIconColor = (url: string): string => {
   } else {
     return 'text-gray-500'
   }
-}
-
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 </script>
 

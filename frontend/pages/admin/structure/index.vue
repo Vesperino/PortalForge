@@ -424,11 +424,6 @@ const cancelAssign = () => {
   assigningUserId.value = null
 }
 
-// Get users for a department
-const getUsersForDepartment = (departmentId: string) => {
-  return allUsers.value.filter(u => u.departmentId === departmentId)
-}
-
 // Handle employee click for quick edit
 const handleEmployeeClick = async (employeeId: string) => {
   const user = allUsers.value.find(u => u.id === employeeId)

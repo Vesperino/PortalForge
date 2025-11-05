@@ -198,8 +198,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'close'): void
-  (e: 'saved'): void
+  (e: 'close' | 'saved'): void
 }>()
 
 const config = useRuntimeConfig()

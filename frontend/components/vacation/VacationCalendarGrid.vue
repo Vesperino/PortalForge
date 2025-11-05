@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import type { VacationSchedule, CalendarDay } from '~/types/vacation'
 
 interface Props {
@@ -26,11 +26,9 @@ const calendarDays = computed<CalendarDay[]>(() => {
 
   // First day of current month
   const firstDay = new Date(year, month, 1)
-  // Last day of current month
-  const lastDay = new Date(year, month + 1, 0)
 
   // Find Monday before or on first day of month
-  let startDate = new Date(firstDay)
+  const startDate = new Date(firstDay)
   const dayOfWeek = startDate.getDay()
   const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // Monday is 0
   startDate.setDate(startDate.getDate() - daysToSubtract)
@@ -43,8 +41,6 @@ const calendarDays = computed<CalendarDay[]>(() => {
   for (let i = 0; i < 42; i++) {
     const currentDate = new Date(startDate)
     currentDate.setDate(startDate.getDate() + i)
-
-    const dateStr = currentDate.toISOString().split('T')[0]
 
     // Find vacations for this day
     const dayVacations = props.vacations.filter((vacation) => {
@@ -187,7 +183,7 @@ const handleDayClick = (day: CalendarDay) => {
         <!-- Vacation badges (show max 3, then "+X more") -->
         <div class="space-y-1">
           <div
-            v-for="(vacation, vIndex) in day.vacations.slice(0, 3)"
+            v-for="vacation in day.vacations.slice(0, 3)"
             :key="vacation.id"
             class="text-xs px-2 py-0.5 rounded truncate"
             :class="{

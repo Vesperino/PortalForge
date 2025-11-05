@@ -137,12 +137,6 @@ const formatDateShort = (date: Date) => {
   }).format(date)
 }
 
-const formatDateRange = (startDate: Date, endDate: Date) => {
-  const start = formatDateShort(startDate)
-  const end = formatDateShort(endDate)
-  return start === end ? start : `${start} - ${end}`
-}
-
 const toggleEdit = () => {
   isEditing.value = !isEditing.value
 }

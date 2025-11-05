@@ -16,7 +16,7 @@ interface Props {
   emptyMessage?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   isLoading: false,
   error: null,
   title: 'Historia urlopów',

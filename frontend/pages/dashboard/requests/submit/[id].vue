@@ -341,8 +341,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ArrowLeft, Clock } from 'lucide-vue-next'
 import type { RequestTemplate, RequestPriority } from '~/types/requests'
-import type { VacationSummary, ValidateVacationResponse } from '~/composables/useVacations'
-import { LeaveType } from '~/composables/useVacations'
+import type { VacationSummary, ValidateVacationResponse, LeaveType } from '~/composables/useVacations'
 
 definePageMeta({
   layout: 'default',
