@@ -427,9 +427,13 @@ const loadTemplate = async () => {
   try {
     loading.value = true
     error.value = null
-    
+
     const template = await getTemplateById(templateId.value)
-    
+
+    console.log('Loaded template:', template)
+    console.log('Template fields:', template?.fields)
+    console.log('Template approvalStepTemplates:', template?.approvalStepTemplates)
+
     if (!template) {
       error.value = 'Szablon nie został znaleziony'
       return
@@ -440,6 +444,9 @@ const loadTemplate = async () => {
       ...field,
       options: field.options ? (typeof field.options === 'string' ? JSON.parse(field.options) : field.options) : []
     }))
+
+    console.log('Parsed fields:', fields)
+    console.log('Approval steps:', template.approvalStepTemplates || [])
 
     form.value = {
       name: template.name,
@@ -453,6 +460,10 @@ const loadTemplate = async () => {
       fields: fields,
       approvalStepTemplates: template.approvalStepTemplates || [],
     }
+
+    console.log('Form value after assignment:', form.value)
+    console.log('Form fields count:', form.value.fields.length)
+    console.log('Form approval steps count:', form.value.approvalStepTemplates.length)
 
     // Load users, role groups, and departments in parallel
     const [usersResult, groupsResult, departmentsResult] = await Promise.all([

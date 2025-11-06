@@ -41,38 +41,44 @@ public class GetRequestTemplateByIdQueryHandler
             CreatedByName = template.CreatedBy?.FullName ?? string.Empty,
             CreatedAt = template.CreatedAt,
             UpdatedAt = template.UpdatedAt,
-            Fields = template.Fields.Select(f => new RequestTemplateFieldDto
-            {
-                Id = f.Id,
-                Label = f.Label,
-                FieldType = f.FieldType.ToString(),
-                Placeholder = f.Placeholder,
-                IsRequired = f.IsRequired,
-                Options = f.Options,
-                MinValue = f.MinValue,
-                MaxValue = f.MaxValue,
-                HelpText = f.HelpText,
-                Order = f.Order
-            }).ToList(),
-            ApprovalStepTemplates = template.ApprovalStepTemplates.Select(ast => new RequestApprovalStepTemplateDto
-            {
-                Id = ast.Id,
-                StepOrder = ast.StepOrder,
-                ApproverType = ast.ApproverType.ToString(),
-                SpecificUserId = ast.SpecificUserId,
-                SpecificDepartmentId = ast.SpecificDepartmentId,
-                SpecificDepartmentRoleType = ast.SpecificDepartmentRoleType.ToString(),
-                ApproverGroupId = ast.ApproverGroupId,
-                RequiresQuiz = ast.RequiresQuiz,
-                PassingScore = ast.PassingScore,
-                QuizQuestions = ast.QuizQuestions.Select(qq => new QuizQuestionDto
+            Fields = template.Fields
+                .OrderBy(f => f.Order)
+                .Select(f => new RequestTemplateFieldDto
                 {
-                    Id = qq.Id,
-                    Question = qq.Question,
-                    Options = qq.Options,
-                    Order = qq.Order
+                    Id = f.Id,
+                    Label = f.Label,
+                    FieldType = f.FieldType.ToString(),
+                    Placeholder = f.Placeholder,
+                    IsRequired = f.IsRequired,
+                    Options = f.Options,
+                    MinValue = f.MinValue,
+                    MaxValue = f.MaxValue,
+                    HelpText = f.HelpText,
+                    Order = f.Order
+                }).ToList(),
+            ApprovalStepTemplates = template.ApprovalStepTemplates
+                .OrderBy(ast => ast.StepOrder)
+                .Select(ast => new RequestApprovalStepTemplateDto
+                {
+                    Id = ast.Id,
+                    StepOrder = ast.StepOrder,
+                    ApproverType = ast.ApproverType.ToString(),
+                    SpecificUserId = ast.SpecificUserId,
+                    SpecificDepartmentId = ast.SpecificDepartmentId,
+                    SpecificDepartmentRoleType = ast.SpecificDepartmentRoleType.ToString(),
+                    ApproverGroupId = ast.ApproverGroupId,
+                    RequiresQuiz = ast.RequiresQuiz,
+                    PassingScore = ast.PassingScore,
+                    QuizQuestions = ast.QuizQuestions
+                        .OrderBy(qq => qq.Order)
+                        .Select(qq => new QuizQuestionDto
+                        {
+                            Id = qq.Id,
+                            Question = qq.Question,
+                            Options = qq.Options,
+                            Order = qq.Order
+                        }).ToList()
                 }).ToList()
-            }).ToList()
         };
 
         return new GetRequestTemplateByIdResult

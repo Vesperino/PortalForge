@@ -151,14 +151,30 @@ public class UpdateRequestTemplateCommandHandler
                 {
                     // Update existing step
                     existingStep.StepOrder = stepDto.StepOrder;
-                    existingStep.ApproverType = Enum.Parse<ApproverType>(stepDto.ApproverType);
+
+                    // Parse and update ApproverType
+                    var newApproverType = Enum.Parse<ApproverType>(stepDto.ApproverType);
+                    existingStep.ApproverType = newApproverType;
+
                     existingStep.SpecificUserId = stepDto.SpecificUserId;
                     existingStep.SpecificDepartmentId = stepDto.SpecificDepartmentId;
 
-                    // Update SpecificDepartmentRoleType if provided
-                    if (!string.IsNullOrEmpty(stepDto.SpecificDepartmentRoleType))
+                    // Update SpecificDepartmentRoleType only for SpecificDepartment approver type
+                    if (newApproverType == ApproverType.SpecificDepartment)
                     {
-                        existingStep.SpecificDepartmentRoleType = Enum.Parse<DepartmentRoleType>(stepDto.SpecificDepartmentRoleType);
+                        if (!string.IsNullOrEmpty(stepDto.SpecificDepartmentRoleType))
+                        {
+                            existingStep.SpecificDepartmentRoleType = Enum.Parse<DepartmentRoleType>(stepDto.SpecificDepartmentRoleType);
+                        }
+                        else
+                        {
+                            existingStep.SpecificDepartmentRoleType = DepartmentRoleType.Head;
+                        }
+                    }
+                    else
+                    {
+                        // Reset to default when not using SpecificDepartment
+                        existingStep.SpecificDepartmentRoleType = DepartmentRoleType.Head;
                     }
 
                     existingStep.ApproverGroupId = stepDto.ApproverGroupId;

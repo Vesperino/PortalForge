@@ -17,9 +17,9 @@ public class RequestTemplateRepository : IRequestTemplateRepository
     public async Task<RequestTemplate?> GetByIdAsync(Guid id)
     {
         return await _context.RequestTemplates
-            .Include(rt => rt.Fields.OrderBy(f => f.Order))
-            .Include(rt => rt.ApprovalStepTemplates.OrderBy(ast => ast.StepOrder))
-                .ThenInclude(ast => ast.QuizQuestions.OrderBy(qq => qq.Order))
+            .Include(rt => rt.Fields)
+            .Include(rt => rt.ApprovalStepTemplates)
+                .ThenInclude(ast => ast.QuizQuestions)
             .Include(rt => rt.CreatedBy)
             .FirstOrDefaultAsync(rt => rt.Id == id);
     }
