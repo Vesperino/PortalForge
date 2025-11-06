@@ -64,21 +64,9 @@ public class ApproveRequestStepCommandHandler
             };
         }
 
-        // Check if quiz is required and has been completed
-        if (step.RequiresQuiz)
-        {
-            if (!step.QuizScore.HasValue)
-            {
-                return new ApproveRequestStepResult
-                {
-                    Success = false,
-                    Message = "Quiz must be completed by the requester before this step can be approved"
-                };
-            }
-
-            // Note: Approver can override quiz failure and approve anyway
-            // The frontend shows quiz results to help approver make informed decision
-        }
+        // Note: Quiz is informational only for approvers
+        // Approvers can always approve regardless of quiz completion or results
+        // The quiz results are shown to help approver make an informed decision
 
         // Approve the step
         step.Status = ApprovalStepStatus.Approved;
@@ -86,7 +74,7 @@ public class ApproveRequestStepCommandHandler
 
         // Add note if approver is overriding quiz failure
         var comment = command.Comment ?? string.Empty;
-        if (step.RequiresQuiz && step.QuizPassed != true)
+        if (step.RequiresQuiz && step.QuizScore.HasValue && step.QuizPassed == false)
         {
             var overrideNote = $"[OVERRIDE] Approver approved despite quiz failure (scored {step.QuizScore}%)";
             comment = string.IsNullOrWhiteSpace(comment)
