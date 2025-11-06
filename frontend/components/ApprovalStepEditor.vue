@@ -39,7 +39,7 @@
             >
 
             <!-- Selected Department Display -->
-            <div v-if="selectedDepartment && !showDepartmentDropdown" class="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-between">
+            <div v-if="selectedDepartment && departmentSearchTerm && !showDepartmentDropdown" class="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                   <Icon name="heroicons:building-office-2" class="w-5 h-5" />
@@ -342,6 +342,7 @@ const clearDepartmentSelection = () => {
   selectedDepartment.value = null
   updateStep({ specificDepartmentId: undefined })
   departmentSearchTerm.value = ''
+  showDepartmentDropdown.value = true
 }
 
 const handleQuizSave = (data: { questions: any[], passingScore: number }) => {

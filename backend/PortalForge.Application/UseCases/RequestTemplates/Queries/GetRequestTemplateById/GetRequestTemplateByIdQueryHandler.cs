@@ -61,6 +61,7 @@ public class GetRequestTemplateByIdQueryHandler
                 ApproverType = ast.ApproverType.ToString(),
                 SpecificUserId = ast.SpecificUserId,
                 SpecificDepartmentId = ast.SpecificDepartmentId,
+                SpecificDepartmentRoleType = ast.SpecificDepartmentRoleType.ToString(),
                 ApproverGroupId = ast.ApproverGroupId,
                 RequiresQuiz = ast.RequiresQuiz,
                 PassingScore = ast.PassingScore,

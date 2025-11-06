@@ -45,6 +45,7 @@ public class RequestApprovalStepTemplateDto
     public string ApproverType { get; set; } = "DirectSupervisor"; // DirectSupervisor, SpecificUser, SpecificDepartment, UserGroup, Submitter
     public Guid? SpecificUserId { get; set; } // For ApproverType = SpecificUser
     public Guid? SpecificDepartmentId { get; set; } // For ApproverType = SpecificDepartment
+    public string? SpecificDepartmentRoleType { get; set; } // For ApproverType = SpecificDepartment: Head or Director
     public Guid? ApproverGroupId { get; set; } // For ApproverType = UserGroup
     public bool RequiresQuiz { get; set; }
     public int? PassingScore { get; set; } // Minimum score (0-100) required to pass this step's quiz
