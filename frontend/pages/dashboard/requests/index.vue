@@ -758,15 +758,6 @@ const filteredApprovals = computed(() => {
   )
 })
 
-const canApproveRequests = computed(() => {
-  const user = authStore.user
-  if (!user || !user.role) return false
-
-  // Check if user has admin, hr, or manager role
-  // These roles have permissions to approve requests
-  return ['admin', 'hr', 'manager'].includes(user.role)
-})
-
 // Format form data for display in modal
 const formattedRequestFormData = computed(() => {
   if (!requestDetails.value?.formData) return []
@@ -865,10 +856,6 @@ const formatDate = (dateString: string) => {
 const selectTemplate = (template: RequestTemplate) => {
   // Navigate to request submission page
   navigateTo(`/dashboard/requests/submit/${template.id}`)
-}
-
-const closeRequestDetails = () => {
-  selectedRequest.value = null
 }
 
 // Open request details modal

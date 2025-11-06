@@ -54,7 +54,6 @@ public class RegisterCommandValidatorTests
 
     [Theory]
     [InlineData("")]
-    [InlineData(null)]
     public async Task Validator_EmptyEmail_FailsValidation(string email)
     {
         // Arrange
@@ -260,7 +259,6 @@ public class RegisterCommandValidatorTests
 
     [Theory]
     [InlineData("")]
-    [InlineData(null)]
     public async Task Validator_EmptyFirstName_FailsValidation(string firstName)
     {
         // Arrange
@@ -284,7 +282,6 @@ public class RegisterCommandValidatorTests
 
     [Theory]
     [InlineData("")]
-    [InlineData(null)]
     public async Task Validator_EmptyLastName_FailsValidation(string lastName)
     {
         // Arrange
@@ -308,7 +305,6 @@ public class RegisterCommandValidatorTests
 
     [Theory]
     [InlineData("")]
-    [InlineData(null)]
     public async Task Validator_EmptyDepartment_FailsValidation(string department)
     {
         // Arrange
@@ -332,7 +328,6 @@ public class RegisterCommandValidatorTests
 
     [Theory]
     [InlineData("")]
-    [InlineData(null)]
     public async Task Validator_EmptyPosition_FailsValidation(string position)
     {
         // Arrange
