@@ -179,7 +179,7 @@ public class ApproveRequestStepCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_QuizRequired_RequiresSurveyStatus()
+    public async Task Handle_QuizNotCompleted_StillAllowsApproval()
     {
         // Arrange
         var requestId = Guid.NewGuid();
@@ -198,7 +198,7 @@ public class ApproveRequestStepCommandHandlerTests
                     ApproverId = approverId,
                     Status = ApprovalStepStatus.InReview,
                     RequiresQuiz = true,
-                    QuizPassed = null
+                    QuizPassed = null // Quiz not completed yet
                 }
             }
         };
@@ -216,11 +216,57 @@ public class ApproveRequestStepCommandHandlerTests
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        // Assert
-        Assert.False(result.Success);
-        Assert.Contains("Quiz must be completed", result.Message);
-        Assert.Equal(ApprovalStepStatus.RequiresSurvey, request.ApprovalSteps.First().Status);
-        Assert.Equal(RequestStatus.AwaitingSurvey, request.Status);
+        // Assert - Quiz is informational only, approval should succeed
+        Assert.True(result.Success);
+        Assert.Equal(ApprovalStepStatus.Approved, request.ApprovalSteps.First().Status);
+        Assert.Equal(RequestStatus.Approved, request.Status);
+    }
+
+    [Fact]
+    public async Task Handle_QuizFailedButApproverApprovesAnyway_AllowsApproval()
+    {
+        // Arrange
+        var requestId = Guid.NewGuid();
+        var stepId = Guid.NewGuid();
+        var approverId = Guid.NewGuid();
+
+        var request = new Request
+        {
+            Id = requestId,
+            Status = RequestStatus.InReview,
+            ApprovalSteps = new List<RequestApprovalStep>
+            {
+                new RequestApprovalStep
+                {
+                    Id = stepId,
+                    ApproverId = approverId,
+                    Status = ApprovalStepStatus.InReview,
+                    RequiresQuiz = true,
+                    QuizScore = 40, // Failed quiz
+                    QuizPassed = false
+                }
+            }
+        };
+
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+            .ReturnsAsync(request);
+
+        var command = new ApproveRequestStepCommand
+        {
+            RequestId = requestId,
+            StepId = stepId,
+            ApproverId = approverId,
+            Comment = "Approved despite quiz failure - special circumstances"
+        };
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert - Approver can approve even if quiz was failed
+        Assert.True(result.Success);
+        Assert.Equal(ApprovalStepStatus.Approved, request.ApprovalSteps.First().Status);
+        Assert.Equal(RequestStatus.Approved, request.Status);
+        Assert.Contains("special circumstances", request.ApprovalSteps.First().Comment ?? "");
     }
 
     [Fact]
