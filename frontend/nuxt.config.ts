@@ -151,6 +151,9 @@ export default defineNuxtConfig({
     build: {
       target: 'es2020',
     },
+    optimizeDeps: {
+      exclude: ['vue-pdf-embed', 'docx-preview'],
+    },
   },
 
   icon: {
