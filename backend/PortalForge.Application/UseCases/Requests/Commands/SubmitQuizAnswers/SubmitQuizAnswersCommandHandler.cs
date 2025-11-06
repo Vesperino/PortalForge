@@ -61,6 +61,21 @@ public class SubmitQuizAnswersCommandHandler
             };
         }
 
+        // Check if quiz was already submitted (one attempt only)
+        if (step.QuizScore.HasValue)
+        {
+            return new SubmitQuizAnswersResult
+            {
+                Success = false,
+                Message = step.QuizPassed == true
+                    ? "Quiz already completed and passed. You can approve this request."
+                    : $"Quiz already completed. You scored {step.QuizScore}% which did not meet the required threshold. This request cannot be approved.",
+                Score = step.QuizScore.Value,
+                Passed = step.QuizPassed ?? false,
+                RequiredScore = step.PassingScore ?? 70
+            };
+        }
+
         // Get quiz questions from template
         var template = await _unitOfWork.RequestTemplateRepository.GetByIdAsync(request.RequestTemplateId);
         if (template == null)

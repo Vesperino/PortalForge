@@ -146,13 +146,6 @@
           </div>
           <div v-else class="flex justify-end gap-3">
             <button
-              v-if="!quizResult.passed"
-              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-              @click="retakeQuiz"
-            >
-              Spróbuj ponownie
-            </button>
-            <button
               class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
               @click="closeModal"
             >
@@ -199,7 +192,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   close: []
-  quizPassed: []
+  quizCompleted: []
 }>()
 
 const answers = ref<Record<string, string>>({})
@@ -253,9 +246,8 @@ const submitQuiz = async () => {
 
     quizResult.value = result
 
-    if (result.passed) {
-      emit('quizPassed')
-    }
+    // Emit completed regardless of pass/fail - approver will see result and decide
+    emit('quizCompleted')
   } catch (error: any) {
     console.error('Error submitting quiz:', error)
     quizResult.value = {
@@ -268,11 +260,6 @@ const submitQuiz = async () => {
   } finally {
     submitting.value = false
   }
-}
-
-const retakeQuiz = () => {
-  quizResult.value = null
-  answers.value = {}
 }
 
 const closeModal = () => {

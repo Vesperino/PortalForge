@@ -64,19 +64,8 @@ public class ApproveRequestStepCommandHandler
             };
         }
 
-        // Check if quiz is required and not passed
-        if (step.RequiresQuiz && step.QuizPassed != true)
-        {
-            step.Status = ApprovalStepStatus.RequiresSurvey;
-            request.Status = RequestStatus.AwaitingSurvey;
-            await _unitOfWork.SaveChangesAsync();
-            
-            return new ApproveRequestStepResult
-            {
-                Success = false,
-                Message = "Quiz must be completed before approval"
-            };
-        }
+        // NOTE: Quiz is informational only - approver can approve regardless of quiz result
+        // The quiz score and pass/fail status are stored for reference but don't block approval
 
         // Approve the step
         step.Status = ApprovalStepStatus.Approved;

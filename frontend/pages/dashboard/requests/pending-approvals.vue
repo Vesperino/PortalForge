@@ -83,11 +83,37 @@
                 Krok {{ getCurrentStep(request)?.stepOrder }} z {{ request.approvalSteps.length }}
               </p>
             </div>
+
+            <!-- Quiz Result (if completed) -->
+            <div
+              v-if="getQuizResult(request)"
+              class="mt-3 p-3 rounded-lg border"
+              :class="[
+                getQuizResult(request)?.passed
+                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                  : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+              ]"
+            >
+              <p class="text-xs font-medium" :class="[
+                getQuizResult(request)?.passed
+                  ? 'text-green-900 dark:text-green-100'
+                  : 'text-red-900 dark:text-red-100'
+              ]">
+                📋 Quiz {{ getQuizResult(request)?.passed ? 'zaliczony' : 'niezaliczony' }}
+              </p>
+              <p class="text-xs mt-1" :class="[
+                getQuizResult(request)?.passed
+                  ? 'text-green-700 dark:text-green-300'
+                  : 'text-red-700 dark:text-red-300'
+              ]">
+                Wynik: {{ getQuizResult(request)?.score }}% (wymagane: {{ getQuizResult(request)?.requiredScore }}%)
+              </p>
+            </div>
           </div>
 
           <!-- Actions -->
           <div class="flex flex-col gap-2">
-            <!-- Quiz Button (if required and not passed) -->
+            <!-- Quiz Button (if required and not yet completed) -->
             <button
               v-if="needsQuiz(request)"
               class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
@@ -97,15 +123,9 @@
               Wypełnij quiz
             </button>
 
-            <!-- Approve Button (disabled if quiz required but not passed) -->
+            <!-- Approve Button (always enabled - approver decides) -->
             <button
-              :disabled="needsQuiz(request)"
-              :class="[
-                'px-4 py-2 text-white rounded-lg font-medium transition-colors flex items-center gap-2',
-                needsQuiz(request)
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-green-600 hover:bg-green-700'
-              ]"
+              class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
               @click="openApproveModal(request)"
             >
               <Icon name="heroicons:check" class="w-5 h-5" />
@@ -186,7 +206,7 @@
       :request-id="selectedQuizRequest.id"
       :step-id="getCurrentStep(selectedQuizRequest)?.id || ''"
       @close="closeQuizModal"
-      @quiz-passed="handleQuizPassed"
+      @quiz-completed="handleQuizCompleted"
     />
 
     <!-- Reject Modal -->
@@ -369,7 +389,21 @@ const needsQuiz = (request: Request): boolean => {
   const currentStep = getCurrentStep(request)
   if (!currentStep) return false
 
-  return currentStep.requiresQuiz && !currentStep.quizPassed
+  // Show quiz button only if quiz is required and hasn't been attempted yet
+  return currentStep.requiresQuiz && currentStep.quizScore === null
+}
+
+const getQuizResult = (request: Request) => {
+  const currentStep = getCurrentStep(request)
+  if (!currentStep || !currentStep.requiresQuiz || currentStep.quizScore === null) {
+    return null
+  }
+
+  return {
+    score: currentStep.quizScore,
+    passed: currentStep.quizPassed || false,
+    requiredScore: currentStep.passingScore || 70
+  }
 }
 
 const getQuizQuestions = (request: Request) => {
@@ -392,7 +426,7 @@ const closeQuizModal = () => {
   selectedQuizRequest.value = null
 }
 
-const handleQuizPassed = async () => {
+const handleQuizCompleted = async () => {
   closeQuizModal()
   await fetchRequests()
 }
