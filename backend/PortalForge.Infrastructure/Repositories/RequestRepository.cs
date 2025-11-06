@@ -24,6 +24,10 @@ public class RequestRepository : IRequestRepository
                 .ThenInclude(aps => aps.Approver)
             .Include(r => r.ApprovalSteps)
                 .ThenInclude(aps => aps.QuizAnswers)
+                    .ThenInclude(qa => qa.QuizQuestion)
+            .Include(r => r.ApprovalSteps)
+                .ThenInclude(aps => aps.ApprovalStepTemplate)
+                    .ThenInclude(ast => ast.QuizQuestions)
             .FirstOrDefaultAsync(r => r.Id == id);
     }
 
