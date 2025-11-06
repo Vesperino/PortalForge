@@ -473,9 +473,6 @@ const validateApprovalSteps = (): string | null => {
     if (step.approverType === 'SpecificDepartment' && !step.specificDepartmentId) {
       return `Krok ${step.stepOrder}: Wybierz konkretny dział`
     }
-    if (step.approverType === 'UserGroup' && !step.approverGroupId) {
-      return `Krok ${step.stepOrder}: Wybierz grupę użytkowników`
-    }
     // Quiz validation
     if (step.requiresQuiz) {
       if (!step.quizQuestions || step.quizQuestions.length === 0) {

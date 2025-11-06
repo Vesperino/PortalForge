@@ -20,8 +20,6 @@
             <option value="DepartmentDirector">Dyrektor działu (Director)</option>
             <option value="SpecificUser">Konkretny użytkownik</option>
             <option value="SpecificDepartment">Szef konkretnego działu</option>
-            <option value="UserGroup">Grupa użytkowników</option>
-            <option value="Submitter">Wnioskodawca (self-approval)</option>
           </select>
         </div>
 
@@ -149,30 +147,6 @@
           </div>
         </div>
 
-        <!-- Group Selection (when ApproverType = UserGroup) -->
-        <div v-if="step.approverType === 'UserGroup'">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Wybierz grupę użytkowników
-          </label>
-          <select
-            :value="step.approverGroupId"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-            @change="(e) => updateStep({ approverGroupId: (e.target as HTMLSelectElement).value })"
-          >
-            <option value="">-- Wybierz grupę --</option>
-            <option v-for="group in roleGroups" :key="group.id" :value="group.id">
-              {{ group.name }} ({{ group.userCount }} użytkowników)
-            </option>
-          </select>
-        </div>
-
-        <!-- Submitter Info (when ApproverType = Submitter) -->
-        <div v-if="step.approverType === 'Submitter'" class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-          <p class="text-sm text-yellow-800 dark:text-yellow-200">
-            <Icon name="heroicons:information-circle" class="w-4 h-4 inline mr-1" />
-            Ten krok będzie zatwierdzany przez osobę, która złożyła wniosek (self-approval/acknowledgment).
-          </p>
-        </div>
 
         <!-- Requires Quiz Checkbox -->
         <div class="space-y-2">
@@ -309,9 +283,6 @@ const onApproverTypeChange = (newType: string) => {
     updates.specificDepartmentId = undefined
     selectedDepartment.value = null
     departmentSearchTerm.value = ''
-  }
-  if (newType !== 'UserGroup') {
-    updates.approverGroupId = undefined
   }
 
   updateStep(updates)
