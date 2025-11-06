@@ -105,7 +105,7 @@ const downloadFile = (url: string, event: Event) => {
             :src="attachment"
             :alt="getFileName(attachment)"
             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-          />
+          >
 
           <!-- PDF Icon -->
           <div

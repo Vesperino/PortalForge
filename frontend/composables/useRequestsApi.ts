@@ -255,26 +255,6 @@ export const useRequestsApi = () => {
     }
   }
 
-  const uploadCommentAttachment = async (file: File) => {
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await $fetch(
-        `${config.public.apiUrl}/api/storage/upload/comment-attachment`,
-        {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: formData
-        }
-      ) as { url: string; fileName: string; filePath: string }
-      return response
-    } catch (error) {
-      console.error('Error uploading comment attachment:', error)
-      throw error
-    }
-  }
-
   const addComment = async (requestId: string, comment: string, files?: File[]) => {
     try {
       // Create FormData

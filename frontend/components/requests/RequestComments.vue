@@ -278,7 +278,7 @@ const downloadFile = (url: string) => {
           class="hidden"
           accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
           @change="handleFileSelect"
-        />
+        >
 
         <!-- Actions -->
         <div class="flex items-center justify-between">

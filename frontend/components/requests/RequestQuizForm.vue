@@ -150,12 +150,12 @@ async function submitQuiz() {
           >
             <input
               :checked="selectedAnswers[question.id] === option.value"
-              @change="selectedAnswers[question.id] = option.value"
               type="radio"
               :name="`question-${question.id}`"
               :value="option.value"
               class="w-4 h-4 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 dark:bg-gray-700 dark:border-gray-600"
-            />
+              @change="selectedAnswers[question.id] = option.value"
+            >
             <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">
               {{ option.label }}
             </span>
@@ -168,17 +168,17 @@ async function submitQuiz() {
     <div class="mt-6 flex gap-3 justify-end">
       <button
         type="button"
-        @click="emit('cancel')"
         :disabled="isSubmitting"
         class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+        @click="emit('cancel')"
       >
         Anuluj
       </button>
       <button
         type="button"
-        @click="submitQuiz"
         :disabled="!allAnswered || isSubmitting"
         class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        @click="submitQuiz"
       >
         <span v-if="isSubmitting" class="animate-spin">⏳</span>
         <span>{{ isSubmitting ? 'Wysyłanie...' : 'Wyślij odpowiedzi' }}</span>

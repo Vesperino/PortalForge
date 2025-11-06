@@ -491,8 +491,8 @@ onMounted(() => {
             </p>
             <button
               type="button"
-              @click="showQuizForm = true"
               class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              @click="showQuizForm = true"
             >
               Rozpocznij quiz
             </button>

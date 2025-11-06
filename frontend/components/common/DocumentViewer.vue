@@ -10,7 +10,7 @@ import {
   Maximize2,
   Minimize2,
   RotateCw,
-  Fit
+  Minimize
 } from 'lucide-vue-next'
 
 interface Props {
@@ -269,7 +269,7 @@ watch(() => props.initialIndex, (newIndex) => {
               title="Dopasuj do ekranu (F)"
               @click="fitToScreen"
             >
-              <Fit class="w-5 h-5" />
+              <Minimize class="w-5 h-5" />
             </button>
 
             <div class="w-px h-6 bg-gray-700 mx-1" />
@@ -340,7 +340,7 @@ watch(() => props.initialIndex, (newIndex) => {
             :style="imageTransformStyle"
             class="max-w-full max-h-full object-contain transition-transform duration-200 select-none"
             draggable="false"
-          />
+          >
         </div>
 
         <!-- PDF Viewer -->
@@ -399,7 +399,7 @@ watch(() => props.initialIndex, (newIndex) => {
               :src="attachment"
               :alt="`Miniatura ${index + 1}`"
               class="w-full h-full object-cover"
-            />
+            >
             <div
               v-else
               class="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center"
