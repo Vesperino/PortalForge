@@ -183,8 +183,64 @@ export default defineNuxtConfig({
         'question-mark-circle'
       ]),
       createIconSubset(fluentEmojiFlat as IconifyJSON, [
+        // Urlopy i czas wolny
         'beach-with-umbrella',
-        'airplane'
+        'airplane',
+        'palm-tree',
+        'camping',
+        'bed',
+        'calendar',
+        'sunglasses',
+        'mountain',
+        'house',
+        'clock',
+        // Sprzęt IT i technologia
+        'laptop',
+        'desktop-computer',
+        'mobile-phone',
+        'printer',
+        'keyboard',
+        'toolbox',
+        'battery',
+        // HR i Kadry
+        'briefcase',
+        'identification-card',
+        'family',
+        'handshake',
+        'clipboard',
+        // Finanse i budżet
+        'money-bag',
+        'credit-card',
+        'dollar-banknote',
+        'chart-increasing',
+        'receipt',
+        // Biuro i infrastruktura
+        'office-building',
+        'desk',
+        'key',
+        'automobile',
+        'light-bulb',
+        // Zdrowie i bezpieczeństwo
+        'hospital',
+        'adhesive-bandage',
+        'face-with-thermometer',
+        'shield',
+        'warning',
+        // Szkolenia i rozwój
+        'graduation-cap',
+        'books',
+        'trophy',
+        'teacher',
+        'rocket',
+        // Dokumenty
+        'page-facing-up',
+        'file-folder',
+        'memo',
+        'pen',
+        // Ogólne
+        'check-mark-button',
+        'bell',
+        'megaphone'
       ]),
       createIconSubset(svgSpinners as IconifyJSON, ['ring-resize'])
     ]
