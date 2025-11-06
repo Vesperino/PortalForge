@@ -14,7 +14,7 @@
           <select
             :value="step.approverType"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-            @change="(e) => { const newType = (e.target as HTMLSelectElement).value as any; onApproverTypeChange(newType); updateStep({ approverType: newType }); }"
+            @change="(e) => { const newType = (e.target as HTMLSelectElement).value; onApproverTypeChange(newType); }"
           >
             <option value="DirectSupervisor">Kierownik działu (HeadOfDepartment)</option>
             <option value="DepartmentDirector">Dyrektor działu (Director)</option>
@@ -281,6 +281,7 @@ const filteredUsers = computed(() => {
 })
 
 const filteredDepartments = computed(() => {
+  if (!Array.isArray(props.departments)) return []
   if (!departmentSearchTerm.value) return props.departments.slice(0, 10)
 
   const search = departmentSearchTerm.value.toLowerCase()
@@ -295,7 +296,9 @@ const updateStep = (updates: Partial<RequestApprovalStepTemplate>) => {
 
 const onApproverTypeChange = (newType: string) => {
   // Clear selections when type changes
-  const updates: Partial<RequestApprovalStepTemplate> = {}
+  const updates: Partial<RequestApprovalStepTemplate> = {
+    approverType: newType as any
+  }
 
   if (newType !== 'SpecificUser') {
     updates.specificUserId = undefined
@@ -311,9 +314,7 @@ const onApproverTypeChange = (newType: string) => {
     updates.approverGroupId = undefined
   }
 
-  if (Object.keys(updates).length > 0) {
-    updateStep(updates)
-  }
+  updateStep(updates)
 }
 
 const searchUsers = () => {
@@ -360,7 +361,7 @@ const handleQuizSave = (data: { questions: any[], passingScore: number }) => {
 
 // Initialize selected user and department if already set
 onMounted(() => {
-  if (props.step.specificUserId) {
+  if (props.step.specificUserId && Array.isArray(props.users)) {
     const user = props.users.find(u => u.id === props.step.specificUserId)
     if (user) {
       selectedUser.value = user
@@ -368,7 +369,7 @@ onMounted(() => {
     }
   }
 
-  if (props.step.specificDepartmentId) {
+  if (props.step.specificDepartmentId && Array.isArray(props.departments)) {
     const dept = props.departments.find(d => d.id === props.step.specificDepartmentId)
     if (dept) {
       selectedDepartment.value = dept
