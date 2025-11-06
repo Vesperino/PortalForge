@@ -125,11 +125,22 @@ public class NotificationService : INotificationService
         var submitter = request.SubmittedBy;
         var template = request.RequestTemplate;
 
+        // Check if current step requires quiz
+        var currentStep = request.ApprovalSteps
+            .FirstOrDefault(s => s.ApproverId == approverId && s.Status == ApprovalStepStatus.InReview);
+
+        var message = $"{submitter.FirstName} {submitter.LastName} przesłał wniosek \"{template.Name}\" oczekujący na Twoje zatwierdzenie.";
+
+        if (currentStep?.RequiresQuiz == true)
+        {
+            message += $" ⚠️ UWAGA: Ten etap wymaga wypełnienia quizu przed zatwierdzeniem (wymagane {currentStep.PassingScore ?? 70}% poprawnych odpowiedzi).";
+        }
+
         await CreateNotificationAsync(
             userId: approverId,
             type: NotificationType.RequestPendingApproval,
             title: $"Nowy wniosek do zatwierdzenia: {template.Name}",
-            message: $"{submitter.FirstName} {submitter.LastName} przesłał wniosek \"{template.Name}\" oczekujący na Twoje zatwierdzenie.",
+            message: message,
             relatedEntityType: "Request",
             relatedEntityId: request.Id.ToString(),
             actionUrl: $"/dashboard/requests/{request.Id}"

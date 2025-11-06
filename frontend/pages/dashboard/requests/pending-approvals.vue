@@ -87,13 +87,31 @@
 
           <!-- Actions -->
           <div class="flex flex-col gap-2">
+            <!-- Quiz Button (if required and not passed) -->
             <button
-              class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              v-if="needsQuiz(request)"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              @click="openQuizModal(request)"
+            >
+              <Icon name="heroicons:clipboard-document-check" class="w-5 h-5" />
+              Wypełnij quiz
+            </button>
+
+            <!-- Approve Button (disabled if quiz required but not passed) -->
+            <button
+              :disabled="needsQuiz(request)"
+              :class="[
+                'px-4 py-2 text-white rounded-lg font-medium transition-colors flex items-center gap-2',
+                needsQuiz(request)
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-green-600 hover:bg-green-700'
+              ]"
               @click="openApproveModal(request)"
             >
               <Icon name="heroicons:check" class="w-5 h-5" />
               Zatwierdź
             </button>
+
             <button
               class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
               @click="openRejectModal(request)"
@@ -158,6 +176,18 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Quiz Modal -->
+    <QuizModal
+      v-if="selectedQuizRequest"
+      :show="showQuizModal"
+      :questions="getQuizQuestions(selectedQuizRequest)"
+      :passing-score="getPassingScore(selectedQuizRequest)"
+      :request-id="selectedQuizRequest.id"
+      :step-id="getCurrentStep(selectedQuizRequest)?.id || ''"
+      @close="closeQuizModal"
+      @quiz-passed="handleQuizPassed"
+    />
 
     <!-- Reject Modal -->
     <Teleport to="body">
@@ -225,7 +255,9 @@ const error = ref<string | null>(null)
 
 const showApproveModal = ref(false)
 const showRejectModal = ref(false)
+const showQuizModal = ref(false)
 const selectedRequest = ref<Request | null>(null)
+const selectedQuizRequest = ref<Request | null>(null)
 const approveComment = ref('')
 const rejectReason = ref('')
 const approving = ref(false)
@@ -312,7 +344,7 @@ const handleApprove = async () => {
 
 const handleReject = async () => {
   if (!selectedRequest.value || !rejectReason.value.trim()) return
-  
+
   const currentStep = getCurrentStep(selectedRequest.value)
   if (!currentStep) return
 
@@ -323,7 +355,7 @@ const handleReject = async () => {
       currentStep.id,
       { reason: rejectReason.value }
     )
-    
+
     closeRejectModal()
     await fetchRequests()
   } catch (err: any) {
@@ -331,6 +363,38 @@ const handleReject = async () => {
   } finally {
     rejecting.value = false
   }
+}
+
+const needsQuiz = (request: Request): boolean => {
+  const currentStep = getCurrentStep(request)
+  if (!currentStep) return false
+
+  return currentStep.requiresQuiz && !currentStep.quizPassed
+}
+
+const getQuizQuestions = (request: Request) => {
+  const currentStep = getCurrentStep(request)
+  return currentStep?.quizQuestions || []
+}
+
+const getPassingScore = (request: Request): number => {
+  const currentStep = getCurrentStep(request)
+  return currentStep?.passingScore || 70
+}
+
+const openQuizModal = (request: Request) => {
+  selectedQuizRequest.value = request
+  showQuizModal.value = true
+}
+
+const closeQuizModal = () => {
+  showQuizModal.value = false
+  selectedQuizRequest.value = null
+}
+
+const handleQuizPassed = async () => {
+  closeQuizModal()
+  await fetchRequests()
 }
 
 onMounted(() => {
