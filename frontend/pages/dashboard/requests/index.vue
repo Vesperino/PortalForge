@@ -334,12 +334,26 @@
                     {{ getCurrentStepLabel(request) }}
                   </p>
                 </div>
+
+                <!-- Quiz Warning if required but not passed -->
+                <div
+                  v-if="!canApproveRequest(request)"
+                  class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
+                >
+                  <p class="text-xs font-medium text-blue-900 dark:text-blue-100 mb-1">
+                    Oczekiwanie na quiz
+                  </p>
+                  <p class="text-xs text-blue-800 dark:text-blue-200">
+                    {{ getQuizStatusMessage(request) }}
+                  </p>
+                </div>
               </div>
 
               <!-- Actions -->
               <div class="flex flex-col gap-2">
                 <button
-                  class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                  :disabled="!canApproveRequest(request)"
+                  class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600"
                   @click="openApproveModal(request)"
                 >
                   <Icon name="heroicons:check" class="w-5 h-5" />
@@ -592,6 +606,26 @@
             Czy na pewno chcesz zatwierdzić wniosek <strong>{{ selectedRequest?.requestNumber }}</strong>?
           </p>
 
+          <!-- Quiz Warning -->
+          <div
+            v-if="selectedRequest && !canApproveRequest(selectedRequest)"
+            class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
+          >
+            <div class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                  Nie można zatwierdzić
+                </p>
+                <p class="text-sm text-blue-800 dark:text-blue-200">
+                  {{ getQuizStatusMessage(selectedRequest) }}
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Komentarz (opcjonalny)
@@ -606,8 +640,8 @@
 
           <div class="flex gap-3">
             <button
-              :disabled="approving"
-              class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors"
+              :disabled="approving || (selectedRequest && !canApproveRequest(selectedRequest))"
+              class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
               @click="handleApprove"
             >
               {{ approving ? 'Zatwierdzanie...' : 'Zatwierdź' }}
@@ -948,6 +982,40 @@ const loadApprovalsHistory = async () => {
 
 const getCurrentStep = (request: Request) => {
   return request.approvalSteps.find(step => step.status === 'InReview')
+}
+
+// Check if current step requires quiz and if it's been passed
+const canApproveRequest = (request: Request) => {
+  const currentStep = getCurrentStep(request)
+  if (!currentStep) return false
+
+  const requiresQuiz = currentStep.requiresQuiz || (currentStep as any).RequiresQuiz
+  if (!requiresQuiz) return true
+
+  const quizPassed = currentStep.quizPassed || (currentStep as any).QuizPassed
+  return quizPassed === true
+}
+
+// Get quiz status message
+const getQuizStatusMessage = (request: Request) => {
+  const currentStep = getCurrentStep(request)
+  if (!currentStep) return null
+
+  const requiresQuiz = currentStep.requiresQuiz || (currentStep as any).RequiresQuiz
+  if (!requiresQuiz) return null
+
+  const quizScore = currentStep.quizScore ?? (currentStep as any).QuizScore
+  const quizPassed = currentStep.quizPassed || (currentStep as any).QuizPassed
+
+  if (quizScore === null || quizScore === undefined) {
+    return 'Wnioskodawca musi najpierw wypełnić wymagany quiz.'
+  }
+
+  if (!quizPassed) {
+    return `Quiz niezaliczony (wynik: ${quizScore}%). Wnioskodawca musi zaliczyć quiz.`
+  }
+
+  return null
 }
 
 const openApproveModal = (request: Request) => {

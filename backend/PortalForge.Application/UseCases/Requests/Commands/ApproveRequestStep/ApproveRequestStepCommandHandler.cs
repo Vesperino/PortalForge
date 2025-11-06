@@ -64,8 +64,27 @@ public class ApproveRequestStepCommandHandler
             };
         }
 
-        // NOTE: Quiz is informational only - approver can approve regardless of quiz result
-        // The quiz score and pass/fail status are stored for reference but don't block approval
+        // Check if quiz is required and has been completed successfully
+        if (step.RequiresQuiz)
+        {
+            if (!step.QuizScore.HasValue)
+            {
+                return new ApproveRequestStepResult
+                {
+                    Success = false,
+                    Message = "Quiz must be completed by the requester before this step can be approved"
+                };
+            }
+
+            if (step.QuizPassed != true)
+            {
+                return new ApproveRequestStepResult
+                {
+                    Success = false,
+                    Message = $"Quiz was not passed (scored {step.QuizScore}%). The requester must pass the quiz before you can approve this request."
+                };
+            }
+        }
 
         // Approve the step
         step.Status = ApprovalStepStatus.Approved;

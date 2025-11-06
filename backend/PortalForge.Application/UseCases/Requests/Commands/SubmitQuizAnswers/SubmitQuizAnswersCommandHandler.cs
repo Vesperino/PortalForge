@@ -124,7 +124,6 @@ public class SubmitQuizAnswersCommandHandler
             // Save quiz answer
             var quizAnswer = new QuizAnswer
             {
-                Id = Guid.NewGuid(),
                 RequestApprovalStepId = step.Id,
                 QuizQuestionId = question.Id,
                 SelectedAnswer = answer.SelectedAnswer,
