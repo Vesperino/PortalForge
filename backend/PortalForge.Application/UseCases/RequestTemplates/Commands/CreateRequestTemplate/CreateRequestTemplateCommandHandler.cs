@@ -68,6 +68,7 @@ public class CreateRequestTemplateCommandHandler
                 SpecificDepartmentId = stepDto.SpecificDepartmentId,
                 ApproverGroupId = stepDto.ApproverGroupId,
                 RequiresQuiz = stepDto.RequiresQuiz,
+                PassingScore = stepDto.PassingScore,
                 CreatedAt = DateTime.UtcNow
             };
 

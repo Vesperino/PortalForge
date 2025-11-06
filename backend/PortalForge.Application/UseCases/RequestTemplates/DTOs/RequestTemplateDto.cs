@@ -47,6 +47,7 @@ public class RequestApprovalStepTemplateDto
     public Guid? SpecificDepartmentId { get; set; } // For ApproverType = SpecificDepartment
     public Guid? ApproverGroupId { get; set; } // For ApproverType = UserGroup
     public bool RequiresQuiz { get; set; }
+    public int? PassingScore { get; set; } // Minimum score (0-100) required to pass this step's quiz
     public List<QuizQuestionDto> QuizQuestions { get; set; } = new(); // Quiz questions specific to this approval step
 }
 

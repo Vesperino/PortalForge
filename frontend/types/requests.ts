@@ -42,6 +42,8 @@ export interface RequestApprovalStepTemplate {
   specificDepartmentId?: string
   approverGroupId?: string
   requiresQuiz: boolean
+  passingScore?: number
+  quizQuestions?: QuizQuestion[]
 }
 
 export interface QuizQuestion {
@@ -117,11 +119,9 @@ export interface CreateRequestTemplateDto {
   requiresApproval: boolean
   requiresSubstituteSelection?: boolean
   estimatedProcessingDays?: number
-  passingScore?: number
   isActive?: boolean
   fields: RequestTemplateField[]
   approvalStepTemplates: RequestApprovalStepTemplate[]
-  quizQuestions: QuizQuestion[]
 }
 
 export interface UpdateRequestTemplateDto {
@@ -132,11 +132,9 @@ export interface UpdateRequestTemplateDto {
   departmentId?: string
   requiresApproval?: boolean
   estimatedProcessingDays?: number
-  passingScore?: number
   isActive?: boolean
   fields?: RequestTemplateField[]
   approvalStepTemplates?: RequestApprovalStepTemplate[]
-  quizQuestions?: QuizQuestion[]
 }
 
 export interface SubmitRequestDto {

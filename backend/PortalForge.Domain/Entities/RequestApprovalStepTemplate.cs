@@ -49,6 +49,12 @@ public class RequestApprovalStepTemplate
     public bool RequiresQuiz { get; set; } = false;
 
     /// <summary>
+    /// Minimum score (percentage) required to pass the quiz for this approval step.
+    /// Only relevant if RequiresQuiz is true. Value between 0-100.
+    /// </summary>
+    public int? PassingScore { get; set; }
+
+    /// <summary>
     /// Quiz questions specific to this approval step.
     /// Only relevant if RequiresQuiz is true.
     /// </summary>

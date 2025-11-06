@@ -339,103 +339,6 @@
             </div>
           </div>
 
-          <!-- Step 4: Quiz (if any step requires it) -->
-          <div v-else-if="currentStep === 3" class="space-y-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Próg zdawalności (%)
-              </label>
-              <input
-                v-model.number="form.passingScore"
-                type="number"
-                min="0"
-                max="100"
-                placeholder="80"
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-              >
-            </div>
-
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                Pytania quizu
-              </h3>
-              <button
-                @click="addQuizQuestion"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-              >
-                <Plus class="w-4 h-4 mr-2" />
-                Dodaj pytanie
-              </button>
-            </div>
-
-            <div v-if="quizQuestions.length === 0" class="text-center py-8 text-gray-500">
-              Brak pytań. Dodaj pytania do quizu.
-            </div>
-
-            <div class="space-y-6">
-              <div
-                v-for="(question, qIndex) in quizQuestions"
-                :key="qIndex"
-                class="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-4"
-              >
-                <div class="flex items-start gap-4 mb-4">
-                  <div class="flex-shrink-0 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold">
-                    {{ qIndex + 1 }}
-                  </div>
-                  
-                  <div class="flex-1">
-                    <input
-                      v-model="question.question"
-                      type="text"
-                      placeholder="Treść pytania..."
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                    >
-                  </div>
-
-                  <button
-                    @click="removeQuizQuestion(qIndex)"
-                    class="text-red-600 hover:text-red-700 p-2"
-                  >
-                    <Trash2 class="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div class="ml-12 space-y-2">
-                  <button
-                    @click="addQuizOption(qIndex)"
-                    class="text-sm text-blue-600 hover:text-blue-700"
-                  >
-                    + Dodaj odpowiedź
-                  </button>
-                  
-                  <div
-                    v-for="(option, oIndex) in question.options"
-                    :key="oIndex"
-                    class="flex items-center gap-2"
-                  >
-                    <input
-                      v-model="option.isCorrect"
-                      type="checkbox"
-                      class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                    >
-                    <input
-                      v-model="option.label"
-                      type="text"
-                      placeholder="Treść odpowiedzi..."
-                      class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                    >
-                    <button
-                      @click="removeQuizOption(qIndex, oIndex)"
-                      class="text-red-600 hover:text-red-700"
-                    >
-                      <X class="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!-- Navigation Buttons -->
           <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
@@ -504,7 +407,7 @@ const loading = ref(true)
 const saving = ref(false)
 const error = ref<string | null>(null)
 
-const steps = ['Podstawowe info', 'Pola formularza', 'Przepływ zatwierdzeń', 'Quiz']
+const steps = ['Podstawowe info', 'Pola formularza', 'Przepływ zatwierdzeń']
 const currentStep = ref(0)
 
 const form = ref({
@@ -515,19 +418,10 @@ const form = ref({
   departmentId: '',
   requiresApproval: true,
   estimatedProcessingDays: undefined as number | undefined,
-  passingScore: 80,
   isActive: true,
   fields: [] as RequestTemplateField[],
   approvalStepTemplates: [] as RequestApprovalStepTemplate[],
 })
-
-interface QuizQuestionLocal {
-  question: string
-  options: QuizOption[]
-  order: number
-}
-
-const quizQuestions = ref<QuizQuestionLocal[]>([])
 
 const loadTemplate = async () => {
   try {
@@ -555,19 +449,9 @@ const loadTemplate = async () => {
       departmentId: template.departmentId || '',
       requiresApproval: template.requiresApproval ?? true,
       estimatedProcessingDays: template.estimatedProcessingDays,
-      passingScore: template.passingScore || 80,
       isActive: template.isActive ?? true,
       fields: fields,
       approvalStepTemplates: template.approvalStepTemplates || [],
-    }
-
-    // Load quiz questions if they exist
-    if (template.quizQuestions && Array.isArray(template.quizQuestions)) {
-      quizQuestions.value = template.quizQuestions.map((q: any) => ({
-        question: q.question,
-        options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
-        order: q.order
-      }))
     }
 
     // Load users, role groups, and departments in parallel
@@ -639,38 +523,6 @@ const removeApprovalStep = (index: number) => {
   form.value.approvalStepTemplates.forEach((s, i) => s.stepOrder = i + 1)
 }
 
-const addQuizQuestion = () => {
-  quizQuestions.value.push({
-    question: '',
-    options: [],
-    order: quizQuestions.value.length + 1
-  })
-}
-
-const removeQuizQuestion = (index: number) => {
-  quizQuestions.value.splice(index, 1)
-  quizQuestions.value.forEach((q, i) => q.order = i + 1)
-}
-
-const addQuizOption = (questionIndex: number) => {
-  const question = quizQuestions.value[questionIndex]
-  if (!question) return
-  
-  const option: QuizOption = {
-    value: `option_${Date.now()}`,
-    label: '',
-    isCorrect: false
-  }
-  question.options.push(option)
-}
-
-const removeQuizOption = (questionIndex: number, optionIndex: number) => {
-  const question = quizQuestions.value[questionIndex]
-  if (!question) return
-  
-  question.options.splice(optionIndex, 1)
-}
-
 const validateApprovalSteps = (): string | null => {
   for (const step of form.value.approvalStepTemplates) {
     if (step.approverType === 'Role' && !step.approverRole) {
@@ -701,17 +553,16 @@ const saveTemplate = async () => {
       }
     }
 
-    // Prepare quiz questions
-    const quizQuestionsFormatted = quizQuestions.value.map(q => ({
-      question: q.question,
-      options: JSON.stringify(q.options),
-      order: q.order
-    }))
-
     // Serialize field options
     const fieldsToSubmit = form.value.fields.map(field => ({
       ...field,
       options: field.options && field.options.length > 0 ? JSON.stringify(field.options) : undefined
+    }))
+
+    // Prepare approval step templates with their quiz questions
+    const approvalStepsToSubmit = form.value.approvalStepTemplates.map(step => ({
+      ...step,
+      quizQuestions: step.quizQuestions || []
     }))
 
     await updateTemplate(templateId.value, {
@@ -722,11 +573,9 @@ const saveTemplate = async () => {
       departmentId: form.value.departmentId || undefined,
       requiresApproval: form.value.requiresApproval,
       estimatedProcessingDays: form.value.estimatedProcessingDays,
-      passingScore: form.value.passingScore,
       isActive: form.value.isActive,
       fields: fieldsToSubmit,
-      approvalStepTemplates: form.value.approvalStepTemplates,
-      quizQuestions: quizQuestionsFormatted
+      approvalStepTemplates: approvalStepsToSubmit
     })
 
     toast.success('Sukces!', 'Szablon zaktualizowany pomyślnie')

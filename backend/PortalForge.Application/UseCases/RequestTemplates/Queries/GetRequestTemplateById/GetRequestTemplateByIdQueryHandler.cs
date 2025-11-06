@@ -63,6 +63,7 @@ public class GetRequestTemplateByIdQueryHandler
                 SpecificDepartmentId = ast.SpecificDepartmentId,
                 ApproverGroupId = ast.ApproverGroupId,
                 RequiresQuiz = ast.RequiresQuiz,
+                PassingScore = ast.PassingScore,
                 QuizQuestions = ast.QuizQuestions.Select(qq => new QuizQuestionDto
                 {
                     Id = qq.Id,

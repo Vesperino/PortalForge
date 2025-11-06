@@ -157,6 +157,7 @@ public class UpdateRequestTemplateCommandHandler
                     existingStep.SpecificDepartmentId = stepDto.SpecificDepartmentId;
                     existingStep.ApproverGroupId = stepDto.ApproverGroupId;
                     existingStep.RequiresQuiz = stepDto.RequiresQuiz;
+                    existingStep.PassingScore = stepDto.PassingScore;
 
                     // Update quiz questions for this step
                     UpdateStepQuizQuestions(existingStep, stepDto.QuizQuestions);
@@ -174,6 +175,7 @@ public class UpdateRequestTemplateCommandHandler
                         SpecificDepartmentId = stepDto.SpecificDepartmentId,
                         ApproverGroupId = stepDto.ApproverGroupId,
                         RequiresQuiz = stepDto.RequiresQuiz,
+                        PassingScore = stepDto.PassingScore,
                         CreatedAt = DateTime.UtcNow
                     };
 

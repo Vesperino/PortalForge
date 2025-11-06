@@ -146,13 +146,28 @@
             </span>
           </label>
 
-          <!-- Quiz Info -->
-          <div v-if="step.requiresQuiz" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <p class="text-sm text-blue-800 dark:text-blue-200">
-              <Icon name="heroicons:information-circle" class="w-4 h-4 inline mr-1" />
-              Pytania quizu są konfigurowane w zakładce <strong>"Quiz"</strong> na końcu formularza.
-              Zatwierdzający będzie musiał odpowiedzieć na pytania quizu przed zatwierdzeniem tego kroku.
-            </p>
+          <!-- Quiz Configuration Button -->
+          <div v-if="step.requiresQuiz" class="flex items-center gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+            <div class="flex-1">
+              <p class="text-sm font-medium text-purple-900 dark:text-purple-100">
+                Quiz dla tego etapu
+              </p>
+              <p class="text-xs text-purple-700 dark:text-purple-300 mt-1">
+                <template v-if="step.quizQuestions && step.quizQuestions.length > 0">
+                  {{ step.quizQuestions.length }} pytań | Próg: {{ step.passingScore || 80 }}%
+                </template>
+                <template v-else>
+                  Brak pytań - kliknij "Konfiguruj quiz" aby dodać
+                </template>
+              </p>
+            </div>
+            <button
+              @click="showQuizModal = true"
+              class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <Icon name="heroicons:cog-6-tooth" class="w-4 h-4 mr-2" />
+              Konfiguruj quiz
+            </button>
           </div>
         </div>
       </div>
@@ -164,6 +179,16 @@
         <Icon name="heroicons:trash" class="w-5 h-5" />
       </button>
     </div>
+
+    <!-- Quiz Configuration Modal -->
+    <QuizConfigModal
+      v-if="showQuizModal"
+      :questions="step.quizQuestions || []"
+      :passing-score="step.passingScore"
+      :step-order="step.stepOrder"
+      @close="showQuizModal = false"
+      @save="handleQuizSave"
+    />
   </div>
 </template>
 
@@ -193,6 +218,7 @@ const userSearchTerm = ref('')
 const showUserDropdown = ref(false)
 const selectedUser = ref<UserDto | null>(null)
 const dropdownRef = ref<HTMLElement | null>(null)
+const showQuizModal = ref(false)
 
 const filteredUsers = computed(() => {
   if (!userSearchTerm.value) return props.users.slice(0, 10)
@@ -247,6 +273,14 @@ const clearUserSelection = () => {
   selectedUser.value = null
   updateStep({ specificUserId: undefined })
   userSearchTerm.value = ''
+}
+
+const handleQuizSave = (data: { questions: any[], passingScore: number }) => {
+  updateStep({
+    quizQuestions: data.questions,
+    passingScore: data.passingScore
+  })
+  showQuizModal.value = false
 }
 
 // Initialize selected user if specificUserId is already set
