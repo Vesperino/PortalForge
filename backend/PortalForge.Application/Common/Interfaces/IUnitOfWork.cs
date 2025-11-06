@@ -32,4 +32,14 @@ public interface IUnitOfWork : IDisposable
     Task BeginTransactionAsync();
     Task CommitTransactionAsync();
     Task RollbackTransactionAsync();
+
+    /// <summary>
+    /// Marks an entity for deletion in the current context.
+    /// </summary>
+    void DeleteEntity<T>(T entity) where T : class;
+
+    /// <summary>
+    /// Marks multiple entities for deletion in the current context.
+    /// </summary>
+    void DeleteEntities<T>(IEnumerable<T> entities) where T : class;
 }

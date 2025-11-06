@@ -80,9 +80,10 @@ public class UpdateRequestTemplateCommandHandler
                 .Where(f => !requestFieldIds.Contains(f.Id))
                 .ToList();
 
+            // Mark entities for deletion and remove from collection
             foreach (var field in fieldsToRemove)
             {
-                template.Fields.Remove(field);
+                _unitOfWork.DeleteEntity(field);
             }
 
             // Update or add fields
@@ -105,10 +106,9 @@ public class UpdateRequestTemplateCommandHandler
                 }
                 else
                 {
-                    // Add new field
+                    // Add new field (don't set Id - let EF Core generate it)
                     var newField = new RequestTemplateField
                     {
-                        Id = Guid.NewGuid(),
                         Label = fieldDto.Label,
                         FieldType = Enum.Parse<FieldType>(fieldDto.FieldType),
                         Placeholder = fieldDto.Placeholder,
@@ -137,9 +137,10 @@ public class UpdateRequestTemplateCommandHandler
                 .Where(s => !requestStepIds.Contains(s.Id))
                 .ToList();
 
+            // Mark entities for deletion
             foreach (var step in stepsToRemove)
             {
-                template.ApprovalStepTemplates.Remove(step);
+                _unitOfWork.DeleteEntity(step);
             }
 
             // Update or add approval steps
@@ -186,10 +187,9 @@ public class UpdateRequestTemplateCommandHandler
                 }
                 else
                 {
-                    // Add new step
+                    // Add new step (don't set Id - let EF Core generate it)
                     var newStep = new RequestApprovalStepTemplate
                     {
-                        Id = Guid.NewGuid(),
                         StepOrder = stepDto.StepOrder,
                         ApproverType = Enum.Parse<ApproverType>(stepDto.ApproverType),
                         SpecificUserId = stepDto.SpecificUserId,
@@ -208,9 +208,9 @@ public class UpdateRequestTemplateCommandHandler
                     {
                         foreach (var questionDto in stepDto.QuizQuestions)
                         {
+                            // Don't set Id - let EF Core generate it
                             var newQuestion = new QuizQuestion
                             {
-                                Id = Guid.NewGuid(),
                                 Question = questionDto.Question,
                                 Options = questionDto.Options,
                                 Order = questionDto.Order
@@ -243,8 +243,12 @@ public class UpdateRequestTemplateCommandHandler
     {
         if (quizQuestions == null)
         {
-            // If no quiz questions provided, clear existing ones
-            step.QuizQuestions.Clear();
+            // If no quiz questions provided, delete all existing ones
+            var allQuestions = step.QuizQuestions.ToList();
+            foreach (var question in allQuestions)
+            {
+                _unitOfWork.DeleteEntity(question);
+            }
             return;
         }
 
@@ -258,9 +262,10 @@ public class UpdateRequestTemplateCommandHandler
             .Where(q => !requestQuestionIds.Contains(q.Id))
             .ToList();
 
+        // Mark entities for deletion
         foreach (var question in questionsToRemove)
         {
-            step.QuizQuestions.Remove(question);
+            _unitOfWork.DeleteEntity(question);
         }
 
         // Update or add quiz questions
@@ -277,10 +282,9 @@ public class UpdateRequestTemplateCommandHandler
             }
             else
             {
-                // Add new question
+                // Add new question (don't set Id - let EF Core generate it)
                 var newQuestion = new QuizQuestion
                 {
-                    Id = Guid.NewGuid(),
                     Question = questionDto.Question,
                     Options = questionDto.Options,
                     Order = questionDto.Order

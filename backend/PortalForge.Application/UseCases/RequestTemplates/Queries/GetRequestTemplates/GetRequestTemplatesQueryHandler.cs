@@ -35,7 +35,39 @@ public class GetRequestTemplatesQueryHandler
             CreatedById = t.CreatedById,
             CreatedByName = t.CreatedBy?.FullName ?? string.Empty,
             CreatedAt = t.CreatedAt,
-            UpdatedAt = t.UpdatedAt
+            UpdatedAt = t.UpdatedAt,
+            Fields = t.Fields.Select(f => new RequestTemplateFieldDto
+            {
+                Id = f.Id,
+                Label = f.Label,
+                FieldType = f.FieldType.ToString(),
+                Placeholder = f.Placeholder,
+                IsRequired = f.IsRequired,
+                Options = f.Options,
+                MinValue = f.MinValue,
+                MaxValue = f.MaxValue,
+                HelpText = f.HelpText,
+                Order = f.Order
+            }).ToList(),
+            ApprovalStepTemplates = t.ApprovalStepTemplates.Select(ast => new RequestApprovalStepTemplateDto
+            {
+                Id = ast.Id,
+                StepOrder = ast.StepOrder,
+                ApproverType = ast.ApproverType.ToString(),
+                SpecificUserId = ast.SpecificUserId,
+                SpecificDepartmentId = ast.SpecificDepartmentId,
+                SpecificDepartmentRoleType = ast.SpecificDepartmentRoleType.ToString(),
+                ApproverGroupId = ast.ApproverGroupId,
+                RequiresQuiz = ast.RequiresQuiz,
+                PassingScore = ast.PassingScore,
+                QuizQuestions = ast.QuizQuestions.Select(q => new QuizQuestionDto
+                {
+                    Id = q.Id,
+                    Question = q.Question,
+                    Options = q.Options,
+                    Order = q.Order
+                }).ToList()
+            }).ToList()
         }).ToList();
 
         return new GetRequestTemplatesResult
