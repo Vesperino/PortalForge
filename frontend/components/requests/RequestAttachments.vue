@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Paperclip, Download, FileText, Image, File, Eye } from 'lucide-vue-next'
-import FilePreviewModal from '~/components/common/FilePreviewModal.vue'
 
 interface Props {
   attachments: string[]
@@ -9,8 +8,8 @@ interface Props {
 
 defineProps<Props>()
 
-const showPreviewModal = ref(false)
-const previewFile = ref<{ url: string, name: string } | null>(null)
+const showViewer = ref(false)
+const viewerInitialIndex = ref(0)
 
 const getFileExtension = (url: string): string => {
   const parts = url.split('.')
@@ -46,21 +45,25 @@ const getFileIconColor = (url: string): string => {
   }
 }
 
-const openPreview = (url: string, event?: Event) => {
-  if (event) {
-    event.preventDefault()
-  }
-  previewFile.value = {
-    url,
-    name: getFileName(url)
-  }
-  showPreviewModal.value = true
+const canPreview = (url: string): boolean => {
+  const ext = getFileExtension(url)
+  return ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'pdf'].includes(ext)
+}
+
+const openViewer = (index: number) => {
+  viewerInitialIndex.value = index
+  showViewer.value = true
 }
 
 const downloadFile = (url: string, event: Event) => {
-  event.preventDefault()
   event.stopPropagation()
-  window.open(url, '_blank')
+  const link = document.createElement('a')
+  link.href = url
+  link.download = getFileName(url)
+  link.target = '_blank'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 </script>
 
@@ -79,8 +82,7 @@ const downloadFile = (url: string, event: Event) => {
       <div
         v-for="(attachment, index) in attachments"
         :key="index"
-        class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 transition group cursor-pointer"
-        @click="openPreview(attachment)"
+        class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 group"
       >
         <!-- File Icon -->
         <component
@@ -91,7 +93,7 @@ const downloadFile = (url: string, event: Event) => {
 
         <!-- File Info -->
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">
+          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
             {{ getFileName(attachment) }}
           </p>
           <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">
@@ -100,17 +102,21 @@ const downloadFile = (url: string, event: Event) => {
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex gap-2 flex-shrink-0">
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <!-- Preview Button (for images and PDFs) -->
           <button
+            v-if="canPreview(attachment)"
+            class="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
             title="Podgląd"
-            class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
-            @click="openPreview(attachment, $event)"
+            @click="openViewer(index)"
           >
             <Eye class="w-5 h-5" />
           </button>
+
+          <!-- Download Button -->
           <button
+            class="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
             title="Pobierz"
-            class="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition"
             @click="downloadFile(attachment, $event)"
           >
             <Download class="w-5 h-5" />
@@ -125,12 +131,12 @@ const downloadFile = (url: string, event: Event) => {
       <p>Brak załączników</p>
     </div>
 
-    <!-- File Preview Modal -->
-    <FilePreviewModal
-      v-if="previewFile"
-      v-model:visible="showPreviewModal"
-      :file-url="previewFile.url"
-      :file-name="previewFile.name"
+    <!-- Document Viewer Modal -->
+    <DocumentViewer
+      v-if="showViewer"
+      :attachments="attachments"
+      :initial-index="viewerInitialIndex"
+      @close="showViewer = false"
     />
   </div>
 </template>
