@@ -41,13 +41,13 @@ public class SubmitQuizAnswersCommandHandler
             };
         }
 
-        // Verify approver
-        if (step.ApproverId != command.ApproverId)
+        // Verify user is the request submitter (quiz is filled by submitter, not approver)
+        if (request.SubmittedById != command.ApproverId) // Note: ApproverId is actually UserId here (naming issue)
         {
             return new SubmitQuizAnswersResult
             {
                 Success = false,
-                Message = "Unauthorized: You are not the approver for this step"
+                Message = "Unauthorized: Only the request submitter can fill the quiz"
             };
         }
 

@@ -109,5 +109,9 @@ public class ApprovalStepDto
     public string? Comment { get; set; }
     public DateTime? FinishedAt { get; set; }
     public bool RequiresQuiz { get; set; }
+    public int? QuizScore { get; set; }
+    public bool? QuizPassed { get; set; }
+    public int? PassingScore { get; set; }
+    public List<QuizQuestionDto> QuizQuestions { get; set; } = new();
 }
 
