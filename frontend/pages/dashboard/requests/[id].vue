@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-vue-next'
 import RequestQuizForm from '~/components/requests/RequestQuizForm.vue'
 import RequestQuizResult from '~/components/requests/RequestQuizResult.vue'
+import RequestQuizAnswersDisplay from '~/components/requests/RequestQuizAnswersDisplay.vue'
 import RequestAttachments from '~/components/requests/RequestAttachments.vue'
 import RequestComments from '~/components/requests/RequestComments.vue'
 import RequestEditHistory from '~/components/requests/RequestEditHistory.vue'
@@ -104,9 +105,9 @@ const hasQuizQuestions = computed(() => {
 })
 
 const canApprove = computed(() => {
-  if (!isCurrentApprover.value) return false
-  if (requiresQuiz.value && !quizPassed.value) return false
-  return true
+  // Approver can always make a decision, even if quiz was failed
+  // This allows them to override the quiz requirement if needed
+  return isCurrentApprover.value
 })
 
 // Format form data for display
@@ -513,11 +514,14 @@ onMounted(() => {
             />
 
             <!-- Display quiz questions and answers (read-only) -->
-            <div class="mt-4 space-y-4">
-              <p class="text-sm text-gray-600 dark:text-gray-400">
-                Poniżej znajdują się pytania i odpowiedzi wnioskodawcy:
-              </p>
-              <!-- Questions list will be shown here - for now just results -->
+            <div class="mt-6">
+              <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                Szczegółowe odpowiedzi
+              </h4>
+              <RequestQuizAnswersDisplay
+                :questions="(currentStep?.quizQuestions || currentStep?.QuizQuestions || [])"
+                :answers="(currentStep?.quizAnswers || currentStep?.QuizAnswers || [])"
+              />
             </div>
           </div>
 
@@ -532,7 +536,7 @@ onMounted(() => {
                   Oczekiwanie na wypełnienie quizu przez wnioskodawcę
                 </p>
                 <p class="text-sm text-blue-800 dark:text-blue-200">
-                  Wnioskodawca musi najpierw wypełnić i zaliczyć wymagany quiz. Nie możesz zatwierdzić tego wniosku, dopóki quiz nie zostanie pomyślnie ukończony. Po wypełnieniu quizu przez wnioskodawcę, wyniki pojawią się tutaj.
+                  Wnioskodawca musi najpierw wypełnić wymagany quiz. Po wypełnieniu quizu przez wnioskodawcę, wyniki pojawią się tutaj.
                 </p>
               </div>
             </div>
@@ -551,20 +555,47 @@ onMounted(() => {
           <!-- Warning if quiz is required but not completed/passed -->
           <div
             v-if="requiresQuiz && !quizPassed"
-            class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
+            class="mb-4 p-4 border rounded-lg"
+            :class="{
+              'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800':
+                quizScore === null || quizScore === undefined,
+              'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800':
+                quizScore !== null && quizScore !== undefined
+            }"
           >
             <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                class="w-5 h-5 mt-0.5 flex-shrink-0"
+                :class="{
+                  'text-blue-600 dark:text-blue-400': quizScore === null || quizScore === undefined,
+                  'text-amber-600 dark:text-amber-400': quizScore !== null && quizScore !== undefined
+                }"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <div>
-                <p class="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                <p
+                  class="text-sm font-medium mb-1"
+                  :class="{
+                    'text-blue-900 dark:text-blue-100': quizScore === null || quizScore === undefined,
+                    'text-amber-900 dark:text-amber-100': quizScore !== null && quizScore !== undefined
+                  }"
+                >
                   {{ quizScore === null || quizScore === undefined ? 'Oczekiwanie na quiz' : 'Quiz niezaliczony' }}
                 </p>
-                <p class="text-sm text-blue-800 dark:text-blue-200">
+                <p
+                  class="text-sm"
+                  :class="{
+                    'text-blue-800 dark:text-blue-200': quizScore === null || quizScore === undefined,
+                    'text-amber-800 dark:text-amber-200': quizScore !== null && quizScore !== undefined
+                  }"
+                >
                   {{ quizScore === null || quizScore === undefined
-                    ? 'Wnioskodawca musi najpierw wypełnić wymagany quiz. Nie możesz zatwierdzić tego wniosku, dopóki quiz nie zostanie pomyślnie ukończony.'
-                    : `Wnioskodawca nie zdał quizu (wynik: ${quizScore}%). Aby zatwierdzić wniosek, wnioskodawca musi zaliczyć quiz.`
+                    ? 'Wnioskodawca musi najpierw wypełnić wymagany quiz. Możesz jednak podjąć decyzję o zatwierdzeniu lub odrzuceniu mimo to.'
+                    : `Wnioskodawca nie zdał quizu (wynik: ${quizScore}%). Mimo to, jako opiniujący możesz podjąć decyzję o zatwierdzeniu lub odrzuceniu wniosku według własnego uznania.`
                   }}
                 </p>
               </div>

@@ -122,5 +122,6 @@ public class ApprovalStepDto
     public bool? QuizPassed { get; set; }
     public int? PassingScore { get; set; }
     public List<QuizQuestionDto> QuizQuestions { get; set; } = new();
+    public List<QuizAnswerDto> QuizAnswers { get; set; } = new();
 }
 

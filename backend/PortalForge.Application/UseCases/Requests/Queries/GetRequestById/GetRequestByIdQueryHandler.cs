@@ -84,7 +84,15 @@ public class GetRequestByIdQueryHandler : IRequestHandler<GetRequestByIdQuery, R
                             Question = q.Question,
                             Options = q.Options,
                             Order = q.Order
-                        }).ToList() ?? new List<QuizQuestionDto>()
+                        }).ToList() ?? new List<QuizQuestionDto>(),
+                    QuizAnswers = s.QuizAnswers
+                        .Select(a => new QuizAnswerDto
+                        {
+                            QuestionId = a.QuizQuestionId,
+                            SelectedAnswer = a.SelectedAnswer,
+                            IsCorrect = a.IsCorrect,
+                            AnsweredAt = a.AnsweredAt
+                        }).ToList()
                 };
             }).OrderBy(s => s.StepOrder).ToList(),
             Comments = comments.Select(c => new RequestCommentDto
