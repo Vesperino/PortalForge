@@ -458,30 +458,8 @@ onMounted(() => {
           <RequestEditHistory :edit-history="request.editHistory" />
         </div>
 
-        <!-- DEBUG INFO -->
-        <div v-if="true" class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
-          <h3 class="font-semibold mb-2">Debug Info:</h3>
-          <pre class="text-xs">
-isRequestSubmitter: {{ isRequestSubmitter }}
-requiresQuiz: {{ requiresQuiz }}
-hasQuizQuestions: {{ hasQuizQuestions }}
-isCurrentApprover: {{ isCurrentApprover }}
-currentStep: {{ currentStep }}
-quizQuestions: {{ currentStep?.quizQuestions || currentStep?.QuizQuestions }}
-          </pre>
-        </div>
-
         <!-- Quiz Section for REQUEST SUBMITTER -->
         <div v-if="isRequestSubmitter && requiresQuiz && hasQuizQuestions">
-          <!-- DEBUG: Show quiz state -->
-          <div class="bg-purple-50 p-2 mb-2 text-xs">
-            showQuizForm: {{ showQuizForm }}<br>
-            quizScore: {{ quizScore }}<br>
-            Warunek 1 (quiz result): {{ quizScore !== null && quizScore !== undefined }}<br>
-            Warunek 2 (show form): {{ showQuizForm }}<br>
-            questions count: {{ (currentStep?.quizQuestions || currentStep?.QuizQuestions || []).length }}
-          </div>
-
           <!-- Show quiz result if already completed -->
           <RequestQuizResult
             v-if="quizScore !== null && quizScore !== undefined"
@@ -492,7 +470,6 @@ quizQuestions: {{ currentStep?.quizQuestions || currentStep?.QuizQuestions }}
 
           <!-- Show quiz form if not yet completed or failed -->
           <div v-else-if="showQuizForm" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <p class="text-green-600 mb-4">QUIZ FORM SHOULD BE HERE (showQuizForm = {{ showQuizForm }})</p>
             <RequestQuizForm
               :questions="(currentStep?.quizQuestions || currentStep?.QuizQuestions || [])"
               :request-id="requestId"
@@ -513,7 +490,7 @@ quizQuestions: {{ currentStep?.quizQuestions || currentStep?.QuizQuestions }}
             </p>
             <button
               type="button"
-              @click="showQuizForm = true; console.log('Button clicked, showQuizForm =', showQuizForm)"
+              @click="showQuizForm = true"
               class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
             >
               Rozpocznij quiz
@@ -545,10 +522,20 @@ quizQuestions: {{ currentStep?.quizQuestions || currentStep?.QuizQuestions }}
           </div>
 
           <!-- Show waiting message if quiz not completed yet -->
-          <div v-else class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-            <p class="text-sm text-yellow-800 dark:text-yellow-200">
-              Wnioskodawca jeszcze nie wypełnił wymaganego quizu. Po wypełnieniu quizu, wyniki pojawią się tutaj.
-            </p>
+          <div v-else class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                  Oczekiwanie na wypełnienie quizu przez wnioskodawcę
+                </p>
+                <p class="text-sm text-blue-800 dark:text-blue-200">
+                  Wnioskodawca musi najpierw wypełnić i zaliczyć wymagany quiz. Nie możesz zatwierdzić tego wniosku, dopóki quiz nie zostanie pomyślnie ukończony. Po wypełnieniu quizu przez wnioskodawcę, wyniki pojawią się tutaj.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -561,14 +548,27 @@ quizQuestions: {{ currentStep?.quizQuestions || currentStep?.QuizQuestions }}
             Jesteś aktualnym opiniującym tego wniosku. Możesz go zatwierdzić lub odrzucić.
           </p>
 
-          <!-- Warning if quiz is required but not passed -->
+          <!-- Warning if quiz is required but not completed/passed -->
           <div
             v-if="requiresQuiz && !quizPassed"
-            class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg"
+            class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
           >
-            <p class="text-sm text-yellow-800 dark:text-yellow-200">
-              Aby zatwierdzić wniosek, musisz najpierw zaliczyć quiz.
-            </p>
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                  {{ quizScore === null || quizScore === undefined ? 'Oczekiwanie na quiz' : 'Quiz niezaliczony' }}
+                </p>
+                <p class="text-sm text-blue-800 dark:text-blue-200">
+                  {{ quizScore === null || quizScore === undefined
+                    ? 'Wnioskodawca musi najpierw wypełnić wymagany quiz. Nie możesz zatwierdzić tego wniosku, dopóki quiz nie zostanie pomyślnie ukończony.'
+                    : `Wnioskodawca nie zdał quizu (wynik: ${quizScore}%). Aby zatwierdzić wniosek, wnioskodawca musi zaliczyć quiz.`
+                  }}
+                </p>
+              </div>
+            </div>
           </div>
 
           <div class="flex gap-3">

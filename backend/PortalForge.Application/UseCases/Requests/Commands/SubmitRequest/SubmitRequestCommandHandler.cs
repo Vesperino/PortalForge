@@ -171,10 +171,6 @@ public class SubmitRequestCommandHandler
                     StartedAt = isFirstPendingStep ? DateTime.UtcNow : null
                 };
                 request.ApprovalSteps.Add(approvalStep);
-
-                _logger.LogDebug(
-                    "Created approval step {StepOrder} for request {RequestId}, approver {ApproverId}, status {Status}",
-                    stepTemplate.StepOrder, request.Id, approver.Id, approvalStep.Status);
             }
         }
 
