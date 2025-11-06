@@ -14,7 +14,7 @@ export const iconMapping: Record<string, string> = {
   'sunglasses': 'fluent-emoji-flat:sunglasses',
   'mountain': 'fluent-emoji-flat:mountain',
   'home-office': 'fluent-emoji-flat:house',
-  'clock': 'fluent-emoji-flat:clock',
+  'clock': 'fluent-emoji-flat:alarm-clock',
 
   // Sprzęt IT i technologia
   'laptop': 'fluent-emoji-flat:laptop',
@@ -29,7 +29,7 @@ export const iconMapping: Record<string, string> = {
   // HR i Kadry
   'briefcase': 'fluent-emoji-flat:briefcase',
   'id-card': 'fluent-emoji-flat:identification-card',
-  'family': 'fluent-emoji-flat:family',
+  'family': 'fluent-emoji-flat:people-hugging',
   'handshake': 'fluent-emoji-flat:handshake',
   'clipboard-hr': 'fluent-emoji-flat:clipboard',
 
@@ -42,7 +42,7 @@ export const iconMapping: Record<string, string> = {
 
   // Biuro i infrastruktura
   'office': 'fluent-emoji-flat:office-building',
-  'desk': 'fluent-emoji-flat:desk',
+  'desk': 'fluent-emoji-flat:chair',
   'key': 'fluent-emoji-flat:key',
   'parking': 'fluent-emoji-flat:automobile',
   'light-bulb': 'fluent-emoji-flat:light-bulb',

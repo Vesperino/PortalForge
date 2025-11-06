@@ -113,7 +113,7 @@ const icons: IconDefinition[] = [
   { name: 'sunglasses', label: 'Wolne', iconifyName: 'fluent-emoji-flat:sunglasses', category: 'vacation', keywords: ['wolne', 'odpoczynek', 'relaks'] },
   { name: 'mountain', label: 'Wyjazd górski', iconifyName: 'fluent-emoji-flat:mountain', category: 'vacation', keywords: ['góry', 'urlop', 'wyjazd'] },
   { name: 'home-office', label: 'Praca zdalna', iconifyName: 'fluent-emoji-flat:house', category: 'vacation', keywords: ['home office', 'praca zdalna', 'dom'] },
-  { name: 'clock', label: 'Urlop bezpłatny', iconifyName: 'fluent-emoji-flat:clock', category: 'vacation', keywords: ['bezpłatny', 'czas', 'urlop'] },
+  { name: 'clock', label: 'Urlop bezpłatny', iconifyName: 'fluent-emoji-flat:alarm-clock', category: 'vacation', keywords: ['bezpłatny', 'czas', 'urlop'] },
 
   // Sprzęt IT i technologia (8)
   { name: 'laptop', label: 'Laptop', iconifyName: 'fluent-emoji-flat:laptop', category: 'equipment', keywords: ['laptop', 'komputer', 'sprzęt IT'] },
@@ -128,7 +128,7 @@ const icons: IconDefinition[] = [
   // HR i Kadry (5)
   { name: 'briefcase', label: 'Zatrudnienie', iconifyName: 'fluent-emoji-flat:briefcase', category: 'hr', keywords: ['zatrudnienie', 'praca', 'umowa'] },
   { name: 'id-card', label: 'Dane osobowe', iconifyName: 'fluent-emoji-flat:identification-card', category: 'hr', keywords: ['dane', 'karta', 'identyfikacja', 'dokumenty'] },
-  { name: 'family', label: 'Sprawy rodzinne', iconifyName: 'fluent-emoji-flat:family', category: 'hr', keywords: ['rodzina', 'opieka', 'dziecko'] },
+  { name: 'family', label: 'Sprawy rodzinne', iconifyName: 'fluent-emoji-flat:people-hugging', category: 'hr', keywords: ['rodzina', 'opieka', 'dziecko'] },
   { name: 'handshake', label: 'Onboarding', iconifyName: 'fluent-emoji-flat:handshake', category: 'hr', keywords: ['wdrożenie', 'onboarding', 'powitanie'] },
   { name: 'clipboard-hr', label: 'Ankiety HR', iconifyName: 'fluent-emoji-flat:clipboard', category: 'hr', keywords: ['ankieta', 'formularz', 'badanie'] },
 
@@ -141,7 +141,7 @@ const icons: IconDefinition[] = [
 
   // Biuro i infrastruktura (5)
   { name: 'office', label: 'Biuro', iconifyName: 'fluent-emoji-flat:office-building', category: 'office', keywords: ['biuro', 'budynek', 'siedziba'] },
-  { name: 'desk', label: 'Miejsce pracy', iconifyName: 'fluent-emoji-flat:desk', category: 'office', keywords: ['biurko', 'miejsce', 'stanowisko'] },
+  { name: 'desk', label: 'Miejsce pracy', iconifyName: 'fluent-emoji-flat:chair', category: 'office', keywords: ['biurko', 'miejsce', 'stanowisko'] },
   { name: 'key', label: 'Dostęp', iconifyName: 'fluent-emoji-flat:key', category: 'office', keywords: ['klucz', 'dostęp', 'uprawnienia'] },
   { name: 'parking', label: 'Parking', iconifyName: 'fluent-emoji-flat:automobile', category: 'office', keywords: ['parking', 'samochód', 'miejsce parkingowe'] },
   { name: 'light-bulb', label: 'Pomysł/Zgłoszenie', iconifyName: 'fluent-emoji-flat:light-bulb', category: 'office', keywords: ['pomysł', 'innowacja', 'sugestia'] },
