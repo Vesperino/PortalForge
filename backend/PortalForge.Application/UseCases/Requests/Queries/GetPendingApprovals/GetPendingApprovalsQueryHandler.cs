@@ -65,7 +65,15 @@ public class GetPendingApprovalsQueryHandler
                         Question = q.Question,
                         Options = q.Options,
                         Order = q.Order
-                    }).ToList() ?? new List<QuizQuestionDto>()
+                    }).ToList() ?? new List<QuizQuestionDto>(),
+                QuizAnswers = step.QuizAnswers
+                    .Select(a => new QuizAnswerDto
+                    {
+                        QuestionId = a.QuizQuestionId,
+                        SelectedAnswer = a.SelectedAnswer,
+                        IsCorrect = a.IsCorrect,
+                        AnsweredAt = a.AnsweredAt
+                    }).ToList()
             }).ToList()
         }).ToList();
 

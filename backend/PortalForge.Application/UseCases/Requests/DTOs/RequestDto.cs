@@ -33,6 +33,7 @@ public class RequestApprovalStepDto
     public bool? QuizPassed { get; set; }
     public int? PassingScore { get; set; }
     public List<QuizQuestionDto> QuizQuestions { get; set; } = new();
+    public List<QuizAnswerDto> QuizAnswers { get; set; } = new();
 }
 
 public class QuizQuestionDto
@@ -41,6 +42,14 @@ public class QuizQuestionDto
     public string Question { get; set; } = string.Empty;
     public string Options { get; set; } = string.Empty;
     public int Order { get; set; }
+}
+
+public class QuizAnswerDto
+{
+    public Guid QuestionId { get; set; }
+    public string SelectedAnswer { get; set; } = string.Empty;
+    public bool IsCorrect { get; set; }
+    public DateTime AnsweredAt { get; set; }
 }
 
 /// <summary>

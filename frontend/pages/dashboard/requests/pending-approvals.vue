@@ -87,27 +87,105 @@
             <!-- Quiz Result (if completed) -->
             <div
               v-if="getQuizResult(request)"
-              class="mt-3 p-3 rounded-lg border"
+              class="mt-3 rounded-lg border overflow-hidden"
               :class="[
                 getQuizResult(request)?.passed
                   ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
                   : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
               ]"
             >
-              <p class="text-xs font-medium" :class="[
-                getQuizResult(request)?.passed
-                  ? 'text-green-900 dark:text-green-100'
-                  : 'text-red-900 dark:text-red-100'
-              ]">
-                📋 Quiz {{ getQuizResult(request)?.passed ? 'zaliczony' : 'niezaliczony' }}
-              </p>
-              <p class="text-xs mt-1" :class="[
-                getQuizResult(request)?.passed
-                  ? 'text-green-700 dark:text-green-300'
-                  : 'text-red-700 dark:text-red-300'
-              ]">
-                Wynik: {{ getQuizResult(request)?.score }}% (wymagane: {{ getQuizResult(request)?.requiredScore }}%)
-              </p>
+              <button
+                class="w-full p-3 text-left flex items-center justify-between hover:opacity-80 transition-opacity"
+                @click="toggleQuizDetails(request.id)"
+              >
+                <div>
+                  <p class="text-xs font-medium" :class="[
+                    getQuizResult(request)?.passed
+                      ? 'text-green-900 dark:text-green-100'
+                      : 'text-red-900 dark:text-red-100'
+                  ]">
+                    📋 Quiz {{ getQuizResult(request)?.passed ? 'zaliczony' : 'niezaliczony' }}
+                  </p>
+                  <p class="text-xs mt-1" :class="[
+                    getQuizResult(request)?.passed
+                      ? 'text-green-700 dark:text-green-300'
+                      : 'text-red-700 dark:text-red-300'
+                  ]">
+                    Wynik: {{ getQuizResult(request)?.score }}% (wymagane: {{ getQuizResult(request)?.requiredScore }}%)
+                  </p>
+                </div>
+                <Icon
+                  :name="expandedQuizzes.has(request.id) ? 'heroicons:chevron-up' : 'heroicons:chevron-down'"
+                  class="w-4 h-4"
+                  :class="[
+                    getQuizResult(request)?.passed
+                      ? 'text-green-700 dark:text-green-300'
+                      : 'text-red-700 dark:text-red-300'
+                  ]"
+                />
+              </button>
+
+              <!-- Quiz Details (expandable) -->
+              <div
+                v-if="expandedQuizzes.has(request.id)"
+                class="border-t px-3 py-2 space-y-2"
+                :class="[
+                  getQuizResult(request)?.passed
+                    ? 'border-green-200 dark:border-green-800 bg-white dark:bg-gray-800'
+                    : 'border-red-200 dark:border-red-800 bg-white dark:bg-gray-800'
+                ]"
+              >
+                <div
+                  v-for="(question, index) in getQuizQuestions(request)"
+                  :key="question.id"
+                  class="text-xs"
+                >
+                  <p class="font-medium text-gray-900 dark:text-white mb-1">
+                    {{ index + 1 }}. {{ question.question }}
+                  </p>
+                  <div class="ml-4 space-y-1">
+                    <div
+                      v-for="option in getQuizOptions(question)"
+                      :key="option.value"
+                      class="flex items-center gap-2"
+                    >
+                      <span
+                        v-if="isSelectedAnswer(request, question.id, option.value)"
+                        :class="[
+                          'font-medium',
+                          isCorrectOption(option) ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'
+                        ]"
+                      >
+                        {{ isCorrectOption(option) ? '✓' : '✗' }}
+                      </span>
+                      <span
+                        v-else-if="isCorrectOption(option)"
+                        class="text-green-700 dark:text-green-400 font-medium"
+                      >
+                        ✓
+                      </span>
+                      <span v-else class="w-4"></span>
+                      <span
+                        :class="[
+                          isSelectedAnswer(request, question.id, option.value)
+                            ? 'font-medium ' + (isCorrectOption(option) ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100')
+                            : isCorrectOption(option)
+                            ? 'text-gray-600 dark:text-gray-400 italic'
+                            : 'text-gray-600 dark:text-gray-400'
+                        ]"
+                      >
+                        {{ option.label }}
+                        <span v-if="isSelectedAnswer(request, question.id, option.value)" class="font-medium">
+                          (wybrana)
+                        </span>
+                        <span v-else-if="isCorrectOption(option)" class="text-xs">
+                          (poprawna)
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -282,6 +360,7 @@ const approveComment = ref('')
 const rejectReason = ref('')
 const approving = ref(false)
 const rejecting = ref(false)
+const expandedQuizzes = ref<Set<string>>(new Set())
 
 const fetchRequests = async () => {
   loading.value = true
@@ -429,6 +508,36 @@ const closeQuizModal = () => {
 const handleQuizCompleted = async () => {
   closeQuizModal()
   await fetchRequests()
+}
+
+const toggleQuizDetails = (requestId: string) => {
+  if (expandedQuizzes.value.has(requestId)) {
+    expandedQuizzes.value.delete(requestId)
+  } else {
+    expandedQuizzes.value.add(requestId)
+  }
+  // Trigger reactivity by creating new Set
+  expandedQuizzes.value = new Set(expandedQuizzes.value)
+}
+
+const getQuizOptions = (question: any) => {
+  try {
+    return JSON.parse(question.options)
+  } catch {
+    return []
+  }
+}
+
+const isSelectedAnswer = (request: Request, questionId: string, optionValue: string): boolean => {
+  const currentStep = getCurrentStep(request)
+  if (!currentStep?.quizAnswers) return false
+
+  const answer = currentStep.quizAnswers.find(a => a.questionId === questionId)
+  return answer?.selectedAnswer === optionValue
+}
+
+const isCorrectOption = (option: any): boolean => {
+  return option.isCorrect === true
 }
 
 onMounted(() => {

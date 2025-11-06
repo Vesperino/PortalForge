@@ -59,6 +59,8 @@ public class RequestRepository : IRequestRepository
             .Include(r => r.ApprovalSteps)
                 .ThenInclude(aps => aps.ApprovalStepTemplate)
                     .ThenInclude(ast => ast.QuizQuestions)
+            .Include(r => r.ApprovalSteps)
+                .ThenInclude(aps => aps.QuizAnswers)
             .Where(r => r.ApprovalSteps.Any(aps => aps.ApproverId == approverId))
             .OrderByDescending(r => r.SubmittedAt)
             .AsNoTracking()
