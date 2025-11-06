@@ -217,17 +217,14 @@ public class FileStorageService : IFileStorageService
         return await Task.FromResult(File.Exists(filePath));
     }
 
-    #region Private Helper Methods
-
-    /// <summary>
-    /// Gets full file system path from relative path.
-    /// </summary>
-    private string GetFullPath(string relativePath)
+    public string GetFullPath(string relativePath)
     {
         // Normalize path separators
         var normalizedPath = relativePath.Replace("/", Path.DirectorySeparatorChar.ToString());
         return Path.Combine(_uploadsPath, normalizedPath);
     }
+
+    #region Private Helper Methods
 
     /// <summary>
     /// Sanitizes file name by removing invalid characters and limiting length.
@@ -275,6 +272,7 @@ public class FileStorageService : IFileStorageService
                 ".png" => buffer[0] == 0x89 && buffer[1] == 0x50 && buffer[2] == 0x4E && buffer[3] == 0x47,
                 ".gif" => buffer[0] == 0x47 && buffer[1] == 0x49 && buffer[2] == 0x46,
                 ".zip" => buffer[0] == 0x50 && buffer[1] == 0x4B,
+                ".doc" => buffer[0] == 0xD0 && buffer[1] == 0xCF && buffer[2] == 0x11 && buffer[3] == 0xE0, // MS Compound Binary
                 ".docx" or ".xlsx" => buffer[0] == 0x50 && buffer[1] == 0x4B, // Office Open XML (ZIP-based)
                 ".txt" or ".csv" or ".json" or ".xml" => true, // Text files - skip signature check
                 _ => true // Unknown type - allow (will be caught by extension check)

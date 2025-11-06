@@ -205,7 +205,10 @@ public class ApproveRequestStepCommandHandler
                 "Wniosek został zatwierdzony i zakończony pomyślnie.",
                 NotificationType.RequestCompleted
             );
-        }await _unitOfWork.RequestRepository.UpdateAsync(request);
+        }
+
+        // No need to call UpdateAsync - the request is already tracked by EF
+        // EF will automatically detect changes to tracked entities
         await _unitOfWork.SaveChangesAsync();
 
         return new ApproveRequestStepResult

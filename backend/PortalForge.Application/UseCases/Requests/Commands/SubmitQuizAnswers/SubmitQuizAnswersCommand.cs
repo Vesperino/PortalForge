@@ -1,8 +1,9 @@
 using MediatR;
+using PortalForge.Application.Common.Interfaces;
 
 namespace PortalForge.Application.UseCases.Requests.Commands.SubmitQuizAnswers;
 
-public class SubmitQuizAnswersCommand : IRequest<SubmitQuizAnswersResult>
+public class SubmitQuizAnswersCommand : IRequest<SubmitQuizAnswersResult>, ITransactionalRequest
 {
     public Guid RequestId { get; set; }
     public Guid StepId { get; set; }

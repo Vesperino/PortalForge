@@ -7,6 +7,7 @@ using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.UseCases.Storage.Commands.UploadNewsImage;
 using PortalForge.Application.UseCases.Storage.Commands.DeleteNewsImage;
 using PortalForge.Application.UseCases.Storage.Commands.UploadServiceIcon;
+using PortalForge.Application.UseCases.Storage.Commands.UploadCommentAttachment;
 
 namespace PortalForge.Api.Controllers;
 
@@ -95,6 +96,40 @@ public class StorageController : ControllerBase
         {
             _logger.LogError(ex, "Error uploading service icon");
             return StatusCode(500, new { message = "Error uploading service icon", error = ex.Message });
+        }
+    }
+
+    [HttpPost("upload/comment-attachment")]
+    public async Task<ActionResult<UploadImageResponse>> UploadCommentAttachment(IFormFile file)
+    {
+        try
+        {
+            using var fileStream = file.OpenReadStream();
+
+            var command = new UploadCommentAttachmentCommand
+            {
+                FileStream = fileStream,
+                FileName = file.FileName,
+                FileSize = file.Length
+            };
+
+            var result = await _mediator.Send(command);
+
+            // Build full URL with proper scheme and host
+            var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+            var publicUrl = $"{baseUrl}/api/storage/files/{result.FilePath}";
+
+            return Ok(new UploadImageResponse
+            {
+                Url = publicUrl,
+                FileName = result.FileName,
+                FilePath = result.FilePath
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading comment attachment");
+            return StatusCode(500, new { message = "Error uploading comment attachment", error = ex.Message });
         }
     }
 

@@ -147,7 +147,9 @@ public class SubmitQuizAnswersCommandHandler
         step.QuizScore = percentageScore;
         step.QuizPassed = passed;
 
-        await _unitOfWork.RequestRepository.UpdateAsync(request);
+        // No need to call UpdateAsync - the request is already tracked by EF
+        // Calling Update() causes concurrency issues with the entire entity graph
+        // EF will automatically detect changes to tracked entities
         await _unitOfWork.SaveChangesAsync();
 
         return new SubmitQuizAnswersResult

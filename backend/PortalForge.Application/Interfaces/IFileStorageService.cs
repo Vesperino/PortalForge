@@ -55,4 +55,11 @@ public interface IFileStorageService
     /// <param name="relativePath">Relative path to check.</param>
     /// <returns>True if file exists, false otherwise.</returns>
     Task<bool> FileExistsAsync(string relativePath);
+
+    /// <summary>
+    /// Gets full file system path from relative path.
+    /// </summary>
+    /// <param name="relativePath">Relative path to the file.</param>
+    /// <returns>Full file system path.</returns>
+    string GetFullPath(string relativePath);
 }
