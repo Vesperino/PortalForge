@@ -255,6 +255,26 @@ export const useRequestsApi = () => {
     }
   }
 
+  const addComment = async (requestId: string, comment: string, attachments?: string) => {
+    try {
+      const response = await $fetch(
+        `${config.public.apiUrl}/api/requests/${requestId}/comments`,
+        {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: {
+            comment,
+            attachments: attachments || null
+          }
+        }
+      ) as string
+      return response
+    } catch (error) {
+      console.error('Error adding comment:', error)
+      throw error
+    }
+  }
+
   // Notifications
   const getNotifications = async (unreadOnly = false, pageNumber = 1, pageSize = 20) => {
     try {
@@ -338,6 +358,7 @@ export const useRequestsApi = () => {
     submitRequest,
     approveRequestStep,
     rejectRequestStep,
+    addComment,
 
     // Notifications
     getNotifications,

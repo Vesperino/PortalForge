@@ -42,7 +42,7 @@
             </span>
           </button>
           <button
-            v-if="canApproveRequests"
+            v-if="pendingApprovals.length > 0"
             :class="[
               'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
               activeTab === 'to-approve'
@@ -53,13 +53,13 @@
           >
             <ClipboardList class="w-4 h-4 inline mr-2" />
             Do zatwierdzenia
-            <span v-if="pendingApprovals.length > 0" class="ml-2 px-2 py-0.5 text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full">
+            <span class="ml-2 px-2 py-0.5 text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full">
               {{ pendingApprovals.length }}
             </span>
           </button>
 
           <button
-            v-if="canApproveRequests"
+            v-if="approvalsHistory.length > 0"
             :class="[
               'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
               activeTab === 'approved-by-me'
@@ -68,7 +68,11 @@
             ]"
             @click="activeTab = 'approved-by-me'"
           >
+            <Icon name="heroicons:check-circle" class="w-4 h-4 inline mr-2" />
             Zatwierdzone przeze mnie
+            <span class="ml-2 px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">
+              {{ approvalsHistory.length }}
+            </span>
           </button>
         </nav>
       </div>
@@ -371,21 +375,71 @@
         </div>
 
         <div v-else class="space-y-4">
-          <div
+          <button
             v-for="item in approvalsHistory"
-            :key="item.id"
-            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+            :key="`${item.requestId}-${item.stepId}`"
+            class="w-full bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-blue-500 dark:hover:border-blue-400 transition-all text-left group"
+            @click="openRequestDetailsModal(item.requestId)"
           >
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ item.requestNumber }}</p>
-                <p class="font-medium text-gray-900 dark:text-white">{{ item.templateName }}</p>
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-start gap-4">
+                <Icon
+                  :name="getIconifyName(item.templateIcon)"
+                  class="w-12 h-12 flex-shrink-0 transition-transform group-hover:scale-110"
+                />
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {{ item.templateName }}
+                  </h3>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                    {{ item.requestNumber }}
+                  </p>
+                  <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                    Wnioskodawca: {{ item.submittedByName }}
+                  </p>
+                </div>
               </div>
-              <div class="text-sm" :class="item.decision === 'Approved' ? 'text-green-600' : 'text-red-600'">
+
+              <span
+                :class="[
+                  'px-3 py-1 text-sm font-medium rounded-full',
+                  item.decision === 'Approved'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                ]"
+              >
                 {{ item.decision === 'Approved' ? 'Zatwierdzono' : 'Odrzucono' }}
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <p class="text-gray-500 dark:text-gray-400">Data złożenia</p>
+                <p class="font-medium text-gray-900 dark:text-white">
+                  {{ formatDate(item.submittedAt) }}
+                </p>
+              </div>
+              <div>
+                <p class="text-gray-500 dark:text-gray-400">Data decyzji</p>
+                <p class="font-medium text-gray-900 dark:text-white">
+                  {{ item.finishedAt ? formatDate(item.finishedAt) : '-' }}
+                </p>
+              </div>
+              <div v-if="item.comment">
+                <p class="text-gray-500 dark:text-gray-400">Komentarz</p>
+                <p class="font-medium text-gray-900 dark:text-white truncate">
+                  {{ item.comment }}
+                </p>
               </div>
             </div>
-          </div>
+
+            <div class="flex items-center text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 font-medium text-sm mt-4">
+              <span>Zobacz pełne szczegóły</span>
+              <svg class="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
         </div>
       </div>
     </div>
@@ -400,51 +454,128 @@
     />
 
     <!-- Request Details Modal -->
-    <div
-      v-if="selectedRequest"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-      @click.self="closeRequestDetails"
-    >
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Szczegóły wniosku
-          </h2>
-          <button
-            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-            @click="closeRequestDetails"
-          >
-            <X class="w-6 h-6" />
-          </button>
-        </div>
-
-        <div class="p-6 space-y-6">
-          <!-- Request Info -->
-          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-            <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Informacje o wniosku</h3>
-            <div class="grid grid-cols-2 gap-4 text-sm">
+    <Teleport to="body">
+      <div
+        v-if="showRequestDetailsModal && requestDetails"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+        @click.self="closeRequestDetailsModal"
+      >
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+          <!-- Header -->
+          <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 z-10">
+            <div class="flex items-center gap-4">
+              <Icon
+                :name="getIconifyName(requestDetails.requestTemplateIcon)"
+                class="w-10 h-10"
+              />
               <div>
-                <p class="text-gray-500 dark:text-gray-400">Numer wniosku</p>
-                <p class="font-medium text-gray-900 dark:text-white">{{ selectedRequest.requestNumber }}</p>
-              </div>
-              <div>
-                <p class="text-gray-500 dark:text-gray-400">Status</p>
-                <p class="font-medium text-gray-900 dark:text-white">{{ getStatusLabel(selectedRequest.status) }}</p>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                  {{ requestDetails.requestTemplateName }}
+                </h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  {{ requestDetails.requestNumber }}
+                </p>
               </div>
             </div>
+            <button
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+              @click="closeRequestDetailsModal"
+            >
+              <X class="w-6 h-6" />
+            </button>
           </div>
 
-          <!-- Timeline -->
-          <RequestTimeline :steps="selectedRequest.approvalSteps" />
+          <div class="p-6 space-y-6">
+            <!-- Basic Info -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6">
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p class="text-gray-500 dark:text-gray-400 mb-1">Data złożenia</p>
+                  <p class="font-medium text-gray-900 dark:text-white">
+                    {{ formatDate(requestDetails.submittedAt) }}
+                  </p>
+                </div>
+                <div>
+                  <p class="text-gray-500 dark:text-gray-400 mb-1">Wnioskodawca</p>
+                  <p class="font-medium text-gray-900 dark:text-white">
+                    {{ requestDetails.submittedByName }}
+                  </p>
+                </div>
+                <div>
+                  <p class="text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                  <span
+                    :class="['inline-block px-3 py-1 text-sm font-medium rounded-full', getStatusBadgeClass(requestDetails.status)]"
+                  >
+                    {{ getStatusLabel(requestDetails.status) }}
+                  </span>
+                </div>
+                <div>
+                  <p class="text-gray-500 dark:text-gray-400 mb-1">Priorytet</p>
+                  <p class="font-medium text-gray-900 dark:text-white">
+                    <span :class="requestDetails.priority === 'Urgent' ? 'text-red-600 dark:text-red-400' : ''">
+                      {{ requestDetails.priority === 'Urgent' ? '🔴 Pilne' : '🔵 Standard' }}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
 
-          <!-- Form Data -->
-          <div>
-            <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Wypełniony formularz</h3>
-            <pre class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-sm overflow-x-auto">{{ JSON.parse(selectedRequest.formData) }}</pre>
+            <!-- Timeline -->
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Historia zatwierdzeń
+              </h3>
+              <RequestTimeline :steps="requestDetails.approvalSteps" />
+            </div>
+
+            <!-- Form Data -->
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Wypełniony formularz
+              </h3>
+              <div class="space-y-3">
+                <div
+                  v-for="field in formattedRequestFormData"
+                  :key="field.key"
+                  class="flex flex-col sm:flex-row sm:items-start gap-2 py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+                >
+                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 sm:w-1/3">
+                    {{ field.key }}
+                  </dt>
+                  <dd class="text-sm text-gray-900 dark:text-white sm:w-2/3">
+                    {{ field.value }}
+                  </dd>
+                </div>
+              </div>
+            </div>
+
+            <!-- Attachments -->
+            <div
+              v-if="requestDetails.attachments && requestDetails.attachments.length > 0"
+              class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+            >
+              <RequestAttachments :attachments="requestDetails.attachments" />
+            </div>
+
+            <!-- Comments -->
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <RequestComments
+                :comments="requestDetails.comments || []"
+                :can-add-comment="false"
+              />
+            </div>
+
+            <!-- Edit History -->
+            <div
+              v-if="requestDetails.editHistory && requestDetails.editHistory.length > 0"
+              class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+            >
+              <RequestEditHistory :edit-history="requestDetails.editHistory" />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
 
     <!-- Approve Modal -->
     <Teleport to="body">
@@ -553,7 +684,7 @@ definePageMeta({
   middleware: ['auth', 'verified']
 })
 
-const { getAvailableTemplates, getMyRequests, getPendingApprovals, approveRequestStep, rejectRequestStep } = useRequestsApi()
+const { getAvailableTemplates, getMyRequests, getPendingApprovals, approveRequestStep, rejectRequestStep, getRequestById, getTemplateById } = useRequestsApi()
 const authStore = useAuthStore()
 
 const activeTab = ref<'new' | 'my-requests' | 'to-approve' | 'approved-by-me'>('new')
@@ -573,6 +704,11 @@ const showQuizModal = ref(false)
 const selectedQuizStep = ref<any>(null)
 const quizQuestions = ref<any[]>([])
 const quizPassingScore = ref(80)
+
+// Request details modal state
+const showRequestDetailsModal = ref(false)
+const requestDetails = ref<any | null>(null)
+const requestTemplate = ref<any | null>(null)
 
 // Approve/Reject modal state
 const showApproveModal = ref(false)
@@ -631,6 +767,60 @@ const canApproveRequests = computed(() => {
   return ['admin', 'hr', 'manager'].includes(user.role)
 })
 
+// Format form data for display in modal
+const formattedRequestFormData = computed(() => {
+  if (!requestDetails.value?.formData) return []
+  try {
+    const data = JSON.parse(requestDetails.value.formData)
+    const fields = requestTemplate.value?.fields || []
+    const labelById = new Map<string, string>()
+
+    // Map field IDs to labels
+    for (const f of fields) {
+      const fieldId = (f.id || (f as any).Id)?.toString().toLowerCase()
+      if (fieldId) {
+        labelById.set(fieldId, f.label)
+      }
+    }
+
+    return Object.entries(data).map(([key, value]) => {
+      const normalizedKey = key.toLowerCase()
+      const label = labelById.get(normalizedKey) || formatFieldName(key)
+      return { key: label, value: formatFieldValue(value) }
+    })
+  } catch (err) {
+    console.error('Error parsing form data:', err)
+    return []
+  }
+})
+
+// Format field name (camelCase to readable)
+const formatFieldName = (key: string): string => {
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, str => str.toUpperCase())
+    .trim()
+}
+
+// Format field value
+const formatFieldValue = (value: any): string => {
+  if (value === null || value === undefined) return '-'
+  if (typeof value === 'boolean') return value ? 'Tak' : 'Nie'
+  if (typeof value === 'object') return JSON.stringify(value, null, 2)
+
+  // Try to format as date if it looks like an ISO date
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+    try {
+      const date = new Date(value)
+      return date.toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' })
+    } catch {
+      return value
+    }
+  }
+
+  return String(value)
+}
+
 // Icon mapping
 const { getIconifyName } = useIconMapping()
 
@@ -679,6 +869,38 @@ const selectTemplate = (template: RequestTemplate) => {
 
 const closeRequestDetails = () => {
   selectedRequest.value = null
+}
+
+// Open request details modal
+const openRequestDetailsModal = async (requestId: string) => {
+  try {
+    showRequestDetailsModal.value = true
+    requestDetails.value = null
+    requestTemplate.value = null
+
+    // Fetch request details
+    const details = await getRequestById(requestId)
+    requestDetails.value = details
+
+    // Fetch template for field labels
+    if (details.requestTemplateId) {
+      try {
+        requestTemplate.value = await getTemplateById(details.requestTemplateId)
+      } catch (e) {
+        console.warn('Failed to load request template for details mapping', e)
+      }
+    }
+  } catch (err: any) {
+    console.error('Error loading request details:', err)
+    showRequestDetailsModal.value = false
+  }
+}
+
+// Close request details modal
+const closeRequestDetailsModal = () => {
+  showRequestDetailsModal.value = false
+  requestDetails.value = null
+  requestTemplate.value = null
 }
 
 const closeQuizModal = () => {
@@ -821,10 +1043,10 @@ const getPriorityClass = (priority: string) => {
 onMounted(() => {
   loadTemplates()
   loadMyRequests()
-  if (canApproveRequests.value) {
-    loadPendingApprovals()
-    loadApprovalsHistory()
-  }
+  // Always try to load pending approvals and history
+  // Tabs will show only if there are items
+  loadPendingApprovals()
+  loadApprovalsHistory()
 })
 </script>
 

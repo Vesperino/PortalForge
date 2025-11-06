@@ -223,9 +223,10 @@ public class RequestsController : BaseController
 
     /// <summary>
     /// Submit quiz answers for an approval step
+    /// All authenticated users can submit quiz answers - handler verifies if user is the approver for this step
     /// </summary>
     [HttpPost("{requestId}/steps/{stepId}/quiz")]
-    [Authorize(Policy = "RequirePermission:requests.approve")]
+    [Authorize]
     public async Task<ActionResult> SubmitQuiz(Guid requestId, Guid stepId, [FromBody] SubmitQuizDto dto)
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
