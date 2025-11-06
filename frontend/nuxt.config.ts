@@ -193,7 +193,7 @@ export default defineNuxtConfig({
         'sunglasses',
         'mountain',
         'house',
-        'clock',
+        'alarm-clock',
         // Sprzęt IT i technologia
         'laptop',
         'desktop-computer',
@@ -205,7 +205,7 @@ export default defineNuxtConfig({
         // HR i Kadry
         'briefcase',
         'identification-card',
-        'family',
+        'people-hugging',
         'handshake',
         'clipboard',
         // Finanse i budżet
@@ -216,7 +216,7 @@ export default defineNuxtConfig({
         'receipt',
         // Biuro i infrastruktura
         'office-building',
-        'desk',
+        'chair',
         'key',
         'automobile',
         'light-bulb',
