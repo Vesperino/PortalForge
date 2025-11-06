@@ -31,6 +31,16 @@ public class RequestApprovalStepDto
     public bool RequiresQuiz { get; set; }
     public int? QuizScore { get; set; }
     public bool? QuizPassed { get; set; }
+    public int? PassingScore { get; set; }
+    public List<QuizQuestionDto> QuizQuestions { get; set; } = new();
+}
+
+public class QuizQuestionDto
+{
+    public Guid Id { get; set; }
+    public string Question { get; set; } = string.Empty;
+    public string Options { get; set; } = string.Empty;
+    public int Order { get; set; }
 }
 
 /// <summary>
