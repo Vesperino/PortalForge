@@ -43,7 +43,7 @@ const answersMap = computed(() => {
 
 // Combine questions with answers
 const questionsWithAnswers = computed(() => {
-  return props.questions
+  return [...props.questions]
     .sort((a, b) => a.order - b.order)
     .map(question => {
       const answer = answersMap.value.get(question.id)
