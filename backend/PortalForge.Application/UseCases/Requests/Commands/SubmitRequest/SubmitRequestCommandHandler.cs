@@ -166,6 +166,8 @@ public class SubmitRequestCommandHandler
                         ? ApprovalStepStatus.InReview
                         : ApprovalStepStatus.Pending,
                     RequiresQuiz = stepTemplate.RequiresQuiz,
+                    PassingScore = stepTemplate.PassingScore,
+                    RequestApprovalStepTemplateId = stepTemplate.Id,
                     StartedAt = isFirstPendingStep ? DateTime.UtcNow : null
                 };
                 request.ApprovalSteps.Add(approvalStep);

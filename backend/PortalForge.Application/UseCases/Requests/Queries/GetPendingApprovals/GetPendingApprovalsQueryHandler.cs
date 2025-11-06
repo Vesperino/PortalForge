@@ -55,7 +55,17 @@ public class GetPendingApprovalsQueryHandler
                 Comment = step.Comment,
                 RequiresQuiz = step.RequiresQuiz,
                 QuizScore = step.QuizScore,
-                QuizPassed = step.QuizPassed
+                QuizPassed = step.QuizPassed,
+                PassingScore = step.PassingScore,
+                QuizQuestions = step.ApprovalStepTemplate?.QuizQuestions
+                    .OrderBy(q => q.Order)
+                    .Select(q => new QuizQuestionDto
+                    {
+                        Id = q.Id,
+                        Question = q.Question,
+                        Options = q.Options,
+                        Order = q.Order
+                    }).ToList() ?? new List<QuizQuestionDto>()
             }).ToList()
         }).ToList();
 
