@@ -49,7 +49,7 @@ public class RequestTemplate
     // Navigation properties
     public ICollection<RequestTemplateField> Fields { get; set; } = new List<RequestTemplateField>();
     public ICollection<RequestApprovalStepTemplate> ApprovalStepTemplates { get; set; } = new List<RequestApprovalStepTemplate>();
-    public ICollection<QuizQuestion> QuizQuestions { get; set; } = new List<QuizQuestion>();
+    // QuizQuestions are now per approval step, not per template
     public ICollection<Request> Requests { get; set; } = new List<Request>();
 }
 

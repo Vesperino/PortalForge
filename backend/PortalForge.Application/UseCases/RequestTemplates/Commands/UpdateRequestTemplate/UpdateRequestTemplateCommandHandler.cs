@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.UseCases.RequestTemplates.DTOs;
 using PortalForge.Domain.Entities;
 using PortalForge.Domain.Enums;
 
@@ -156,6 +157,9 @@ public class UpdateRequestTemplateCommandHandler
                     existingStep.SpecificDepartmentId = stepDto.SpecificDepartmentId;
                     existingStep.ApproverGroupId = stepDto.ApproverGroupId;
                     existingStep.RequiresQuiz = stepDto.RequiresQuiz;
+
+                    // Update quiz questions for this step
+                    UpdateStepQuizQuestions(existingStep, stepDto.QuizQuestions);
                 }
                 else
                 {
@@ -172,60 +176,32 @@ public class UpdateRequestTemplateCommandHandler
                         RequiresQuiz = stepDto.RequiresQuiz,
                         CreatedAt = DateTime.UtcNow
                     };
-                    template.ApprovalStepTemplates.Add(newStep);
-                }
-            }
-        }
 
-        // Update quiz questions if provided
-        if (request.QuizQuestions != null)
-        {
-            var requestQuestionIds = request.QuizQuestions
-                .Where(q => q.Id != Guid.Empty)
-                .Select(q => q.Id)
-                .ToList();
-
-            // Remove questions that are no longer in the request
-            var questionsToRemove = template.QuizQuestions
-                .Where(q => !requestQuestionIds.Contains(q.Id))
-                .ToList();
-
-            foreach (var question in questionsToRemove)
-            {
-                template.QuizQuestions.Remove(question);
-            }
-
-            // Update or add quiz questions
-            foreach (var questionDto in request.QuizQuestions)
-            {
-                var existingQuestion = template.QuizQuestions.FirstOrDefault(q => q.Id == questionDto.Id && questionDto.Id != Guid.Empty);
-
-                if (existingQuestion != null)
-                {
-                    // Update existing question
-                    existingQuestion.Question = questionDto.Question;
-                    existingQuestion.Options = questionDto.Options;
-                    existingQuestion.Order = questionDto.Order;
-                }
-                else
-                {
-                    // Add new question
-                    var newQuestion = new QuizQuestion
+                    // Add quiz questions for new step
+                    if (stepDto.QuizQuestions != null)
                     {
-                        Id = Guid.NewGuid(),
-                        RequestTemplateId = template.Id,
-                        Question = questionDto.Question,
-                        Options = questionDto.Options,
-                        Order = questionDto.Order
-                    };
-                    template.QuizQuestions.Add(newQuestion);
+                        foreach (var questionDto in stepDto.QuizQuestions)
+                        {
+                            newStep.QuizQuestions.Add(new QuizQuestion
+                            {
+                                Id = Guid.NewGuid(),
+                                RequestApprovalStepTemplateId = newStep.Id,
+                                Question = questionDto.Question,
+                                Options = questionDto.Options,
+                                Order = questionDto.Order
+                            });
+                        }
+                    }
+
+                    template.ApprovalStepTemplates.Add(newStep);
                 }
             }
         }
 
         template.UpdatedAt = DateTime.UtcNow;
 
-        await _unitOfWork.RequestTemplateRepository.UpdateAsync(template);
+        // No need to call UpdateAsync - entity is already tracked by EF Change Tracker
+        // Changes to collections and properties are automatically detected
         await _unitOfWork.SaveChangesAsync();
 
         _logger.LogInformation("Request template {TemplateId} updated successfully", request.Id);
@@ -235,6 +211,57 @@ public class UpdateRequestTemplateCommandHandler
             Success = true,
             Message = "Template updated successfully"
         };
+    }
+
+    private void UpdateStepQuizQuestions(RequestApprovalStepTemplate step, List<QuizQuestionDto>? quizQuestions)
+    {
+        if (quizQuestions == null)
+        {
+            // If no quiz questions provided, clear existing ones
+            step.QuizQuestions.Clear();
+            return;
+        }
+
+        var requestQuestionIds = quizQuestions
+            .Where(q => q.Id != Guid.Empty)
+            .Select(q => q.Id)
+            .ToList();
+
+        // Remove questions that are no longer in the request
+        var questionsToRemove = step.QuizQuestions
+            .Where(q => !requestQuestionIds.Contains(q.Id))
+            .ToList();
+
+        foreach (var question in questionsToRemove)
+        {
+            step.QuizQuestions.Remove(question);
+        }
+
+        // Update or add quiz questions
+        foreach (var questionDto in quizQuestions)
+        {
+            var existingQuestion = step.QuizQuestions.FirstOrDefault(q => q.Id == questionDto.Id && questionDto.Id != Guid.Empty);
+
+            if (existingQuestion != null)
+            {
+                // Update existing question
+                existingQuestion.Question = questionDto.Question;
+                existingQuestion.Options = questionDto.Options;
+                existingQuestion.Order = questionDto.Order;
+            }
+            else
+            {
+                // Add new question
+                step.QuizQuestions.Add(new QuizQuestion
+                {
+                    Id = Guid.NewGuid(),
+                    RequestApprovalStepTemplateId = step.Id,
+                    Question = questionDto.Question,
+                    Options = questionDto.Options,
+                    Order = questionDto.Order
+                });
+            }
+        }
     }
 }
 

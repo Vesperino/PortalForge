@@ -19,7 +19,7 @@ public class RequestTemplateRepository : IRequestTemplateRepository
         return await _context.RequestTemplates
             .Include(rt => rt.Fields.OrderBy(f => f.Order))
             .Include(rt => rt.ApprovalStepTemplates.OrderBy(ast => ast.StepOrder))
-            .Include(rt => rt.QuizQuestions.OrderBy(qq => qq.Order))
+                .ThenInclude(ast => ast.QuizQuestions.OrderBy(qq => qq.Order))
             .Include(rt => rt.CreatedBy)
             .FirstOrDefaultAsync(rt => rt.Id == id);
     }

@@ -18,10 +18,10 @@ public class RequestTemplateDto
     public string CreatedByName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    
+
     public List<RequestTemplateFieldDto> Fields { get; set; } = new();
     public List<RequestApprovalStepTemplateDto> ApprovalStepTemplates { get; set; } = new();
-    public List<QuizQuestionDto> QuizQuestions { get; set; } = new();
+    // QuizQuestions are now per approval step, not per template
 }
 
 public class RequestTemplateFieldDto
@@ -47,6 +47,7 @@ public class RequestApprovalStepTemplateDto
     public Guid? SpecificDepartmentId { get; set; } // For ApproverType = SpecificDepartment
     public Guid? ApproverGroupId { get; set; } // For ApproverType = UserGroup
     public bool RequiresQuiz { get; set; }
+    public List<QuizQuestionDto> QuizQuestions { get; set; } = new(); // Quiz questions specific to this approval step
 }
 
 public class QuizQuestionDto

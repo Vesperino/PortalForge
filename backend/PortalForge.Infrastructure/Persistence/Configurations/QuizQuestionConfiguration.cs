@@ -23,15 +23,19 @@ public class QuizQuestionConfiguration : IEntityTypeConfiguration<QuizQuestion>
         builder.Property(qq => qq.Order)
             .IsRequired();
 
-        // Relationships are configured in RequestTemplateConfiguration
-        
+        // Relationships - QuizQuestion belongs to RequestApprovalStepTemplate
+        builder.HasOne(qq => qq.RequestApprovalStepTemplate)
+            .WithMany(ast => ast.QuizQuestions)
+            .HasForeignKey(qq => qq.RequestApprovalStepTemplateId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasMany(qq => qq.QuizAnswers)
             .WithOne(qa => qa.QuizQuestion)
             .HasForeignKey(qa => qa.QuizQuestionId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // Indexes
-        builder.HasIndex(qq => new { qq.RequestTemplateId, qq.Order });
+        builder.HasIndex(qq => new { qq.RequestApprovalStepTemplateId, qq.Order });
     }
 }
 

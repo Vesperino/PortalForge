@@ -83,7 +83,7 @@ public class UpdateRequestTemplateCommandHandlerTests
         existingTemplate.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 
         _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.GetByIdAsync(templateId), Times.Once);
-        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.UpdateAsync(existingTemplate), Times.Once);
+        // Note: UpdateAsync is not called because EF Core change tracking handles updates automatically
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Once);
     }
 
@@ -256,19 +256,29 @@ public class UpdateRequestTemplateCommandHandlerTests
     {
         // Arrange
         var templateId = Guid.NewGuid();
+        var stepId = Guid.NewGuid();
         var command = new UpdateRequestTemplateCommand
         {
             Id = templateId,
             Name = "Template with Quiz",
             Description = "Description",
             PassingScore = 90,
-            QuizQuestions = new List<QuizQuestionDto>
+            ApprovalStepTemplates = new List<RequestApprovalStepTemplateDto>
             {
-                new QuizQuestionDto
+                new RequestApprovalStepTemplateDto
                 {
-                    Question = "New Question?",
-                    Options = "[{\"value\":\"a\",\"label\":\"Answer\",\"isCorrect\":true}]",
-                    Order = 1
+                    StepOrder = 1,
+                    ApproverType = "DirectSupervisor",
+                    RequiresQuiz = true,
+                    QuizQuestions = new List<QuizQuestionDto>
+                    {
+                        new QuizQuestionDto
+                        {
+                            Question = "New Question?",
+                            Options = "[{\"value\":\"a\",\"label\":\"Answer\",\"isCorrect\":true}]",
+                            Order = 1
+                        }
+                    }
                 }
             }
         };
@@ -282,15 +292,24 @@ public class UpdateRequestTemplateCommandHandlerTests
             Category = "Test",
             PassingScore = 80,
             Fields = new List<RequestTemplateField>(),
-            ApprovalStepTemplates = new List<RequestApprovalStepTemplate>(),
-            QuizQuestions = new List<QuizQuestion>
+            ApprovalStepTemplates = new List<RequestApprovalStepTemplate>
             {
-                new QuizQuestion 
-                { 
-                    Id = Guid.NewGuid(),
-                    Question = "Old Question?",
-                    Options = "[]",
-                    Order = 1 
+                new RequestApprovalStepTemplate
+                {
+                    Id = stepId,
+                    StepOrder = 1,
+                    ApproverType = ApproverType.DirectSupervisor,
+                    RequiresQuiz = true,
+                    QuizQuestions = new List<QuizQuestion>
+                    {
+                        new QuizQuestion
+                        {
+                            Id = Guid.NewGuid(),
+                            Question = "Old Question?",
+                            Options = "[]",
+                            Order = 1
+                        }
+                    }
                 }
             },
             CreatedAt = DateTime.UtcNow.AddDays(-10)
@@ -311,8 +330,10 @@ public class UpdateRequestTemplateCommandHandlerTests
         // Assert
         result.Success.Should().BeTrue();
         existingTemplate.PassingScore.Should().Be(90);
-        existingTemplate.QuizQuestions.Should().HaveCount(1);
-        existingTemplate.QuizQuestions.First().Question.Should().Be("New Question?");
+        existingTemplate.ApprovalStepTemplates.Should().HaveCount(1);
+        existingTemplate.ApprovalStepTemplates.First().RequiresQuiz.Should().BeTrue();
+        existingTemplate.ApprovalStepTemplates.First().QuizQuestions.Should().HaveCount(1);
+        existingTemplate.ApprovalStepTemplates.First().QuizQuestions.First().Question.Should().Be("New Question?");
     }
 }
 

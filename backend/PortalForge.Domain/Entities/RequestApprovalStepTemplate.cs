@@ -48,6 +48,12 @@ public class RequestApprovalStepTemplate
     /// </summary>
     public bool RequiresQuiz { get; set; } = false;
 
+    /// <summary>
+    /// Quiz questions specific to this approval step.
+    /// Only relevant if RequiresQuiz is true.
+    /// </summary>
+    public ICollection<QuizQuestion> QuizQuestions { get; set; } = new List<QuizQuestion>();
+
     public DateTime CreatedAt { get; set; }
 }
 

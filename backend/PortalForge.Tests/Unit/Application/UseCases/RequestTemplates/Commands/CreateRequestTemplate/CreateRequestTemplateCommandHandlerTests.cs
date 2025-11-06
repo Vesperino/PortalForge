@@ -113,16 +113,16 @@ public class CreateRequestTemplateCommandHandlerTests
                 {
                     StepOrder = 1,
                     ApproverType = "DirectSupervisor",
-                    RequiresQuiz = true
-                }
-            },
-            QuizQuestions = new List<QuizQuestionDto>
-            {
-                new QuizQuestionDto
-                {
-                    Question = "Test Question?",
-                    Options = "[{\"value\":\"a\",\"label\":\"Answer A\",\"isCorrect\":true}]",
-                    Order = 1
+                    RequiresQuiz = true,
+                    QuizQuestions = new List<QuizQuestionDto>
+                    {
+                        new QuizQuestionDto
+                        {
+                            Question = "Test Question?",
+                            Options = "[{\"value\":\"a\",\"label\":\"Answer A\",\"isCorrect\":true}]",
+                            Order = 1
+                        }
+                    }
                 }
             }
         };
@@ -142,8 +142,10 @@ public class CreateRequestTemplateCommandHandlerTests
         result.Should().NotBeNull();
         capturedTemplate.Should().NotBeNull();
         capturedTemplate!.PassingScore.Should().Be(80);
-        capturedTemplate.QuizQuestions.Should().HaveCount(1);
-        capturedTemplate.QuizQuestions.First().Question.Should().Be("Test Question?");
+        capturedTemplate.ApprovalStepTemplates.Should().HaveCount(1);
+        capturedTemplate.ApprovalStepTemplates.First().RequiresQuiz.Should().BeTrue();
+        capturedTemplate.ApprovalStepTemplates.First().QuizQuestions.Should().HaveCount(1);
+        capturedTemplate.ApprovalStepTemplates.First().QuizQuestions.First().Question.Should().Be("Test Question?");
     }
 
     [Fact]

@@ -55,7 +55,7 @@ public class CreateRequestTemplateCommandHandler
             template.Fields.Add(field);
         }
 
-        // Add approval step templates
+        // Add approval step templates with their quiz questions
         foreach (var stepDto in request.ApprovalStepTemplates)
         {
             var step = new RequestApprovalStepTemplate
@@ -70,21 +70,24 @@ public class CreateRequestTemplateCommandHandler
                 RequiresQuiz = stepDto.RequiresQuiz,
                 CreatedAt = DateTime.UtcNow
             };
-            template.ApprovalStepTemplates.Add(step);
-        }
 
-        // Add quiz questions
-        foreach (var questionDto in request.QuizQuestions)
-        {
-            var question = new QuizQuestion
+            // Add quiz questions for this step
+            if (stepDto.QuizQuestions != null)
             {
-                Id = Guid.NewGuid(),
-                RequestTemplateId = template.Id,
-                Question = questionDto.Question,
-                Options = questionDto.Options,
-                Order = questionDto.Order
-            };
-            template.QuizQuestions.Add(question);
+                foreach (var questionDto in stepDto.QuizQuestions)
+                {
+                    step.QuizQuestions.Add(new QuizQuestion
+                    {
+                        Id = Guid.NewGuid(),
+                        RequestApprovalStepTemplateId = step.Id,
+                        Question = questionDto.Question,
+                        Options = questionDto.Options,
+                        Order = questionDto.Order
+                    });
+                }
+            }
+
+            template.ApprovalStepTemplates.Add(step);
         }
 
         await _unitOfWork.RequestTemplateRepository.CreateAsync(template);

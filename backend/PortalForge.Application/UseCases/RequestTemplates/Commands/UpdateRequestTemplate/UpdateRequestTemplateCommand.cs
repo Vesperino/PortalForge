@@ -15,9 +15,9 @@ public class UpdateRequestTemplateCommand : IRequest<UpdateRequestTemplateResult
     public int? EstimatedProcessingDays { get; set; }
     public int? PassingScore { get; set; }
     public bool? IsActive { get; set; }
-    
+
     public List<RequestTemplateFieldDto>? Fields { get; set; }
     public List<RequestApprovalStepTemplateDto>? ApprovalStepTemplates { get; set; }
-    public List<QuizQuestionDto>? QuizQuestions { get; set; }
+    // QuizQuestions are now nested within ApprovalStepTemplates
 }
 

@@ -62,10 +62,8 @@ public class RequestTemplateConfiguration : IEntityTypeConfiguration<RequestTemp
             .HasForeignKey(ast => ast.RequestTemplateId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(rt => rt.QuizQuestions)
-            .WithOne(qq => qq.RequestTemplate)
-            .HasForeignKey(qq => qq.RequestTemplateId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // QuizQuestions are now per approval step, not per template
+        // Configured in QuizQuestionConfiguration
 
         builder.HasMany(rt => rt.Requests)
             .WithOne(r => r.RequestTemplate)

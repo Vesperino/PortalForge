@@ -80,18 +80,31 @@ public class CreateRequestTemplateCommandValidator : AbstractValidator<CreateReq
 
                 step.RuleFor(s => s.ApproverType)
                     .NotEmpty().WithMessage("Approver type is required")
-                    .Must(BeValidApproverType).WithMessage("Approver type must be one of: Role, SpecificUser, UserGroup, Submitter");
+                    .Must(BeValidApproverType).WithMessage("Approver type must be one of: DirectSupervisor, DepartmentDirector, SpecificUser, SpecificDepartment, UserGroup");
             });
         });
 
-        RuleForEach(x => x.QuizQuestions).ChildRules(question =>
+        // Validate quiz questions within approval steps
+        When(x => x.ApprovalStepTemplates.Any(s => s.RequiresQuiz), () =>
         {
-            question.RuleFor(q => q.Question)
-                .NotEmpty().WithMessage("Question text is required")
-                .MaximumLength(500).WithMessage("Question text cannot exceed 500 characters");
+            RuleForEach(x => x.ApprovalStepTemplates).ChildRules(step =>
+            {
+                step.When(s => s.RequiresQuiz, () =>
+                {
+                    step.RuleFor(s => s.QuizQuestions)
+                        .NotEmpty().WithMessage("Quiz questions are required when RequiresQuiz is true");
 
-            question.RuleFor(q => q.Options)
-                .NotEmpty().WithMessage("Question must have at least one option");
+                    step.RuleForEach(s => s.QuizQuestions).ChildRules(question =>
+                    {
+                        question.RuleFor(q => q.Question)
+                            .NotEmpty().WithMessage("Question text is required")
+                            .MaximumLength(500).WithMessage("Question text cannot exceed 500 characters");
+
+                        question.RuleFor(q => q.Options)
+                            .NotEmpty().WithMessage("Question must have at least one option");
+                    });
+                });
+            });
         });
     }
 
@@ -123,7 +136,7 @@ public class CreateRequestTemplateCommandValidator : AbstractValidator<CreateReq
 
     private bool BeValidApproverType(string approverType)
     {
-        var validTypes = new[] { "Role", "SpecificUser", "UserGroup", "Submitter" };
+        var validTypes = new[] { "DirectSupervisor", "DepartmentDirector", "SpecificUser", "SpecificDepartment", "UserGroup" };
         return validTypes.Contains(approverType, StringComparer.OrdinalIgnoreCase);
     }
 }

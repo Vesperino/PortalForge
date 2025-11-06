@@ -17,6 +17,6 @@ public class CreateRequestTemplateCommand : IRequest<CreateRequestTemplateResult
     
     public List<RequestTemplateFieldDto> Fields { get; set; } = new();
     public List<RequestApprovalStepTemplateDto> ApprovalStepTemplates { get; set; } = new();
-    public List<QuizQuestionDto> QuizQuestions { get; set; } = new();
+    // QuizQuestions are now nested within ApprovalStepTemplates
 }
 

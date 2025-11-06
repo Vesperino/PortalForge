@@ -173,7 +173,7 @@ public class SeedRequestTemplatesCommandHandler
             Order = 5
         });
 
-        trainingTemplate.ApprovalStepTemplates.Add(new RequestApprovalStepTemplate
+        var trainingStep = new RequestApprovalStepTemplate
         {
             Id = Guid.NewGuid(),
             RequestTemplateId = trainingTemplate.Id,
@@ -181,25 +181,27 @@ public class SeedRequestTemplatesCommandHandler
             ApproverType = ApproverType.DirectSupervisor,
             RequiresQuiz = true,
             CreatedAt = DateTime.UtcNow
-        });
+        };
 
-        trainingTemplate.QuizQuestions.Add(new QuizQuestion
+        trainingStep.QuizQuestions.Add(new QuizQuestion
         {
             Id = Guid.NewGuid(),
-            RequestTemplateId = trainingTemplate.Id,
+            RequestApprovalStepTemplateId = trainingStep.Id,
             Question = "Jakie są obowiązki pracownika po ukończeniu szkolenia?",
             Options = "[{\"value\":\"a\",\"label\":\"Podzielenie się wiedzą z zespołem\",\"isCorrect\":true},{\"value\":\"b\",\"label\":\"Brak obowiązków\",\"isCorrect\":false},{\"value\":\"c\",\"label\":\"Tylko wykonywanie swojej pracy\",\"isCorrect\":false}]",
             Order = 1
         });
 
-        trainingTemplate.QuizQuestions.Add(new QuizQuestion
+        trainingStep.QuizQuestions.Add(new QuizQuestion
         {
             Id = Guid.NewGuid(),
-            RequestTemplateId = trainingTemplate.Id,
+            RequestApprovalStepTemplateId = trainingStep.Id,
             Question = "W jakim terminie należy przedstawić raport z szkolenia?",
             Options = "[{\"value\":\"a\",\"label\":\"W ciągu 7 dni roboczych\",\"isCorrect\":true},{\"value\":\"b\",\"label\":\"Nie ma wymogu\",\"isCorrect\":false},{\"value\":\"c\",\"label\":\"W ciągu miesiąca\",\"isCorrect\":false}]",
             Order = 2
         });
+
+        trainingTemplate.ApprovalStepTemplates.Add(trainingStep);
 
         await _unitOfWork.RequestTemplateRepository.CreateAsync(trainingTemplate);
         count++;
@@ -252,7 +254,7 @@ public class SeedRequestTemplatesCommandHandler
             Order = 3
         });
 
-        rdAccessTemplate.ApprovalStepTemplates.Add(new RequestApprovalStepTemplate
+        var rdAccessStep = new RequestApprovalStepTemplate
         {
             Id = Guid.NewGuid(),
             RequestTemplateId = rdAccessTemplate.Id,
@@ -260,34 +262,36 @@ public class SeedRequestTemplatesCommandHandler
             ApproverType = ApproverType.DirectSupervisor,
             RequiresQuiz = true,
             CreatedAt = DateTime.UtcNow
-        });
+        };
 
-        rdAccessTemplate.QuizQuestions.Add(new QuizQuestion
+        rdAccessStep.QuizQuestions.Add(new QuizQuestion
         {
             Id = Guid.NewGuid(),
-            RequestTemplateId = rdAccessTemplate.Id,
+            RequestApprovalStepTemplateId = rdAccessStep.Id,
             Question = "Jak często należy zmieniać hasło do systemów R&D?",
             Options = "[{\"value\":\"a\",\"label\":\"Co 90 dni\",\"isCorrect\":true},{\"value\":\"b\",\"label\":\"Co roku\",\"isCorrect\":false},{\"value\":\"c\",\"label\":\"Nigdy\",\"isCorrect\":false}]",
             Order = 1
         });
 
-        rdAccessTemplate.QuizQuestions.Add(new QuizQuestion
+        rdAccessStep.QuizQuestions.Add(new QuizQuestion
         {
             Id = Guid.NewGuid(),
-            RequestTemplateId = rdAccessTemplate.Id,
+            RequestApprovalStepTemplateId = rdAccessStep.Id,
             Question = "Czy można udostępniać dane z systemów R&D osobom trzecim?",
             Options = "[{\"value\":\"a\",\"label\":\"Nie, są poufne\",\"isCorrect\":true},{\"value\":\"b\",\"label\":\"Tak, zawsze\",\"isCorrect\":false},{\"value\":\"c\",\"label\":\"Tylko znajomym\",\"isCorrect\":false}]",
             Order = 2
         });
 
-        rdAccessTemplate.QuizQuestions.Add(new QuizQuestion
+        rdAccessStep.QuizQuestions.Add(new QuizQuestion
         {
             Id = Guid.NewGuid(),
-            RequestTemplateId = rdAccessTemplate.Id,
+            RequestApprovalStepTemplateId = rdAccessStep.Id,
             Question = "Co zrobić w przypadku podejrzenia naruszenia bezpieczeństwa?",
             Options = "[{\"value\":\"a\",\"label\":\"Natychmiast zgłosić do działu IT\",\"isCorrect\":true},{\"value\":\"b\",\"label\":\"Zignorować\",\"isCorrect\":false},{\"value\":\"c\",\"label\":\"Powiedzieć kolegom\",\"isCorrect\":false}]",
             Order = 3
         });
+
+        rdAccessTemplate.ApprovalStepTemplates.Add(rdAccessStep);
 
         await _unitOfWork.RequestTemplateRepository.CreateAsync(rdAccessTemplate);
         count++;

@@ -62,14 +62,14 @@ public class GetRequestTemplateByIdQueryHandler
                 SpecificUserId = ast.SpecificUserId,
                 SpecificDepartmentId = ast.SpecificDepartmentId,
                 ApproverGroupId = ast.ApproverGroupId,
-                RequiresQuiz = ast.RequiresQuiz
-            }).ToList(),
-            QuizQuestions = template.QuizQuestions.Select(qq => new QuizQuestionDto
-            {
-                Id = qq.Id,
-                Question = qq.Question,
-                Options = qq.Options,
-                Order = qq.Order
+                RequiresQuiz = ast.RequiresQuiz,
+                QuizQuestions = ast.QuizQuestions.Select(qq => new QuizQuestionDto
+                {
+                    Id = qq.Id,
+                    Question = qq.Question,
+                    Options = qq.Options,
+                    Order = qq.Order
+                }).ToList()
             }).ToList()
         };
 

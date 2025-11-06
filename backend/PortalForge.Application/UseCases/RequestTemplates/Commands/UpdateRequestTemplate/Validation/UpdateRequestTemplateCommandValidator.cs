@@ -84,20 +84,30 @@ public class UpdateRequestTemplateCommandValidator : AbstractValidator<UpdateReq
 
                 step.RuleFor(s => s.ApproverType)
                     .NotEmpty().WithMessage("Approver type is required")
-                    .Must(BeValidApproverType).WithMessage("Approver type must be one of: Role, SpecificUser, UserGroup, Submitter");
+                    .Must(BeValidApproverType).WithMessage("Approver type must be one of: DirectSupervisor, DepartmentDirector, SpecificUser, SpecificDepartment, UserGroup");
             });
         });
 
-        When(x => x.QuizQuestions != null, () =>
+        // Validate quiz questions within approval steps
+        When(x => x.ApprovalStepTemplates != null && x.ApprovalStepTemplates.Any(s => s.RequiresQuiz), () =>
         {
-            RuleForEach(x => x.QuizQuestions).ChildRules(question =>
+            RuleForEach(x => x.ApprovalStepTemplates!).ChildRules(step =>
             {
-                question.RuleFor(q => q.Question)
-                    .NotEmpty().WithMessage("Question text is required")
-                    .MaximumLength(500).WithMessage("Question text cannot exceed 500 characters");
+                step.When(s => s.RequiresQuiz, () =>
+                {
+                    step.RuleFor(s => s.QuizQuestions)
+                        .NotEmpty().WithMessage("Quiz questions are required when RequiresQuiz is true");
 
-                question.RuleFor(q => q.Options)
-                    .NotEmpty().WithMessage("Question must have at least one option");
+                    step.RuleForEach(s => s.QuizQuestions).ChildRules(question =>
+                    {
+                        question.RuleFor(q => q.Question)
+                            .NotEmpty().WithMessage("Question text is required")
+                            .MaximumLength(500).WithMessage("Question text cannot exceed 500 characters");
+
+                        question.RuleFor(q => q.Options)
+                            .NotEmpty().WithMessage("Question must have at least one option");
+                    });
+                });
             });
         });
     }
@@ -132,7 +142,7 @@ public class UpdateRequestTemplateCommandValidator : AbstractValidator<UpdateReq
 
     private bool BeValidApproverType(string approverType)
     {
-        var validTypes = new[] { "Role", "SpecificUser", "UserGroup", "Submitter" };
+        var validTypes = new[] { "DirectSupervisor", "DepartmentDirector", "SpecificUser", "SpecificDepartment", "UserGroup" };
         return validTypes.Contains(approverType, StringComparer.OrdinalIgnoreCase);
     }
 }
