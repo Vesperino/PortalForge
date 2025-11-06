@@ -10,7 +10,7 @@ import {
   Maximize2,
   Minimize2,
   RotateCw,
-  Fit
+  Expand
 } from 'lucide-vue-next'
 
 interface Props {
@@ -269,7 +269,7 @@ watch(() => props.initialIndex, (newIndex) => {
               title="Dopasuj do ekranu (F)"
               @click="fitToScreen"
             >
-              <Fit class="w-5 h-5" />
+              <Expand class="w-5 h-5" />
             </button>
 
             <div class="w-px h-6 bg-gray-700 mx-1" />

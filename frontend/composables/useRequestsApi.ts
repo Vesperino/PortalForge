@@ -292,16 +292,28 @@ export const useRequestsApi = () => {
         })
       }
 
-      // Submit comment with files
-      const response = await $fetch(
+      // Use native fetch for FormData to ensure proper multipart/form-data encoding
+      // $fetch/ofetch sometimes has issues with FormData serialization
+      const authHeaders = getAuthHeaders()
+      const response = await fetch(
         `${config.public.apiUrl}/api/requests/${requestId}/comments`,
         {
           method: 'POST',
-          headers: getAuthHeaders(),
+          headers: {
+            ...authHeaders
+            // Don't set Content-Type - browser will set it automatically with boundary
+          },
           body: formData
         }
-      ) as string
-      return response
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
+        throw errorData
+      }
+
+      const result = await response.json()
+      return result as string
     } catch (error) {
       console.error('Error adding comment:', error)
       throw error
