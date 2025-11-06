@@ -83,6 +83,7 @@ public class UpdateRequestTemplateCommandHandler
             // Mark entities for deletion and remove from collection
             foreach (var field in fieldsToRemove)
             {
+                template.Fields.Remove(field);
                 _unitOfWork.DeleteEntity(field);
             }
 
@@ -137,9 +138,10 @@ public class UpdateRequestTemplateCommandHandler
                 .Where(s => !requestStepIds.Contains(s.Id))
                 .ToList();
 
-            // Mark entities for deletion
+            // Mark entities for deletion and remove from collection
             foreach (var step in stepsToRemove)
             {
+                template.ApprovalStepTemplates.Remove(step);
                 _unitOfWork.DeleteEntity(step);
             }
 
@@ -247,6 +249,7 @@ public class UpdateRequestTemplateCommandHandler
             var allQuestions = step.QuizQuestions.ToList();
             foreach (var question in allQuestions)
             {
+                step.QuizQuestions.Remove(question);
                 _unitOfWork.DeleteEntity(question);
             }
             return;
@@ -262,9 +265,10 @@ public class UpdateRequestTemplateCommandHandler
             .Where(q => !requestQuestionIds.Contains(q.Id))
             .ToList();
 
-        // Mark entities for deletion
+        // Mark entities for deletion and remove from collection
         foreach (var question in questionsToRemove)
         {
+            step.QuizQuestions.Remove(question);
             _unitOfWork.DeleteEntity(question);
         }
 
