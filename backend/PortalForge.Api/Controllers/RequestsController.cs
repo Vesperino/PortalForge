@@ -7,6 +7,7 @@ using PortalForge.Application.UseCases.Requests.Commands.ApproveRequestStep;
 using PortalForge.Application.UseCases.Requests.Commands.EditRequest;
 using PortalForge.Application.UseCases.Requests.Commands.RejectRequestStep;
 using PortalForge.Application.UseCases.Requests.Commands.SubmitRequest;
+using PortalForge.Application.UseCases.Requests.Commands.SubmitQuizAnswers;
 using PortalForge.Application.UseCases.Requests.Queries.GetMyRequests;
 using PortalForge.Application.UseCases.Requests.Queries.GetPendingApprovals;
 using PortalForge.Application.UseCases.Requests.Queries.GetRequestById;
@@ -215,6 +216,41 @@ public class RequestsController : BaseController
         if (!result.Success)
         {
             return BadRequest(result.Message);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Submit quiz answers for an approval step
+    /// </summary>
+    [HttpPost("{requestId}/steps/{stepId}/quiz")]
+    [Authorize(Policy = "RequirePermission:requests.approve")]
+    public async Task<ActionResult> SubmitQuiz(Guid requestId, Guid stepId, [FromBody] SubmitQuizDto dto)
+    {
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
+        var command = new SubmitQuizAnswersCommand
+        {
+            RequestId = requestId,
+            StepId = stepId,
+            ApproverId = userGuid,
+            Answers = dto.Answers.Select(a => new QuizAnswerSubmission
+            {
+                QuestionId = a.QuestionId,
+                SelectedAnswer = a.SelectedAnswer
+            }).ToList()
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
         }
 
         return Ok(result);

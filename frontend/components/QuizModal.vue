@@ -1,275 +1,278 @@
 <template>
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[10002]" @click.self="$emit('close')">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-      <!-- Header -->
-      <div class="p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-              Quiz wymagany do zatwierdzenia
-            </h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Wymagany wynik: {{ passingScore }}%
-            </p>
-          </div>
-          <button
-            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-            @click="$emit('close')"
-          >
-            <X class="w-6 h-6" />
-          </button>
-        </div>
-      </div>
-
-      <!-- Quiz Content -->
-      <div class="p-6">
-        <!-- Before submission -->
-        <div v-if="!submitted" class="space-y-6">
-          <div
-            v-for="(question, index) in extendedQuestions"
-            :key="question.id"
-            class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6"
-          >
-            <div class="flex items-start gap-3 mb-4">
-              <div class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
-                {{ index + 1 }}
-              </div>
-              <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                {{ question.question }}
+  <Teleport to="body">
+    <div
+      v-if="show"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      @click.self="closeModal"
+    >
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                Quiz wymagany przed zatwierdzeniem
               </h3>
+              <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                Odpowiedz poprawnie na {{ passingScore }}% pytań aby móc zatwierdzić wniosek
+              </p>
             </div>
-
-            <div class="ml-11 space-y-2">
-              <label
-                v-for="option in question.parsedOptions"
-                :key="option.value"
-                class="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 cursor-pointer transition-colors"
-                :class="{
-                  'bg-blue-50 dark:bg-blue-900/30 border-blue-500': question.id && answers[question.id] === option.value
-                }"
-              >
-                <input
-                  v-if="question.id"
-                  v-model="answers[question.id]"
-                  type="radio"
-                  :name="`question-${question.id}`"
-                  :value="option.value"
-                  class="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                >
-                <span class="ml-3 text-gray-700 dark:text-gray-300">
-                  {{ option.label }}
-                </span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Progress -->
-          <div class="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4">
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-blue-900 dark:text-blue-300">
-                Odpowiedziano: {{ answeredCount }} / {{ extendedQuestions.length }}
-              </span>
-              <span class="text-blue-600 dark:text-blue-400 font-medium">
-                {{ Math.round((answeredCount / extendedQuestions.length) * 100) }}%
-              </span>
-            </div>
-            <div class="mt-2 w-full bg-blue-200 dark:bg-blue-900 rounded-full h-2">
-              <div
-                class="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all"
-                :style="{ width: `${(answeredCount / extendedQuestions.length) * 100}%` }"
-              />
-            </div>
+            <button
+              :disabled="submitting"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              @click="closeModal"
+            >
+              <Icon name="heroicons:x-mark" class="w-6 h-6" />
+            </button>
           </div>
         </div>
 
-        <!-- After submission -->
-        <div v-else class="space-y-6">
-          <!-- Results Summary -->
+        <!-- Quiz Result (if completed) -->
+        <div v-if="quizResult" class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div
             :class="[
-              'rounded-lg p-6 text-center',
-              quizPassed
-                ? 'bg-green-50 dark:bg-green-900/30 border-2 border-green-500'
-                : 'bg-red-50 dark:bg-red-900/30 border-2 border-red-500'
+              'p-4 rounded-lg',
+              quizResult.passed
+                ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
             ]"
           >
-            <component
-              :is="quizPassed ? CheckCircle : XCircle"
-              :class="[
-                'w-16 h-16 mx-auto mb-4',
-                quizPassed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-              ]"
-            />
-            <h3
-              :class="[
-                'text-2xl font-bold mb-2',
-                quizPassed ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100'
-              ]"
-            >
-              {{ quizPassed ? 'Gratulacje! Zdałeś quiz!' : 'Niestety, nie zdałeś quizu' }}
-            </h3>
-            <p
-              :class="[
-                'text-lg',
-                quizPassed ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
-              ]"
-            >
-              Twój wynik: <strong>{{ score }}%</strong>
-            </p>
-            <p
-              :class="[
-                'text-sm mt-1',
-                quizPassed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-              ]"
-            >
-              (Wymagane: {{ passingScore }}%)
-            </p>
+            <div class="flex items-start gap-3">
+              <Icon
+                :name="quizResult.passed ? 'heroicons:check-circle' : 'heroicons:x-circle'"
+                :class="[
+                  'w-6 h-6 mt-0.5',
+                  quizResult.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                ]"
+              />
+              <div class="flex-1">
+                <h4
+                  :class="[
+                    'font-semibold',
+                    quizResult.passed ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100'
+                  ]"
+                >
+                  {{ quizResult.passed ? '✅ Quiz zaliczony!' : '❌ Quiz niezaliczony' }}
+                </h4>
+                <p
+                  :class="[
+                    'text-sm mt-1',
+                    quizResult.passed ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
+                  ]"
+                >
+                  {{ quizResult.message }}
+                </p>
+                <div class="mt-2 text-sm font-medium">
+                  <span :class="quizResult.passed ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100'">
+                    Twój wynik: {{ quizResult.score }}%
+                  </span>
+                  <span class="text-gray-500 dark:text-gray-400 mx-2">•</span>
+                  <span class="text-gray-700 dark:text-gray-300">
+                    Wymagane: {{ quizResult.requiredScore }}%
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
 
-          <!-- Detailed Answers -->
-          <div class="space-y-4">
-            <h4 class="text-lg font-semibold text-gray-900 dark:text-white">
-              Szczegółowe odpowiedzi
-            </h4>
-
+        <!-- Questions -->
+        <div v-if="!quizResult" class="flex-1 overflow-y-auto px-6 py-4">
+          <div class="space-y-6">
             <div
-              v-for="(question, index) in extendedQuestions"
+              v-for="(question, index) in sortedQuestions"
               :key="question.id"
-              class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6"
+              class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4"
             >
-              <div class="flex items-start gap-3 mb-4">
-                <div class="flex-shrink-0 w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center font-bold">
+              <div class="flex gap-3">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">
                   {{ index + 1 }}
                 </div>
                 <div class="flex-1">
-                  <h5 class="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-3">
                     {{ question.question }}
-                  </h5>
+                  </h4>
 
                   <div class="space-y-2">
-                    <div
-                      v-for="option in question.parsedOptions"
+                    <label
+                      v-for="option in getOptions(question)"
                       :key="option.value"
-                      :class="[
-                        'p-3 rounded-lg border',
-                        option.isCorrect
-                          ? 'bg-green-50 dark:bg-green-900/30 border-green-500'
-                          : question.id && answers[question.id] === option.value
-                          ? 'bg-red-50 dark:bg-red-900/30 border-red-500'
-                          : 'border-gray-200 dark:border-gray-600'
-                      ]"
+                      class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                      :class="{
+                        'bg-white dark:bg-gray-700 border-blue-500 dark:border-blue-400': answers[question.id] === option.value
+                      }"
                     >
-                      <div class="flex items-center justify-between">
-                        <span
-:class="[
-                          'text-gray-700 dark:text-gray-300',
-                          option.isCorrect && 'font-medium text-green-900 dark:text-green-100',
-                          !option.isCorrect && question.id && answers[question.id] === option.value && 'font-medium text-red-900 dark:text-red-100'
-                        ]">
-                          {{ option.label }}
-                        </span>
-                        <span>
-                          <CheckCircle v-if="option.isCorrect" class="w-5 h-5 text-green-600 dark:text-green-400" />
-                          <XCircle v-else-if="question.id && answers[question.id] === option.value" class="w-5 h-5 text-red-600 dark:text-red-400" />
-                        </span>
-                      </div>
-                    </div>
+                      <input
+                        v-model="answers[question.id]"
+                        type="radio"
+                        :name="`question-${question.id}`"
+                        :value="option.value"
+                        class="mt-1 text-blue-600 focus:ring-blue-500"
+                      >
+                      <span class="flex-1 text-sm text-gray-700 dark:text-gray-300">
+                        {{ option.label }}
+                      </span>
+                    </label>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Footer -->
-      <div class="p-6 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800">
-        <div class="flex items-center justify-between">
-          <button
-            v-if="!submitted"
-            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            @click="$emit('close')"
-          >
-            Anuluj
-          </button>
-          <div v-else />
-
-          <button
-            v-if="!submitted"
-            :disabled="answeredCount < extendedQuestions.length"
-            class="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
-            @click="submitQuiz"
-          >
-            Prześlij odpowiedzi
-          </button>
-          <button
-            v-else
-            class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            @click="$emit('close')"
-          >
-            Zamknij
-          </button>
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          <div v-if="!quizResult" class="flex items-center justify-between">
+            <div class="text-sm text-gray-600 dark:text-gray-400">
+              Odpowiedzi: {{ Object.keys(answers).length }} / {{ questions.length }}
+            </div>
+            <div class="flex gap-3">
+              <button
+                :disabled="submitting"
+                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+                @click="closeModal"
+              >
+                Anuluj
+              </button>
+              <button
+                :disabled="!allQuestionsAnswered || submitting"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                @click="submitQuiz"
+              >
+                <Icon v-if="submitting" name="svg-spinners:ring-resize" class="w-5 h-5" />
+                {{ submitting ? 'Sprawdzanie...' : 'Wyślij odpowiedzi' }}
+              </button>
+            </div>
+          </div>
+          <div v-else class="flex justify-end gap-3">
+            <button
+              class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+              @click="closeModal"
+            >
+              Zamknij
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { X, CheckCircle, XCircle } from 'lucide-vue-next'
-import type { QuizQuestion, QuizOption } from '~/types/requests'
-
-interface ExtendedQuestion extends QuizQuestion {
-  parsedOptions: QuizOption[]
+interface QuizQuestion {
+  id: string
+  question: string
+  options: string
+  order: number
 }
 
-const props = defineProps<{
+interface QuizOption {
+  value: string
+  label: string
+  isCorrect?: boolean
+}
+
+interface QuizResult {
+  success: boolean
+  message: string
+  score: number
+  passed: boolean
+  requiredScore: number
+}
+
+interface Props {
+  show: boolean
   questions: QuizQuestion[]
   passingScore: number
-}>()
+  requestId: string
+  stepId: string
+}
+
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
   close: []
-  submit: [score: number, passed: boolean, answers: Record<string, string>]
+  quizCompleted: []
 }>()
 
 const answers = ref<Record<string, string>>({})
-const submitted = ref(false)
-const score = ref(0)
-const quizPassed = ref(false)
+const submitting = ref(false)
+const quizResult = ref<QuizResult | null>(null)
 
-const extendedQuestions = computed<ExtendedQuestion[]>(() => {
-  return props.questions.map(q => ({
-    ...q,
-    parsedOptions: JSON.parse(q.options) as QuizOption[]
-  }))
+const sortedQuestions = computed(() => {
+  return [...props.questions].sort((a, b) => a.order - b.order)
 })
 
-const answeredCount = computed(() => {
-  return Object.keys(answers.value).length
+const allQuestionsAnswered = computed(() => {
+  return props.questions.every(q => answers.value[q.id])
 })
 
-const submitQuiz = () => {
-  let correctCount = 0
-  
-  extendedQuestions.value.forEach(question => {
-    const userAnswer = answers.value[question.id!]
-    const correctOption = question.parsedOptions.find(opt => opt.isCorrect)
-    
-    if (userAnswer === correctOption?.value) {
-      correctCount++
-    }
-  })
-  
-  const calculatedScore = Math.round((correctCount / extendedQuestions.value.length) * 100)
-  const passed = calculatedScore >= props.passingScore
-  
-  score.value = calculatedScore
-  quizPassed.value = passed
-  submitted.value = true
-  
-  emit('submit', calculatedScore, passed, answers.value)
+const getOptions = (question: QuizQuestion): QuizOption[] => {
+  try {
+    return JSON.parse(question.options)
+  } catch {
+    return []
+  }
 }
-</script>
 
+const submitQuiz = async () => {
+  if (!allQuestionsAnswered.value) return
+
+  submitting.value = true
+  quizResult.value = null
+
+  try {
+    const answersArray = Object.entries(answers.value).map(([questionId, selectedAnswer]) => ({
+      questionId,
+      selectedAnswer
+    }))
+
+    const config = useRuntimeConfig()
+    const authStore = useAuthStore()
+
+    const result = await $fetch<QuizResult>(
+      `${config.public.apiUrl}/api/requests/${props.requestId}/steps/${props.stepId}/quiz`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: {
+          answers: answersArray
+        }
+      }
+    )
+
+    quizResult.value = result
+
+    // Emit completed regardless of pass/fail - approver will see result and decide
+    emit('quizCompleted')
+  } catch (error: any) {
+    console.error('Error submitting quiz:', error)
+    quizResult.value = {
+      success: false,
+      message: error.data?.message || 'Nie udało się wysłać odpowiedzi. Spróbuj ponownie.',
+      score: 0,
+      passed: false,
+      requiredScore: props.passingScore
+    }
+  } finally {
+    submitting.value = false
+  }
+}
+
+const closeModal = () => {
+  if (!submitting.value) {
+    emit('close')
+  }
+}
+
+// Reset state when modal opens
+watch(() => props.show, (newValue) => {
+  if (newValue) {
+    answers.value = {}
+    quizResult.value = null
+  }
+})
+</script>

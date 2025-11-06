@@ -21,9 +21,14 @@ public class RequestApprovalStep
     public string? Comment { get; set; }
     
     public bool RequiresQuiz { get; set; } = false;
+    public int? PassingScore { get; set; }
     public int? QuizScore { get; set; }
     public bool? QuizPassed { get; set; }
-    
+
+    // Link to template step to access quiz questions
+    public Guid? RequestApprovalStepTemplateId { get; set; }
+    public RequestApprovalStepTemplate? ApprovalStepTemplate { get; set; }
+
     // Navigation properties
     public ICollection<QuizAnswer> QuizAnswers { get; set; } = new List<QuizAnswer>();
 }

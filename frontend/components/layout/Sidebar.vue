@@ -29,6 +29,7 @@ const navItems: NavItem[] = [
   { name: 'organization', label: 'Struktura organizacyjna', icon: 'org', path: '/dashboard/organization' },
   { name: 'documents', label: 'Dokumenty', icon: 'documents', path: '/dashboard/documents' },
   { name: 'requests', label: 'Wnioski', icon: 'requests', path: '/dashboard/requests' },
+  { name: 'pending-approvals', label: 'Wnioski do zatwierdzenia', icon: 'pending-approvals', path: '/dashboard/requests/pending-approvals' },
   { name: 'services', label: 'Serwisy wewnętrzne', icon: 'services', path: '/dashboard/services' },
   { name: 'chat-ai', label: 'Asystent AI', icon: 'ai', path: '/dashboard/chat-ai' },
   { name: 'audit-logs', label: 'Logi audytu', icon: 'audit', path: '/admin/audit', requiresAdmin: true },
@@ -92,6 +93,9 @@ const filteredNavItems = computed(() => {
           </svg>
           <svg v-else-if="item.icon === 'requests'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m2-6h-3.586a1 1 0 01-.707-.293L12 3l-1.707 1.707A1 1 0 019.586 5H6a2 2 0 00-2 2v11a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2z" />
+          </svg>
+          <svg v-else-if="item.icon === 'pending-approvals'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
           </svg>
           <svg v-else-if="item.icon === 'documents'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

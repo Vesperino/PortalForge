@@ -62,6 +62,13 @@ export interface QuizOption {
   isCorrect: boolean
 }
 
+export interface QuizAnswer {
+  questionId: string
+  selectedAnswer: string
+  isCorrect: boolean
+  answeredAt: string
+}
+
 export interface RequestTemplate {
   id: string
   name: string
@@ -95,6 +102,9 @@ export interface RequestApprovalStep {
   requiresQuiz: boolean
   quizScore?: number
   quizPassed?: boolean
+  passingScore?: number
+  quizQuestions?: QuizQuestion[]
+  quizAnswers?: QuizAnswer[]
 }
 
 export interface Request {
