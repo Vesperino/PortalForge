@@ -66,6 +66,18 @@ public class RejectRequestStepCommandHandler
         step.FinishedAt = DateTime.UtcNow;
         step.Comment = command.Reason;
 
+        // Create a comment in the request comments table
+        var requestComment = new Domain.Entities.RequestComment
+        {
+            Id = Guid.NewGuid(),
+            RequestId = request.Id,
+            UserId = command.ApproverId,
+            Comment = $"❌ Odrzucono wniosek: {command.Reason}",
+            Attachments = null,
+            CreatedAt = DateTime.UtcNow
+        };
+        await _unitOfWork.RequestCommentRepository.CreateAsync(requestComment);
+
         // Reject the entire request
         request.Status = RequestStatus.Rejected;
         request.CompletedAt = DateTime.UtcNow;
