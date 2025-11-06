@@ -328,6 +328,11 @@ const clearUserSelection = () => {
 }
 
 const searchDepartments = () => {
+  // Clear selection when user starts typing
+  if (selectedDepartment.value && departmentSearchTerm.value !== selectedDepartment.value.name) {
+    selectedDepartment.value = null
+    updateStep({ specificDepartmentId: undefined })
+  }
   showDepartmentDropdown.value = true
 }
 
