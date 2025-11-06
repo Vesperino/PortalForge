@@ -277,24 +277,28 @@ export const useRequestsApi = () => {
 
   const addComment = async (requestId: string, comment: string, files?: File[]) => {
     try {
-      // Upload files first if provided
-      let attachmentUrls: string[] = []
-      if (files && files.length > 0) {
-        const uploadPromises = files.map(file => uploadCommentAttachment(file))
-        const uploadResults = await Promise.all(uploadPromises)
-        attachmentUrls = uploadResults.map(result => result.url)
+      // Create FormData
+      const formData = new FormData()
+
+      // Add comment text
+      if (comment && comment.trim()) {
+        formData.append('comment', comment.trim())
       }
 
-      // Submit comment with attachment URLs
+      // Add attachments directly (backend will handle upload)
+      if (files && files.length > 0) {
+        files.forEach(file => {
+          formData.append('attachments', file)
+        })
+      }
+
+      // Submit comment with files
       const response = await $fetch(
         `${config.public.apiUrl}/api/requests/${requestId}/comments`,
         {
           method: 'POST',
           headers: getAuthHeaders(),
-          body: {
-            comment,
-            attachments: attachmentUrls.length > 0 ? JSON.stringify(attachmentUrls) : null
-          }
+          body: formData
         }
       ) as string
       return response
