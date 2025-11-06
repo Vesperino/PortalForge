@@ -511,8 +511,7 @@ const removeFieldOption = (fieldIndex: number, optionIndex: number) => {
 const addApprovalStep = () => {
   form.value.approvalStepTemplates.push({
     stepOrder: form.value.approvalStepTemplates.length + 1,
-    approverType: 'Role',
-    approverRole: 'Manager',
+    approverType: 'DirectSupervisor',
     requiresQuiz: false
   })
 }
@@ -525,14 +524,23 @@ const removeApprovalStep = (index: number) => {
 
 const validateApprovalSteps = (): string | null => {
   for (const step of form.value.approvalStepTemplates) {
-    if (step.approverType === 'Role' && !step.approverRole) {
-      return `Krok ${step.stepOrder}: Wybierz rolę zatwierdzającego`
-    }
     if (step.approverType === 'SpecificUser' && !step.specificUserId) {
       return `Krok ${step.stepOrder}: Wybierz konkretnego użytkownika`
     }
+    if (step.approverType === 'SpecificDepartment' && !step.specificDepartmentId) {
+      return `Krok ${step.stepOrder}: Wybierz konkretny dział`
+    }
     if (step.approverType === 'UserGroup' && !step.approverGroupId) {
       return `Krok ${step.stepOrder}: Wybierz grupę użytkowników`
+    }
+    // Quiz validation
+    if (step.requiresQuiz) {
+      if (!step.quizQuestions || step.quizQuestions.length === 0) {
+        return `Krok ${step.stepOrder}: Quiz wymaga przynajmniej jednego pytania`
+      }
+      if (!step.passingScore || step.passingScore < 0 || step.passingScore > 100) {
+        return `Krok ${step.stepOrder}: Próg zdawalności quizu musi być między 0 a 100`
+      }
     }
   }
   return null

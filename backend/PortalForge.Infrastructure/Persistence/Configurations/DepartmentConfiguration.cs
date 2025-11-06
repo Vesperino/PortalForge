@@ -51,10 +51,24 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
             .HasForeignKey(d => d.DirectorId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Head of Department Substitute relationship
+        builder.HasOne(d => d.HeadOfDepartmentSubstitute)
+            .WithMany()
+            .HasForeignKey(d => d.HeadOfDepartmentSubstituteId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Director Substitute relationship
+        builder.HasOne(d => d.DirectorSubstitute)
+            .WithMany()
+            .HasForeignKey(d => d.DirectorSubstituteId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Indexes for performance
         builder.HasIndex(d => d.ParentDepartmentId);
         builder.HasIndex(d => d.HeadOfDepartmentId);
         builder.HasIndex(d => d.DirectorId);
+        builder.HasIndex(d => d.HeadOfDepartmentSubstituteId);
+        builder.HasIndex(d => d.DirectorSubstituteId);
         builder.HasIndex(d => d.IsActive);
         builder.HasIndex(d => d.Name);
     }
