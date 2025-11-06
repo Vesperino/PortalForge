@@ -44,7 +44,9 @@ public class RequestRoutingService : IRequestRoutingService
                 ? await ResolveByUserGroupAsync(stepTemplate.ApproverGroupId.Value)
                 : null,
             ApproverType.SpecificDepartment => stepTemplate.SpecificDepartmentId.HasValue
-                ? await ResolveBySpecificDepartmentAsync(stepTemplate.SpecificDepartmentId.Value)
+                ? await ResolveBySpecificDepartmentAsync(
+                    stepTemplate.SpecificDepartmentId.Value,
+                    stepTemplate.SpecificDepartmentRoleType)
                 : null,
             ApproverType.Submitter => submitter,
             _ => null
@@ -189,12 +191,14 @@ public class RequestRoutingService : IRequestRoutingService
                 break;
 
             case ApproverType.SpecificDepartment:
-                // For specific department, use department's substitute
+                // For specific department, use department's substitute based on role type
                 if (stepTemplate.SpecificDepartmentId.HasValue)
                 {
                     var targetDepartment = await _unitOfWork.DepartmentRepository
                         .GetByIdAsync(stepTemplate.SpecificDepartmentId.Value);
-                    substitute = targetDepartment?.HeadOfDepartmentSubstitute;
+                    substitute = stepTemplate.SpecificDepartmentRoleType == DepartmentRoleType.Head
+                        ? targetDepartment?.HeadOfDepartmentSubstitute
+                        : targetDepartment?.DirectorSubstitute;
                 }
                 break;
 
@@ -303,9 +307,11 @@ public class RequestRoutingService : IRequestRoutingService
     }
 
     /// <summary>
-    /// Resolves approver from a specific department (department head).
+    /// Resolves approver from a specific department (head or director based on role type).
     /// </summary>
-    private async Task<User?> ResolveBySpecificDepartmentAsync(Guid departmentId)
+    private async Task<User?> ResolveBySpecificDepartmentAsync(
+        Guid departmentId,
+        DepartmentRoleType roleType)
     {
         var department = await _unitOfWork.DepartmentRepository.GetByIdAsync(departmentId);
 
@@ -317,16 +323,22 @@ public class RequestRoutingService : IRequestRoutingService
             return null;
         }
 
-        if (department.HeadOfDepartment == null)
+        var approver = roleType == DepartmentRoleType.Head
+            ? department.HeadOfDepartment
+            : department.Director;
+
+        if (approver == null)
         {
+            var roleTypeName = roleType == DepartmentRoleType.Head ? "head" : "director";
             _logger.LogWarning(
-                "Department {DepartmentId} ({DepartmentName}) has no head assigned",
+                "Department {DepartmentId} ({DepartmentName}) has no {RoleType} assigned",
                 departmentId,
-                department.Name);
+                department.Name,
+                roleTypeName);
             return null;
         }
 
-        return department.HeadOfDepartment;
+        return approver;
     }
 
     /// <summary>

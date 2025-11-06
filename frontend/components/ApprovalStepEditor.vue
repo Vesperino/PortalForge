@@ -14,14 +14,12 @@
           <select
             :value="step.approverType"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-            @change="(e) => { const newType = (e.target as HTMLSelectElement).value as any; onApproverTypeChange(newType); updateStep({ approverType: newType }); }"
+            @change="(e) => { const newType = (e.target as HTMLSelectElement).value; onApproverTypeChange(newType); }"
           >
             <option value="DirectSupervisor">Kierownik działu (HeadOfDepartment)</option>
             <option value="DepartmentDirector">Dyrektor działu (Director)</option>
             <option value="SpecificUser">Konkretny użytkownik</option>
             <option value="SpecificDepartment">Szef konkretnego działu</option>
-            <option value="UserGroup">Grupa użytkowników</option>
-            <option value="Submitter">Wnioskodawca (self-approval)</option>
           </select>
         </div>
 
@@ -81,6 +79,24 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Department Role Selection -->
+          <div class="mt-3">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Rola w dziale
+            </label>
+            <select
+              :value="step.specificDepartmentRoleType || 'Head'"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+              @change="(e) => updateStep({ specificDepartmentRoleType: (e.target as HTMLSelectElement).value as any })"
+            >
+              <option value="Head">Kierownik działu (Head)</option>
+              <option value="Director">Dyrektor działu (Director)</option>
+            </select>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Wybierz, czy wniosek ma być zatwierdzany przez kierownika czy dyrektora wybranego działu
+            </p>
           </div>
         </div>
 
@@ -149,30 +165,6 @@
           </div>
         </div>
 
-        <!-- Group Selection (when ApproverType = UserGroup) -->
-        <div v-if="step.approverType === 'UserGroup'">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Wybierz grupę użytkowników
-          </label>
-          <select
-            :value="step.approverGroupId"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-            @change="(e) => updateStep({ approverGroupId: (e.target as HTMLSelectElement).value })"
-          >
-            <option value="">-- Wybierz grupę --</option>
-            <option v-for="group in roleGroups" :key="group.id" :value="group.id">
-              {{ group.name }} ({{ group.userCount }} użytkowników)
-            </option>
-          </select>
-        </div>
-
-        <!-- Submitter Info (when ApproverType = Submitter) -->
-        <div v-if="step.approverType === 'Submitter'" class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-          <p class="text-sm text-yellow-800 dark:text-yellow-200">
-            <Icon name="heroicons:information-circle" class="w-4 h-4 inline mr-1" />
-            Ten krok będzie zatwierdzany przez osobę, która złożyła wniosek (self-approval/acknowledgment).
-          </p>
-        </div>
 
         <!-- Requires Quiz Checkbox -->
         <div class="space-y-2">
@@ -281,6 +273,7 @@ const filteredUsers = computed(() => {
 })
 
 const filteredDepartments = computed(() => {
+  if (!Array.isArray(props.departments)) return []
   if (!departmentSearchTerm.value) return props.departments.slice(0, 10)
 
   const search = departmentSearchTerm.value.toLowerCase()
@@ -295,7 +288,9 @@ const updateStep = (updates: Partial<RequestApprovalStepTemplate>) => {
 
 const onApproverTypeChange = (newType: string) => {
   // Clear selections when type changes
-  const updates: Partial<RequestApprovalStepTemplate> = {}
+  const updates: Partial<RequestApprovalStepTemplate> = {
+    approverType: newType as any
+  }
 
   if (newType !== 'SpecificUser') {
     updates.specificUserId = undefined
@@ -304,16 +299,15 @@ const onApproverTypeChange = (newType: string) => {
   }
   if (newType !== 'SpecificDepartment') {
     updates.specificDepartmentId = undefined
+    updates.specificDepartmentRoleType = undefined
     selectedDepartment.value = null
     departmentSearchTerm.value = ''
-  }
-  if (newType !== 'UserGroup') {
-    updates.approverGroupId = undefined
+  } else if (newType === 'SpecificDepartment' && !props.step.specificDepartmentRoleType) {
+    // Set default role type when switching to SpecificDepartment
+    updates.specificDepartmentRoleType = 'Head'
   }
 
-  if (Object.keys(updates).length > 0) {
-    updateStep(updates)
-  }
+  updateStep(updates)
 }
 
 const searchUsers = () => {
@@ -360,7 +354,7 @@ const handleQuizSave = (data: { questions: any[], passingScore: number }) => {
 
 // Initialize selected user and department if already set
 onMounted(() => {
-  if (props.step.specificUserId) {
+  if (props.step.specificUserId && Array.isArray(props.users)) {
     const user = props.users.find(u => u.id === props.step.specificUserId)
     if (user) {
       selectedUser.value = user
@@ -368,7 +362,7 @@ onMounted(() => {
     }
   }
 
-  if (props.step.specificDepartmentId) {
+  if (props.step.specificDepartmentId && Array.isArray(props.departments)) {
     const dept = props.departments.find(d => d.id === props.step.specificDepartmentId)
     if (dept) {
       selectedDepartment.value = dept
