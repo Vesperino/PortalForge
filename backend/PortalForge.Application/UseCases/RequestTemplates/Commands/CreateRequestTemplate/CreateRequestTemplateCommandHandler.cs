@@ -64,6 +64,9 @@ public class CreateRequestTemplateCommandHandler
                 ApproverType = Enum.Parse<ApproverType>(stepDto.ApproverType),
                 SpecificUserId = stepDto.SpecificUserId,
                 SpecificDepartmentId = stepDto.SpecificDepartmentId,
+                SpecificDepartmentRoleType = !string.IsNullOrEmpty(stepDto.SpecificDepartmentRoleType)
+                    ? Enum.Parse<DepartmentRoleType>(stepDto.SpecificDepartmentRoleType)
+                    : DepartmentRoleType.Head,
                 ApproverGroupId = stepDto.ApproverGroupId,
                 RequiresQuiz = stepDto.RequiresQuiz,
                 PassingScore = stepDto.PassingScore,
