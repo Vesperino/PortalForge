@@ -80,6 +80,24 @@
               </div>
             </div>
           </div>
+
+          <!-- Department Role Selection -->
+          <div class="mt-3">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Rola w dziale
+            </label>
+            <select
+              :value="step.specificDepartmentRoleType || 'Head'"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+              @change="(e) => updateStep({ specificDepartmentRoleType: (e.target as HTMLSelectElement).value as any })"
+            >
+              <option value="Head">Kierownik działu (Head)</option>
+              <option value="Director">Dyrektor działu (Director)</option>
+            </select>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Wybierz, czy wniosek ma być zatwierdzany przez kierownika czy dyrektora wybranego działu
+            </p>
+          </div>
         </div>
 
         <!-- User Selection (when ApproverType = SpecificUser) -->
@@ -281,8 +299,12 @@ const onApproverTypeChange = (newType: string) => {
   }
   if (newType !== 'SpecificDepartment') {
     updates.specificDepartmentId = undefined
+    updates.specificDepartmentRoleType = undefined
     selectedDepartment.value = null
     departmentSearchTerm.value = ''
+  } else if (newType === 'SpecificDepartment' && !props.step.specificDepartmentRoleType) {
+    // Set default role type when switching to SpecificDepartment
+    updates.specificDepartmentRoleType = 'Head'
   }
 
   updateStep(updates)

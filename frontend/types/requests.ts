@@ -8,6 +8,8 @@ export type FieldType = 'Text' | 'Textarea' | 'Number' | 'Select' | 'Date' | 'Ch
 
 export type ApproverType = 'DirectSupervisor' | 'DepartmentDirector' | 'SpecificUser' | 'SpecificDepartment' | 'UserGroup' | 'Submitter'
 
+export type DepartmentRoleType = 'Head' | 'Director'
+
 export type NotificationType =
   | 'RequestPendingApproval'
   | 'RequestApproved'
@@ -40,6 +42,7 @@ export interface RequestApprovalStepTemplate {
   approverType: ApproverType
   specificUserId?: string
   specificDepartmentId?: string
+  specificDepartmentRoleType?: DepartmentRoleType
   approverGroupId?: string
   requiresQuiz: boolean
   passingScore?: number
