@@ -83,6 +83,21 @@ public class ApproveRequestStepCommandHandler
         }
         step.Comment = comment;
 
+        // Create a comment in the request comments table if there's a comment
+        if (!string.IsNullOrWhiteSpace(comment))
+        {
+            var requestComment = new Domain.Entities.RequestComment
+            {
+                Id = Guid.NewGuid(),
+                RequestId = request.Id,
+                UserId = command.ApproverId,
+                Comment = $"✅ Zatwierdzono etap: {comment}",
+                Attachments = null,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _unitOfWork.RequestCommentRepository.CreateAsync(requestComment);
+        }
+
         // Check if there are more pending steps
         var nextStep = request.ApprovalSteps
             .Where(s => s.Status == ApprovalStepStatus.Pending)
