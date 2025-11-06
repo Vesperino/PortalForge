@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { MessageCircle, Send, Paperclip, X, Upload, FileText, Image as ImageIcon } from 'lucide-vue-next'
+import { MessageCircle, Send, Paperclip, X, FileText, Image as ImageIcon, Eye } from 'lucide-vue-next'
+import FilePreviewModal from '~/components/common/FilePreviewModal.vue'
 
 interface Comment {
   id: string
@@ -33,6 +34,8 @@ const isSubmitting = ref(false)
 const attachments = ref<AttachmentFile[]>([])
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
+const showPreviewModal = ref(false)
+const previewFile = ref<{ url: string, name: string } | null>(null)
 
 const ALLOWED_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
 const ALLOWED_EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg', '.doc', '.docx']
@@ -190,6 +193,18 @@ const handleSubmit = async () => {
   }
 }
 
+const openPreview = (url: string, event?: Event) => {
+  if (event) {
+    event.preventDefault()
+    event.stopPropagation()
+  }
+  previewFile.value = {
+    url,
+    name: getAttachmentFileName(url)
+  }
+  showPreviewModal.value = true
+}
+
 // Setup clipboard paste listener
 onMounted(() => {
   if (textareaRef.value) {
@@ -254,12 +269,11 @@ onUnmounted(() => {
             Załączniki ({{ comment.attachments.length }}):
           </p>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <a
+            <div
               v-for="(attachment, idx) in comment.attachments"
               :key="idx"
-              :href="attachment"
-              target="_blank"
-              class="flex items-center gap-2 p-2 bg-white dark:bg-gray-600 rounded border border-gray-200 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 transition"
+              class="flex items-center gap-2 p-2 bg-white dark:bg-gray-600 rounded border border-gray-200 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 transition cursor-pointer group"
+              @click="openPreview(attachment)"
             >
               <component
                 :is="getAttachmentIcon(attachment)"
@@ -268,7 +282,14 @@ onUnmounted(() => {
               <span class="text-sm text-gray-900 dark:text-white truncate flex-1">
                 {{ getAttachmentFileName(attachment) }}
               </span>
-            </a>
+              <button
+                title="Podgląd"
+                class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
+                @click="openPreview(attachment, $event)"
+              >
+                <Eye class="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -307,7 +328,7 @@ onUnmounted(() => {
             >
               <!-- Preview for images -->
               <div v-if="attachment.preview" class="w-12 h-12 rounded overflow-hidden flex-shrink-0">
-                <img :src="attachment.preview" :alt="attachment.file.name" class="w-full h-full object-cover" />
+                <img :src="attachment.preview" :alt="attachment.file.name" class="w-full h-full object-cover">
               </div>
               <!-- Icon for other files -->
               <div v-else class="w-12 h-12 flex items-center justify-center bg-gray-200 dark:bg-gray-600 rounded flex-shrink-0">
@@ -327,9 +348,9 @@ onUnmounted(() => {
               <!-- Remove button -->
               <button
                 type="button"
-                @click="removeAttachment(attachment.id)"
-                class="flex-shrink-0 p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition"
                 :disabled="isSubmitting"
+                class="flex-shrink-0 p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition"
+                @click="removeAttachment(attachment.id)"
               >
                 <X class="w-4 h-4" />
               </button>
@@ -346,14 +367,14 @@ onUnmounted(() => {
               type="file"
               multiple
               :accept="ALLOWED_EXTENSIONS.join(',')"
-              @change="handleFileSelect"
               class="hidden"
-            />
+              @change="handleFileSelect"
+            >
             <button
               type="button"
-              @click="fileInputRef?.click()"
               :disabled="isSubmitting"
               class="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              @click="fileInputRef?.click()"
             >
               <Paperclip class="w-4 h-4" />
               Dodaj plik
@@ -375,5 +396,13 @@ onUnmounted(() => {
         </div>
       </form>
     </div>
+
+    <!-- File Preview Modal -->
+    <FilePreviewModal
+      v-if="previewFile"
+      v-model:visible="showPreviewModal"
+      :file-url="previewFile.url"
+      :file-name="previewFile.name"
+    />
   </div>
 </template>
