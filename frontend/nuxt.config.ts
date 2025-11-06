@@ -140,9 +140,16 @@ export default defineNuxtConfig({
     transpile: [],
   },
 
+  postcss: {
+    plugins: {
+      tailwindcss: {},
+      autoprefixer: {},
+    },
+  },
+
   vite: {
     build: {
-      target: 'esnext',
+      target: 'es2020',
     },
   },
 

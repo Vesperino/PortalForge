@@ -41,7 +41,6 @@ public class CreateRequestTemplateCommandHandler
             var field = new RequestTemplateField
             {
                 Id = Guid.NewGuid(),
-                RequestTemplateId = template.Id,
                 Label = fieldDto.Label,
                 FieldType = Enum.Parse<FieldType>(fieldDto.FieldType),
                 Placeholder = fieldDto.Placeholder,
@@ -61,7 +60,6 @@ public class CreateRequestTemplateCommandHandler
             var step = new RequestApprovalStepTemplate
             {
                 Id = Guid.NewGuid(),
-                RequestTemplateId = template.Id,
                 StepOrder = stepDto.StepOrder,
                 ApproverType = Enum.Parse<ApproverType>(stepDto.ApproverType),
                 SpecificUserId = stepDto.SpecificUserId,
@@ -77,14 +75,14 @@ public class CreateRequestTemplateCommandHandler
             {
                 foreach (var questionDto in stepDto.QuizQuestions)
                 {
-                    step.QuizQuestions.Add(new QuizQuestion
+                    var quizQuestion = new QuizQuestion
                     {
                         Id = Guid.NewGuid(),
-                        RequestApprovalStepTemplateId = step.Id,
                         Question = questionDto.Question,
                         Options = questionDto.Options,
                         Order = questionDto.Order
-                    });
+                    };
+                    step.QuizQuestions.Add(quizQuestion);
                 }
             }
 

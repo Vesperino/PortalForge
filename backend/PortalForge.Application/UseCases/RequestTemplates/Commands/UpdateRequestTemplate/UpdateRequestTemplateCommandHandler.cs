@@ -109,7 +109,6 @@ public class UpdateRequestTemplateCommandHandler
                     var newField = new RequestTemplateField
                     {
                         Id = Guid.NewGuid(),
-                        RequestTemplateId = template.Id,
                         Label = fieldDto.Label,
                         FieldType = Enum.Parse<FieldType>(fieldDto.FieldType),
                         Placeholder = fieldDto.Placeholder,
@@ -168,7 +167,6 @@ public class UpdateRequestTemplateCommandHandler
                     var newStep = new RequestApprovalStepTemplate
                     {
                         Id = Guid.NewGuid(),
-                        RequestTemplateId = template.Id,
                         StepOrder = stepDto.StepOrder,
                         ApproverType = Enum.Parse<ApproverType>(stepDto.ApproverType),
                         SpecificUserId = stepDto.SpecificUserId,
@@ -184,14 +182,14 @@ public class UpdateRequestTemplateCommandHandler
                     {
                         foreach (var questionDto in stepDto.QuizQuestions)
                         {
-                            newStep.QuizQuestions.Add(new QuizQuestion
+                            var newQuestion = new QuizQuestion
                             {
                                 Id = Guid.NewGuid(),
-                                RequestApprovalStepTemplateId = newStep.Id,
                                 Question = questionDto.Question,
                                 Options = questionDto.Options,
                                 Order = questionDto.Order
-                            });
+                            };
+                            newStep.QuizQuestions.Add(newQuestion);
                         }
                     }
 
@@ -254,14 +252,14 @@ public class UpdateRequestTemplateCommandHandler
             else
             {
                 // Add new question
-                step.QuizQuestions.Add(new QuizQuestion
+                var newQuestion = new QuizQuestion
                 {
                     Id = Guid.NewGuid(),
-                    RequestApprovalStepTemplateId = step.Id,
                     Question = questionDto.Question,
                     Options = questionDto.Options,
                     Order = questionDto.Order
-                });
+                };
+                step.QuizQuestions.Add(newQuestion);
             }
         }
     }
