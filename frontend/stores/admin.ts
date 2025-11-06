@@ -52,6 +52,7 @@ export interface UpdateUserRequest {
   role: string
   roleGroupIds: string[]
   isActive: boolean
+  NewPassword?: string  // PascalCase to match backend DTO
 }
 
 export const useAdminStore = defineStore('admin', {

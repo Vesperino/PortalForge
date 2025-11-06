@@ -9,13 +9,16 @@ namespace PortalForge.Application.UseCases.Admin.Commands.UpdateUser;
 public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UpdateUserResult>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISupabaseAuthService _authService;
     private readonly ILogger<UpdateUserCommandHandler> _logger;
 
     public UpdateUserCommandHandler(
         IUnitOfWork unitOfWork,
+        ISupabaseAuthService authService,
         ILogger<UpdateUserCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _authService = authService;
         _logger = logger;
     }
 
@@ -98,6 +101,21 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Updat
 
         await _unitOfWork.UserRepository.UpdateAsync(user);
 
+        // Update password if provided
+        if (!string.IsNullOrWhiteSpace(request.NewPassword))
+        {
+            _logger.LogInformation("Admin updating password for user: {UserId}", user.Id);
+            var passwordUpdated = await _authService.AdminUpdatePasswordAsync(user.Id, request.NewPassword);
+
+            if (!passwordUpdated)
+            {
+                _logger.LogError("Failed to update password for user: {UserId}", user.Id);
+                throw new ValidationException("Failed to update password", new List<string> { "Password update failed" });
+            }
+
+            _logger.LogInformation("Password updated successfully for user: {UserId}", user.Id);
+        }
+
         // Update role groups - remove all existing and add new ones
         await _unitOfWork.UserRoleGroupRepository.DeleteByUserIdAsync(user.Id);
 
@@ -143,7 +161,8 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Updat
                 PhoneNumber = user.PhoneNumber,
                 Role = user.Role.ToString(),
                 IsActive = user.IsActive,
-                RoleGroups = request.RoleGroupIds
+                RoleGroups = request.RoleGroupIds,
+                PasswordChanged = !string.IsNullOrWhiteSpace(request.NewPassword)
             }),
             Timestamp = DateTime.UtcNow
         };

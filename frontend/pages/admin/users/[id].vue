@@ -106,7 +106,7 @@
           </div>
 
           <!-- Phone Number -->
-          <div>
+          <div class="md:col-span-2">
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Numer telefonu
             </label>
@@ -115,24 +115,6 @@
               type="tel"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-          </div>
-
-          <!-- Annual Vacation Days -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Roczny limit urlopów
-            </label>
-            <input
-              v-model.number="form.annualVacationDays"
-              type="number"
-              min="0"
-              max="50"
-              placeholder="26"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-            <p class="mt-1 text-xs text-gray-500">
-              Domyślnie: 26 dni. Dla korekt używaj <NuxtLink to="/admin/vacation" class="text-blue-600 hover:underline">Zarządzania urlopami</NuxtLink>
-            </p>
           </div>
 
           <!-- Role -->
@@ -179,6 +161,29 @@
                 </span>
               </label>
             </div>
+          </div>
+
+          <!-- New Password -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Resetuj hasło
+            </label>
+            <input
+              v-model="form.NewPassword"
+              type="password"
+              placeholder="Pozostaw puste, aby nie zmieniać hasła"
+              :class="[
+                'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:border-transparent',
+                passwordError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+              ]"
+              @input="validatePassword"
+            >
+            <p v-if="passwordError" class="mt-1 text-xs text-red-600">
+              {{ passwordError }}
+            </p>
+            <p v-else class="mt-1 text-xs text-gray-500">
+              Pozostaw puste, aby nie zmieniać hasła. Hasło musi zawierać minimum 8 znaków, w tym wielką literę, małą literę i cyfrę.
+            </p>
           </div>
 
           <!-- Is Active -->
@@ -252,6 +257,7 @@ const currentUser = computed(() => adminStore.currentUser)
 const form = ref<UpdateUserRequest | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
+const passwordError = ref<string | null>(null)
 const departments = ref<DepartmentTreeDto[]>([])
 const positionId = ref<string | null>(null)
 const positionName = ref<string>('')
@@ -309,6 +315,7 @@ const loadUser = async () => {
       role: user.role,
       roleGroupIds: roleGroupIds,
       isActive: user.isActive,
+      NewPassword: undefined,  // PascalCase to match backend
     }
   } catch (err: any) {
     error.value = err.message || 'Nie udało się załadować danych użytkownika'
@@ -319,6 +326,14 @@ const loadUser = async () => {
 
 const handleSubmit = async () => {
   if (!form.value) return
+
+  // Validate password if provided
+  if (form.value.NewPassword && form.value.NewPassword.trim() !== '') {
+    const validationResult = validatePassword()
+    if (!validationResult) {
+      return // Stop submission if password validation fails
+    }
+  }
 
   loading.value = true
   error.value = null
@@ -331,7 +346,16 @@ const handleSubmit = async () => {
     // Ensure departmentId is set
     form.value.departmentId = departmentId.value
 
+    // Remove NewPassword if empty
+    if (!form.value.NewPassword || form.value.NewPassword.trim() === '') {
+      delete form.value.NewPassword
+    }
+
     await adminStore.updateUser(userId, form.value)
+
+    // Show success notification
+    showSuccessToast()
+
     await navigateTo('/admin/users')
   } catch (err: any) {
     error.value = err.message || 'Nie udało się zaktualizować użytkownika'
@@ -375,6 +399,62 @@ const handleDepartmentChange = (event: Event) => {
     form.value.department = dept.name
     form.value.departmentId = dept.id
   }
+}
+
+// Password validation
+const validatePassword = (): boolean => {
+  if (!form.value?.NewPassword || form.value.NewPassword.trim() === '') {
+    passwordError.value = null
+    return true // Empty password is valid (means no change)
+  }
+
+  const password = form.value.NewPassword
+
+  if (password.length < 8) {
+    passwordError.value = 'Hasło musi zawierać minimum 8 znaków'
+    return false
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    passwordError.value = 'Hasło musi zawierać przynajmniej jedną wielką literę'
+    return false
+  }
+
+  if (!/[a-z]/.test(password)) {
+    passwordError.value = 'Hasło musi zawierać przynajmniej jedną małą literę'
+    return false
+  }
+
+  if (!/[0-9]/.test(password)) {
+    passwordError.value = 'Hasło musi zawierać przynajmniej jedną cyfrę'
+    return false
+  }
+
+  passwordError.value = null
+  return true
+}
+
+// Success toast notification
+const showSuccessToast = () => {
+  // Create toast element
+  const toast = document.createElement('div')
+  toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center gap-3 animate-fade-in'
+  toast.innerHTML = `
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+    <span class="font-medium">Dane użytkownika zostały zaktualizowane pomyślnie</span>
+  `
+  document.body.appendChild(toast)
+
+  // Remove toast after 3 seconds
+  setTimeout(() => {
+    toast.style.opacity = '0'
+    toast.style.transition = 'opacity 0.3s'
+    setTimeout(() => {
+      document.body.removeChild(toast)
+    }, 300)
+  }, 3000)
 }
 
 // Fetch data on mount

@@ -477,6 +477,49 @@ public class SupabaseAuthService : ISupabaseAuthService
         }
     }
 
+    public async Task<bool> AdminUpdatePasswordAsync(Guid userId, string newPassword)
+    {
+        try
+        {
+            _logger.LogInformation("Admin attempting to update password for user: {UserId}", userId);
+
+            // Use Supabase Admin API to update user password
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("apikey", _supabaseServiceRoleKey);
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_supabaseServiceRoleKey}");
+
+            var requestBody = new
+            {
+                password = newPassword
+            };
+
+            var content = new StringContent(
+                System.Text.Json.JsonSerializer.Serialize(requestBody),
+                System.Text.Encoding.UTF8,
+                "application/json");
+
+            var response = await httpClient.PutAsync(
+                $"{_supabaseUrl}/auth/v1/admin/users/{userId}",
+                content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Admin password update failed for user {UserId}: {StatusCode} - {Error}",
+                    userId, response.StatusCode, errorContent);
+                return false;
+            }
+
+            _logger.LogInformation("Password updated successfully by admin for user: {UserId}", userId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during admin password update for user: {UserId}", userId);
+            return false;
+        }
+    }
+
     public async Task<bool> VerifyEmailAsync(string accessToken)
     {
         try

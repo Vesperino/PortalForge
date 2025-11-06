@@ -55,6 +55,16 @@ public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
             .NotEmpty().WithMessage("Role is required")
             .Must(BeValidRole).WithMessage("Role must be one of: Admin, HR, Manager, Marketing, Employee");
 
+        When(x => !string.IsNullOrEmpty(x.NewPassword), () =>
+        {
+            RuleFor(x => x.NewPassword)
+                .MinimumLength(8).WithMessage("Password must be at least 8 characters")
+                .MaximumLength(100).WithMessage("Password cannot exceed 100 characters")
+                .Matches(@"[A-Z]").WithMessage("Password must contain at least one uppercase letter")
+                .Matches(@"[a-z]").WithMessage("Password must contain at least one lowercase letter")
+                .Matches(@"[0-9]").WithMessage("Password must contain at least one number");
+        });
+
         RuleFor(x => x.UpdatedBy)
             .NotEmpty().WithMessage("UpdatedBy is required");
     }
