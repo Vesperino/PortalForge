@@ -13,6 +13,8 @@ using PortalForge.Application.UseCases.Requests.Queries.GetPendingApprovals;
 using PortalForge.Application.UseCases.Requests.Queries.GetRequestById;
 using PortalForge.Application.UseCases.Requests.Queries.GetRequestsToApprove;
 using PortalForge.Application.UseCases.Requests.Queries.GetApprovalsHistory;
+using PortalForge.Application.Common.Interfaces;
+using System.Text.Json;
 
 namespace PortalForge.Api.Controllers;
 
@@ -22,11 +24,16 @@ public class RequestsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<RequestsController> _logger;
+    private readonly IFileStorageService _fileStorageService;
 
-    public RequestsController(IMediator mediator, ILogger<RequestsController> logger)
+    public RequestsController(
+        IMediator mediator,
+        ILogger<RequestsController> logger,
+        IFileStorageService fileStorageService)
     {
         _mediator = mediator;
         _logger = logger;
+        _fileStorageService = fileStorageService;
     }
 
     /// <summary>
@@ -165,12 +172,14 @@ public class RequestsController : BaseController
     /// <summary>
     /// Add a comment to a request
     /// All authenticated users can add comments (handler checks ownership/approval rights)
+    /// Supports optional file attachments via FormData
     /// </summary>
     [HttpPost("{requestId:guid}/comments")]
     [Authorize]
     public async Task<ActionResult<Guid>> AddComment(
         Guid requestId,
-        [FromBody] AddCommentRequest request)
+        [FromForm] string? comment,
+        [FromForm] List<IFormFile>? attachments)
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
         if (unauthorizedResult != null)
@@ -178,12 +187,29 @@ public class RequestsController : BaseController
             return unauthorizedResult;
         }
 
+        // Upload attachments if any
+        List<string>? attachmentUrls = null;
+        if (attachments != null && attachments.Count > 0)
+        {
+            attachmentUrls = new List<string>();
+            foreach (var file in attachments)
+            {
+                var relativePath = await _fileStorageService.SaveFileAsync(
+                    file.OpenReadStream(),
+                    file.FileName,
+                    "request-comments");
+                attachmentUrls.Add(relativePath);
+            }
+        }
+
         var command = new AddRequestCommentCommand
         {
             RequestId = requestId,
             UserId = userGuid,
-            Comment = request.Comment,
-            Attachments = request.Attachments
+            Comment = comment ?? string.Empty,
+            Attachments = attachmentUrls != null && attachmentUrls.Count > 0
+                ? JsonSerializer.Serialize(attachmentUrls)
+                : null
         };
 
         var commentId = await _mediator.Send(command);
