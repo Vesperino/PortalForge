@@ -685,7 +685,6 @@ definePageMeta({
 })
 
 const { getAvailableTemplates, getMyRequests, getPendingApprovals, approveRequestStep, rejectRequestStep, getRequestById, getTemplateById } = useRequestsApi()
-const authStore = useAuthStore()
 
 const activeTab = ref<'new' | 'my-requests' | 'to-approve' | 'approved-by-me'>('new')
 const templates = ref<RequestTemplate[]>([])
