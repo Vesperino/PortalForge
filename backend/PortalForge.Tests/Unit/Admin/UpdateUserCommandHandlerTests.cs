@@ -12,16 +12,19 @@ namespace PortalForge.Tests.Unit.Admin;
 public class UpdateUserCommandHandlerTests
 {
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private readonly Mock<ISupabaseAuthService> _mockSupabaseAuthService;
     private readonly Mock<ILogger<UpdateUserCommandHandler>> _mockLogger;
     private readonly UpdateUserCommandHandler _handler;
 
     public UpdateUserCommandHandlerTests()
     {
         _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _mockSupabaseAuthService = new Mock<ISupabaseAuthService>();
         _mockLogger = new Mock<ILogger<UpdateUserCommandHandler>>();
 
         _handler = new UpdateUserCommandHandler(
             _mockUnitOfWork.Object,
+            _mockSupabaseAuthService.Object,
             _mockLogger.Object);
     }
 

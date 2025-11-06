@@ -685,7 +685,6 @@ definePageMeta({
 })
 
 const { getAvailableTemplates, getMyRequests, getPendingApprovals, approveRequestStep, rejectRequestStep, getRequestById, getTemplateById } = useRequestsApi()
-const authStore = useAuthStore()
 
 const activeTab = ref<'new' | 'my-requests' | 'to-approve' | 'approved-by-me'>('new')
 const templates = ref<RequestTemplate[]>([])
@@ -756,15 +755,6 @@ const filteredApprovals = computed(() => {
     r.requestTemplateName.toLowerCase().includes(query) ||
     r.submittedByName?.toLowerCase().includes(query)
   )
-})
-
-const canApproveRequests = computed(() => {
-  const user = authStore.user
-  if (!user || !user.role) return false
-
-  // Check if user has admin, hr, or manager role
-  // These roles have permissions to approve requests
-  return ['admin', 'hr', 'manager'].includes(user.role)
 })
 
 // Format form data for display in modal
@@ -865,10 +855,6 @@ const formatDate = (dateString: string) => {
 const selectTemplate = (template: RequestTemplate) => {
   // Navigate to request submission page
   navigateTo(`/dashboard/requests/submit/${template.id}`)
-}
-
-const closeRequestDetails = () => {
-  selectedRequest.value = null
 }
 
 // Open request details modal

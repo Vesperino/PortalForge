@@ -425,7 +425,7 @@ const validatePassword = (): boolean => {
     return false
   }
 
-  if (!/[0-9]/.test(password)) {
+  if (!/\d/.test(password)) {
     passwordError.value = 'Hasło musi zawierać przynajmniej jedną cyfrę'
     return false
   }
