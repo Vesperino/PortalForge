@@ -16,6 +16,7 @@ public class UpdateUserCommand : IRequest<UpdateUserResult>, ITransactionalReque
     public string Role { get; set; } = string.Empty;
     public List<Guid> RoleGroupIds { get; set; } = new();
     public bool IsActive { get; set; }
+    public string? NewPassword { get; set; }
     public Guid UpdatedBy { get; set; }
 }
 

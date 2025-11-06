@@ -27,6 +27,9 @@ public class RequestTemplateRepository : IRequestTemplateRepository
     public async Task<IEnumerable<RequestTemplate>> GetAllAsync()
     {
         return await _context.RequestTemplates
+            .Include(rt => rt.Fields)
+            .Include(rt => rt.ApprovalStepTemplates)
+                .ThenInclude(ast => ast.QuizQuestions)
             .Include(rt => rt.CreatedBy)
             .OrderByDescending(rt => rt.CreatedAt)
             .AsNoTracking()

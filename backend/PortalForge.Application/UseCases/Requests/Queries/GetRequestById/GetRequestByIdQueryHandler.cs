@@ -37,6 +37,9 @@ public class GetRequestByIdQueryHandler : IRequestHandler<GetRequestByIdQuery, R
         // Get edit history
         var editHistory = await _unitOfWork.RequestEditHistoryRepository.GetByRequestIdAsync(request.RequestId);
 
+        // Get template with quiz questions
+        var template = await _unitOfWork.RequestTemplateRepository.GetByIdAsync(req.RequestTemplateId);
+
         // Map to DTO
         var dto = new RequestDetailDto
         {
@@ -54,16 +57,35 @@ public class GetRequestByIdQueryHandler : IRequestHandler<GetRequestByIdQuery, R
             Attachments = ParseAttachments(req.Attachments),
             Status = req.Status.ToString(),
             CompletedAt = req.CompletedAt,
-            ApprovalSteps = req.ApprovalSteps.Select(s => new ApprovalStepDto
+            ApprovalSteps = req.ApprovalSteps.Select(s =>
             {
-                Id = s.Id,
-                StepOrder = s.StepOrder,
-                ApproverId = s.ApproverId,
-                ApproverName = s.Approver != null ? $"{s.Approver.FirstName} {s.Approver.LastName}" : "Unknown",
-                Status = s.Status.ToString(),
-                Comment = s.Comment,
-                FinishedAt = s.FinishedAt,
-                RequiresQuiz = s.RequiresQuiz
+                // Find the template for this step to get quiz questions
+                var stepTemplate = template?.ApprovalStepTemplates
+                    .FirstOrDefault(ast => ast.Id == s.RequestApprovalStepTemplateId);
+
+                return new ApprovalStepDto
+                {
+                    Id = s.Id,
+                    StepOrder = s.StepOrder,
+                    ApproverId = s.ApproverId,
+                    ApproverName = s.Approver != null ? $"{s.Approver.FirstName} {s.Approver.LastName}" : "Unknown",
+                    Status = s.Status.ToString(),
+                    Comment = s.Comment,
+                    FinishedAt = s.FinishedAt,
+                    RequiresQuiz = s.RequiresQuiz,
+                    QuizScore = s.QuizScore,
+                    QuizPassed = s.QuizPassed,
+                    PassingScore = s.PassingScore ?? stepTemplate?.PassingScore,
+                    QuizQuestions = stepTemplate?.QuizQuestions
+                        .OrderBy(q => q.Order)
+                        .Select(q => new QuizQuestionDto
+                        {
+                            Id = q.Id,
+                            Question = q.Question,
+                            Options = q.Options,
+                            Order = q.Order
+                        }).ToList() ?? new List<QuizQuestionDto>()
+                };
             }).OrderBy(s => s.StepOrder).ToList(),
             Comments = comments.Select(c => new RequestCommentDto
             {

@@ -138,6 +138,16 @@ public class UnitOfWork : IUnitOfWork
         }
     }
 
+    public void DeleteEntity<T>(T entity) where T : class
+    {
+        _context.Remove(entity);
+    }
+
+    public void DeleteEntities<T>(IEnumerable<T> entities) where T : class
+    {
+        _context.RemoveRange(entities);
+    }
+
     public void Dispose()
     {
         _transaction?.Dispose();

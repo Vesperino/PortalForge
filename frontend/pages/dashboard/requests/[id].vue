@@ -1,6 +1,11 @@
 ﻿<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-vue-next'
+import RequestQuizForm from '~/components/requests/RequestQuizForm.vue'
+import RequestQuizResult from '~/components/requests/RequestQuizResult.vue'
+import RequestAttachments from '~/components/requests/RequestAttachments.vue'
+import RequestComments from '~/components/requests/RequestComments.vue'
+import RequestEditHistory from '~/components/requests/RequestEditHistory.vue'
 
 definePageMeta({
   layout: 'default',
@@ -28,18 +33,39 @@ const approveComment = ref('')
 const rejectComment = ref('')
 const isSubmitting = ref(false)
 
+// Quiz state
+const showQuizForm = ref(false)
+
+// Check if current user is the request submitter
+const isRequestSubmitter = computed(() => {
+  if (!request.value || !authStore.user) return false
+  const submitterId = request.value.submittedById || (request.value as any).SubmittedById
+  const userId = authStore.user.id || (authStore.user as any).Id
+  return submitterId === userId
+})
+
 // Check if current user is the approver for the current step
 const isCurrentApprover = computed(() => {
   if (!request.value || !authStore.user) return false
 
-  const currentStep = request.value.approvalSteps.find((s: any) => s.status === 'InReview')
-  return currentStep?.approverId === authStore.user.id
+  const currentStep = request.value.approvalSteps.find((s: any) =>
+    s.status === 'InReview' || s.Status === 'InReview'
+  )
+
+  if (!currentStep) return false
+
+  const approverId = currentStep.approverId || currentStep.ApproverId
+  const userId = authStore.user.id || authStore.user.Id
+
+  return approverId === userId
 })
 
 // Get current approval step
 const currentStep = computed(() => {
   if (!request.value) return null
-  return request.value.approvalSteps.find((s: any) => s.status === 'InReview')
+  return request.value.approvalSteps.find((s: any) =>
+    s.status === 'InReview' || s.Status === 'InReview'
+  )
 })
 
 // Check if user can add comments (request submitter or approvers)
@@ -52,6 +78,35 @@ const canAddComment = computed(() => {
   // Approvers can comment
   const isApprover = request.value.approvalSteps.some((s: any) => s.approverId === authStore.user.id)
   return isApprover
+})
+
+// Quiz-related computed properties
+// Note: Backend returns PascalCase, so we need to check both camelCase and PascalCase
+const requiresQuiz = computed(() => {
+  const step = currentStep.value
+  return step?.requiresQuiz === true || (step as any)?.RequiresQuiz === true
+})
+
+const quizPassed = computed(() => {
+  const step = currentStep.value
+  return step?.quizPassed === true || (step as any)?.QuizPassed === true
+})
+
+const quizScore = computed(() => {
+  const step = currentStep.value
+  return step?.quizScore ?? (step as any)?.QuizScore
+})
+
+const hasQuizQuestions = computed(() => {
+  const step = currentStep.value
+  const questions = step?.quizQuestions || (step as any)?.QuizQuestions
+  return questions?.length > 0
+})
+
+const canApprove = computed(() => {
+  if (!isCurrentApprover.value) return false
+  if (requiresQuiz.value && !quizPassed.value) return false
+  return true
 })
 
 // Format form data for display
@@ -232,6 +287,18 @@ const handleReject = async () => {
   }
 }
 
+// Handle quiz submission
+const handleQuizSubmitted = async (result: { success: boolean; score: number; passed: boolean }) => {
+  if (result.passed) {
+    toast.success(`Quiz zaliczony! Wynik: ${result.score}%`)
+    showQuizForm.value = false
+    // Reload request to get updated quiz status
+    await loadRequest()
+  } else {
+    toast.error(`Quiz niezaliczony. Wynik: ${result.score}%`)
+  }
+}
+
 // Handle add comment
 const handleAddComment = async (commentText: string) => {
   try {
@@ -395,6 +462,100 @@ onMounted(() => {
           <RequestEditHistory :edit-history="request.editHistory" />
         </div>
 
+        <!-- DEBUG INFO -->
+        <div v-if="true" class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
+          <h3 class="font-semibold mb-2">Debug Info:</h3>
+          <pre class="text-xs">
+isRequestSubmitter: {{ isRequestSubmitter }}
+requiresQuiz: {{ requiresQuiz }}
+hasQuizQuestions: {{ hasQuizQuestions }}
+isCurrentApprover: {{ isCurrentApprover }}
+currentStep: {{ currentStep }}
+quizQuestions: {{ currentStep?.quizQuestions || currentStep?.QuizQuestions }}
+          </pre>
+        </div>
+
+        <!-- Quiz Section for REQUEST SUBMITTER -->
+        <div v-if="isRequestSubmitter && requiresQuiz && hasQuizQuestions">
+          <!-- DEBUG: Show quiz state -->
+          <div class="bg-purple-50 p-2 mb-2 text-xs">
+            showQuizForm: {{ showQuizForm }}<br>
+            quizScore: {{ quizScore }}<br>
+            Warunek 1 (quiz result): {{ quizScore !== null && quizScore !== undefined }}<br>
+            Warunek 2 (show form): {{ showQuizForm }}<br>
+            questions count: {{ (currentStep?.quizQuestions || currentStep?.QuizQuestions || []).length }}
+          </div>
+
+          <!-- Show quiz result if already completed -->
+          <RequestQuizResult
+            v-if="quizScore !== null && quizScore !== undefined"
+            :score="quizScore"
+            :passed="quizPassed"
+            :passing-score="(currentStep?.passingScore || currentStep?.PassingScore || 70)"
+          />
+
+          <!-- Show quiz form if not yet completed or failed -->
+          <div v-else-if="showQuizForm" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <p class="text-green-600 mb-4">QUIZ FORM SHOULD BE HERE (showQuizForm = {{ showQuizForm }})</p>
+            <RequestQuizForm
+              :questions="(currentStep?.quizQuestions || currentStep?.QuizQuestions || [])"
+              :request-id="requestId"
+              :step-id="(currentStep?.id || currentStep?.Id)"
+              :passing-score="(currentStep?.passingScore || currentStep?.PassingScore)"
+              @submitted="handleQuizSubmitted"
+              @cancel="showQuizForm = false"
+            />
+          </div>
+
+          <!-- Show button to start quiz if not started yet -->
+          <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Quiz wymagany
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Ten etap wymaga zaliczenia quizu. Proszę wypełnić quiz poniżej.
+            </p>
+            <button
+              type="button"
+              @click="showQuizForm = true; console.log('Button clicked, showQuizForm =', showQuizForm)"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+            >
+              Rozpocznij quiz
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz Results for APPROVER (read-only view) -->
+        <div v-if="isCurrentApprover && requiresQuiz && hasQuizQuestions" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Wyniki quizu wnioskodawcy
+          </h3>
+
+          <!-- Show quiz result if completed -->
+          <div v-if="quizScore !== null && quizScore !== undefined">
+            <RequestQuizResult
+              :score="quizScore"
+              :passed="quizPassed"
+              :passing-score="(currentStep?.passingScore || currentStep?.PassingScore || 70)"
+            />
+
+            <!-- Display quiz questions and answers (read-only) -->
+            <div class="mt-4 space-y-4">
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                Poniżej znajdują się pytania i odpowiedzi wnioskodawcy:
+              </p>
+              <!-- Questions list will be shown here - for now just results -->
+            </div>
+          </div>
+
+          <!-- Show waiting message if quiz not completed yet -->
+          <div v-else class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <p class="text-sm text-yellow-800 dark:text-yellow-200">
+              Wnioskodawca jeszcze nie wypełnił wymaganego quizu. Po wypełnieniu quizu, wyniki pojawią się tutaj.
+            </p>
+          </div>
+        </div>
+
         <!-- Action Buttons (only for current approver) -->
         <div v-if="isCurrentApprover" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -403,9 +564,21 @@ onMounted(() => {
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
             Jesteś aktualnym opiniującym tego wniosku. Możesz go zatwierdzić lub odrzucić.
           </p>
+
+          <!-- Warning if quiz is required but not passed -->
+          <div
+            v-if="requiresQuiz && !quizPassed"
+            class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg"
+          >
+            <p class="text-sm text-yellow-800 dark:text-yellow-200">
+              Aby zatwierdzić wniosek, musisz najpierw zaliczyć quiz.
+            </p>
+          </div>
+
           <div class="flex gap-3">
             <button
-              class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors"
+              :disabled="!canApprove"
+              class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               @click="showApproveModal = true"
             >
               <CheckCircle class="w-5 h-5" />

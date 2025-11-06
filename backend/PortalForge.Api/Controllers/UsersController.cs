@@ -115,6 +115,7 @@ public class UsersController : ControllerBase
             Role = request.Role,
             RoleGroupIds = request.RoleGroupIds,
             IsActive = request.IsActive,
+            NewPassword = request.NewPassword,
             UpdatedBy = GetCurrentUserId()
         };
 
@@ -296,6 +297,7 @@ public class UpdateUserRequest
     public string Role { get; set; } = string.Empty;
     public List<Guid> RoleGroupIds { get; set; } = new();
     public bool IsActive { get; set; }
+    public string? NewPassword { get; set; }
 }
 
 public class UpdateVacationAllowanceRequest
