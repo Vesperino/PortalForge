@@ -15,6 +15,9 @@ namespace PortalForge.Infrastructure.Migrations
                 schema: "public",
                 table: "QuizQuestions");
 
+            // Delete existing quiz questions as they were incorrectly attached to templates instead of approval steps
+            migrationBuilder.Sql("DELETE FROM public.\"QuizQuestions\";");
+
             migrationBuilder.RenameColumn(
                 name: "RequestTemplateId",
                 schema: "public",
