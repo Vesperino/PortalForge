@@ -300,9 +300,9 @@ const handleQuizSubmitted = async (result: { success: boolean; score: number; pa
 }
 
 // Handle add comment
-const handleAddComment = async (commentText: string) => {
+const handleAddComment = async (commentText: string, files?: File[]) => {
   try {
-    await addComment(requestId, commentText)
+    await addComment(requestId, commentText, files)
 
     toast.success('Komentarz został dodany')
 
