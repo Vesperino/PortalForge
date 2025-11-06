@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { MessageCircle, Send, Paperclip, X, Eye, Download } from 'lucide-vue-next'
+import DocumentViewer from '~/components/common/DocumentViewer.vue'
 
 interface Comment {
   id: string
