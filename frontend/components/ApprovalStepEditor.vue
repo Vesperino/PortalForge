@@ -30,16 +30,58 @@
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Wybierz dział
           </label>
-          <select
-            :value="step.specificDepartmentId"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-            @change="(e) => updateStep({ specificDepartmentId: (e.target as HTMLSelectElement).value })"
-          >
-            <option value="">-- Wybierz dział --</option>
-            <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-              {{ dept.name }}
-            </option>
-          </select>
+          <div ref="departmentDropdownRef" class="relative">
+            <input
+              v-model="departmentSearchTerm"
+              type="text"
+              placeholder="Szukaj działu..."
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+              @input="searchDepartments"
+              @focus="showDepartmentDropdown = true"
+            >
+
+            <!-- Selected Department Display -->
+            <div v-if="selectedDepartment && !showDepartmentDropdown" class="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  <Icon name="heroicons:building-office-2" class="w-5 h-5" />
+                </div>
+                <div>
+                  <div class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ selectedDepartment.name }}
+                  </div>
+                </div>
+              </div>
+              <button
+                class="text-red-600 hover:text-red-700 p-1"
+                @click="clearDepartmentSelection"
+              >
+                <Icon name="heroicons:x-mark" class="w-5 h-5" />
+              </button>
+            </div>
+
+            <!-- Department Dropdown -->
+            <div
+              v-if="showDepartmentDropdown && filteredDepartments.length > 0"
+              class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+            >
+              <div
+                v-for="dept in filteredDepartments"
+                :key="dept.id"
+                class="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-3"
+                @click="selectDepartment(dept)"
+              >
+                <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm">
+                  <Icon name="heroicons:building-office-2" class="w-5 h-5" />
+                </div>
+                <div>
+                  <div class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ dept.name }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- User Selection (when ApproverType = SpecificUser) -->
@@ -220,6 +262,11 @@ const selectedUser = ref<UserDto | null>(null)
 const dropdownRef = ref<HTMLElement | null>(null)
 const showQuizModal = ref(false)
 
+const departmentSearchTerm = ref('')
+const showDepartmentDropdown = ref(false)
+const selectedDepartment = ref<DepartmentDto | null>(null)
+const departmentDropdownRef = ref<HTMLElement | null>(null)
+
 const filteredUsers = computed(() => {
   if (!userSearchTerm.value) return props.users.slice(0, 10)
 
@@ -230,6 +277,15 @@ const filteredUsers = computed(() => {
     user.email.toLowerCase().includes(search) ||
     user.position.toLowerCase().includes(search) ||
     user.department.toLowerCase().includes(search)
+  ).slice(0, 10)
+})
+
+const filteredDepartments = computed(() => {
+  if (!departmentSearchTerm.value) return props.departments.slice(0, 10)
+
+  const search = departmentSearchTerm.value.toLowerCase()
+  return props.departments.filter(dept =>
+    dept.name.toLowerCase().includes(search)
   ).slice(0, 10)
 })
 
@@ -248,6 +304,8 @@ const onApproverTypeChange = (newType: string) => {
   }
   if (newType !== 'SpecificDepartment') {
     updates.specificDepartmentId = undefined
+    selectedDepartment.value = null
+    departmentSearchTerm.value = ''
   }
   if (newType !== 'UserGroup') {
     updates.approverGroupId = undefined
@@ -275,6 +333,23 @@ const clearUserSelection = () => {
   userSearchTerm.value = ''
 }
 
+const searchDepartments = () => {
+  showDepartmentDropdown.value = true
+}
+
+const selectDepartment = (dept: DepartmentDto) => {
+  selectedDepartment.value = dept
+  updateStep({ specificDepartmentId: dept.id })
+  departmentSearchTerm.value = dept.name
+  showDepartmentDropdown.value = false
+}
+
+const clearDepartmentSelection = () => {
+  selectedDepartment.value = null
+  updateStep({ specificDepartmentId: undefined })
+  departmentSearchTerm.value = ''
+}
+
 const handleQuizSave = (data: { questions: any[], passingScore: number }) => {
   updateStep({
     quizQuestions: data.questions,
@@ -283,13 +358,21 @@ const handleQuizSave = (data: { questions: any[], passingScore: number }) => {
   showQuizModal.value = false
 }
 
-// Initialize selected user if specificUserId is already set
+// Initialize selected user and department if already set
 onMounted(() => {
   if (props.step.specificUserId) {
     const user = props.users.find(u => u.id === props.step.specificUserId)
     if (user) {
       selectedUser.value = user
       userSearchTerm.value = `${user.firstName} ${user.lastName}`
+    }
+  }
+
+  if (props.step.specificDepartmentId) {
+    const dept = props.departments.find(d => d.id === props.step.specificDepartmentId)
+    if (dept) {
+      selectedDepartment.value = dept
+      departmentSearchTerm.value = dept.name
     }
   }
 
@@ -304,6 +387,9 @@ onUnmounted(() => {
 const handleClickOutside = (event: MouseEvent) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     showUserDropdown.value = false
+  }
+  if (departmentDropdownRef.value && !departmentDropdownRef.value.contains(event.target as Node)) {
+    showDepartmentDropdown.value = false
   }
 }
 </script>
