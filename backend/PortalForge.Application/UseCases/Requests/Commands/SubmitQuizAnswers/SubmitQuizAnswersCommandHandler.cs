@@ -104,13 +104,18 @@ public class SubmitQuizAnswersCommandHandler
         int totalQuestions = stepTemplate.QuizQuestions.Count;
 
         // Save answers and calculate score
+        var jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
         foreach (var answer in command.Answers)
         {
             var question = stepTemplate.QuizQuestions.FirstOrDefault(q => q.Id == answer.QuestionId);
             if (question == null) continue;
 
-            // Parse options to find correct answer
-            var options = JsonSerializer.Deserialize<List<QuizOption>>(question.Options);
+            // Parse options to find correct answer (case-insensitive to handle camelCase from frontend)
+            var options = JsonSerializer.Deserialize<List<QuizOption>>(question.Options, jsonOptions);
             if (options == null) continue;
 
             var correctOption = options.FirstOrDefault(o => o.IsCorrect);

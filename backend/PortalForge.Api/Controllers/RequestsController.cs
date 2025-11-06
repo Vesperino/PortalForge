@@ -218,9 +218,10 @@ public class RequestsController : BaseController
 
     /// <summary>
     /// Approve a request step
+    /// Approvers can approve steps they're assigned to, even without general approve permission
     /// </summary>
     [HttpPost("{requestId}/steps/{stepId}/approve")]
-    [Authorize(Policy = "RequirePermission:requests.approve")]
+    [Authorize]
     public async Task<ActionResult> ApproveStep(Guid requestId, Guid stepId, [FromBody] ApproveStepDto dto)
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
@@ -285,9 +286,10 @@ public class RequestsController : BaseController
 
     /// <summary>
     /// Reject a request step
+    /// Approvers can reject steps they're assigned to, even without general approve permission
     /// </summary>
     [HttpPost("{requestId}/steps/{stepId}/reject")]
-    [Authorize(Policy = "RequirePermission:requests.approve")]
+    [Authorize]
     public async Task<ActionResult> RejectStep(Guid requestId, Guid stepId, [FromBody] RejectStepDto dto)
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
