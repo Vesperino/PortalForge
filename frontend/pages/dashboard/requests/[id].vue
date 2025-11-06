@@ -10,7 +10,7 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const { getRequestById, getTemplateById } = useRequestsApi()
+const { getRequestById, getTemplateById, addComment } = useRequestsApi()
 const toast = useNotificationToast()
 
 const requestId = route.params.id as string
@@ -235,13 +235,9 @@ const handleReject = async () => {
 // Handle add comment
 const handleAddComment = async (commentText: string) => {
   try {
-    await $fetch(`/api/requests/${requestId}/comments`, {
-      method: 'POST',
-      body: {
-        comment: commentText,
-        attachments: null
-      }
-    })
+    await addComment(requestId, commentText)
+
+    toast.success('Komentarz został dodany')
 
     // Reload request to get new comment
     await loadRequest()
