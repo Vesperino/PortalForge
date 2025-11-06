@@ -15,25 +15,25 @@
       <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
         <nav class="-mb-px flex space-x-8">
           <button
-            @click="activeTab = 'new'"
             :class="[
               'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
               activeTab === 'new'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
             ]"
+            @click="activeTab = 'new'"
           >
             <Plus class="w-4 h-4 inline mr-2" />
             Nowy wniosek
           </button>
           <button
-            @click="activeTab = 'my-requests'"
             :class="[
               'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
               activeTab === 'my-requests'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
             ]"
+            @click="activeTab = 'my-requests'"
           >
             <List class="w-4 h-4 inline mr-2" />
             Moje wnioski
@@ -43,13 +43,13 @@
           </button>
           <button
             v-if="canApproveRequests"
-            @click="activeTab = 'to-approve'"
             :class="[
               'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
               activeTab === 'to-approve'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
             ]"
+            @click="activeTab = 'to-approve'"
           >
             <ClipboardList class="w-4 h-4 inline mr-2" />
             Do zatwierdzenia
@@ -60,13 +60,13 @@
 
           <button
             v-if="canApproveRequests"
-            @click="activeTab = 'approved-by-me'"
             :class="[
               'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
               activeTab === 'approved-by-me'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
             ]"
+            @click="activeTab = 'approved-by-me'"
           >
             Zatwierdzone przeze mnie
           </button>
@@ -89,7 +89,7 @@
 
         <!-- Templates Grid -->
         <div v-if="loadingTemplates" class="text-center py-12">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"/>
         </div>
 
         <div v-else-if="filteredTemplates.length === 0" class="text-center py-12">
@@ -106,8 +106,8 @@
           <button
             v-for="template in filteredTemplates"
             :key="template.id"
-            @click="selectTemplate(template)"
             class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-blue-500 transition-all text-left p-6 group"
+            @click="selectTemplate(template)"
           >
             <div class="flex items-start justify-between mb-4">
               <Icon
@@ -166,7 +166,7 @@
 
         <!-- Requests List -->
         <div v-if="loadingRequests" class="text-center py-12">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"/>
         </div>
 
         <div v-else-if="filteredRequests.length === 0" class="text-center py-12">
@@ -269,7 +269,7 @@
 
         <!-- Loading State -->
         <div v-if="loadingApprovals" class="text-center py-12">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"/>
         </div>
 
         <!-- Empty State -->
@@ -335,15 +335,15 @@
               <!-- Actions -->
               <div class="flex flex-col gap-2">
                 <button
-                  @click="openApproveModal(request)"
                   class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                  @click="openApproveModal(request)"
                 >
                   <Icon name="heroicons:check" class="w-5 h-5" />
                   Zatwierdź
                 </button>
                 <button
-                  @click="openRejectModal(request)"
                   class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                  @click="openRejectModal(request)"
                 >
                   <X class="w-5 h-5" />
                   Odrzuć
@@ -363,7 +363,7 @@
       <!-- Tab: Zatwierdzone przeze mnie -->
       <div v-else-if="activeTab === 'approved-by-me'" class="space-y-6">
         <div v-if="loadingApprovals" class="text-center py-12">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"/>
         </div>
 
         <div v-else-if="approvalsHistory.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -411,8 +411,8 @@
             Szczegóły wniosku
           </h2>
           <button
-            @click="closeRequestDetails"
             class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            @click="closeRequestDetails"
           >
             <X class="w-6 h-6" />
           </button>
@@ -470,21 +470,21 @@
               rows="3"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               placeholder="Dodaj komentarz..."
-            ></textarea>
+            />
           </div>
 
           <div class="flex gap-3">
             <button
-              @click="handleApprove"
               :disabled="approving"
               class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors"
+              @click="handleApprove"
             >
               {{ approving ? 'Zatwierdzanie...' : 'Zatwierdź' }}
             </button>
             <button
-              @click="closeApproveModal"
               :disabled="approving"
               class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+              @click="closeApproveModal"
             >
               Anuluj
             </button>
@@ -518,21 +518,21 @@
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-white"
               placeholder="Opisz powód odrzucenia..."
               required
-            ></textarea>
+            />
           </div>
 
           <div class="flex gap-3">
             <button
-              @click="handleReject"
               :disabled="rejecting || !rejectReason.trim()"
               class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors"
+              @click="handleReject"
             >
               {{ rejecting ? 'Odrzucanie...' : 'Odrzuć' }}
             </button>
             <button
-              @click="closeRejectModal"
               :disabled="rejecting"
               class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+              @click="closeRejectModal"
             >
               Anuluj
             </button>

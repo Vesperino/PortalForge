@@ -756,7 +756,7 @@ onMounted(() => {
               type="text"
               placeholder="Wyszukaj po imieniu, nazwisku, emailu lub stanowisku..."
               class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            />
+            >
           </div>
         </div>
         <div class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -1099,9 +1099,9 @@ onMounted(() => {
             </label>
             <select
               v-model="quickEditForm.departmentName"
-              @change="handleQuickEditDepartmentChange"
               required
               class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              @change="handleQuickEditDepartmentChange"
             >
               <option value="">Wybierz dział</option>
               <option
@@ -1122,10 +1122,10 @@ onMounted(() => {
             <PositionAutocomplete
               :model-value="quickEditForm.positionId"
               :initial-position-name="quickEditForm.position"
-              @update:modelValue="handlePositionUpdate"
-              @update:positionName="handlePositionNameUpdate"
               placeholder="Wpisz lub wybierz stanowisko..."
               required
+              @update:model-value="handlePositionUpdate"
+              @update:position-name="handlePositionNameUpdate"
             />
           </div>
         </div>

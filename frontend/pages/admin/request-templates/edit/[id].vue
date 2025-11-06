@@ -4,7 +4,7 @@
       <!-- Loading State -->
       <div v-if="loading" class="flex items-center justify-center py-12">
         <div class="text-center">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"/>
           <p class="text-gray-600 dark:text-gray-400">Ładowanie szablonu...</p>
         </div>
       </div>
@@ -48,7 +48,6 @@
             <button
               v-for="(step, index) in steps"
               :key="index"
-              @click="currentStep = index"
               :class="[
                 'flex-1 py-3 px-4 text-sm font-medium transition-colors',
                 currentStep === index
@@ -59,6 +58,7 @@
                 index === 0 ? 'rounded-l-lg' : '',
                 index === steps.length - 1 ? 'rounded-r-lg' : 'border-r border-gray-300 dark:border-gray-600'
               ]"
+              @click="currentStep = index"
             >
               {{ step }}
             </button>
@@ -142,9 +142,9 @@
 
             <div class="flex items-center">
               <input
+                id="requiresApproval"
                 v-model="form.requiresApproval"
                 type="checkbox"
-                id="requiresApproval"
                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               >
               <label for="requiresApproval" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
@@ -154,9 +154,9 @@
 
             <div class="flex items-center">
               <input
+                id="isActive"
                 v-model="form.isActive"
                 type="checkbox"
-                id="isActive"
                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               >
               <label for="isActive" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -172,8 +172,8 @@
                 Pola formularza
               </h3>
               <button
-                @click="addField"
                 class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                @click="addField"
               >
                 <Plus class="w-4 h-4 mr-2" />
                 Dodaj pole
@@ -261,15 +261,15 @@
                             class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm"
                           >
                           <button
-                            @click="removeFieldOption(index, optIndex)"
                             class="text-red-600 hover:text-red-700"
+                            @click="removeFieldOption(index, optIndex)"
                           >
                             <X class="w-4 h-4" />
                           </button>
                         </div>
                         <button
-                          @click="addFieldOption(index)"
                           class="text-sm text-blue-600 hover:text-blue-700"
+                          @click="addFieldOption(index)"
                         >
                           + Dodaj opcję
                         </button>
@@ -290,8 +290,8 @@
                     </div>
 
                     <button
-                      @click="removeField(index)"
                       class="text-red-600 hover:text-red-700 p-2"
+                      @click="removeField(index)"
                     >
                       <Trash2 class="w-5 h-5" />
                     </button>
@@ -308,8 +308,8 @@
                 Przepływ zatwierdzeń
               </h3>
               <button
-                @click="addApprovalStep"
                 class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                @click="addApprovalStep"
               >
                 <Plus class="w-4 h-4 mr-2" />
                 Dodaj etap
@@ -321,7 +321,7 @@
             </div>
 
             <div v-if="loadingData" class="text-center py-8">
-              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"/>
               <p class="mt-2 text-gray-600 dark:text-gray-400">Ładowanie danych...</p>
             </div>
 
@@ -343,8 +343,8 @@
           <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               v-if="currentStep > 0"
-              @click="currentStep--"
               class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+              @click="currentStep--"
             >
               <ArrowLeft class="w-4 h-4 mr-2" />
               Wstecz
@@ -353,17 +353,17 @@
 
             <button
               v-if="currentStep < steps.length - 1"
-              @click="currentStep++"
               class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              @click="currentStep++"
             >
               Dalej
               <ArrowRight class="w-4 h-4 ml-2" />
             </button>
             <button
               v-else
-              @click="saveTemplate"
               :disabled="saving"
               class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50"
+              @click="saveTemplate"
             >
               <Save class="w-4 h-4 mr-2" />
               {{ saving ? 'Zapisywanie...' : 'Zapisz zmiany' }}
@@ -379,7 +379,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ArrowLeft, ArrowRight, Plus, Trash2, X, Save, GripVertical } from 'lucide-vue-next'
 import draggable from 'vuedraggable'
-import type { RequestTemplateField, RequestApprovalStepTemplate, QuizOption } from '~/types/requests'
+import type { RequestTemplateField, RequestApprovalStepTemplate } from '~/types/requests'
 import type { UserDto } from '~/stores/admin'
 import type { RoleGroupDto } from '~/stores/roleGroups'
 

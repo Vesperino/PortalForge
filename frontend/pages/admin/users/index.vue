@@ -40,7 +40,7 @@
               placeholder="Email, imię, nazwisko..."
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               @input="debouncedSearch"
-            />
+            >
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Dział</label>
@@ -50,7 +50,7 @@
               placeholder="Wszystkie działy"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               @input="debouncedSearch"
-            />
+            >
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rola</label>
@@ -84,7 +84,7 @@
 
       <!-- Loading State -->
       <div v-if="adminStore.loading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"/>
         <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie użytkowników...</p>
       </div>
 
@@ -162,8 +162,8 @@
                   Edytuj
                 </NuxtLink>
                 <button
-                  @click="confirmDelete(user)"
                   class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                  @click="confirmDelete(user)"
                 >
                   Usuń
                 </button>
@@ -176,16 +176,16 @@
         <div class="bg-white dark:bg-gray-800 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
           <div class="flex-1 flex justify-between sm:hidden">
             <button
-              @click="previousPage"
               :disabled="adminStore.pageNumber === 1"
               class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
+              @click="previousPage"
             >
               Poprzednia
             </button>
             <button
-              @click="nextPage"
               :disabled="adminStore.pageNumber === adminStore.totalPages"
               class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
+              @click="nextPage"
             >
               Następna
             </button>
@@ -205,16 +205,16 @@
             <div>
               <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                 <button
-                  @click="previousPage"
                   :disabled="adminStore.pageNumber === 1"
                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
+                  @click="previousPage"
                 >
                   Poprzednia
                 </button>
                 <button
-                  @click="nextPage"
                   :disabled="adminStore.pageNumber === adminStore.totalPages"
                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
+                  @click="nextPage"
                 >
                   Następna
                 </button>

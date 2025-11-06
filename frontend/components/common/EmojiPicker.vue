@@ -2,8 +2,8 @@
   <div class="relative">
     <button
       type="button"
-      @click="isOpen = !isOpen"
       class="px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+      @click="isOpen = !isOpen"
     >
       {{ selectedEmoji || '😀 Wybierz emoji' }}
     </button>
@@ -20,7 +20,7 @@
           type="text"
           placeholder="Szukaj emoji..."
           class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+        >
       </div>
 
       <!-- Categories -->
@@ -29,9 +29,9 @@
           v-for="cat in categories"
           :key="cat.name"
           type="button"
-          @click="activeCategory = cat.name"
           class="px-2 py-1 text-xs rounded transition-colors"
           :class="activeCategory === cat.name ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300' : 'hover:bg-gray-100 dark:hover:bg-gray-700'"
+          @click="activeCategory = cat.name"
         >
           {{ cat.icon }} {{ cat.label }}
         </button>
@@ -44,9 +44,9 @@
             v-for="emoji in filteredEmojis"
             :key="emoji"
             type="button"
-            @click="selectEmoji(emoji)"
             class="text-2xl p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
             :title="emoji"
+            @click="selectEmoji(emoji)"
           >
             {{ emoji }}
           </button>

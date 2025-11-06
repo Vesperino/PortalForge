@@ -17,13 +17,13 @@
         v-for="category in categories"
         :key="category.id"
         type="button"
-        @click="selectedCategory = category.id"
         :class="[
           'px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors',
           selectedCategory === category.id
             ? 'bg-blue-600 text-white'
             : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
         ]"
+        @click="selectedCategory = category.id"
       >
         {{ category.label }}
       </button>
@@ -34,12 +34,12 @@
         v-for="icon in filteredIcons"
         :key="icon.name"
         type="button"
-        @click="selectIcon(icon.name)"
         :class="[
           'flex flex-col items-center justify-center p-3 rounded-lg transition-all hover:bg-blue-50 dark:hover:bg-blue-900',
           selectedIcon === icon.name ? 'bg-blue-100 dark:bg-blue-800 ring-2 ring-blue-500' : 'bg-white dark:bg-gray-700'
         ]"
         :title="icon.label"
+        @click="selectIcon(icon.name)"
       >
         <Icon :name="icon.iconifyName" class="w-8 h-8" />
         <span class="text-xs mt-1 text-gray-600 dark:text-gray-400 truncate w-full text-center">
@@ -57,8 +57,8 @@
       </div>
       <button
         type="button"
-        @click="clearSelection"
         class="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
+        @click="clearSelection"
       >
         Wyczysc
       </button>

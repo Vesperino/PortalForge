@@ -259,7 +259,7 @@ onMounted(() => {
               type="text"
               placeholder="np. VacationAllowanceUpdated"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-            />
+            >
           </div>
 
           <!-- From Date -->
@@ -271,7 +271,7 @@ onMounted(() => {
               v-model="fromDateFilter"
               type="date"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-            />
+            >
           </div>
 
           <!-- To Date -->
@@ -283,7 +283,7 @@ onMounted(() => {
               v-model="toDateFilter"
               type="date"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-            />
+            >
           </div>
 
           <!-- Reset Button -->
@@ -306,7 +306,7 @@ onMounted(() => {
               type="text"
               placeholder="Szukaj w logach..."
               class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-            />
+            >
           </div>
         </div>
       </div>

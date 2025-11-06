@@ -125,23 +125,23 @@ onMounted(() => {
           <!-- Scope Filter -->
           <div class="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
             <button
-              @click="selectedScope = 'all'"
               :class="selectedScope === 'all' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
               class="px-4 py-2 text-sm font-medium transition-colors"
+              @click="selectedScope = 'all'"
             >
               Wszystkie
             </button>
             <button
-              @click="selectedScope = 'department'"
               :class="selectedScope === 'department' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
               class="px-4 py-2 text-sm font-medium border-l border-gray-300 dark:border-gray-600 transition-colors"
+              @click="selectedScope = 'department'"
             >
               Mój dział
             </button>
             <button
-              @click="selectedScope = 'global'"
               :class="selectedScope === 'global' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
               class="px-4 py-2 text-sm font-medium border-l border-gray-300 dark:border-gray-600 transition-colors"
+              @click="selectedScope = 'global'"
             >
               Globalne
             </button>
@@ -162,7 +162,7 @@ onMounted(() => {
 
     <!-- Loading State -->
     <div v-if="loading" class="rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-12 text-center">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"/>
       <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie serwisów...</p>
     </div>
 
@@ -170,8 +170,8 @@ onMounted(() => {
     <div v-else-if="error" class="rounded-xl border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 p-6">
       <p class="text-red-800 dark:text-red-300">{{ error }}</p>
       <button
-        @click="loadServices"
         class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+        @click="loadServices"
       >
         Spróbuj ponownie
       </button>
@@ -209,8 +209,8 @@ onMounted(() => {
               <!-- Icon -->
               <div class="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
                 <span v-if="service.iconType === 'emoji'">{{ service.icon || '🔗' }}</span>
-                <img v-else-if="service.iconType === 'image'" :src="service.icon" alt="" class="w-10 h-10 rounded" />
-                <i v-else :class="service.icon" class="text-blue-600 dark:text-blue-400"></i>
+                <img v-else-if="service.iconType === 'image'" :src="service.icon" alt="" class="w-10 h-10 rounded" >
+                <i v-else :class="service.icon" class="text-blue-600 dark:text-blue-400"/>
               </div>
 
               <!-- Content -->

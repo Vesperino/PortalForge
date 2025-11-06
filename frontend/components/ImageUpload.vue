@@ -144,7 +144,7 @@ function handlePaste(event: ClipboardEvent) {
         class="hidden"
         :accept="acceptedFormats.join(',')"
         @change="handleFileChange"
-      />
+      >
       
       <div v-if="!isUploading" class="space-y-2">
         <div class="text-4xl">📸</div>
@@ -168,7 +168,7 @@ function handlePaste(event: ClipboardEvent) {
           <div
             class="bg-blue-500 h-2 rounded-full transition-all duration-300"
             :style="{ width: `${uploadProgress}%` }"
-          ></div>
+          />
         </div>
       </div>
     </div>
@@ -179,7 +179,7 @@ function handlePaste(event: ClipboardEvent) {
         :src="previewUrl"
         alt="Preview"
         class="w-full h-64 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
-      />
+      >
       <button
         type="button"
         class="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
@@ -206,7 +206,7 @@ function handlePaste(event: ClipboardEvent) {
           class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm"
           placeholder="https://example.com/image.jpg"
           @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
-        />
+        >
       </div>
     </details>
   </div>

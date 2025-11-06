@@ -149,13 +149,13 @@ const documentsFullPath = computed(() => {
       <div class="border-b border-gray-200 dark:border-gray-700">
         <nav class="flex -mb-px">
           <button
-            @click="activeTab = 'storage'"
             :class="[
               'px-6 py-4 text-sm font-medium border-b-2 transition',
               activeTab === 'storage'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
             ]"
+            @click="activeTab = 'storage'"
           >
             <div class="flex items-center gap-2">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,13 +165,13 @@ const documentsFullPath = computed(() => {
             </div>
           </button>
           <button
-            @click="activeTab = 'ai'"
             :class="[
               'px-6 py-4 text-sm font-medium border-b-2 transition',
               activeTab === 'ai'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
             ]"
+            @click="activeTab = 'ai'"
           >
             <div class="flex items-center gap-2">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -13,8 +13,8 @@
           </label>
           <select
             :value="step.approverType"
-            @change="(e) => { const newType = (e.target as HTMLSelectElement).value as any; onApproverTypeChange(newType); updateStep({ approverType: newType }); }"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+            @change="(e) => { const newType = (e.target as HTMLSelectElement).value as any; onApproverTypeChange(newType); updateStep({ approverType: newType }); }"
           >
             <option value="DirectSupervisor">Kierownik działu (HeadOfDepartment)</option>
             <option value="DepartmentDirector">Dyrektor działu (Director)</option>
@@ -32,8 +32,8 @@
           </label>
           <select
             :value="step.specificDepartmentId"
-            @change="(e) => updateStep({ specificDepartmentId: (e.target as HTMLSelectElement).value })"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+            @change="(e) => updateStep({ specificDepartmentId: (e.target as HTMLSelectElement).value })"
           >
             <option value="">-- Wybierz dział --</option>
             <option v-for="dept in departments" :key="dept.id" :value="dept.id">
@@ -50,11 +50,11 @@
           <div ref="dropdownRef" class="relative">
             <input
               v-model="userSearchTerm"
-              @input="searchUsers"
-              @focus="showUserDropdown = true"
               type="text"
               placeholder="Szukaj użytkownika..."
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+              @input="searchUsers"
+              @focus="showUserDropdown = true"
             >
             
             <!-- Selected User Display -->
@@ -73,8 +73,8 @@
                 </div>
               </div>
               <button
-                @click="clearUserSelection"
                 class="text-red-600 hover:text-red-700 p-1"
+                @click="clearUserSelection"
               >
                 <Icon name="heroicons:x-mark" class="w-5 h-5" />
               </button>
@@ -88,8 +88,8 @@
               <div
                 v-for="user in filteredUsers"
                 :key="user.id"
-                @click="selectUser(user)"
                 class="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-3"
+                @click="selectUser(user)"
               >
                 <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                   {{ user.firstName[0] }}{{ user.lastName[0] }}
@@ -114,8 +114,8 @@
           </label>
           <select
             :value="step.approverGroupId"
-            @change="(e) => updateStep({ approverGroupId: (e.target as HTMLSelectElement).value })"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+            @change="(e) => updateStep({ approverGroupId: (e.target as HTMLSelectElement).value })"
           >
             <option value="">-- Wybierz grupę --</option>
             <option v-for="group in roleGroups" :key="group.id" :value="group.id">
@@ -137,9 +137,9 @@
           <label class="flex items-center">
             <input
               :checked="step.requiresQuiz"
-              @change="(e) => updateStep({ requiresQuiz: (e.target as HTMLInputElement).checked })"
               type="checkbox"
               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              @change="(e) => updateStep({ requiresQuiz: (e.target as HTMLInputElement).checked })"
             >
             <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
               Wymaga quizu
@@ -162,8 +162,8 @@
               </p>
             </div>
             <button
-              @click="showQuizModal = true"
               class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
+              @click="showQuizModal = true"
             >
               <Icon name="heroicons:cog-6-tooth" class="w-4 h-4 mr-2" />
               Konfiguruj quiz
@@ -173,8 +173,8 @@
       </div>
 
       <button
-        @click="$emit('remove')"
         class="text-red-600 hover:text-red-700 p-2"
+        @click="$emit('remove')"
       >
         <Icon name="heroicons:trash" class="w-5 h-5" />
       </button>

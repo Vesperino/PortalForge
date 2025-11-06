@@ -34,26 +34,26 @@
       <!-- Filters -->
       <div class="mb-6 flex flex-wrap gap-3">
         <button
-          @click="filterCategory = ''"
           :class="[
             'px-4 py-2 rounded-lg font-medium transition-colors',
             filterCategory === '' 
               ? 'bg-blue-600 text-white' 
               : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
           ]"
+          @click="filterCategory = ''"
         >
           Wszystkie
         </button>
         <button
           v-for="category in uniqueCategories"
           :key="category"
-          @click="filterCategory = category"
           :class="[
             'px-4 py-2 rounded-lg font-medium transition-colors',
             filterCategory === category 
               ? 'bg-blue-600 text-white' 
               : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
           ]"
+          @click="filterCategory = category"
         >
           {{ category }}
         </button>
@@ -61,7 +61,7 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="flex items-center justify-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"/>
       </div>
 
       <!-- Error State -->
@@ -149,17 +149,17 @@
               </NuxtLink>
 
               <button
-                @click="viewTemplate(template)"
                 class="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm"
+                @click="viewTemplate(template)"
               >
                 Szczegóły
               </button>
             </div>
 
             <button
-              @click="confirmDelete(template)"
               class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium text-sm flex items-center gap-1"
               :disabled="deleting === template.id"
+              @click="confirmDelete(template)"
             >
               <Trash2 class="w-4 h-4" />
               {{ deleting === template.id ? 'Usuwanie...' : 'Usuń' }}
@@ -186,12 +186,12 @@
             Utwórz pierwszy szablon
           </NuxtLink>
           <button
-            @click="seedTemplates"
             :disabled="seeding"
             class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors"
+            @click="seedTemplates"
           >
             <template v-if="seeding">
-              <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"/>
               Ładowanie...
             </template>
             <template v-else>
@@ -211,8 +211,8 @@
           Nie znaleziono żadnych szablonów spełniających kryteria wyszukiwania
         </p>
         <button
-          @click="clearFilters"
           class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors"
+          @click="clearFilters"
         >
           Wyczyść filtry
         </button>

@@ -3,7 +3,7 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Loading -->
       <div v-if="loading" class="text-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"/>
       </div>
 
       <!-- Error -->
@@ -58,7 +58,7 @@
 
           <!-- Loading vacation data -->
           <div v-if="vacationSummaryLoading" class="text-center py-4">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"/>
           </div>
 
           <!-- Vacation summary -->
@@ -128,7 +128,7 @@
 
             <!-- Validation in progress -->
             <div v-else-if="isValidating" class="flex items-center gap-2 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+              <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"/>
               <span class="text-sm text-gray-600 dark:text-gray-400">Sprawdzanie dostępności...</span>
             </div>
           </div>
@@ -139,7 +139,7 @@
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Załączniki (zdjęcia/skan zaświadczenia)
           </label>
-          <input type="file" multiple accept="image/*" @change="onAttachmentsChange" class="block w-full text-sm text-gray-700 dark:text-gray-300" />
+          <input type="file" multiple accept="image/*" class="block w-full text-sm text-gray-700 dark:text-gray-300" @change="onAttachmentsChange" >
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Do 5 plików, zostaną zapisane wraz z wnioskiem.</p>
         </div>
 
@@ -161,7 +161,7 @@
               placeholder="Wpisz min. 2 znaki i wybierz z listy"
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               @input="searchUsers"
-            />
+            >
             <ul v-if="subResults.length > 0" class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow">
               <li
                 v-for="u in subResults"
@@ -233,8 +233,8 @@
                 <select
                   v-model="formData[field.id!]"
                   :required="field.isRequired"
-                  @change="handleFieldChange"
                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  @change="handleFieldChange"
                 >
                   <option value="">Wybierz...</option>
                   <option
@@ -258,8 +258,8 @@
                   v-model="formData[field.id!]"
                   type="date"
                   :required="field.isRequired"
-                  @change="handleFieldChange"
                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  @change="handleFieldChange"
                 >
                 <p v-if="field.helpText" class="mt-1 text-sm text-gray-500">{{ field.helpText }}</p>
               </div>
@@ -325,9 +325,9 @@
           </NuxtLink>
 
           <button
-            @click="submitRequest"
             :disabled="submitting || (template.isVacationRequest && validationResult && !validationResult.canTake)"
             class="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+            @click="submitRequest"
           >
             {{ submitting ? 'Wysyłanie...' : 'Złóż wniosek' }}
           </button>

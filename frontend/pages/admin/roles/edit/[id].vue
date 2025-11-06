@@ -18,7 +18,7 @@
 
       <!-- Loading State -->
       <div v-if="isLoading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"/>
         <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie grupy ról...</p>
       </div>
 
@@ -56,7 +56,7 @@
               :disabled="roleGroup.isSystemRole"
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="np. Moderatorzy"
-            />
+            >
           </div>
 
           <!-- Description -->
@@ -72,7 +72,7 @@
               :disabled="roleGroup.isSystemRole"
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="Opisz rolę i zakres odpowiedzialności..."
-            ></textarea>
+            />
           </div>
 
           <!-- Permissions -->
@@ -83,7 +83,7 @@
 
             <!-- Loading State -->
             <div v-if="permissionsStore.loading" class="text-center py-8">
-              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"/>
               <p class="mt-2 text-gray-600 dark:text-gray-400">Ładowanie uprawnień...</p>
             </div>
 
@@ -104,8 +104,8 @@
                   <button
                     v-if="!roleGroup.isSystemRole"
                     type="button"
-                    @click="toggleCategory(category)"
                     class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                    @click="toggleCategory(category)"
                   >
                     {{ isCategorySelected(category) ? 'Odznacz wszystkie' : 'Zaznacz wszystkie' }}
                   </button>
@@ -118,12 +118,12 @@
                     :class="{ 'cursor-not-allowed': roleGroup.isSystemRole }"
                   >
                     <input
+                      v-model="formData.permissionIds"
                       type="checkbox"
                       :value="permission.id"
-                      v-model="formData.permissionIds"
                       :disabled="roleGroup.isSystemRole"
                       class="mt-1 h-4 w-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
+                    >
                     <div class="ml-3">
                       <span class="text-sm font-medium text-gray-900 dark:text-white">{{ permission.name }}</span>
                       <p class="text-xs text-gray-600 dark:text-gray-400">{{ permission.description }}</p>

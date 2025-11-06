@@ -232,7 +232,7 @@ function toggleCodeBlock() {
         U
       </button>
 
-      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"/>
 
       <!-- Nagłówki -->
       <button
@@ -263,7 +263,7 @@ function toggleCodeBlock() {
         H3
       </button>
 
-      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"/>
 
       <!-- Wyrównanie -->
       <button
@@ -311,7 +311,7 @@ function toggleCodeBlock() {
         </svg>
       </button>
 
-      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"/>
 
       <!-- Listy -->
       <button
@@ -333,7 +333,7 @@ function toggleCodeBlock() {
         1. Lista
       </button>
 
-      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"/>
 
       <!-- Code Block -->
       <button
@@ -346,7 +346,7 @@ function toggleCodeBlock() {
         &lt;/&gt; Kod
       </button>
 
-      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"/>
 
       <!-- Kolor tekstu -->
       <button
@@ -358,7 +358,7 @@ function toggleCodeBlock() {
         🎨 Kolor
       </button>
 
-      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"/>
 
       <!-- Link -->
       <button
@@ -380,7 +380,7 @@ function toggleCodeBlock() {
         ❌ Unlink
       </button>
 
-      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"/>
 
       <!-- Media -->
       <button
@@ -400,7 +400,7 @@ function toggleCodeBlock() {
         ▶️ YouTube
       </button>
 
-      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+      <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"/>
 
       <!-- Tabela -->
       <button

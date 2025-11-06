@@ -25,7 +25,6 @@
           <button
             v-for="(step, index) in steps"
             :key="index"
-            @click="currentStep = index"
             :class="[
               'flex-1 py-3 px-4 text-sm font-medium transition-colors',
               currentStep === index
@@ -36,6 +35,7 @@
               index === 0 ? 'rounded-l-lg' : '',
               index === steps.length - 1 ? 'rounded-r-lg' : 'border-r border-gray-300 dark:border-gray-600'
             ]"
+            @click="currentStep = index"
           >
             {{ step }}
           </button>
@@ -119,9 +119,9 @@
 
           <div class="flex items-center">
             <input
+              id="requiresApproval"
               v-model="form.requiresApproval"
               type="checkbox"
-              id="requiresApproval"
               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             >
             <label for="requiresApproval" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
@@ -131,9 +131,9 @@
 
           <div class="flex items-center">
             <input
+              id="requiresSubstituteSelection"
               v-model="form.requiresSubstituteSelection"
               type="checkbox"
-              id="requiresSubstituteSelection"
               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             >
             <label for="requiresSubstituteSelection" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
@@ -155,8 +155,8 @@
               Pola formularza
             </h3>
             <button
-              @click="addField"
               class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              @click="addField"
             >
               <Plus class="w-4 h-4 mr-2" />
               Dodaj pole
@@ -244,15 +244,15 @@
                           class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm"
                         >
                         <button
-                          @click="removeFieldOption(index, optIndex)"
                           class="text-red-600 hover:text-red-700"
+                          @click="removeFieldOption(index, optIndex)"
                         >
                           <X class="w-4 h-4" />
                         </button>
                       </div>
                       <button
-                        @click="addFieldOption(index)"
                         class="text-sm text-blue-600 hover:text-blue-700"
+                        @click="addFieldOption(index)"
                       >
                         + Dodaj opcję
                       </button>
@@ -273,8 +273,8 @@
                   </div>
 
                   <button
-                    @click="removeField(index)"
                     class="text-red-600 hover:text-red-700 p-2"
+                    @click="removeField(index)"
                   >
                     <Trash2 class="w-5 h-5" />
                   </button>
@@ -291,8 +291,8 @@
               Przepływ zatwierdzeń
             </h3>
             <button
-              @click="addApprovalStep"
               class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              @click="addApprovalStep"
             >
               <Plus class="w-4 h-4 mr-2" />
               Dodaj etap
@@ -326,8 +326,8 @@
         <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
           <button
             v-if="currentStep > 0"
-            @click="currentStep--"
             class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            @click="currentStep--"
           >
             <ArrowLeft class="w-4 h-4 mr-2" />
             Wstecz
@@ -336,17 +336,17 @@
 
           <button
             v-if="currentStep < steps.length - 1"
-            @click="currentStep++"
             class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+            @click="currentStep++"
           >
             Dalej
             <ArrowRight class="w-4 h-4 ml-2" />
           </button>
           <button
             v-else
-            @click="saveTemplate"
             :disabled="saving"
             class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50"
+            @click="saveTemplate"
           >
             <Save class="w-4 h-4 mr-2" />
             {{ saving ? 'Zapisywanie...' : 'Zapisz szablon' }}
@@ -361,7 +361,7 @@
 import { ref } from 'vue'
 import { ArrowLeft, ArrowRight, Plus, Trash2, X, Save, GripVertical } from 'lucide-vue-next'
 import draggable from 'vuedraggable'
-import type { RequestTemplateField, RequestApprovalStepTemplate, QuizOption } from '~/types/requests'
+import type { RequestTemplateField, RequestApprovalStepTemplate } from '~/types/requests'
 import type { UserDto } from '~/stores/admin'
 import type { RoleGroupDto } from '~/stores/roleGroups'
 import type { DepartmentDto } from '~/composables/useDepartmentsApi'

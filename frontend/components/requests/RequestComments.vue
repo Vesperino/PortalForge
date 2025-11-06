@@ -139,7 +139,7 @@ const handleSubmit = async () => {
 
     <!-- Add Comment Form -->
     <div v-if="canAddComment" class="border-t border-gray-200 dark:border-gray-700 pt-4">
-      <form @submit.prevent="handleSubmit" class="space-y-3">
+      <form class="space-y-3" @submit.prevent="handleSubmit">
         <textarea
           v-model="newComment"
           rows="3"

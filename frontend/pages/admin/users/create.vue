@@ -22,7 +22,7 @@
       </div>
 
       <!-- Form -->
-      <form @submit.prevent="handleSubmit" class="bg-white rounded-lg shadow-md p-6">
+      <form class="bg-white rounded-lg shadow-md p-6" @submit.prevent="handleSubmit">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Email -->
           <div class="md:col-span-2">
@@ -35,7 +35,7 @@
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="jan.kowalski@example.com"
-            />
+            >
           </div>
 
           <!-- Password -->
@@ -50,7 +50,7 @@
               minlength="8"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Minimum 8 znaków"
-            />
+            >
           </div>
 
           <!-- First Name -->
@@ -64,7 +64,7 @@
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Jan"
-            />
+            >
           </div>
 
           <!-- Last Name -->
@@ -78,7 +78,7 @@
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Kowalski"
-            />
+            >
           </div>
 
           <!-- Department -->
@@ -109,10 +109,10 @@
             </label>
             <PositionAutocomplete
               :model-value="positionId"
-              @update:modelValue="handlePositionUpdate"
-              @update:positionName="handlePositionNameUpdate"
               placeholder="Wpisz lub wybierz stanowisko..."
               required
+              @update:model-value="handlePositionUpdate"
+              @update:position-name="handlePositionNameUpdate"
             />
           </div>
 
@@ -126,7 +126,7 @@
               type="tel"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="+48 123 456 789"
-            />
+            >
           </div>
 
           <!-- Role -->
@@ -162,11 +162,11 @@
                 class="flex items-center"
               >
                 <input
+                  v-model="form.roleGroupIds"
                   type="checkbox"
                   :value="roleGroup.id"
-                  v-model="form.roleGroupIds"
                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
+                >
                 <span class="ml-2 text-sm text-gray-700">
                   {{ roleGroup.name }}
                   <span class="text-gray-500">({{ roleGroup.description }})</span>
@@ -179,10 +179,10 @@
           <div class="md:col-span-2">
             <label class="flex items-center">
               <input
-                type="checkbox"
                 v-model="form.mustChangePassword"
+                type="checkbox"
                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
+              >
               <span class="ml-2 text-sm text-gray-700">
                 Wymagaj zmiany hasła przy pierwszym logowaniu
               </span>

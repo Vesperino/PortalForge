@@ -323,8 +323,8 @@ onMounted(async () => {
       </label>
       <select
         v-model="selectedDepartmentId"
-        @change="fetchCalendarData"
         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+        @change="fetchCalendarData"
       >
         <option
           v-for="dept in visibleDepartments"

@@ -46,7 +46,7 @@
               placeholder="Email, imię, nazwisko..."
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               @input="debouncedSearch"
-            />
+            >
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -58,14 +58,14 @@
               placeholder="Filtruj po dziale..."
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               @input="debouncedSearch"
-            />
+            >
           </div>
         </div>
       </div>
 
       <!-- Loading State -->
       <div v-if="loading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"/>
         <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie użytkowników...</p>
       </div>
 
@@ -104,9 +104,9 @@
 
             <!-- Save Button -->
             <button
-              @click="savePermissions(user.id)"
               :disabled="savingUserId === user.id"
               class="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              @click="savePermissions(user.id)"
             >
               <svg
                 v-if="savingUserId !== user.id"
@@ -117,7 +117,7 @@
               >
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <div v-else class="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div v-else class="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"/>
               {{ savingUserId === user.id ? 'Zapisywanie...' : 'Zapisz' }}
             </button>
           </div>
@@ -133,7 +133,7 @@
                     type="checkbox"
                     class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                     @change="handleViewAllChange(user.id)"
-                  />
+                  >
                   <span class="ml-2 text-sm font-medium text-gray-900 dark:text-white">
                     Może przeglądać wszystkie działy
                   </span>
@@ -169,7 +169,7 @@
                       :value="dept.id"
                       type="checkbox"
                       class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                    />
+                    >
                     <span class="ml-2 text-sm text-gray-900 dark:text-white">
                       {{ dept.name }}
                     </span>
@@ -224,16 +224,16 @@
           </div>
           <div class="flex gap-2">
             <button
-              @click="previousPage"
               :disabled="currentPage === 1"
               class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              @click="previousPage"
             >
               Poprzednia
             </button>
             <button
-              @click="nextPage"
               :disabled="currentPage === totalPages"
               class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              @click="nextPage"
             >
               Następna
             </button>

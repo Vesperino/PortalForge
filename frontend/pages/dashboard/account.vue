@@ -422,8 +422,8 @@ const logout = async () => {
             <label class="text-sm text-gray-700 dark:text-gray-300">Rok:</label>
             <select
               v-model.number="selectedYear"
-              @change="fetchVacationData"
               class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              @change="fetchVacationData"
             >
               <option v-for="y in availableYears" :key="y" :value="y">{{ y }}</option>
             </select>
@@ -465,7 +465,7 @@ const logout = async () => {
                     <span class="text-gray-500 dark:text-gray-400">Zastępca</span>
                     <span class="font-medium">{{ selectedVacation.substitute ? `${selectedVacation.substitute.firstName} ${selectedVacation.substitute.lastName}` : '—' }}</span>
                   </div>
-                  <div class="flex justify-between" v-if="selectedVacation.createdAt">
+                  <div v-if="selectedVacation.createdAt" class="flex justify-between">
                     <span class="text-gray-500 dark:text-gray-400">Utworzone</span>
                     <span class="font-medium">{{ new Date(selectedVacation.createdAt).toLocaleString('pl-PL') }}</span>
                   </div>

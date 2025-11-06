@@ -31,7 +31,7 @@
 
       <!-- Loading State -->
       <div v-if="roleGroupsStore.loading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"/>
         <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie grup ról...</p>
       </div>
 
@@ -96,8 +96,8 @@
               </NuxtLink>
               <button
                 v-if="!roleGroup.isSystemRole"
-                @click="confirmDelete(roleGroup)"
                 class="inline-flex items-center px-3 py-1.5 text-sm bg-red-600 dark:bg-red-500 text-white rounded hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
+                @click="confirmDelete(roleGroup)"
               >
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -131,16 +131,16 @@
 
           <div class="flex items-center justify-end space-x-3">
             <button
-              @click="cancelDelete"
               :disabled="isDeleting"
               class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              @click="cancelDelete"
             >
               Anuluj
             </button>
             <button
-              @click="handleDelete"
               :disabled="isDeleting"
               class="px-4 py-2 bg-red-600 dark:bg-red-500 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              @click="handleDelete"
             >
               {{ isDeleting ? 'Usuwanie...' : 'Usuń' }}
             </button>

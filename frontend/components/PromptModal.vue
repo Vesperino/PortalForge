@@ -36,7 +36,7 @@
               :placeholder="placeholder"
               @keyup.enter="handleConfirm"
               @keyup.escape="handleCancel"
-            />
+            >
           </div>
 
           <!-- Actions -->

@@ -2,7 +2,7 @@
   <div class="fixed inset-0 z-[10002] overflow-y-auto" @click.self="$emit('close')">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
       <!-- Background overlay -->
-      <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75" @click="$emit('close')"></div>
+      <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75" @click="$emit('close')"/>
 
       <!-- Modal panel -->
       <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
@@ -14,8 +14,8 @@
             </h3>
             <button
               type="button"
-              @click="$emit('close')"
               class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+              @click="$emit('close')"
             >
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -27,7 +27,7 @@
         <!-- Body -->
         <div class="px-6 py-4">
           <!-- Add New Category Form -->
-          <form @submit.prevent="handleAddCategory" class="mb-6">
+          <form class="mb-6" @submit.prevent="handleAddCategory">
             <div class="flex gap-2">
               <input
                 v-model="newCategoryName"
@@ -35,7 +35,7 @@
                 placeholder="Nazwa nowej kategorii..."
                 required
                 class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+              >
               <button
                 type="submit"
                 class="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
@@ -61,8 +61,8 @@
                 <span class="text-xs text-gray-500 dark:text-gray-400">({{ category.services?.length || 0 }} serwisów)</span>
               </div>
               <button
-                @click="handleDeleteCategory(category.id)"
                 class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm"
+                @click="handleDeleteCategory(category.id)"
               >
                 Usuń
               </button>
@@ -74,8 +74,8 @@
         <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600 flex justify-end">
           <button
             type="button"
-            @click="$emit('close')"
             class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-500"
+            @click="$emit('close')"
           >
             Zamknij
           </button>

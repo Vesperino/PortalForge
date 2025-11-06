@@ -529,7 +529,7 @@ watch(() => route.path, (newPath) => {
     <!-- Loading State -->
     <div v-if="isLoading" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12">
       <div class="flex flex-col items-center justify-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"/>
         <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie danych...</p>
       </div>
     </div>
@@ -592,7 +592,7 @@ watch(() => route.path, (newPath) => {
                     :src="getManagerByDepartment(dept).profilePhotoUrl"
                     :alt="`${getManagerByDepartment(dept).firstName} ${getManagerByDepartment(dept).lastName}`"
                     class="w-full h-full object-cover"
-                  />
+                  >
                   <span v-else>
                     {{ getInitials(getManagerByDepartment(dept)) }}
                   </span>
@@ -621,7 +621,7 @@ watch(() => route.path, (newPath) => {
                     :src="getDirectorByDepartment(dept).profilePhotoUrl"
                     :alt="`${getDirectorByDepartment(dept).firstName} ${getDirectorByDepartment(dept).lastName}`"
                     class="w-full h-full object-cover"
-                  />
+                  >
                   <span v-else>
                     {{ getInitials(getDirectorByDepartment(dept)) }}
                   </span>
@@ -651,7 +651,7 @@ watch(() => route.path, (newPath) => {
                     :src="employee.profilePhotoUrl"
                     :alt="`${employee.firstName} ${employee.lastName}`"
                     class="w-full h-full object-cover"
-                  />
+                  >
                   <span v-else>
                     {{ getInitials(employee) }}
                   </span>
@@ -707,7 +707,7 @@ watch(() => route.path, (newPath) => {
                           :src="employee.profilePhotoUrl"
                           :alt="`${employee.firstName} ${employee.lastName}`"
                           class="w-full h-full object-cover"
-                        />
+                        >
                         <span v-else>
                           {{ getInitials(employee) }}
                         </span>
@@ -788,27 +788,27 @@ watch(() => route.path, (newPath) => {
                   {{ Math.round(zoom * 100) }}%
                 </span>
                 <button
-                  @click="zoom = Math.min(3, zoom + 0.2)"
                   class="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
                   title="Powiększ"
+                  @click="zoom = Math.min(3, zoom + 0.2)"
                 >
                   <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
                   </svg>
                 </button>
                 <button
-                  @click="zoom = Math.max(0.3, zoom - 0.2)"
                   class="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
                   title="Pomniejsz"
+                  @click="zoom = Math.max(0.3, zoom - 0.2)"
                 >
                   <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
                   </svg>
                 </button>
                 <button
-                  @click="resetView"
                   class="p-2 bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-lg transition-colors"
                   title="Resetuj widok"
+                  @click="resetView"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -834,8 +834,8 @@ watch(() => route.path, (newPath) => {
                 :value="rootDept"
                 collapsible
                 selection-mode="single"
-                @node-select="handleDepartmentNodeClick"
                 class="mb-8"
+                @node-select="handleDepartmentNodeClick"
               >
                 <template #department="slotProps">
                   <div class="department-node">
@@ -843,7 +843,7 @@ watch(() => route.path, (newPath) => {
                       {{ slotProps.node.data.name }}
                     </div>
                     <div class="department-manager">
-                      👤 <br/>Dyrektor: {{ slotProps.node.data.director }}
+                      👤 <br>Dyrektor: {{ slotProps.node.data.director }}
                     </div>
                     <div class="department-stats">
                       <span class="employee-badge">
@@ -861,7 +861,7 @@ watch(() => route.path, (newPath) => {
                         :src="slotProps.node.data.profilePhotoUrl"
                         :alt="`${slotProps.node.data.firstName} ${slotProps.node.data.lastName}`"
                         class="employee-avatar-img"
-                      />
+                      >
                       <span v-else>
                         {{ slotProps.node.data.firstName[0] }}{{ slotProps.node.data.lastName[0] }}
                       </span>
@@ -938,7 +938,7 @@ watch(() => route.path, (newPath) => {
                     :src="selectedEmployee.profilePhotoUrl"
                     :alt="`${selectedEmployee.firstName} ${selectedEmployee.lastName}`"
                     class="w-full h-full object-cover"
-                  />
+                  >
                   <span v-else>
                     {{ getInitials(selectedEmployee) }}
                   </span>
@@ -1125,7 +1125,7 @@ watch(() => route.path, (newPath) => {
                     <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kierownik działu</p>
                     <div v-if="getManagerByDepartment(selectedDepartmentNode)" class="flex items-center gap-3">
                       <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
-                        <img v-if="getManagerByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :src="getManagerByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :alt="`${getManagerByDepartment(selectedDepartmentNode)?.firstName} ${getManagerByDepartment(selectedDepartmentNode)?.lastName}`" class="w-full h-full object-cover" />
+                        <img v-if="getManagerByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :src="getManagerByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :alt="`${getManagerByDepartment(selectedDepartmentNode)?.firstName} ${getManagerByDepartment(selectedDepartmentNode)?.lastName}`" class="w-full h-full object-cover" >
                         <span v-else>{{ getInitials(getManagerByDepartment(selectedDepartmentNode) as any) }}</span>
                       </div>
                       <div>
@@ -1145,7 +1145,7 @@ watch(() => route.path, (newPath) => {
                     <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Dyrektor działu</p>
                     <div v-if="getDirectorByDepartment(selectedDepartmentNode)" class="flex items-center gap-3">
                       <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-semibold overflow-hidden">
-                        <img v-if="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :src="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :alt="`${getDirectorByDepartment(selectedDepartmentNode)?.firstName} ${getDirectorByDepartment(selectedDepartmentNode)?.lastName}`" class="w-full h-full object-cover" />
+                        <img v-if="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :src="getDirectorByDepartment(selectedDepartmentNode)?.profilePhotoUrl" :alt="`${getDirectorByDepartment(selectedDepartmentNode)?.firstName} ${getDirectorByDepartment(selectedDepartmentNode)?.lastName}`" class="w-full h-full object-cover" >
                         <span v-else>{{ getInitials(getDirectorByDepartment(selectedDepartmentNode) as any) }}</span>
                       </div>
                       <div>
@@ -1180,7 +1180,7 @@ watch(() => route.path, (newPath) => {
                     @click="selectEmployee(employee); showDepartmentModal = false"
                   >
                     <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold overflow-hidden">
-                      <img v-if="employee.profilePhotoUrl" :src="employee.profilePhotoUrl" :alt="`${employee.firstName} ${employee.lastName}`" class="w-full h-full object-cover" />
+                      <img v-if="employee.profilePhotoUrl" :src="employee.profilePhotoUrl" :alt="`${employee.firstName} ${employee.lastName}`" class="w-full h-full object-cover" >
                       <span v-else>{{ getInitials(employee) }}</span>
                     </div>
                     <div class="flex-1">
@@ -1268,7 +1268,7 @@ watch(() => route.path, (newPath) => {
                       :src="quickEditEmployee.profilePhotoUrl"
                       :alt="`${quickEditEmployee.firstName} ${quickEditEmployee.lastName}`"
                       class="w-full h-full object-cover"
-                    />
+                    >
                     <span v-else>
                       {{ getInitials(quickEditEmployee) }}
                     </span>
@@ -1290,7 +1290,7 @@ watch(() => route.path, (newPath) => {
               </div>
 
               <!-- Form -->
-              <form @submit.prevent="saveQuickEdit" class="space-y-4">
+              <form class="space-y-4" @submit.prevent="saveQuickEdit">
                 <!-- Department -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -1319,10 +1319,10 @@ watch(() => route.path, (newPath) => {
                   </label>
                   <PositionAutocomplete
                     :model-value="positionId"
-                    @update:modelValue="handlePositionUpdate"
-                    @update:positionName="handlePositionNameUpdate"
                     placeholder="Wpisz lub wybierz stanowisko..."
                     required
+                    @update:model-value="handlePositionUpdate"
+                    @update:position-name="handlePositionNameUpdate"
                   />
                 </div>
 
@@ -1331,8 +1331,8 @@ watch(() => route.path, (newPath) => {
                   <button
                     type="button"
                     class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                    @click="closeQuickEditModal"
                     :disabled="quickEditLoading"
+                    @click="closeQuickEditModal"
                   >
                     Anuluj
                   </button>

@@ -17,8 +17,8 @@
               </p>
             </div>
             <button
-              @click="$emit('close')"
               class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              @click="$emit('close')"
             >
               <X class="w-6 h-6" />
             </button>
@@ -51,8 +51,8 @@
               Pytania ({{ localQuestions.length }})
             </h3>
             <button
-              @click="addQuestion"
               class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              @click="addQuestion"
             >
               <Plus class="w-4 h-4 mr-2" />
               Dodaj pytanie
@@ -92,8 +92,8 @@
                 </div>
 
                 <button
-                  @click="removeQuestion(qIndex)"
                   class="text-red-600 hover:text-red-700 p-2 mt-5"
+                  @click="removeQuestion(qIndex)"
                 >
                   <Trash2 class="w-5 h-5" />
                 </button>
@@ -106,8 +106,8 @@
                     Odpowiedzi
                   </label>
                   <button
-                    @click="addOption(qIndex)"
                     class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    @click="addOption(qIndex)"
                   >
                     + Dodaj odpowiedź
                   </button>
@@ -135,8 +135,8 @@
                     class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
                   >
                   <button
-                    @click="removeOption(qIndex, oIndex)"
                     class="text-red-600 hover:text-red-700"
+                    @click="removeOption(qIndex, oIndex)"
                   >
                     <X class="w-4 h-4" />
                   </button>
@@ -156,15 +156,15 @@
         <div class="p-6 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800">
           <div class="flex items-center justify-end gap-3">
             <button
-              @click="$emit('close')"
               class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              @click="$emit('close')"
             >
               Anuluj
             </button>
             <button
-              @click="saveQuiz"
               :disabled="!isValid"
               class="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+              @click="saveQuiz"
             >
               Zapisz quiz
             </button>

@@ -105,7 +105,7 @@ function removeImage() {
         class="hidden"
         accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/x-icon"
         @change="handleFileChange"
-      />
+      >
 
       <div v-if="!isUploading" class="space-y-2">
         <div class="text-3xl">🖼️</div>
@@ -131,7 +131,7 @@ function removeImage() {
         :src="previewUrl"
         alt="Preview"
         class="w-32 h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-600 mx-auto"
-      />
+      >
       <button
         type="button"
         class="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg text-xs"

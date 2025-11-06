@@ -18,7 +18,7 @@
 
       <!-- Loading State -->
       <div v-if="loading && !form" class="bg-white rounded-lg shadow-md p-12 text-center">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"/>
         <p class="mt-4 text-gray-600">Ładowanie danych użytkownika...</p>
       </div>
 
@@ -28,7 +28,7 @@
       </div>
 
       <!-- Form -->
-      <form v-if="form" @submit.prevent="handleSubmit" class="bg-white rounded-lg shadow-md p-6">
+      <form v-if="form" class="bg-white rounded-lg shadow-md p-6" @submit.prevent="handleSubmit">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Email (read-only) -->
           <div class="md:col-span-2">
@@ -40,7 +40,7 @@
               type="email"
               disabled
               class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500"
-            />
+            >
           </div>
 
           <!-- First Name -->
@@ -53,7 +53,7 @@
               type="text"
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            >
           </div>
 
           <!-- Last Name -->
@@ -66,7 +66,7 @@
               type="text"
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            >
           </div>
 
           <!-- Department -->
@@ -76,9 +76,9 @@
             </label>
             <select
               v-model="form.department"
-              @change="handleDepartmentChange"
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              @change="handleDepartmentChange"
             >
               <option value="">Wybierz dział</option>
               <option
@@ -98,10 +98,10 @@
             </label>
             <PositionAutocomplete
               :model-value="positionId"
-              @update:modelValue="handlePositionUpdate"
-              @update:positionName="handlePositionNameUpdate"
               placeholder="Wpisz lub wybierz stanowisko..."
               required
+              @update:model-value="handlePositionUpdate"
+              @update:position-name="handlePositionNameUpdate"
             />
           </div>
 
@@ -114,7 +114,7 @@
               v-model="form.phoneNumber"
               type="tel"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            >
           </div>
 
           <!-- Annual Vacation Days -->
@@ -129,7 +129,7 @@
               max="50"
               placeholder="26"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            >
             <p class="mt-1 text-xs text-gray-500">
               Domyślnie: 26 dni. Dla korekt używaj <NuxtLink to="/admin/vacation" class="text-blue-600 hover:underline">Zarządzania urlopami</NuxtLink>
             </p>
@@ -168,11 +168,11 @@
                 class="flex items-center"
               >
                 <input
+                  v-model="form.roleGroupIds"
                   type="checkbox"
                   :value="roleGroup.id"
-                  v-model="form.roleGroupIds"
                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
+                >
                 <span class="ml-2 text-sm text-gray-700">
                   {{ roleGroup.name }}
                   <span class="text-gray-500">({{ roleGroup.description }})</span>
@@ -185,10 +185,10 @@
           <div class="md:col-span-2">
             <label class="flex items-center">
               <input
-                type="checkbox"
                 v-model="form.isActive"
+                type="checkbox"
                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
+              >
               <span class="ml-2 text-sm text-gray-700">
                 Konto aktywne
               </span>

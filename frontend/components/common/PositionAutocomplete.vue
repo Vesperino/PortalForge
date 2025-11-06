@@ -146,12 +146,12 @@ watch(() => props.initialPositionName, async (newName) => {
       <AutoComplete
         v-model="positionInput"
         :suggestions="suggestions"
-        optionLabel="name"
+        option-label="name"
         :placeholder="placeholder || 'Wpisz stanowisko...'"
         :required="required"
         :disabled="disabled"
         class="flex-1"
-        :appendTo="'self'"
+        :append-to="'self'"
         :pt="{
           root: { class: 'w-full' },
           input: { class: 'w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all' },
@@ -175,8 +175,8 @@ watch(() => props.initialPositionName, async (newName) => {
         severity="success"
         outlined
         :disabled="disabled"
-        @click="openCreateModal"
         title="Dodaj nowe stanowisko"
+        @click="openCreateModal"
       />
     </div>
 

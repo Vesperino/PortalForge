@@ -2,7 +2,7 @@
   <div class="fixed inset-0 z-[10002] overflow-y-auto" @click.self="$emit('close')">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
       <!-- Background overlay -->
-      <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75" @click="$emit('close')"></div>
+      <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75" @click="$emit('close')"/>
 
       <!-- Modal panel -->
       <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
@@ -15,8 +15,8 @@
               </h3>
               <button
                 type="button"
-                @click="$emit('close')"
                 class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                @click="$emit('close')"
               >
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -39,7 +39,7 @@
                   required
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="np. System HR"
-                />
+                >
               </div>
 
               <!-- Description -->
@@ -52,7 +52,7 @@
                   rows="3"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Krótki opis serwisu..."
-                ></textarea>
+                />
               </div>
 
               <!-- URL -->
@@ -66,7 +66,7 @@
                   required
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="https://example.com"
-                />
+                >
               </div>
 
               <!-- Icon -->
@@ -104,7 +104,7 @@
                   type="number"
                   min="0"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                >
               </div>
 
               <!-- Checkboxes -->
@@ -114,7 +114,7 @@
                     v-model="form.isGlobal"
                     type="checkbox"
                     class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
-                  />
+                  >
                   <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     Globalny (widoczny dla wszystkich działów)
                   </span>
@@ -125,7 +125,7 @@
                     v-model="form.isPinned"
                     type="checkbox"
                     class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
-                  />
+                  >
                   <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     Przypięty (wyświetlany na górze)
                   </span>
@@ -136,7 +136,7 @@
                     v-model="form.isActive"
                     type="checkbox"
                     class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
-                  />
+                  >
                   <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     Aktywny
                   </span>
@@ -169,8 +169,8 @@
           <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600 flex justify-end gap-3">
             <button
               type="button"
-              @click="$emit('close')"
               class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-500"
+              @click="$emit('close')"
             >
               Anuluj
             </button>

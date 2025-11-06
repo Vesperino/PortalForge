@@ -129,7 +129,7 @@ async function searchLocation() {
         :class="{ 'border-red-500 dark:border-red-500': error }"
         placeholder="Wprowadź adres lub kliknij na mapie"
         @keyup.enter="searchLocation"
-      />
+      >
       <button
         type="button"
         class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"

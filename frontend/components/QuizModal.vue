@@ -13,8 +13,8 @@
             </p>
           </div>
           <button
-            @click="$emit('close')"
             class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            @click="$emit('close')"
           >
             <X class="w-6 h-6" />
           </button>
@@ -160,7 +160,8 @@
                       ]"
                     >
                       <div class="flex items-center justify-between">
-                        <span :class="[
+                        <span
+:class="[
                           'text-gray-700 dark:text-gray-300',
                           option.isCorrect && 'font-medium text-green-900 dark:text-green-100',
                           !option.isCorrect && question.id && answers[question.id] === option.value && 'font-medium text-red-900 dark:text-red-100'
@@ -186,8 +187,8 @@
         <div class="flex items-center justify-between">
           <button
             v-if="!submitted"
-            @click="$emit('close')"
             class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            @click="$emit('close')"
           >
             Anuluj
           </button>
@@ -195,16 +196,16 @@
 
           <button
             v-if="!submitted"
-            @click="submitQuiz"
             :disabled="answeredCount < extendedQuestions.length"
             class="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+            @click="submitQuiz"
           >
             Prześlij odpowiedzi
           </button>
           <button
             v-else
-            @click="$emit('close')"
             class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            @click="$emit('close')"
           >
             Zamknij
           </button>

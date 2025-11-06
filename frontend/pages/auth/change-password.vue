@@ -303,8 +303,8 @@ async function handleChangePassword() {
           <button
             v-if="!mustChangePassword"
             type="button"
-            @click="router.push('/dashboard')"
             class="w-full flex justify-center py-4 px-4 border-2 border-gray-300 rounded-xl text-base font-semibold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200"
+            @click="router.push('/dashboard')"
           >
             Anuluj
           </button>

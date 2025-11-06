@@ -102,13 +102,13 @@ const isOverLimit = computed(() => charactersRemaining.value < 0)
       <div class="border-b border-gray-200 dark:border-gray-700">
         <nav class="flex -mb-px">
           <button
-            @click="activeTab = 'translate'"
             :class="[
               'px-6 py-4 text-sm font-medium border-b-2 transition',
               activeTab === 'translate'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
             ]"
+            @click="activeTab = 'translate'"
           >
             <div class="flex items-center gap-2">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,13 +118,13 @@ const isOverLimit = computed(() => charactersRemaining.value < 0)
             </div>
           </button>
           <button
-            @click="activeTab = 'chat'"
             :class="[
               'px-6 py-4 text-sm font-medium border-b-2 transition',
               activeTab === 'chat'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
             ]"
+            @click="activeTab = 'chat'"
           >
             <div class="flex items-center gap-2">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,9 +186,9 @@ const isOverLimit = computed(() => charactersRemaining.value < 0)
         </div>
 
         <button
-          @click="handleTranslate"
           :disabled="!textToTranslate.trim() || isOverLimit || isTranslating"
           class="w-full px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition font-medium flex items-center justify-center gap-2"
+          @click="handleTranslate"
         >
           <svg v-if="isTranslating" class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -237,8 +237,8 @@ const isOverLimit = computed(() => charactersRemaining.value < 0)
           </div>
           <button
             v-if="chatHistory.length > 0"
-            @click="clearChat"
             class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+            @click="clearChat"
           >
             Wyczyść historię
           </button>
@@ -315,16 +315,16 @@ const isOverLimit = computed(() => charactersRemaining.value < 0)
           <div class="flex gap-3">
             <input
               v-model="chatMessage"
-              @keyup.enter="handleSendMessage"
               type="text"
               class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Wpisz wiadomość..."
               :disabled="isChatting"
+              @keyup.enter="handleSendMessage"
             >
             <button
-              @click="handleSendMessage"
               :disabled="!chatMessage.trim() || isChatting"
               class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition font-medium flex items-center gap-2"
+              @click="handleSendMessage"
             >
               <svg v-if="isChatting" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
