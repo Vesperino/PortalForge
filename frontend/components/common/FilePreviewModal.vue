@@ -61,11 +61,6 @@ const zoomOut = () => {
   if (imageZoom.value > 50) imageZoom.value -= 10
 }
 
-const resetZoom = () => {
-  imageZoom.value = 100
-  imageRotation.value = 0
-}
-
 const rotate = () => {
   imageRotation.value = (imageRotation.value + 90) % 360
 }
