@@ -264,11 +264,16 @@ public class DefaultRequestTemplatesSeeder
         template.EstimatedProcessingDays = 3;
         template.IsActive = true;
 
-        // Check if there are any active requests using this template
+        // Check existing fields and steps
+        var existingFields = _context.RequestTemplateFields
+            .Where(f => f.RequestTemplateId == template.Id)
+            .ToList();
+
         var existingSteps = _context.RequestApprovalStepTemplates
             .Where(s => s.RequestTemplateId == template.Id)
             .ToList();
 
+        // Check if there are any active requests using this template
         var hasActiveRequests = false;
         if (existingSteps.Any())
         {
@@ -278,27 +283,30 @@ public class DefaultRequestTemplatesSeeder
                             stepIds.Contains(ras.RequestApprovalStepTemplateId.Value));
         }
 
-        // If there are active requests, only update basic properties - don't touch fields/steps
-        if (hasActiveRequests)
+        // CRITICAL FIX: If there are NO fields, always add them (even with active requests)
+        // This handles the case where fields were lost/deleted but requests exist
+        var needsFieldsRestoration = !existingFields.Any();
+
+        // If there are active requests AND fields exist, skip update to preserve data
+        if (hasActiveRequests && !needsFieldsRestoration)
         {
-            _logger.LogInformation("Skipping fields and approval steps update for vacation template - active requests exist");
+            _logger.LogInformation("Skipping fields and approval steps update for vacation template - active requests exist and fields are present");
             return;
         }
 
-        // Safe to update fields and steps - no active requests
+        if (needsFieldsRestoration)
+        {
+            _logger.LogWarning("RESTORING MISSING FIELDS for vacation template (fields count: {Count})", existingFields.Count);
+        }
 
-        // Remove existing fields to prevent duplicates
-        var existingFields = _context.RequestTemplateFields
-            .Where(f => f.RequestTemplateId == template.Id)
-            .ToList();
-
+        // Remove existing fields to prevent duplicates (only if they exist)
         if (existingFields.Any())
         {
             _context.RequestTemplateFields.RemoveRange(existingFields);
         }
 
-        // Remove existing approval steps
-        if (existingSteps.Any())
+        // Only remove/recreate approval steps if there are no active requests
+        if (!hasActiveRequests && existingSteps.Any())
         {
             _context.RequestApprovalStepTemplates.RemoveRange(existingSteps);
         }
@@ -358,22 +366,29 @@ public class DefaultRequestTemplatesSeeder
         // Add to context as new entities
         _context.RequestTemplateFields.AddRange(newFields);
 
-        // Add NEW approval steps
-        var newSteps = new List<RequestApprovalStepTemplate>
+        // Only add NEW approval steps if there are no active requests
+        if (!hasActiveRequests)
         {
-            new RequestApprovalStepTemplate
+            var newSteps = new List<RequestApprovalStepTemplate>
             {
-                Id = Guid.NewGuid(),
-                RequestTemplateId = template.Id,
-                StepOrder = 1,
-                ApproverType = ApproverType.DirectSupervisor,
-                RequiresQuiz = false,
-                CreatedAt = DateTime.UtcNow
-            }
-        };
+                new RequestApprovalStepTemplate
+                {
+                    Id = Guid.NewGuid(),
+                    RequestTemplateId = template.Id,
+                    StepOrder = 1,
+                    ApproverType = ApproverType.DirectSupervisor,
+                    RequiresQuiz = false,
+                    CreatedAt = DateTime.UtcNow
+                }
+            };
 
-        // Add to context as new entities
-        _context.RequestApprovalStepTemplates.AddRange(newSteps);
+            // Add to context as new entities
+            _context.RequestApprovalStepTemplates.AddRange(newSteps);
+        }
+        else
+        {
+            _logger.LogInformation("Keeping existing approval steps for vacation template - active requests exist");
+        }
     }
 
     private void UpdateSickLeaveTemplate(RequestTemplate template, Guid updatedById)
@@ -391,11 +406,16 @@ public class DefaultRequestTemplatesSeeder
         template.EstimatedProcessingDays = 0;
         template.IsActive = true;
 
-        // Check if there are any active requests using this template
+        // Check existing fields and steps
+        var existingFields = _context.RequestTemplateFields
+            .Where(f => f.RequestTemplateId == template.Id)
+            .ToList();
+
         var existingSteps = _context.RequestApprovalStepTemplates
             .Where(s => s.RequestTemplateId == template.Id)
             .ToList();
 
+        // Check if there are any active requests using this template
         var hasActiveRequests = false;
         if (existingSteps.Any())
         {
@@ -405,27 +425,30 @@ public class DefaultRequestTemplatesSeeder
                             stepIds.Contains(ras.RequestApprovalStepTemplateId.Value));
         }
 
-        // If there are active requests, only update basic properties - don't touch fields/steps
-        if (hasActiveRequests)
+        // CRITICAL FIX: If there are NO fields, always add them (even with active requests)
+        // This handles the case where fields were lost/deleted but requests exist
+        var needsFieldsRestoration = !existingFields.Any();
+
+        // If there are active requests AND fields exist, skip update to preserve data
+        if (hasActiveRequests && !needsFieldsRestoration)
         {
-            _logger.LogInformation("Skipping fields and approval steps update for sick leave template - active requests exist");
+            _logger.LogInformation("Skipping fields and approval steps update for sick leave template - active requests exist and fields are present");
             return;
         }
 
-        // Safe to update fields and steps - no active requests
+        if (needsFieldsRestoration)
+        {
+            _logger.LogWarning("RESTORING MISSING FIELDS for sick leave template (fields count: {Count})", existingFields.Count);
+        }
 
-        // Remove existing fields to prevent duplicates
-        var existingFields = _context.RequestTemplateFields
-            .Where(f => f.RequestTemplateId == template.Id)
-            .ToList();
-
+        // Remove existing fields to prevent duplicates (only if they exist)
         if (existingFields.Any())
         {
             _context.RequestTemplateFields.RemoveRange(existingFields);
         }
 
-        // Remove existing approval steps
-        if (existingSteps.Any())
+        // Only remove/recreate approval steps if there are no active requests
+        if (!hasActiveRequests && existingSteps.Any())
         {
             _context.RequestApprovalStepTemplates.RemoveRange(existingSteps);
         }
@@ -469,21 +492,28 @@ public class DefaultRequestTemplatesSeeder
         // Add to context as new entities
         _context.RequestTemplateFields.AddRange(newFields);
 
-        // Add NEW approval steps
-        var newSteps = new List<RequestApprovalStepTemplate>
+        // Only add NEW approval steps if there are no active requests
+        if (!hasActiveRequests)
         {
-            new RequestApprovalStepTemplate
+            var newSteps = new List<RequestApprovalStepTemplate>
             {
-                Id = Guid.NewGuid(),
-                RequestTemplateId = template.Id,
-                StepOrder = 1,
-                ApproverType = ApproverType.DirectSupervisor,
-                RequiresQuiz = false,
-                CreatedAt = DateTime.UtcNow
-            }
-        };
+                new RequestApprovalStepTemplate
+                {
+                    Id = Guid.NewGuid(),
+                    RequestTemplateId = template.Id,
+                    StepOrder = 1,
+                    ApproverType = ApproverType.DirectSupervisor,
+                    RequiresQuiz = false,
+                    CreatedAt = DateTime.UtcNow
+                }
+            };
 
-        // Add to context as new entities
-        _context.RequestApprovalStepTemplates.AddRange(newSteps);
+            // Add to context as new entities
+            _context.RequestApprovalStepTemplates.AddRange(newSteps);
+        }
+        else
+        {
+            _logger.LogInformation("Keeping existing approval steps for sick leave template - active requests exist");
+        }
     }
 }

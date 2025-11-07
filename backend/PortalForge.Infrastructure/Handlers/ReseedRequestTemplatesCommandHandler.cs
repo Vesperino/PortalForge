@@ -71,10 +71,26 @@ public class ReseedRequestTemplatesCommandHandler : IRequestHandler<ReseedReques
                         .Where(t => t.Name == "Wniosek urlopowy" || t.Name == "Zgłoszenie L4 (zwolnienie lekarskie)")
                         .ToListAsync(cancellationToken);
 
-                    // Remove only fields and steps (they will be recreated by seeder)
+                    // Remove only fields (they will be recreated by seeder)
+                    // DON'T remove approval steps - they might be referenced by active requests
                     foreach (var template in existingTemplates)
                     {
-                        // Remove ALL fields
+                        // Check if there are active requests using this template
+                        var steps = await _context.RequestApprovalStepTemplates
+                            .Where(s => s.RequestTemplateId == template.Id)
+                            .ToListAsync(cancellationToken);
+
+                        var hasActiveRequests = false;
+                        if (steps.Any())
+                        {
+                            var stepIds = steps.Select(s => s.Id).ToList();
+                            hasActiveRequests = await _context.RequestApprovalSteps
+                                .AnyAsync(ras => ras.RequestApprovalStepTemplateId.HasValue &&
+                                                stepIds.Contains(ras.RequestApprovalStepTemplateId.Value),
+                                         cancellationToken);
+                        }
+
+                        // Remove ALL fields (safe - not referenced by anything)
                         var fields = await _context.RequestTemplateFields
                             .Where(f => f.RequestTemplateId == template.Id)
                             .ToListAsync(cancellationToken);
@@ -85,19 +101,19 @@ public class ReseedRequestTemplatesCommandHandler : IRequestHandler<ReseedReques
                             _context.RequestTemplateFields.RemoveRange(fields);
                         }
 
-                        // Remove approval step templates
-                        var steps = await _context.RequestApprovalStepTemplates
-                            .Where(s => s.RequestTemplateId == template.Id)
-                            .ToListAsync(cancellationToken);
-
-                        if (steps.Any())
+                        // Only remove approval steps if there are NO active requests
+                        if (!hasActiveRequests && steps.Any())
                         {
-                            _logger.LogInformation("Removing {Count} steps from template {TemplateName}", steps.Count, template.Name);
+                            _logger.LogInformation("Removing {Count} steps from template {TemplateName} (no active requests)", steps.Count, template.Name);
                             _context.RequestApprovalStepTemplates.RemoveRange(steps);
                         }
+                        else if (hasActiveRequests)
+                        {
+                            _logger.LogWarning("Skipping step removal for template {TemplateName} - active requests exist", template.Name);
+                        }
 
-                        // Mark templates as inactive temporarily (will be reactivated by seeder)
-                        template.IsActive = false;
+                        // Keep templates active
+                        template.IsActive = true;
                     }
 
                     await _context.SaveChangesAsync(cancellationToken);
