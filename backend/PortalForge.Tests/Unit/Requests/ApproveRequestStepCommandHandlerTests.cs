@@ -1,6 +1,7 @@
 using Moq;
 using Xunit;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Interfaces;
 using PortalForge.Application.Services;
 using PortalForge.Application.UseCases.Requests.Commands.ApproveRequestStep;
 using PortalForge.Domain.Entities;
@@ -12,6 +13,7 @@ public class ApproveRequestStepCommandHandlerTests
 {
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
     private readonly Mock<IRequestRepository> _mockRequestRepo;
+    private readonly Mock<IRequestCommentRepository> _mockRequestCommentRepo;
     private readonly Mock<INotificationService> _mockNotificationService;
     private readonly Mock<IVacationScheduleService> _mockVacationService;
     private readonly ApproveRequestStepCommandHandler _handler;
@@ -20,9 +22,11 @@ public class ApproveRequestStepCommandHandlerTests
     {
         _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockRequestRepo = new Mock<IRequestRepository>();
+        _mockRequestCommentRepo = new Mock<IRequestCommentRepository>();
         _mockNotificationService = new Mock<INotificationService>();
         _mockVacationService = new Mock<IVacationScheduleService>();
         _mockUnitOfWork.Setup(u => u.RequestRepository).Returns(_mockRequestRepo.Object);
+        _mockUnitOfWork.Setup(u => u.RequestCommentRepository).Returns(_mockRequestCommentRepo.Object);
         _handler = new ApproveRequestStepCommandHandler(
             _mockUnitOfWork.Object,
             _mockNotificationService.Object,
