@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Paperclip, Download, FileText, Image, File, Eye } from 'lucide-vue-next'
 import DocumentViewer from '~/components/common/DocumentViewer.vue'
 
@@ -7,7 +7,11 @@ interface Props {
   attachments: string[]
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
+
+// Convert relative paths to full URLs
+const { getFileUrl } = useFileUrl()
+const fullAttachments = computed(() => props.attachments.map(a => getFileUrl(a)))
 
 const showViewer = ref(false)
 const viewerInitialIndex = ref(0)
@@ -91,9 +95,9 @@ const downloadFile = (url: string, event: Event) => {
     </div>
 
     <!-- Attachments Grid -->
-    <div v-if="attachments.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div v-if="fullAttachments.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div
-        v-for="(attachment, index) in attachments"
+        v-for="(attachment, index) in fullAttachments"
         :key="index"
         class="group relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
       >
@@ -191,7 +195,7 @@ const downloadFile = (url: string, event: Event) => {
     <!-- Document Viewer Modal -->
     <DocumentViewer
       v-if="showViewer"
-      :attachments="attachments"
+      :attachments="fullAttachments"
       :initial-index="viewerInitialIndex"
       @close="showViewer = false"
     />
