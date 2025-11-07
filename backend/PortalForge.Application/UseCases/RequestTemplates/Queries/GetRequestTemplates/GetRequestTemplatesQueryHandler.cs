@@ -15,12 +15,14 @@ public class GetRequestTemplatesQueryHandler
     }
 
     public async Task<GetRequestTemplatesResult> Handle(
-        GetRequestTemplatesQuery request, 
+        GetRequestTemplatesQuery request,
         CancellationToken cancellationToken)
     {
         var templates = await _unitOfWork.RequestTemplateRepository.GetAllAsync();
 
-        var templateDtos = templates.Select(t => new RequestTemplateDto
+        var templateDtos = templates
+            .Where(t => t.IsActive)
+            .Select(t => new RequestTemplateDto
         {
             Id = t.Id,
             Name = t.Name,
