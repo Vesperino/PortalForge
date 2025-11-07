@@ -28,7 +28,7 @@ public class UpdateRequestTemplateCommandHandler
         _logger.LogInformation("Updating request template {TemplateId}", request.Id);
 
         var template = await _unitOfWork.RequestTemplateRepository.GetByIdAsync(request.Id);
-        
+
         if (template == null)
         {
             _logger.LogWarning("Request template {TemplateId} not found", request.Id);
@@ -36,6 +36,19 @@ public class UpdateRequestTemplateCommandHandler
             {
                 Success = false,
                 Message = "Template not found"
+            };
+        }
+
+        // Prevent modification of system templates (vacation and sick leave)
+        if (template.IsVacationRequest || template.IsSickLeaveRequest)
+        {
+            _logger.LogWarning(
+                "Attempt to modify system template {TemplateId} ({TemplateName}). System templates cannot be modified.",
+                request.Id, template.Name);
+            return new UpdateRequestTemplateResult
+            {
+                Success = false,
+                Message = "System templates (vacation request and sick leave) cannot be modified. These templates are managed by the system to ensure compliance with labor regulations."
             };
         }
 

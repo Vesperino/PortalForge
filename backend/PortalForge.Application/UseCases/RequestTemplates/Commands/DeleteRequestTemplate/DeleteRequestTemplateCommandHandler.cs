@@ -34,6 +34,20 @@ public class DeleteRequestTemplateCommandHandler
             throw new NotFoundException($"Request template with ID {request.Id} not found");
         }
 
+        // Prevent deletion of system templates (vacation and sick leave)
+        if (template.IsVacationRequest || template.IsSickLeaveRequest)
+        {
+            _logger.LogWarning(
+                "Attempt to delete system template {TemplateId} ({TemplateName}). System templates cannot be deleted.",
+                request.Id, template.Name);
+
+            return new DeleteRequestTemplateResult
+            {
+                Success = false,
+                Message = "System templates (vacation request and sick leave) cannot be deleted. These templates are managed by the system to ensure compliance with labor regulations."
+            };
+        }
+
         // Check if template is being used by any requests
         var requests = await _unitOfWork.RequestRepository.GetByTemplateIdAsync(request.Id);
 
