@@ -202,7 +202,36 @@ public class StorageController : ControllerBase
             // Return file with proper headers
             var fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-            return File(fileStream, contentType, fileName, enableRangeProcessing: true);
+            // Define content types that should be displayed inline in the browser
+            var inlineContentTypes = new[]
+            {
+                "application/pdf",
+                "text/plain",
+                "text/html",
+                "text/css",
+                "text/javascript",
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/svg+xml",
+                "image/webp",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+                "application/msword", // .doc
+                "application/vnd.ms-excel" // .xls
+            };
+
+            // Return file with inline disposition for supported types, download for others
+            if (inlineContentTypes.Contains(contentType))
+            {
+                // For inline viewing, don't specify fileName to avoid Content-Disposition: attachment
+                return File(fileStream, contentType, enableRangeProcessing: true);
+            }
+            else
+            {
+                // For other file types, trigger download with original filename
+                return File(fileStream, contentType, fileName, enableRangeProcessing: true);
+            }
         }
         catch (Exception ex)
         {
