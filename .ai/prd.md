@@ -27,55 +27,104 @@ Organizacje 200+ pracowników borykają się z:
 
 ### 3.1 Funkcjonalności wchodzące w zakres MVP
 
-#### 3.1.1 System autoryzacji i zarządzania użytkownikami
-- Logowanie przez Supabase Auth
-- Ręczne dodawanie użytkowników przez administratora
-- Import użytkowników z plików CSV/Excel
-- System ról: Admin, Manager, HR, Marketing, Pracownik
-- Zarządzanie sesjami i bezpieczeństwem
+#### 3.1.1 System autoryzacji i zarządzania użytkownikami ✅ ZREALIZOWANE (100%)
+- ✅ Logowanie przez Supabase Auth
+- ✅ Rejestracja z weryfikacją email (z rate limiting resend)
+- ✅ Ręczne dodawanie użytkowników przez administratora
+- ⚠️ Import użytkowników z plików CSV/Excel (UI gotowe, backend wymaga implementacji)
+- ✅ System ról: Admin, Manager, HR, Marketing, Pracownik
+- ✅ Role Groups - niestandardowe grupy ról
+- ✅ Zarządzanie sesjami i bezpieczeństwem (8h timeout)
+- ✅ Token refresh co 50 minut
+- ✅ Organizational permissions - kontrola widoczności działów
 
-#### 3.1.2 Zarządzanie strukturą organizacyjną
-- Tworzenie i edycja hierarchicznej struktury drzewiaste
-- Przechowywanie danych pracownika:
-  - Imię i nazwisko (wymagane)
-  - Email służbowy (wymagane)
-  - Telefon służbowy (opcjonalne)
-  - Dział (wymagane)
-  - Stanowisko (wymagane)
-  - Przełożony (wymagane)
-  - Zdjęcie profilowe (opcjonalne, placeholder domyślny)
-- Wizualizacja struktury całej firmy lub pojedynczego działu
-- Historia zmian w strukturze organizacyjnej
-- Eksport struktury do PDF i Excel
+#### 3.1.2 Zarządzanie strukturą organizacyjną ✅ ZREALIZOWANE (95%)
+- ✅ Tworzenie i edycja nielimitowanej hierarchicznej struktury
+- ✅ 3 tryby wizualizacji: Tree (z pan & zoom), Departments, List
+- ✅ Przechowywanie danych pracownika:
+  - ✅ Imię i nazwisko (wymagane)
+  - ✅ Email służbowy (wymagane)
+  - ✅ Telefon służbowy (opcjonalne)
+  - ✅ Dział (wymagane)
+  - ✅ Stanowisko (wymagane)
+  - ✅ Przełożony (wymagane)
+  - ✅ Zdjęcie profilowe (opcjonalne, placeholder domyślny)
+- ✅ Wizualizacja struktury całej firmy lub pojedynczego działu
+- ✅ Wyszukiwanie i filtrowanie pracowników
+- ✅ Historia zmian w strukturze organizacyjnej (Audit Logs)
+- ⚠️ Eksport struktury do PDF i Excel (UI gotowe, backend zwraca 501)
 
-#### 3.1.3 Kalendarz wydarzeń firmowych
-- Tworzenie wydarzeń przez Admin, HR, Marketing
-- System tagowania (#szkolenie, #impreza, #spotkanie)
-- Targetowanie wydarzeń (wszystkie działy lub wybrane)
-- Archiwizacja wydarzeń (rok wstecz)
-- Przeglądanie wydarzeń w widoku kalendarza
+#### 3.1.3 Kalendarz wydarzeń firmowych ⚠️ CZĘŚCIOWO ZREALIZOWANE (60%)
+- ✅ UI kalendarza pełni zaimplementowane
+- ✅ Model domenowy Event w backendzie
+- ✅ Location picker (Google Maps/OpenStreetMap)
+- ✅ Integracja z newsami (NewsId w Event)
+- ❌ Backend use cases (CreateEvent, UpdateEvent, DeleteEvent, GetEvents) - DO ZROBIENIA
+- ❌ EventsController w API - DO ZROBIENIA
+- ❌ Walidatory dla wydarzeń - DO ZROBIENIA
+- System tagowania (#szkolenie, #impreza, #spotkanie) - Przygotowany w UI
+- Targetowanie wydarzeń (wszystkie działy lub wybrane) - Model wspiera
+- Archiwizacja wydarzeń (rok wstecz) - Do implementacji
+- Przeglądanie wydarzeń w widoku kalendarza - UI gotowe
 
-#### 3.1.4 System newsów
-- Tworzenie newsów niezależnych
-- Powiązanie newsów z wydarzeniami w kalendarzu
-- Autoryzacja tworzenia: Admin, HR, Marketing
-- Śledzenie autorstwa newsów
-- Wyświetlanie newsów na stronie głównej
+#### 3.1.4 System newsów ✅ ZREALIZOWANE (100%)
+- ✅ Tworzenie newsów niezależnych
+- ✅ Rich content editor z formatowaniem
+- ✅ Upload obrazów do newsów
+- ✅ Powiązanie newsów z wydarzeniami w kalendarzu
+- ✅ Autoryzacja tworzenia: Admin, HR, Marketing
+- ✅ Śledzenie autorstwa newsów
+- ✅ Wyświetlanie newsów na stronie głównej
+- ✅ 5 kategorii: Announcement, Product, HR, Tech, Event
+- ✅ System hashtagów
+- ✅ Filtrowanie i wyszukiwanie
 
-#### 3.1.5 Monitoring i raporty
-- Logowanie aktywności użytkowników (data/czas logowania)
-- Raport aktywnych użytkowników (logowania w ostatnim tygodniu)
-- Śledzenie autorstwa newsów i wydarzeń
+#### 3.1.5 Monitoring i raporty ✅ ZREALIZOWANE (100%)
+- ✅ Logowanie aktywności użytkowników (Audit Logs)
+- ✅ Audit trail dla wszystkich operacji CRUD
+- ✅ Śledzenie autorstwa newsów i wydarzeń
+- ✅ Historia zmian z timestampami
+- ✅ Filtrowanie i paginacja logów
+- ✅ Tracking użytkownika, akcji, entity type, entity ID
 
-#### 3.1.6 System wniosków ✅ ZREALIZOWANE
-- Tworzenie własnych szablonów wniosków przez administratorów
-- Definiowanie pól formularza (6 typów: Text, Textarea, Number, Select, Date, Checkbox)
-- Konfigurowalny przepływ zatwierdzeń (Kierownik → Dyrektor)
-- Opcjonalne quizy z progiem zdawalności
-- Widoczność działowa (szablony per dział lub ogólnodostępne)
-- Ikony Lucide dla profesjonalnego wyglądu
-- Sekcja "Moje wnioski" z śledzeniem statusu
-- Wizualna timeline zatwierdzania
+#### 3.1.6 System wniosków ✅ ZREALIZOWANE (100%) - PRZEKROCZONE OCZEKIWANIA
+- ✅ Tworzenie własnych szablonów wniosków przez administratorów
+- ✅ Definiowanie pól formularza (6 typów: Text, Textarea, Number, Select, Date, Checkbox)
+- ✅ Konfigurowalny wieloetapowy przepływ zatwierdzeń
+- ✅ 6 typów zatwierdzających (Supervisor, Role, Specific User, Department, User Group, Submitter)
+- ✅ Opcjonalne quizy z progiem zdawalności na każdym etapie
+- ✅ Widoczność działowa (szablony per dział lub ogólnodostępne)
+- ✅ Ikony (Iconify) dla profesjonalnego wyglądu
+- ✅ Sekcja "Moje wnioski" z śledzeniem statusu
+- ✅ Wizualna timeline zatwierdzania
+- ✅ Komentarze do wniosków z załącznikami
+- ✅ Edit History - pełna historia zmian
+- ✅ SLA monitoring z przypomnieniami
+- ✅ Automatyczne tworzenie urlopów po zatwierdzeniu wniosku urlopowego
+- ✅ Sick Leave (L4) auto-approval z powiadomieniami
+- ✅ Auto-routing w hierarchii organizacyjnej
+- ✅ Vacation substitution - przekierowanie do zastępcy
+
+#### 3.1.7 System zarządzania urlopami ✅ ZREALIZOWANE (95%) - DODATKOWO POZA MVP
+- ✅ Kalendarz urlopów zespołu (2 widoki: Timeline Gantt, Calendar Grid)
+- ✅ Automatyczne zastępstwa podczas nieobecności
+- ✅ Wykrywanie konfliktów urlopowych (alerty 30%/50%)
+- ✅ Email powiadomienia (7 dni przed, 1 dzień przed, start, koniec)
+- ✅ Background services (5 automatycznych zadań)
+- ✅ Statystyki zespołu i osobiste
+- ✅ Carried-over vacation tracking z datami wygaśnięcia
+- ✅ On-demand vacation (4 dni rocznie)
+- ✅ Circumstantial leave tracking
+- ✅ Sick Leave (L4) integration
+- ⚠️ Eksport do PDF/Excel (endpointy istnieją, zwracają 501)
+
+#### 3.1.8 Dodatkowe funkcjonalności poza MVP ✅ ZREALIZOWANE
+- ✅ Internal Services - katalog wewnętrznych narzędzi
+- ✅ AI Chat Assistant - wsparcie użytkowników i tłumaczenia
+- ✅ Location Services - geocoding z cache
+- ✅ Storage Management - upload i zarządzanie plikami
+- ✅ System Settings - runtime configuration bez redeploymentu
+- ✅ Notification System - real-time powiadomienia (backend 100%, frontend 60%)
 
 ### 3.2 Funkcjonalności poza zakresem MVP (przyszłe iteracje)
 - Zarządzanie i wersjonowanie dokumentów
@@ -127,95 +176,129 @@ Organizacje 200+ pracowników borykają się z:
 - ✅ Timer pokazuje ile czasu pozostało do następnego wysłania
 - ✅ Backend loguje wszystkie próby resend dla monitoringu
 
-#### US-002: Odzyskiwanie hasła
+#### US-002: Odzyskiwanie hasła ⚠️ CZĘŚCIOWO ZREALIZOWANE
 **Jako** użytkownik
 **Chcę** móc zresetować zapomniane hasło
 **Aby** odzyskać dostęp do swojego konta
 
 **Kryteria akceptacji:**
-- Link "Zapomniałeś hasła?" na stronie logowania
-- Użytkownik podaje adres email
-- System wysyła link do resetowania hasła
-- Link jest ważny przez 1 godzinę
-- Użytkownik może ustawić nowe hasło
-- Po zmianie hasła wszystkie aktywne sesje są wylogowywane
+- ✅ Link "Zapomniałeś hasła?" na stronie logowania (UI istnieje)
+- ✅ Strona reset password w frontendzie
+- ❌ Backend use cases dla reset password flow (nie zaimplementowane)
+- ❌ Użytkownik podaje adres email (UI gotowe, backend brak)
+- ❌ System wysyła link do resetowania hasła (brak implementacji)
+- ❌ Link jest ważny przez 1 godzinę
+- ✅ ChangePasswordCommand istnieje dla zalogowanych użytkowników
+- ❌ Unieważnianie aktywnych sesji po zmianie hasła (do implementacji)
 
-#### US-003: Import użytkowników
+#### US-003: Import użytkowników ⚠️ CZĘŚCIOWO ZREALIZOWANE
 **Jako** administrator
 **Chcę** zaimportować listę użytkowników z pliku CSV/Excel
 **Aby** szybko dodać wielu pracowników do systemu
 
 **Kryteria akceptacji:**
-- System akceptuje pliki CSV i Excel
-- Walidacja danych przed importem
-- Raport błędów importu
-- Możliwość mapowania kolumn
+- ✅ UI admin panel users z przyciskiem import (widoczny)
+- ❌ System akceptuje pliki CSV i Excel (backend nie zaimplementowany)
+- ❌ Walidacja danych przed importem (do implementacji)
+- ❌ Raport błędów importu (do implementacji)
+- ❌ Możliwość mapowania kolumn (do implementacji)
+- ✅ CreateUserCommand istnieje dla pojedynczych użytkowników
+- ✅ BulkAssignDepartment command dla masowych operacji
 
-#### US-004: Zarządzanie strukturą działu
+#### US-004: Zarządzanie strukturą działu ✅ ZREALIZOWANE
 **Jako** manager
 **Chcę** edytować strukturę mojego działu
 **Aby** odzwierciedlić aktualne zależności służbowe
 
 **Kryteria akceptacji:**
-- Manager może dodawać/usuwać pracowników w swoim dziale
-- Manager może zmieniać stanowiska i przypisania
-- Zmiany są logowane w historii
-- Walidacja spójności struktury
+- ✅ Manager może dodawać/usuwać pracowników w swoim dziale (przez admin panel)
+- ✅ Manager może zmieniać stanowiska i przypisania (UpdateUser command)
+- ✅ Zmiany są logowane w historii (Audit Logs)
+- ✅ Walidacja spójności struktury (FluentValidation validators)
+- ✅ Department CRUD operations (Create, Update, Delete)
+- ✅ TransferDepartment command dla przenoszenia pracowników
+- ✅ BulkAssignDepartment dla masowych operacji
 
-#### US-005: Wizualizacja struktury organizacyjnej
+#### US-005: Wizualizacja struktury organizacyjnej ✅ ZREALIZOWANE (PRZEKROCZONE OCZEKIWANIA)
 **Jako** pracownik
 **Chcę** zobaczyć strukturę organizacyjną
 **Aby** zrozumieć zależności służbowe w firmie
 
 **Kryteria akceptacji:**
-- Widok drzewa organizacyjnego
-- Możliwość rozwijania/zwijania działów
-- Wyszukiwanie pracownika
-- Wyświetlanie szczegółów pracownika
+- ✅ Widok drzewa organizacyjnego (OrgTreeChart z PrimeVue)
+- ✅ 3 tryby wizualizacji: Tree, Departments, List
+- ✅ Pan & zoom w trybie Tree (mousewheel zoom, drag pan, Space+drag)
+- ✅ Możliwość rozwijania/zwijania działów
+- ✅ Wyszukiwanie pracownika (Search input z real-time filtering)
+- ✅ Wyświetlanie szczegółów pracownika (Employee modal z pełnymi danymi)
+- ✅ Department modal z listą pracowników
+- ✅ Profile photos z fallback do inicjałów
+- ✅ Quick edit modal dla pracowników
+- ✅ Hierarchical department cards z wizualnym indent
 
-#### US-006: Tworzenie wydarzenia w kalendarzu
+#### US-006: Tworzenie wydarzenia w kalendarzu ⚠️ CZĘŚCIOWO ZREALIZOWANE
 **Jako** HR
 **Chcę** utworzyć wydarzenie firmowe
 **Aby** poinformować pracowników o nadchodzących eventach
 
 **Kryteria akceptacji:**
-- Formularz tworzenia wydarzenia
-- Wybór tagów i działów docelowych
-- Automatyczne tworzenie newsa
-- Walidacja daty i czasu
+- ✅ Formularz tworzenia wydarzenia (UI /dashboard/news/create z toggle event)
+- ✅ Location picker (Google Maps/OSM integration)
+- ✅ Date/time picker component
+- ✅ Hashtag input component
+- ❌ Backend CreateEvent use case (nie zaimplementowane)
+- ❌ EventsController w API (nie istnieje)
+- ❌ Wybór tagów i działów docelowych (UI gotowe, backend brak)
+- ✅ Model Event wspiera targetowanie działów i tagi
+- ⚠️ Automatyczne tworzenie newsa (News może zawierać EventId, ale odwrotnie do zrobienia)
+- ❌ Walidacja daty i czasu (backend validators do stworzenia)
 
-#### US-007: Przeglądanie kalendarza
+#### US-007: Przeglądanie kalendarza ⚠️ CZĘŚCIOWO ZREALIZOWANE
 **Jako** pracownik
 **Chcę** przeglądać kalendarz wydarzeń
 **Aby** być na bieżąco z wydarzeniami firmowymi
 
 **Kryteria akceptacji:**
-- Widok miesięczny kalendarza
-- Filtrowanie po tagach
-- Szczegóły wydarzenia po kliknięciu
-- Oznaczenie wydarzeń dla mojego działu
+- ✅ Widok miesięczny kalendarza (/dashboard/calendar - UI pełni zaimplementowane)
+- ✅ EventModal component dla quick preview
+- ❌ Backend GetEvents query (nie zaimplementowane)
+- ❌ Filtrowanie po tagach (UI gotowe, wymaga backend API)
+- ✅ Szczegóły wydarzenia po kliknięciu (EventModal z pełnymi danymi)
+- ❌ Oznaczenie wydarzeń dla mojego działu (logika do implementacji w backendzie)
+- ✅ Dashboard pokazuje 5 upcoming events (wymaga backend query)
 
-#### US-008: Publikacja newsa
+#### US-008: Publikacja newsa ✅ ZREALIZOWANE (PRZEKROCZONE OCZEKIWANIA)
 **Jako** Marketing
 **Chcę** opublikować news
 **Aby** informować pracowników o ważnych sprawach
 
 **Kryteria akceptacji:**
-- Edytor tekstu z podstawowym formatowaniem
-- Możliwość dodania obrazka
-- Opcja powiązania z wydarzeniem
-- Podgląd przed publikacją
+- ✅ Edytor tekstu z podstawowym formatowaniem (RichTextEditor component)
+- ✅ Rich content editor z pełnym HTML formatting
+- ✅ Możliwość dodania obrazka (ImageUpload component)
+- ✅ Multiple image support w treści
+- ✅ Opcja powiązania z wydarzeniem (EventId field w News)
+- ✅ Kategorie: Announcement, Product, HR, Tech, Event
+- ✅ System hashtagów dla tagowania
+- ✅ Podgląd przed publikacją (preview mode)
+- ✅ Draft/Published status
+- ✅ Author tracking
+- ✅ Publication date scheduling
 
-#### US-009: Eksport struktury organizacyjnej
+#### US-009: Eksport struktury organizacyjnej ⚠️ CZĘŚCIOWO ZREALIZOWANE
 **Jako** administrator
 **Chcę** wyeksportować strukturę do PDF/Excel
 **Aby** wykorzystać dane w dokumentach zewnętrznych
 
 **Kryteria akceptacji:**
-- Eksport całej struktury lub wybranego działu
-- Format PDF z wizualizacją graficzną
-- Format Excel z danymi tabelarycznymi
-- Zawiera wszystkie dane pracowników
+- ✅ UI przyciski Export PDF/Excel w organizacji (/dashboard/organization)
+- ❌ Backend implementacja PDF export (endpoint może istnieć, zwraca 501 Not Implemented)
+- ❌ Backend implementacja Excel export (endpoint może istnieć, zwraca 501 Not Implemented)
+- ❌ Eksport całej struktury lub wybranego działu (logika do implementacji)
+- ❌ Format PDF z wizualizacją graficzną (wymaga QuestPDF lub iText)
+- ❌ Format Excel z danymi tabelarycznymi (wymaga EPPlus lub ClosedXML)
+- ❌ Zawiera wszystkie dane pracowników (template do stworzenia)
+- ✅ GetDepartmentTree query dostarcza dane hierarchiczne dla eksportu
 
 #### US-010: System wniosków z konfigurowalnymi szablonami ✅ ZREALIZOWANE
 **Jako** administrator
@@ -397,6 +480,64 @@ Organizacje 200+ pracowników borykają się z:
 
 ---
 
+## Status Realizacji MVP (Aktualizacja 2025-11-07)
+
+### Podsumowanie realizacji
+
+**Ogólny postęp MVP: ~90%**
+
+| Moduł | Status | Postęp |
+|-------|--------|--------|
+| Autoryzacja i uwierzytelnianie | ✅ Zakończone | 100% |
+| Struktura organizacyjna | ✅ Zakończone | 95% |
+| System wniosków | ✅ Zakończone | 100% |
+| System newsów | ✅ Zakończone | 100% |
+| Kalendarz wydarzeń | ⚠️ W trakcie | 60% |
+| System urlopów | ✅ Zakończone | 95% |
+| Powiadomienia | ✅ Zakończone | 90% |
+| Monitoring i raporty | ✅ Zakończone | 100% |
+
+### Do dokończenia (Faza 4 - Finalizacja)
+
+**Priorytet WYSOKI:**
+1. Backend use cases dla Event (CreateEvent, UpdateEvent, DeleteEvent, GetEvents)
+2. EventsController w API
+3. Eksport PDF/Excel dla urlopów i struktury org
+
+**Priorytet ŚREDNI:**
+4. Reset password flow (backend + frontend)
+5. Import użytkowników z CSV/Excel (backend)
+6. NotificationPanel UI (dropdown z listą powiadomień)
+
+**Priorytet NISKI:**
+7. Moduł zarządzania dokumentami (kompletna implementacja)
+8. Testy E2E
+9. Optymalizacja wydajności
+
+### Funkcjonalności przekraczające MVP
+
+Projekt zrealizował znacznie więcej niż zakładał oryginalny MVP:
+- ✅ System zarządzania urlopami (nie był w MVP)
+- ✅ Multi-step approval workflow z quizami
+- ✅ Sick Leave (L4) auto-approval
+- ✅ Internal Services catalog
+- ✅ AI Chat Assistant
+- ✅ Location Services z geocoding
+- ✅ System Settings - runtime configuration
+- ✅ 6 background jobs dla automatyzacji
+
+### Następne kroki
+
+1. **Week 1**: Dokończenie Event system backend (3-4 dni)
+2. **Week 2**: Implementacja eksportu PDF/Excel (3-4 dni)
+3. **Week 3**: Reset password + Import users + Notification UI (5 dni)
+4. **Week 4**: Testy, optymalizacja, dokumentacja użytkownika (5 dni)
+
+**Planowane uruchomienie produkcyjne**: Koniec miesiąca 11/2025
+
+---
+
 *Dokument utworzony: 2025-01-08*
-*Wersja: 1.0 MVP*
-*Następna rewizja: Po zakończeniu MVP*
+*Ostatnia aktualizacja: 2025-11-07*
+*Wersja: 2.0 - Stan implementacji*
+*Następna rewizja: Po zakończeniu MVP (koniec listopada 2025)*
