@@ -274,14 +274,28 @@ public class DefaultRequestTemplatesSeeder
             _context.RequestTemplateFields.RemoveRange(existingFields);
         }
 
-        // Remove existing approval steps to prevent duplicates
+        // Check if there are any active requests using this template's approval steps
         var existingSteps = _context.RequestApprovalStepTemplates
             .Where(s => s.RequestTemplateId == template.Id)
             .ToList();
 
         if (existingSteps.Any())
         {
-            _context.RequestApprovalStepTemplates.RemoveRange(existingSteps);
+            // Check if any approval steps are being used by active requests
+            var stepIds = existingSteps.Select(s => s.Id).ToList();
+            var hasActiveRequests = _context.RequestApprovalSteps
+                .Any(ras => stepIds.Contains(ras.RequestApprovalStepTemplateId));
+
+            // Only remove and recreate if no active requests are using them
+            if (!hasActiveRequests)
+            {
+                _context.RequestApprovalStepTemplates.RemoveRange(existingSteps);
+            }
+            else
+            {
+                _logger.LogInformation("Skipping approval steps update for vacation template - active requests exist");
+                return; // Don't recreate steps if they're in use
+            }
         }
 
         // Add NEW fields (after removing old ones)
@@ -382,14 +396,28 @@ public class DefaultRequestTemplatesSeeder
             _context.RequestTemplateFields.RemoveRange(existingFields);
         }
 
-        // Remove existing approval steps to prevent duplicates
+        // Check if there are any active requests using this template's approval steps
         var existingSteps = _context.RequestApprovalStepTemplates
             .Where(s => s.RequestTemplateId == template.Id)
             .ToList();
 
         if (existingSteps.Any())
         {
-            _context.RequestApprovalStepTemplates.RemoveRange(existingSteps);
+            // Check if any approval steps are being used by active requests
+            var stepIds = existingSteps.Select(s => s.Id).ToList();
+            var hasActiveRequests = _context.RequestApprovalSteps
+                .Any(ras => stepIds.Contains(ras.RequestApprovalStepTemplateId));
+
+            // Only remove and recreate if no active requests are using them
+            if (!hasActiveRequests)
+            {
+                _context.RequestApprovalStepTemplates.RemoveRange(existingSteps);
+            }
+            else
+            {
+                _logger.LogInformation("Skipping approval steps update for sick leave template - active requests exist");
+                return; // Don't recreate steps if they're in use
+            }
         }
 
         // Add NEW fields (after removing old ones)
