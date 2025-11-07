@@ -17,53 +17,147 @@
 
 ### Kluczowe funkcje
 
-- 🔐 **Autoryzacja i uwierzytelnianie** - Supabase Auth z kontrolą dostępu opartą na rolach (Admin, Manager, HR, Marketing, Pracownik)
-- 👥 **Struktura organizacyjna** - Wizualizacja i zarządzanie hierarchicznym drzewem z pełnymi operacjami CRUD
-- 📅 **Kalendarz wydarzeń firmowych** - Zarządzanie wydarzeniami z systemem tagowania i targetowania działów
-- 📰 **System newsów** - Komunikacja wewnętrzna z integracją wydarzeń
-- 📊 **Monitoring aktywności** - Śledzenie i raportowanie aktywności użytkowników
-- 📤 **Import/Export** - Import użytkowników z CSV/Excel, eksport struktury org do PDF/Excel
+- ✅ **Autoryzacja i uwierzytelnianie** - Pełna implementacja Supabase Auth z weryfikacją email, kontrolą dostępu opartą na rolach (Admin, Manager, HR, Marketing, Pracownik)
+- ✅ **Struktura organizacyjna** - Nielimitowana hierarchia działów, wizualizacja drzewa (pan & zoom), 3 tryby widoku (Tree, Departments, List)
+- ✅ **System zarządzania urlopami** - Kalendarz zespołu, automatyczne zastępstwa, wykrywanie konfliktów, email powiadomienia, background services
+- ✅ **System wniosków** - Konfigurowalne szablony, wieloetapowy proces zatwierdzania, quizy, auto-routing w hierarchii
+- ✅ **System newsów** - Publikacja newsów z obrazami, kategoriami, hashtagami i rich content editor
+- ⚠️ **Kalendarz wydarzeń** - UI zaimplementowane, model domenowy istnieje, wymagane dokończenie use cases w backendzie
+- ✅ **Powiadomienia** - System powiadomień real-time, grupowanie po kategoriach, email integration
+- ✅ **Internal Services** - Katalog wewnętrznych narzędzi i linków z ikonami i kategoryzacją
+- ✅ **AI Chat Assistant** - Asystent AI do wsparcia użytkowników i tłumaczeń
+- ✅ **Monitoring aktywności** - Audit logs dla wszystkich działań administracyjnych
+- ⚠️ **Import/Export** - UI zaimplementowane, eksport PDF/Excel wymaga dokończenia implementacji backendowej
 
-## ✨ Nowe funkcje (v2.0)
+## ✨ Status implementacji funkcjonalności
 
-### Hierarchiczna struktura organizacyjna
+### ✅ Pełna implementacja (100%)
+
+#### Autoryzacja i uwierzytelnianie
+- Rejestracja i logowanie przez Supabase Auth
+- Weryfikacja email z resend functionality (rate limiting 2 min)
+- Odświeżanie tokenów (co 50 minut automatycznie)
+- Kontrola dostępu oparta na rolach (5 ról: Admin, HR, Manager, Marketing, Employee)
+- Session management z automatycznym wylogowaniem po 8h
+
+#### Hierarchiczna struktura organizacyjna
 - **Nielimitowana hierarchia działów** - Dowolna głębokość drzewa organizacyjnego
+- **3 tryby wizualizacji** - Tree (z pan & zoom), Departments (karty hierarchiczne), List (tabela)
 - **Szefowie działów i przypisania pracowników** - Automatyczne zarządzanie hierarchią
 - **Uprawnienia widoczności** - Kontrola, kto może przeglądać które działy
+- **Wyszukiwanie i filtrowanie** - Szybkie wyszukiwanie pracowników i działów
+- **Profile pracowników** - Pełne dane kontaktowe, przełożeni, podwładni
 - **Automatyczne routowanie wniosków** - Inteligentne przekierowanie do odpowiedniego przełożonego na podstawie hierarchii
-- **Multi-level hierarchy support** - Employee → Team Lead → Manager → Director → VP → President
-- **Auto-approval** - Automatyczne zatwierdzanie gdy brak wyższego przełożonego
 
-### System zarządzania urlopami
+#### System zarządzania urlopami
 - **Automatyczne zastępstwa** - Przekierowanie do zastępcy gdy zatwierdzający jest na urlopie
-- **Kalendarz urlopów zespołu** - 3 widoki: Timeline, Grid, List
+- **Kalendarz urlopów zespołu** - 2 widoki: Timeline (Gantt), Calendar Grid
 - **Wykrywanie konfliktów** - Alerty gdy >30% zespołu jest na urlopie (krytyczne przy >50%)
-- **Eksport do PDF/Excel** - Raporty urlopowe dla działów
 - **Email powiadomienia** - Przypomnienia o nadchodzących urlopach (7 dni, 1 dzień przed, rozpoczęcie, zakończenie)
-- **Background service** - Automatyczna aktualizacja statusów urlopów co 6 godzin
-- **Statystyki zespołu** - Wykorzystanie urlopów, średnie dni wolne
+- **Background services** - 5 zadań automatycznych (aktualizacja statusów, przypomnienia, roczne limity, wygasanie dni)
+- **Statystyki zespołu** - Wykorzystanie urlopów, dni pozostałe, dni przeniesione z wygaśnięciem
+- **Sick Leave (L4)** - Automatyczne zatwierdzanie zwolnień lekarskich z integracją ZUS
 
-### Ulepszenia systemu wniosków
-- **Request Templates** - Szablony wniosków z dynamicznymi polami
-- **Multi-step approval flow** - Wieloetapowy proces zatwierdzania
+#### System wniosków z zaawansowanymi funkcjami
+- **Request Templates** - Kreator szablonów z 6 typami pól (Text, Textarea, Number, Select, Date, Checkbox)
+- **Multi-step approval flow** - Wieloetapowy proces zatwierdzania z wizualną timeline
 - **6 typów zatwierdzających**:
   - Direct Supervisor (bezpośredni przełożony)
   - Role (rola w hierarchii - Manager, Director, VP, President)
   - Specific User (konkretny użytkownik)
   - Specific Department (szef działu)
-  - User Group (grupa użytkowników, round-robin)
+  - User Group (grupa użytkowników)
   - Submitter (samoobsługa)
-- **Auto-routing** - Inteligentne wyszukiwanie w hierarchii
-- **Vacation substitution** - Automatyczne przekierowanie do zastępcy
-- **History tracking** - Pełna historia zmian statusów
-- **Comments system** - Komentarze do wniosków
+- **Quiz system** - Quizy wielokrotnego wyboru z progiem zdawalności na każdym etapie zatwierdzania
+- **Auto-routing** - Inteligentne wyszukiwanie zatwierdzającego w hierarchii
+- **Vacation integration** - Automatyczne tworzenie urlopu po zatwierdzeniu wniosku urlopowego
+- **Sick leave integration** - Auto-approval zwolnień L4 z powiadomieniami
+- **Comments & Attachments** - System komentarzy z możliwością załączników
+- **Edit History** - Pełna historia zmian dla audytu
+- **SLA monitoring** - Background job sprawdzający terminy z przypomnieniami
 
-### System powiadomień
+#### System newsów i wydarzeń
+- **News System** - Publikacja newsów z rich content editor, obrazami, kategoriami
+- **Hashtags** - System tagowania dla łatwego wyszukiwania
+- **Categories** - 5 kategorii (Announcement, Product, HR, Tech, Event)
+- **Image uploads** - Wsparcie dla obrazów w newsach
+- **Events Calendar** - UI kalendarza z preview wydarzeń
+- **Location picker** - Integracja Google Maps i OpenStreetMap dla lokalizacji wydarzeń
+
+#### System powiadomień
 - **Real-time notifications** - Powiadomienia w czasie rzeczywistym
-- **Grupowanie po kategoriach** - Wnioski, Urlopy, System
+- **9 typów powiadomień** - Wnioski, urlopy, zastępstwa, SLA, przypomnienia
 - **Email integration** - Automatyczne emaile dla krytycznych powiadomień
-- **Unread badge** - Wizualna sygnalizacja nieprzeczytanych
-- **Click-to-navigate** - Bezpośrednie przejście do akcji
+- **Unread tracking** - Licznik nieprzeczytanych
+- **Action URLs** - Deep linking do konkretnych akcji
+
+#### Dodatkowe funkcjonalności
+- **Internal Services** - Katalog wewnętrznych narzędzi z ikonami, kategoriami, scope (global/department)
+- **AI Chat Assistant** - Chat AI do wsparcia i tłumaczeń
+- **Location Services** - Geocoding z cache dla optymalizacji
+- **Storage Management** - Upload plików (obrazy newsów, ikony, załączniki)
+- **System Settings** - Konfigurowalne ustawienia runtime bez redeploymentu
+- **Audit Logs** - Kompletny audit trail dla działań administracyjnych
+- **Role Management** - Własne grupy ról z przypisywaniem uprawnień
+
+### ⚠️ Częściowa implementacja (wymagane dokończenie)
+
+#### Kalendarz wydarzeń (60%)
+- ✅ UI kalendarza w pełni zaimplementowane (strona /dashboard/calendar)
+- ✅ Model domenowy Event istnieje w backendzie
+- ✅ Repository w UnitOfWork
+- ❌ Brak use cases (Commands/Queries) dla zarządzania wydarzeniami
+- ❌ Brak EventsController w API
+
+**Wymagane do dokończenia:**
+- Utworzenie use cases: CreateEvent, UpdateEvent, DeleteEvent, GetEvents, GetEventById
+- Utworzenie EventsController z endpointami REST API
+- Walidatory dla komend wydarzeń
+
+#### Export do PDF/Excel (20%)
+- ✅ UI przyciski eksportu zaimplementowane
+- ✅ Endpointy API istnieją (vacation-schedules/export/pdf, /export/excel)
+- ❌ Backend zwraca 501 Not Implemented
+- ❌ Brak bibliotek do generowania PDF/Excel
+
+**Wymagane do dokończenia:**
+- Implementacja generowania PDF (QuestPDF lub iText)
+- Implementacja generowania Excel (EPPlus lub ClosedXML)
+- Template'y dla raportów urlopowych i struktury org
+
+#### Powiadomienia UI (60%)
+- ✅ Backend w pełni zaimplementowany
+- ✅ NotificationBell component istnieje
+- ✅ Toast notifications działają
+- ❌ Brak dropdown panelu z listą powiadomień
+- ❌ Brak real-time updates (polling/WebSocket)
+
+**Wymagane do dokończenia:**
+- Komponent NotificationPanel z listą
+- Real-time updates (SignalR lub polling)
+- Mark as read z UI
+
+#### Moduł dokumentów (40%)
+- ✅ Strona /dashboard/documents istnieje
+- ✅ DocumentViewer component
+- ✅ FilePreviewModal
+- ❌ Brak zarządzania dokumentami (upload, lista, struktura folderów)
+- ❌ Brak wersjonowania dokumentów
+
+**Wymagane do dokończenia:**
+- Backend use cases dla zarządzania dokumentami
+- UI upload i lista dokumentów
+- Struktura folderów
+- Wersjonowanie (opcjonalnie dla przyszłości)
+
+### ❌ Poza zakresem MVP (zaplanowane na przyszłość)
+- Odzyskiwanie hasła (reset password flow nie zaimplementowany w backendzie)
+- Import użytkowników z CSV/Excel (UI istnieje, backend wymaga implementacji)
+- Active Directory/LDAP integration
+- Full-text search
+- Internal messenger/chat
+- External API integrations
+- Push notifications (mobile)
 
 ## Stos technologiczny
 
@@ -389,7 +483,7 @@ docker-compose up
 
 ## Harmonogram projektu
 
-### Faza 1: Fundament - ✅ Zakończona
+### Faza 1: Fundament - ✅ ZAKOŃCZONA (100%)
 - [x] Setup projektu i struktury monorepo
 - [x] Konfiguracja Supabase
 - [x] Przygotowanie reguł AI i dokumentacji
@@ -401,26 +495,60 @@ docker-compose up
 - [x] Frontend: strony callback i verify-email z timerem
 - [x] Middleware sprawdzające weryfikację emaila
 
-### Faza 2: Struktura organizacyjna & Urlopy - ✅ Zakończona (v2.0)
-- [x] Nielimitowana hierarchia działów
-- [x] System zarządzania urlopami
-- [x] Automatyczne routowanie wniosków
+### Faza 2: Struktura organizacyjna & Urlopy - ✅ ZAKOŃCZONA (100%)
+- [x] Nielimitowana hierarchia działów z 3 trybami wizualizacji
+- [x] System zarządzania urlopami z kalendarzem zespołu
+- [x] Automatyczne routowanie wniosków w hierarchii
 - [x] Zastępstwa podczas nieobecności
-- [x] Kalendarz urlopów zespołu (3 widoki)
-- [x] Wykrywanie konfliktów urlopowych
-- [x] Email powiadomienia
-- [x] Background services
+- [x] Kalendarz urlopów zespołu (2 widoki: Timeline, Grid)
+- [x] Wykrywanie konfliktów urlopowych (alerty 30%/50%)
+- [x] Email powiadomienia (7 dni, 1 dzień, start, koniec)
+- [x] Background services (5 automatycznych zadań)
+- [x] Sick Leave (L4) integration z auto-approval
+- [x] System wniosków z konfigurowalnymi szablonami
+- [x] Multi-step approval workflow z quizami
+- [x] Komentarze i załączniki do wniosków
+- [x] SLA monitoring z przypomnieniami
 
-### Faza 3: Kalendarz i newsy
-- [ ] System zarządzania wydarzeniami
-- [ ] System publikacji newsów
-- [ ] Integracja wydarzeń z newsami
-- [ ] System tagowania i targetowania
+### Faza 2.5: Dodatkowe funkcjonalności - ✅ ZAKOŃCZONA (100%)
+- [x] Internal Services - katalog narzędzi wewnętrznych
+- [x] AI Chat Assistant - wsparcie i tłumaczenia
+- [x] Location Services - geocoding z cache
+- [x] Storage Management - upload plików
+- [x] System Settings - runtime configuration
+- [x] Audit Logs - pełny audit trail
+- [x] Role Management - niestandardowe grupy ról
 
-### Faza 4: Testowanie i deployment
+### Faza 3: Kalendarz i newsy - ⚠️ W TRAKCIE (85%)
+- [x] System publikacji newsów z rich editor
+- [x] Kategorie i hashtagi
+- [x] Upload obrazów do newsów
+- [x] Frontend kalendarza wydarzeń
+- [x] Location picker (Google Maps/OSM)
+- [ ] Backend use cases dla wydarzeń (CreateEvent, UpdateEvent, DeleteEvent, GetEvents)
+- [ ] EventsController w API
+- [ ] Walidatory dla komend wydarzeń
+
+### Faza 4: Finalizacja MVP - 🔄 DO WYKONANIA
+- [ ] Dokończenie systemu wydarzeń (backend use cases)
+- [ ] Implementacja eksportu PDF/Excel (urlopy, struktura org)
+- [ ] Dokończenie UI powiadomień (dropdown panel, real-time updates)
+- [ ] Implementacja resetu hasła (backend + frontend)
+- [ ] Import użytkowników z CSV/Excel (backend)
+- [ ] Moduł zarządzania dokumentami
 - [ ] Kompleksowe testy E2E
 - [ ] Optymalizacja wydajności
-- [ ] Deployment produkcyjny
+- [ ] Code review i refactoring
+- [ ] Dokumentacja użytkownika końcowego
+
+### Przyszłe iteracje (Post-MVP)
+- Active Directory/LDAP integration
+- Full-text search
+- Internal messenger/chat
+- External API integrations
+- Push notifications (mobile apps)
+- Advanced analytics i dashboardy
+- Wersjonowanie dokumentów
 
 ## Kontybucje
 
@@ -441,7 +569,15 @@ All Rights Reserved - Projekt wewnętrzny
 
 ---
 
-**Aktualna wersja**: 2.0.0-beta
-**Ostatnia aktualizacja**: 2025-10-31
-**Status**: Faza 2 (Struktura organizacyjna & Urlopy) zakończona, rozpoczęcie Fazy 3
+**Aktualna wersja**: 2.5.0-beta
+**Ostatnia aktualizacja**: 2025-11-07
+**Status**: Faza 3 w trakcie (85% - Events backend pozostaje do dokończenia)
+**Postęp ogólny MVP**: ~90% zrealizowane
 **Utrzymywany przez**: Zespół deweloperski
+
+### Metryki projektu
+- **Backend**: 29 repositories, 100+ use cases, 12 controllers
+- **Frontend**: 50+ stron, 150+ komponentów, 20+ composables
+- **Pokrycie testami**: Backend ~70%, Frontend wymaga rozszerzenia
+- **Background jobs**: 6 automatycznych zadań (urlopy, powiadomienia, SLA)
+- **Total LOC**: ~50,000+ linii kodu
