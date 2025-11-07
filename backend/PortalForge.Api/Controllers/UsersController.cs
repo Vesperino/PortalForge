@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Api.DTOs.Requests.Users;
 using PortalForge.Application.UseCases.Admin.Commands.CreateUser;
 using PortalForge.Application.UseCases.Admin.Commands.DeleteUser;
 using PortalForge.Application.UseCases.Admin.Commands.UpdateUser;
@@ -263,91 +264,5 @@ public class UsersController : ControllerBase
         await _mediator.Send(command);
         return NoContent();
     }
-}
-
-public class BulkAssignDepartmentRequest
-{
-    public List<Guid> EmployeeIds { get; set; } = new();
-    public Guid DepartmentId { get; set; }
-}
-
-public class CreateUserRequest
-{
-    public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string Department { get; set; } = string.Empty;
-    public string Position { get; set; } = string.Empty;
-    public string? PhoneNumber { get; set; }
-    public string Role { get; set; } = "Employee";
-    public List<Guid> RoleGroupIds { get; set; } = new();
-    public bool MustChangePassword { get; set; } = true;
-}
-
-public class UpdateUserRequest
-{
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string Department { get; set; } = string.Empty;
-    public Guid? DepartmentId { get; set; }
-    public string Position { get; set; } = string.Empty;
-    public Guid? PositionId { get; set; }
-    public string? PhoneNumber { get; set; }
-    public string Role { get; set; } = string.Empty;
-    public List<Guid> RoleGroupIds { get; set; } = new();
-    public bool IsActive { get; set; }
-    public string? NewPassword { get; set; }
-}
-
-public class UpdateVacationAllowanceRequest
-{
-    public int NewAnnualDays { get; set; }
-    public string Reason { get; set; } = string.Empty;
-}
-
-public class UpdateFullVacationDataRequest
-{
-    /// <summary>
-    /// Annual vacation days entitlement (e.g., 26)
-    /// </summary>
-    public int AnnualVacationDays { get; set; } = 26;
-
-    /// <summary>
-    /// Number of vacation days already used this year
-    /// </summary>
-    public int VacationDaysUsed { get; set; } = 0;
-
-    /// <summary>
-    /// Number of on-demand vacation days already used (max 4)
-    /// </summary>
-    public int OnDemandVacationDaysUsed { get; set; } = 0;
-
-    /// <summary>
-    /// Number of circumstantial leave days used
-    /// </summary>
-    public int CircumstantialLeaveDaysUsed { get; set; } = 0;
-
-    /// <summary>
-    /// Vacation days carried over from previous year
-    /// </summary>
-    public int CarriedOverVacationDays { get; set; } = 0;
-
-    /// <summary>
-    /// Expiry date for carried over vacation days (typically September 30)
-    /// </summary>
-    public DateTime? CarriedOverExpiryDate { get; set; }
-
-    /// <summary>
-    /// Reason for the update (e.g., "Migration from old system", "Manual correction")
-    /// </summary>
-    public string Reason { get; set; } = string.Empty;
-}
-
-public class TransferDepartmentRequest
-{
-    public Guid NewDepartmentId { get; set; }
-    public Guid? NewSupervisorId { get; set; }
-    public string? Reason { get; set; }
 }
 

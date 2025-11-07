@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Api.DTOs.Requests.Profile;
 using PortalForge.Application.UseCases.Profile.Commands.UpdateMyProfile;
 using System.Security.Claims;
 
@@ -50,10 +51,4 @@ public class ProfileController : ControllerBase
         var result = await _mediator.Send(command);
         return Ok(result);
     }
-}
-
-public class UpdateMyProfileRequest
-{
-    public string? PhoneNumber { get; set; }
-    public string? ProfilePhotoUrl { get; set; }
 }
