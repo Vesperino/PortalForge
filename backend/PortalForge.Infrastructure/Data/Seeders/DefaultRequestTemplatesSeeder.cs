@@ -284,7 +284,8 @@ public class DefaultRequestTemplatesSeeder
             // Check if any approval steps are being used by active requests
             var stepIds = existingSteps.Select(s => s.Id).ToList();
             var hasActiveRequests = _context.RequestApprovalSteps
-                .Any(ras => stepIds.Contains(ras.RequestApprovalStepTemplateId));
+                .Any(ras => ras.RequestApprovalStepTemplateId.HasValue &&
+                            stepIds.Contains(ras.RequestApprovalStepTemplateId.Value));
 
             // Only remove and recreate if no active requests are using them
             if (!hasActiveRequests)
@@ -406,7 +407,8 @@ public class DefaultRequestTemplatesSeeder
             // Check if any approval steps are being used by active requests
             var stepIds = existingSteps.Select(s => s.Id).ToList();
             var hasActiveRequests = _context.RequestApprovalSteps
-                .Any(ras => stepIds.Contains(ras.RequestApprovalStepTemplateId));
+                .Any(ras => ras.RequestApprovalStepTemplateId.HasValue &&
+                            stepIds.Contains(ras.RequestApprovalStepTemplateId.Value));
 
             // Only remove and recreate if no active requests are using them
             if (!hasActiveRequests)
