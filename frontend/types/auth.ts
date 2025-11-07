@@ -17,6 +17,8 @@ export interface User {
   subordinates?: User[]
   supervisorId?: string
   isActive?: boolean
+  lastLoginAt?: string
+  employmentStartDate?: string
 }
 
 export enum UserRole {

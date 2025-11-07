@@ -8,6 +8,8 @@ using PortalForge.Application.UseCases.Storage.Commands.UploadNewsImage;
 using PortalForge.Application.UseCases.Storage.Commands.DeleteNewsImage;
 using PortalForge.Application.UseCases.Storage.Commands.UploadServiceIcon;
 using PortalForge.Application.UseCases.Storage.Commands.UploadCommentAttachment;
+using PortalForge.Application.UseCases.Storage.Commands.UploadUserAvatar;
+using System.Security.Claims;
 
 namespace PortalForge.Api.Controllers;
 
@@ -130,6 +132,47 @@ public class StorageController : ControllerBase
         {
             _logger.LogError(ex, "Error uploading comment attachment");
             return StatusCode(500, new { message = "Error uploading comment attachment", error = ex.Message });
+        }
+    }
+
+    [HttpPost("upload/user-avatar")]
+    public async Task<ActionResult<UploadImageResponse>> UploadUserAvatar(IFormFile file)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { message = "User not authenticated" });
+            }
+
+            using var fileStream = file.OpenReadStream();
+
+            var command = new UploadUserAvatarCommand
+            {
+                FileStream = fileStream,
+                FileName = file.FileName,
+                FileSize = file.Length,
+                UploadedBy = userId
+            };
+
+            var result = await _mediator.Send(command);
+
+            // Build full URL with proper scheme and host
+            var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+            var publicUrl = $"{baseUrl}/api/storage/files/{result.FilePath}";
+
+            return Ok(new UploadImageResponse
+            {
+                Url = publicUrl,
+                FileName = result.FileName,
+                FilePath = result.FilePath
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading user avatar");
+            return StatusCode(500, new { message = "Error uploading user avatar", error = ex.Message });
         }
     }
 
