@@ -1,6 +1,7 @@
 using Moq;
 using Xunit;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Interfaces;
 using PortalForge.Application.Services;
 using PortalForge.Application.UseCases.Requests.Commands.ApproveRequestStep;
 using PortalForge.Domain.Entities;
