@@ -28,6 +28,10 @@ const user = ref({
 })
 
 const isEditing = ref(false)
+const isUploadingAvatar = ref(false)
+const avatarPreview = ref<string | null>(null)
+const selectedAvatarFile = ref<File | null>(null)
+const avatarInputRef = ref<HTMLInputElement | null>(null)
 
 // Calculate stats from real user data
 const stats = computed(() => ({
@@ -141,10 +145,110 @@ const toggleEdit = () => {
   isEditing.value = !isEditing.value
 }
 
-const saveChanges = () => {
-  // TODO: Save changes to backend
-  isEditing.value = false
-  toast.success('Zmiany zostały zapisane!')
+const handleAvatarSelect = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+
+  if (!file) return
+
+  // Validate file type
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+  if (!validTypes.includes(file.type)) {
+    toast.error('Nieprawidłowy format pliku. Dozwolone: JPG, PNG, GIF, WebP')
+    return
+  }
+
+  // Validate file size (5MB)
+  const maxSize = 5 * 1024 * 1024
+  if (file.size > maxSize) {
+    toast.error('Plik jest za duży. Maksymalny rozmiar: 5MB')
+    return
+  }
+
+  selectedAvatarFile.value = file
+
+  // Create preview
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    avatarPreview.value = e.target?.result as string
+  }
+  reader.readAsDataURL(file)
+}
+
+const uploadAvatar = async () => {
+  if (!selectedAvatarFile.value) return
+
+  isUploadingAvatar.value = true
+
+  try {
+    const formData = new FormData()
+    formData.append('file', selectedAvatarFile.value)
+
+    const response = await $fetch<{ url: string; fileName: string; filePath: string }>('/api/storage/upload/user-avatar', {
+      method: 'POST',
+      body: formData
+    })
+
+    // Update profile with new avatar URL
+    await $fetch('/api/profile', {
+      method: 'PUT',
+      body: {
+        phoneNumber: user.value.phone || null,
+        profilePhotoUrl: response.url
+      }
+    })
+
+    // Update local state
+    user.value.avatar = response.url
+
+    // Update auth store
+    if (currentUser.value) {
+      currentUser.value.profilePhotoUrl = response.url
+    }
+
+    // Clear preview and selected file
+    avatarPreview.value = null
+    selectedAvatarFile.value = null
+
+    toast.success('Avatar został zaktualizowany!')
+  } catch (error: any) {
+    console.error('Error uploading avatar:', error)
+    toast.error('Nie udało się zaktualizować avatara')
+  } finally {
+    isUploadingAvatar.value = false
+  }
+}
+
+const cancelAvatarUpload = () => {
+  selectedAvatarFile.value = null
+  avatarPreview.value = null
+  if (avatarInputRef.value) {
+    avatarInputRef.value.value = ''
+  }
+}
+
+const saveChanges = async () => {
+  try {
+    // Update profile with phone number
+    await $fetch('/api/profile', {
+      method: 'PUT',
+      body: {
+        phoneNumber: user.value.phone || null,
+        profilePhotoUrl: user.value.avatar || null
+      }
+    })
+
+    // Update auth store
+    if (currentUser.value) {
+      currentUser.value.phoneNumber = user.value.phone
+    }
+
+    isEditing.value = false
+    toast.success('Zmiany zostały zapisane!')
+  } catch (error: any) {
+    console.error('Error saving profile:', error)
+    toast.error('Nie udało się zapisać zmian')
+  }
 }
 
 const logout = async () => {
@@ -178,16 +282,68 @@ const logout = async () => {
       <div class="px-6 pb-6">
         <!-- Avatar -->
         <div class="flex items-end -mt-16 mb-4">
-          <div class="w-32 h-32 rounded-full bg-gray-300 dark:bg-gray-700 border-4 border-white dark:border-gray-800 flex items-center justify-center text-4xl font-bold text-white">
-            {{ user.firstName?.[0] || '' }}{{ user.lastName?.[0] || '' }}
+          <div class="relative group">
+            <!-- Avatar Image or Initials -->
+            <div class="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
+              <img
+                v-if="avatarPreview || user.avatar"
+                :src="avatarPreview || user.avatar"
+                :alt="`${user.firstName} ${user.lastName}`"
+                class="w-full h-full object-cover"
+              >
+              <span v-else class="text-4xl font-bold text-white">
+                {{ user.firstName?.[0] || '' }}{{ user.lastName?.[0] || '' }}
+              </span>
+            </div>
+
+            <!-- Upload Button Overlay -->
+            <button
+              type="button"
+              @click="avatarInputRef?.click()"
+              class="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+            >
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+
+            <!-- Hidden File Input -->
+            <input
+              ref="avatarInputRef"
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+              class="hidden"
+              @change="handleAvatarSelect"
+            >
           </div>
-          <div class="ml-4 mb-2">
+
+          <div class="ml-4 mb-2 flex-1">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
               {{ user.firstName }} {{ user.lastName }}
             </h2>
             <p class="text-gray-600 dark:text-gray-400">
               {{ user.position }}
             </p>
+
+            <!-- Avatar Upload Actions -->
+            <div v-if="selectedAvatarFile" class="flex gap-2 mt-2">
+              <button
+                @click="uploadAvatar"
+                :disabled="isUploadingAvatar"
+                class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span v-if="isUploadingAvatar">Zapisywanie...</span>
+                <span v-else>Zapisz avatar</span>
+              </button>
+              <button
+                @click="cancelAvatarUpload"
+                :disabled="isUploadingAvatar"
+                class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anuluj
+              </button>
+            </div>
           </div>
         </div>
 
