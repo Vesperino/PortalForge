@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Exceptions;
 using PortalForge.Application.Common.Interfaces;
@@ -10,13 +11,16 @@ public class GetRequestByIdQueryHandler : IRequestHandler<GetRequestByIdQuery, R
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<GetRequestByIdQueryHandler> _logger;
+    private readonly IConfiguration _configuration;
 
     public GetRequestByIdQueryHandler(
         IUnitOfWork unitOfWork,
-        ILogger<GetRequestByIdQueryHandler> logger)
+        ILogger<GetRequestByIdQueryHandler> logger,
+        IConfiguration configuration)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task<RequestDetailDto> Handle(GetRequestByIdQuery request, CancellationToken cancellationToken)
@@ -132,10 +136,15 @@ public class GetRequestByIdQueryHandler : IRequestHandler<GetRequestByIdQuery, R
 
         try
         {
-            return System.Text.Json.JsonSerializer.Deserialize<List<string>>(attachmentsJson) ?? new List<string>();
+            var relativePaths = System.Text.Json.JsonSerializer.Deserialize<List<string>>(attachmentsJson) ?? new List<string>();
+
+            // Convert relative paths to full URLs
+            var baseUrl = _configuration["AppSettings:ApiUrl"] ?? "http://localhost:5000";
+            return relativePaths.Select(path => $"{baseUrl.TrimEnd('/')}/api/storage/files/{path}").ToList();
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Failed to parse attachments JSON: {Json}", attachmentsJson);
             return new List<string>();
         }
     }
