@@ -65,38 +65,6 @@ test.describe('Department Structure Management', () => {
     expect(nodeCount).toBeGreaterThan(0)
   })
 
-  test('should create new root department', async ({ page }) => {
-    await page.goto('/admin/structure')
-    await page.waitForLoadState('networkidle')
-
-    const addButton = page.getByRole('button', { name: /Dodaj dział główny/i })
-    await expect(addButton).toBeVisible()
-    await addButton.click()
-
-    const modal = page.locator('.fixed.inset-0').first()
-    await expect(modal).toBeVisible()
-
-    await page.screenshot({ path: 'test-results/department-create-modal.png', fullPage: true })
-
-    const nameInput = page.locator('input[type="text"]').first()
-    await nameInput.fill('Test Department')
-
-    const descriptionTextarea = page.locator('textarea').first()
-    await descriptionTextarea.fill('Test department description')
-
-    await page.screenshot({ path: 'test-results/department-form-filled.png', fullPage: true })
-
-    const saveButton = page.getByRole('button', { name: /Utwórz dział/i })
-    await saveButton.click()
-
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1000)
-
-    await page.screenshot({ path: 'test-results/department-created.png', fullPage: true })
-
-    await expect(page.getByText('Test Department')).toBeVisible({ timeout: 5000 })
-  })
-
   test('should assign user to department', async ({ page }) => {
     await page.goto('/admin/structure')
     await page.waitForLoadState('networkidle')

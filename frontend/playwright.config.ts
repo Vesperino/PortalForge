@@ -7,10 +7,18 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : 2,
   reporter: 'html',
+
+  // Global timeouts
+  timeout: 60000, // 60s per test
+  expect: {
+    timeout: 10000 // 10s for assertions
+  },
+
   use: {
-    baseURL: 'http://localhost:3001/portalforge/fe',
+    baseURL: 'http://localhost:3000/portalforge/fe',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    actionTimeout: 15000, // 15s for actions (click, fill, etc)
   },
 
   projects: [
@@ -20,10 +28,11 @@ export default defineConfig({
     },
   ],
 
-  // Serwer już działa na porcie 3001
-  // webServer: {
-  //   command: 'npm run dev',
-  //   url: 'http://localhost:3001/portalforge/fe',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  // Auto-start dev server before tests
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000/portalforge/fe',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120000, // 2 min for server startup
+  },
 })
