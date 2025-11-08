@@ -22,7 +22,7 @@
 - ✅ **System zarządzania urlopami** - Kalendarz zespołu, automatyczne zastępstwa, wykrywanie konfliktów, email powiadomienia, background services
 - ✅ **System wniosków** - Konfigurowalne szablony, wieloetapowy proces zatwierdzania, quizy, auto-routing w hierarchii
 - ✅ **System newsów** - Publikacja newsów z obrazami, kategoriami, hashtagami i rich content editor
-- ⚠️ **Kalendarz wydarzeń** - UI zaimplementowane, model domenowy istnieje, wymagane dokończenie use cases w backendzie
+- ✅ **Kalendarz wydarzeń** - Dodaj news jako wydarzenie a pojawi się na kalendarzu jako wydarzenie plus wyszukiwanie po hastagu
 - ✅ **Powiadomienia** - System powiadomień real-time, grupowanie po kategoriach, email integration
 - ✅ **Internal Services** - Katalog wewnętrznych narzędzi i linków z ikonami i kategoryzacją
 - ✅ **AI Chat Assistant** - Asystent AI do wsparcia użytkowników i tłumaczeń
