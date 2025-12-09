@@ -22,7 +22,7 @@ public class NewsController : BaseController
     }
 
     [HttpGet]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<ActionResult<PaginatedNewsResponse>> GetAll(
         [FromQuery] string? category = null,
         [FromQuery] int? departmentId = null,
@@ -45,7 +45,7 @@ public class NewsController : BaseController
     }
 
     [HttpGet("{id}")]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<ActionResult<NewsDto>> GetById(int id)
     {
         var query = new GetNewsByIdQuery { NewsId = id };
@@ -54,6 +54,7 @@ public class NewsController : BaseController
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<int>> Create([FromBody] CreateNewsRequestDto request)
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var authorId);
@@ -84,6 +85,7 @@ public class NewsController : BaseController
     }
 
     [HttpPut("{id}")]
+    [Authorize]
     public async Task<ActionResult> Update(int id, [FromBody] UpdateNewsRequestDto request)
     {
         var command = new UpdateNewsCommand
@@ -108,6 +110,7 @@ public class NewsController : BaseController
     }
 
     [HttpDelete("{id}")]
+    [Authorize]
     public async Task<ActionResult> Delete(int id)
     {
         var command = new DeleteNewsCommand { NewsId = id };

@@ -159,7 +159,7 @@ public class StorageController : ControllerBase
     /// Supports full relative paths including date-based subfolders (e.g., new-images/2025-11-05/file.png)
     /// </summary>
     [HttpGet("files/{**relativePath}")]
-    [AllowAnonymous] // Allow anonymous for now - can be restricted based on category
+    [Authorize]
     public async Task<IActionResult> GetFile(string relativePath)
     {
         try
