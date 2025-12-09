@@ -27,7 +27,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("seed")]
-    [AllowAnonymous] // Temporarily allow anonymous access for initial setup
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<SeedAdminDataResult>> SeedData()
     {
         _logger.LogInformation("Seeding admin data...");
@@ -42,7 +42,7 @@ public class AdminController : ControllerBase
     /// Seed 40 sample employees with avatars
     /// </summary>
     [HttpPost("seed-employees")]
-    [AllowAnonymous] // Temporarily allow anonymous access for seeding
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<SeedEmployeesResult>> SeedEmployees()
     {
         _logger.LogInformation("Seeding 40 sample employees...");
@@ -58,7 +58,7 @@ public class AdminController : ControllerBase
     /// Removes old templates and creates new ones with updated structure.
     /// </summary>
     [HttpPost("reseed-request-templates")]
-    [AllowAnonymous] // Temporarily allow anonymous access for maintenance
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ReseedResult>> ReseedRequestTemplates()
     {
         _logger.LogInformation("Reseeding default request templates...");

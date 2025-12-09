@@ -86,7 +86,7 @@ public class DepartmentsController : ControllerBase
     /// </summary>
     /// <returns>List of root departments with nested children</returns>
     [HttpGet("tree")]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<ActionResult<List<DepartmentTreeDto>>> GetTree()
     {
         var query = new GetDepartmentTreeQuery();
@@ -112,7 +112,7 @@ public class DepartmentsController : ControllerBase
     /// <param name="id">Department ID</param>
     /// <returns>Department details</returns>
     [HttpGet("{id}")]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<ActionResult<DepartmentDto>> GetById(Guid id)
     {
         var query = new GetDepartmentByIdQuery { DepartmentId = id };
@@ -127,7 +127,7 @@ public class DepartmentsController : ControllerBase
     /// <param name="includeInactive">Whether to include inactive employees</param>
     /// <returns>List of employees in the department</returns>
     [HttpGet("{id}/employees")]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<ActionResult<List<EmployeeDto>>> GetEmployees(
         Guid id,
         [FromQuery] bool includeInactive = false)

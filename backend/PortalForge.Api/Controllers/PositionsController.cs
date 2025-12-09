@@ -32,7 +32,7 @@ public class PositionsController : ControllerBase
     /// <param name="activeOnly">Whether to return only active positions. Default: true.</param>
     /// <returns>List of positions</returns>
     [HttpGet]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<ActionResult<List<PositionDto>>> GetAll([FromQuery] bool activeOnly = true)
     {
         var query = new GetAllPositionsQuery { ActiveOnly = activeOnly };
@@ -46,7 +46,7 @@ public class PositionsController : ControllerBase
     /// <param name="searchTerm">Search term to filter positions</param>
     /// <returns>List of matching positions (max 10)</returns>
     [HttpGet("search")]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<ActionResult<List<PositionDto>>> Search([FromQuery] string searchTerm = "")
     {
         var query = new SearchPositionsQuery { SearchTerm = searchTerm };

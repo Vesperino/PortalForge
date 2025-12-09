@@ -140,7 +140,7 @@ public class RequestTemplatesController : BaseController
     /// Seed sample request templates (for testing/development)
     /// </summary>
     [HttpPost("seed")]
-    [AllowAnonymous] // Allow anonymous access for testing/development
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> Seed()
     {
         var command = new SeedRequestTemplatesCommand();
