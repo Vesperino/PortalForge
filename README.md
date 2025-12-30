@@ -8,7 +8,7 @@
 
 ## 🚀 Live Demo
 
-- **Frontend**: [https://krablab.pl/portalforge/fe/](https://krablab.pl/portalforge/fe/)
+- **Frontend**: [https://krablab.pl/portalforge/fe/](https://krablab.pl/portalforge/fe/dashboard))
 - **Backend API (Swagger)**: [https://krablab.pl/portalforge/be/swagger/index.html](https://krablab.pl/portalforge/be/swagger/index.html)
 
 ## Przegląd projektu
