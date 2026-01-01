@@ -199,7 +199,7 @@ public class AuthController : BaseController
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error changing password for user {UserId}", userId);
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new { message = "Failed to change password. Please verify your current password is correct." });
         }
     }
 

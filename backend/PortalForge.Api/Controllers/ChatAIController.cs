@@ -61,7 +61,7 @@ public class ChatAIController : BaseController
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during translation for user {UserId}", userId);
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred during translation" });
         }
     }
 
@@ -100,7 +100,7 @@ public class ChatAIController : BaseController
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during chat for user {UserId}", userId);
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred during chat processing" });
         }
     }
 
@@ -109,7 +109,7 @@ public class ChatAIController : BaseController
     /// </summary>
     /// <returns>Result indicating whether the connection is successful.</returns>
     [HttpGet("test-connection")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<bool>> TestConnection(
         [FromServices] IOpenAIService openAIService,
         [FromQuery] string? testApiKey = null)

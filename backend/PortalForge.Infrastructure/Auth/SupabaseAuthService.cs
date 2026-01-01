@@ -147,7 +147,7 @@ public class SupabaseAuthService : ISupabaseAuthService
             return new AuthResult
             {
                 Success = false,
-                ErrorMessage = $"Registration error: {ex.Message}"
+                ErrorMessage = "Registration failed. Please try again later."
             };
         }
     }
@@ -207,7 +207,7 @@ public class SupabaseAuthService : ISupabaseAuthService
             return new AuthResult
             {
                 Success = false,
-                ErrorMessage = $"Login error: {ex.Message}"
+                ErrorMessage = "Login failed. Please check your credentials and try again."
             };
         }
     }
@@ -253,7 +253,7 @@ public class SupabaseAuthService : ISupabaseAuthService
             return new AuthResult
             {
                 Success = false,
-                ErrorMessage = $"Sign in error: {ex.Message}"
+                ErrorMessage = "Sign in failed. Please check your credentials and try again."
             };
         }
     }
@@ -353,11 +353,11 @@ public class SupabaseAuthService : ISupabaseAuthService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during token refresh: {Message}", ex.Message);
+            _logger.LogError(ex, "Error during token refresh");
             return new AuthResult
             {
                 Success = false,
-                ErrorMessage = $"Token refresh error: {ex.Message}"
+                ErrorMessage = "Session refresh failed. Please log in again."
             };
         }
     }
@@ -433,7 +433,7 @@ public class SupabaseAuthService : ISupabaseAuthService
             return new AuthResult
             {
                 Success = false,
-                ErrorMessage = $"Password reset error: {ex.Message}"
+                ErrorMessage = "Password reset failed. Please try again later."
             };
         }
     }
@@ -771,7 +771,7 @@ public class SupabaseAuthService : ISupabaseAuthService
             return new AuthResult
             {
                 Success = false,
-                ErrorMessage = $"Registration error: {ex.Message}"
+                ErrorMessage = "Registration failed. Please try again later."
             };
         }
     }
