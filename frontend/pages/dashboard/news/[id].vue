@@ -50,28 +50,10 @@ async function loadNews() {
   try {
     news.value = await fetchNewsById(newsId.value)
 
-    console.log('Loaded news:', {
-      id: news.value.id,
-      isEvent: news.value.isEvent,
-      hasLatitude: !!news.value.eventLatitude,
-      hasLongitude: !!news.value.eventLongitude,
-      latitude: news.value.eventLatitude,
-      longitude: news.value.eventLongitude,
-      contentLength: news.value.content?.length,
-      contentPreview: news.value.content?.substring(0, 500)
-    })
-
-    console.log('=== FULL CONTENT HTML ===')
-    console.log(news.value.content)
-    console.log('=== END CONTENT HTML ===')
-
     // Initialize map if coordinates are available (removed isEvent check)
     if (news.value.eventLatitude && news.value.eventLongitude) {
       await nextTick()
-      console.log('Attempting to initialize map...')
       initializeMap()
-    } else {
-      console.log('Map not initialized - missing coordinates')
     }
   } catch (err: unknown) {
     error.value = resolveErrorMessage(err, 'Nie udało się załadować aktualności.')
@@ -82,21 +64,12 @@ async function loadNews() {
 }
 
 function initializeMap() {
-  console.log('initializeMap called:', {
-    isClient: import.meta.client,
-    hasMapContainer: !!mapContainer.value,
-    hasNews: !!news.value
-  })
-
   if (!import.meta.client || !mapContainer.value || !news.value) {
-    console.log('Map initialization aborted - missing requirements')
     return
   }
 
   const lat = news.value.eventLatitude!
   const lng = news.value.eventLongitude!
-
-  console.log('Creating Leaflet map with coordinates:', { lat, lng })
 
   map = L.map(mapContainer.value).setView([lat, lng], 15)
 

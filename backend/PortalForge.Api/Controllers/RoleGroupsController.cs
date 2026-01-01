@@ -2,12 +2,12 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Api.DTOs.Requests.RoleGroups;
+using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.UseCases.Admin.Commands.CreateRoleGroup;
 using PortalForge.Application.UseCases.Admin.Commands.UpdateRoleGroup;
 using PortalForge.Application.UseCases.Admin.Commands.DeleteRoleGroup;
 using PortalForge.Application.UseCases.Admin.Queries.GetRoleGroups;
 using PortalForge.Application.UseCases.Admin.Queries.GetRoleGroupById;
-using System.Security.Claims;
 
 namespace PortalForge.Api.Controllers;
 
@@ -18,11 +18,16 @@ public class RoleGroupsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<RoleGroupsController> _logger;
+    private readonly ICurrentUserService _currentUserService;
 
-    public RoleGroupsController(IMediator mediator, ILogger<RoleGroupsController> logger)
+    public RoleGroupsController(
+        IMediator mediator,
+        ILogger<RoleGroupsController> logger,
+        ICurrentUserService currentUserService)
     {
         _mediator = mediator;
         _logger = logger;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
@@ -59,14 +64,12 @@ public class RoleGroupsController : BaseController
     {
         _logger.LogInformation("Creating role group: {Name}", request.Name);
 
-        var userId = GetCurrentUserId();
-
         var command = new CreateRoleGroupCommand
         {
             Name = request.Name,
             Description = request.Description,
             PermissionIds = request.PermissionIds,
-            CreatedBy = userId
+            CreatedBy = _currentUserService.UserId
         };
 
         var result = await _mediator.Send(command);
@@ -78,15 +81,13 @@ public class RoleGroupsController : BaseController
     {
         _logger.LogInformation("Updating role group: {RoleGroupId}", id);
 
-        var userId = GetCurrentUserId();
-
         var command = new UpdateRoleGroupCommand
         {
             RoleGroupId = id,
             Name = request.Name,
             Description = request.Description,
             PermissionIds = request.PermissionIds,
-            UpdatedBy = userId
+            UpdatedBy = _currentUserService.UserId
         };
 
         var result = await _mediator.Send(command);
@@ -98,12 +99,10 @@ public class RoleGroupsController : BaseController
     {
         _logger.LogInformation("Deleting role group: {RoleGroupId}", id);
 
-        var userId = GetCurrentUserId();
-
         var command = new DeleteRoleGroupCommand
         {
             RoleGroupId = id,
-            DeletedBy = userId
+            DeletedBy = _currentUserService.UserId
         };
 
         var result = await _mediator.Send(command);

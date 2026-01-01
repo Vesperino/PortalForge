@@ -173,6 +173,13 @@ public static class DependencyInjection
         // Configure authorization policies
         services.AddAuthorization(options =>
         {
+            // Role-based policies for cleaner controller authorization
+            options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+            options.AddPolicy("HrOrAdmin", policy => policy.RequireRole("Admin", "Hr"));
+            options.AddPolicy("ManagerOrAdmin", policy => policy.RequireRole("Admin", "Manager"));
+            options.AddPolicy("MarketingOrAdmin", policy => policy.RequireRole("Admin", "Marketing"));
+            options.AddPolicy("HrManagerOrAdmin", policy => policy.RequireRole("Admin", "Hr", "Manager"));
+
             // Define all permission-based policies
             var permissions = new[]
             {

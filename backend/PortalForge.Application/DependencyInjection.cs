@@ -19,6 +19,9 @@ public static class DependencyInjection
         // Register handlers from both Application and Infrastructure assemblies
         services.AddMediatR(assembly, Assembly.Load("PortalForge.Infrastructure"));
 
+        // Register pipeline behaviors
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PortalForge.Application.Common.Behaviors.AuthorizationBehavior<,>));
+
         // Register validators automatically
         services.AddValidators(assembly);
 

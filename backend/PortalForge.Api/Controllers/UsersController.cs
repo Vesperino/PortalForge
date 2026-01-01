@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Api.DTOs.Requests.Users;
+using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.UseCases.Admin.Commands.CreateUser;
 using PortalForge.Application.UseCases.Admin.Commands.DeleteUser;
 using PortalForge.Application.UseCases.Admin.Commands.UpdateUser;
@@ -8,7 +10,6 @@ using PortalForge.Application.UseCases.Admin.Queries.GetUserById;
 using PortalForge.Application.UseCases.Admin.Queries.GetUsers;
 using PortalForge.Application.UseCases.Users.Commands.BulkAssignDepartment;
 using PortalForge.Application.UseCases.Users.Commands.TransferDepartment;
-using System.Security.Claims;
 
 namespace PortalForge.Api.Controllers;
 
@@ -19,11 +20,16 @@ public class UsersController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<UsersController> _logger;
+    private readonly ICurrentUserService _currentUserService;
 
-    public UsersController(IMediator mediator, ILogger<UsersController> logger)
+    public UsersController(
+        IMediator mediator,
+        ILogger<UsersController> logger,
+        ICurrentUserService currentUserService)
     {
         _mediator = mediator;
         _logger = logger;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
@@ -84,7 +90,7 @@ public class UsersController : BaseController
             Role = request.Role,
             RoleGroupIds = request.RoleGroupIds,
             MustChangePassword = request.MustChangePassword,
-            CreatedBy = GetCurrentUserId()
+            CreatedBy = _currentUserService.UserId
         };
 
         var result = await _mediator.Send(command);
@@ -110,7 +116,7 @@ public class UsersController : BaseController
             RoleGroupIds = request.RoleGroupIds,
             IsActive = request.IsActive,
             NewPassword = request.NewPassword,
-            UpdatedBy = GetCurrentUserId()
+            UpdatedBy = _currentUserService.UserId
         };
 
         var result = await _mediator.Send(command);
@@ -125,7 +131,7 @@ public class UsersController : BaseController
         var command = new DeleteUserCommand
         {
             UserId = id,
-            DeletedBy = GetCurrentUserId()
+            DeletedBy = _currentUserService.UserId
         };
 
         var result = await _mediator.Send(command);
@@ -177,7 +183,7 @@ public class UsersController : BaseController
     /// Update user's annual vacation allowance (Admin/HR only)
     /// </summary>
     [HttpPut("{userId:guid}/vacation-allowance")]
-    [Authorize(Roles = "Admin,HR")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<IActionResult> UpdateVacationAllowance(
         Guid userId,
         [FromBody] UpdateVacationAllowanceRequest request)
@@ -191,7 +197,7 @@ public class UsersController : BaseController
             UserId = userId,
             NewAnnualDays = request.NewAnnualDays,
             Reason = request.Reason,
-            RequestedByUserId = GetCurrentUserId(),
+            RequestedByUserId = _currentUserService.UserId,
             IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
         };
 
@@ -204,7 +210,7 @@ public class UsersController : BaseController
     /// Use this for migrations or manual corrections.
     /// </summary>
     [HttpPut("{userId:guid}/vacation-data")]
-    [Authorize(Roles = "Admin,HR")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<IActionResult> UpdateFullVacationData(
         Guid userId,
         [FromBody] UpdateFullVacationDataRequest request)
@@ -223,7 +229,7 @@ public class UsersController : BaseController
             CarriedOverVacationDays = request.CarriedOverVacationDays,
             CarriedOverExpiryDate = request.CarriedOverExpiryDate,
             Reason = request.Reason,
-            RequestedByUserId = GetCurrentUserId(),
+            RequestedByUserId = _currentUserService.UserId,
             IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
         };
 
@@ -236,7 +242,7 @@ public class UsersController : BaseController
     /// Automatically reassigns pending requests to new supervisor.
     /// </summary>
     [HttpPost("{userId:guid}/transfer-department")]
-    [Authorize(Roles = "Admin,HR")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<IActionResult> TransferDepartment(
         Guid userId,
         [FromBody] TransferDepartmentRequest request)
@@ -250,7 +256,7 @@ public class UsersController : BaseController
             UserId = userId,
             NewDepartmentId = request.NewDepartmentId,
             NewSupervisorId = request.NewSupervisorId,
-            TransferredByUserId = GetCurrentUserId(),
+            TransferredByUserId = _currentUserService.UserId,
             Reason = request.Reason
         };
 
@@ -258,90 +264,3 @@ public class UsersController : BaseController
         return NoContent();
     }
 }
-
-public class BulkAssignDepartmentRequest
-{
-    public List<Guid> EmployeeIds { get; set; } = new();
-    public Guid DepartmentId { get; set; }
-}
-
-public class CreateUserRequest
-{
-    public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string Department { get; set; } = string.Empty;
-    public string Position { get; set; } = string.Empty;
-    public string? PhoneNumber { get; set; }
-    public string Role { get; set; } = "Employee";
-    public List<Guid> RoleGroupIds { get; set; } = new();
-    public bool MustChangePassword { get; set; } = true;
-}
-
-public class UpdateUserRequest
-{
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string Department { get; set; } = string.Empty;
-    public Guid? DepartmentId { get; set; }
-    public string Position { get; set; } = string.Empty;
-    public Guid? PositionId { get; set; }
-    public string? PhoneNumber { get; set; }
-    public string Role { get; set; } = string.Empty;
-    public List<Guid> RoleGroupIds { get; set; } = new();
-    public bool IsActive { get; set; }
-    public string? NewPassword { get; set; }
-}
-
-public class UpdateVacationAllowanceRequest
-{
-    public int NewAnnualDays { get; set; }
-    public string Reason { get; set; } = string.Empty;
-}
-
-public class UpdateFullVacationDataRequest
-{
-    /// <summary>
-    /// Annual vacation days entitlement (e.g., 26)
-    /// </summary>
-    public int AnnualVacationDays { get; set; } = 26;
-
-    /// <summary>
-    /// Number of vacation days already used this year
-    /// </summary>
-    public int VacationDaysUsed { get; set; } = 0;
-
-    /// <summary>
-    /// Number of on-demand vacation days already used (max 4)
-    /// </summary>
-    public int OnDemandVacationDaysUsed { get; set; } = 0;
-
-    /// <summary>
-    /// Number of circumstantial leave days used
-    /// </summary>
-    public int CircumstantialLeaveDaysUsed { get; set; } = 0;
-
-    /// <summary>
-    /// Vacation days carried over from previous year
-    /// </summary>
-    public int CarriedOverVacationDays { get; set; } = 0;
-
-    /// <summary>
-    /// Expiry date for carried over vacation days (typically September 30)
-    /// </summary>
-    public DateTime? CarriedOverExpiryDate { get; set; }
-
-    /// <summary>
-    /// Reason for the update (e.g., "Migration from old system", "Manual correction")
-    /// </summary>
-    public string Reason { get; set; } = string.Empty;
-}
-
-public class TransferDepartmentRequest
-{
-    public Guid NewDepartmentId { get; set; }
-    public Guid? NewSupervisorId { get; set; }
-    public string? Reason { get; set; }
-}
-

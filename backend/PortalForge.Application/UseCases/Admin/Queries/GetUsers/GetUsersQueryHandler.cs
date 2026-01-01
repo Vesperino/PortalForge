@@ -23,9 +23,8 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, GetUsersResul
             request.SearchTerm, request.Department, request.Role);
 
         // Get all users with their role groups
-        var query = _unitOfWork.UserRepository.GetAllAsync()
-            .Result
-            .AsQueryable();
+        var allUsers = await _unitOfWork.UserRepository.GetAllAsync();
+        var query = allUsers.AsQueryable();
 
         // Apply filters
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))

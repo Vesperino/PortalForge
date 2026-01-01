@@ -413,7 +413,6 @@ watch(zoom, (newZoom) => {
 const route = useRoute()
 watch(() => route.path, (newPath) => {
   if (newPath === '/dashboard/organization') {
-    console.log('Returning to organization page - refreshing data')
     loadData()
   }
 })

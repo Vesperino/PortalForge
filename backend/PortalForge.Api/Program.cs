@@ -31,6 +31,10 @@ builder.Services.AddHangfire(configuration => configuration
 // Add Hangfire server
 builder.Services.AddHangfireServer();
 
+// Register CurrentUserService
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<PortalForge.Application.Common.Interfaces.ICurrentUserService, PortalForge.Api.Services.CurrentUserService>();
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
