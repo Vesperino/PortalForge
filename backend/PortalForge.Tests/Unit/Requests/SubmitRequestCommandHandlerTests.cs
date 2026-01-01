@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Exceptions;
 using PortalForge.Application.Interfaces;
 using PortalForge.Application.Services;
 using PortalForge.Application.UseCases.Requests.Commands.SubmitRequest;
@@ -63,7 +64,7 @@ public class SubmitRequestCommandHandlerTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<Exception>(() => 
+        await Assert.ThrowsAsync<NotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None));
     }
 

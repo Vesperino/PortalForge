@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Common.Models;
+using PortalForge.Application.Exceptions;
 using PortalForge.Application.UseCases.Auth.Commands.Login;
 
 namespace PortalForge.Tests.Unit.Application.UseCases.Auth.Commands.Login;
@@ -112,7 +113,7 @@ public class LoginCommandHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<Exception>()
-            .WithMessage("Invalid credentials");
+        await act.Should().ThrowAsync<ValidationException>()
+            .WithMessage("Invalid email or password");
     }
 }
