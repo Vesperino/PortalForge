@@ -1,4 +1,5 @@
-﻿using MediatR;
+using MediatR;
+using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Services;
 using PortalForge.Domain.Enums;
@@ -11,15 +12,18 @@ public class ApproveRequestStepCommandHandler
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notificationService;
     private readonly IVacationScheduleService _vacationService;
+    private readonly ILogger<ApproveRequestStepCommandHandler> _logger;
 
     public ApproveRequestStepCommandHandler(
         IUnitOfWork unitOfWork,
         INotificationService notificationService,
-        IVacationScheduleService vacationService)
+        IVacationScheduleService vacationService,
+        ILogger<ApproveRequestStepCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _notificationService = notificationService;
         _vacationService = vacationService;
+        _logger = logger;
     }
 
     public async Task<ApproveRequestStepResult> Handle(
@@ -213,7 +217,12 @@ public class ApproveRequestStepCommandHandler
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to deduct vacation days for request {RequestId}. Manual adjustment may be required.",
+                    request.Id);
+            }
 
             // Create calendar entry for vacation requests
             try
@@ -223,7 +232,12 @@ public class ApproveRequestStepCommandHandler
                     await _vacationService.CreateFromApprovedRequestAsync(request);
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to create calendar entry for vacation request {RequestId}. Manual entry may be required.",
+                    request.Id);
+            }
 
             // Notify submitter of completion
             await _notificationService.NotifySubmitterAsync(
