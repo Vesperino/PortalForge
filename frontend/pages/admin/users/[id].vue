@@ -242,6 +242,7 @@ const route = useRoute()
 const adminStore = useAdminStore()
 const roleGroupsStore = useRoleGroupsStore()
 const authStore = useAuthStore()
+const notificationToast = useNotificationToast()
 
 const getAuthHeaders = (): Record<string, string> | undefined => {
   const token = authStore.accessToken
@@ -436,25 +437,7 @@ const validatePassword = (): boolean => {
 
 // Success toast notification
 const showSuccessToast = () => {
-  // Create toast element
-  const toast = document.createElement('div')
-  toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center gap-3 animate-fade-in'
-  toast.innerHTML = `
-    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-    </svg>
-    <span class="font-medium">Dane użytkownika zostały zaktualizowane pomyślnie</span>
-  `
-  document.body.appendChild(toast)
-
-  // Remove toast after 3 seconds
-  setTimeout(() => {
-    toast.style.opacity = '0'
-    toast.style.transition = 'opacity 0.3s'
-    setTimeout(() => {
-      document.body.removeChild(toast)
-    }, 300)
-  }, 3000)
+  notificationToast.success('Sukces', 'Dane użytkownika zostały zaktualizowane pomyślnie', 3000)
 }
 
 // Fetch data on mount

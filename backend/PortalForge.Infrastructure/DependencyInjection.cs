@@ -39,8 +39,9 @@ public static class DependencyInjection
         // Register App Settings
         services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
 
-        // Register Supabase Settings and Auth Service
+        // Register Supabase Settings, Client Factory, and Auth Service
         services.Configure<SupabaseSettings>(configuration.GetSection("Supabase"));
+        services.AddSingleton<ISupabaseClientFactory, SupabaseClientFactory>();
         services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
 
         // Register File Storage Service

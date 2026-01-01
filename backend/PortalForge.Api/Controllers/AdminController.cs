@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Api.DTOs.Requests.Admin;
 using PortalForge.Application.DTOs;
 using PortalForge.Application.UseCases.Admin.Commands.AdjustVacationDays;
 using PortalForge.Application.UseCases.Admin.Commands.ReseedRequestTemplates;
@@ -15,7 +16,7 @@ namespace PortalForge.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class AdminController : ControllerBase
+public class AdminController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<AdminController> _logger;
@@ -92,8 +93,8 @@ public class AdminController : ControllerBase
         Guid userId,
         [FromBody] AdjustVacationDaysRequest request)
     {
-        var currentUserId = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(currentUserId))
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == Guid.Empty)
         {
             return Unauthorized(new { message = "User ID not found in token" });
         }
@@ -103,7 +104,7 @@ public class AdminController : ControllerBase
             UserId = userId,
             AdjustmentAmount = request.AdjustmentAmount,
             Reason = request.Reason,
-            AdjustedBy = Guid.Parse(currentUserId)
+            AdjustedBy = currentUserId
         };
 
         var result = await _mediator.Send(command);
@@ -153,13 +154,3 @@ public class AdminController : ControllerBase
         return Ok(result);
     }
 }
-
-/// <summary>
-/// Request model for adjusting vacation days
-/// </summary>
-public class AdjustVacationDaysRequest
-{
-    public int AdjustmentAmount { get; set; }
-    public string Reason { get; set; } = string.Empty;
-}
-

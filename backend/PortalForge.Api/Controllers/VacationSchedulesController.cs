@@ -17,7 +17,7 @@ namespace PortalForge.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/vacation-schedules")]
-public class VacationSchedulesController : ControllerBase
+public class VacationSchedulesController : BaseController
 {
     private readonly IVacationScheduleService _vacationService;
     private readonly IVacationCalculationService _vacationCalculationService;
@@ -37,12 +37,6 @@ public class VacationSchedulesController : ControllerBase
         _mediator = mediator;
         _logger = logger;
         _unitOfWork = unitOfWork;
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
     }
 
     /// <summary>

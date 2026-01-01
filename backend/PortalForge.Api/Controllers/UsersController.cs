@@ -15,7 +15,7 @@ namespace PortalForge.Api.Controllers;
 [ApiController]
 [Route("api/admin/[controller]")]
 [Authorize]
-public class UsersController : ControllerBase
+public class UsersController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<UsersController> _logger;
@@ -24,12 +24,6 @@ public class UsersController : ControllerBase
     {
         _mediator = mediator;
         _logger = logger;
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
     }
 
     [HttpGet]

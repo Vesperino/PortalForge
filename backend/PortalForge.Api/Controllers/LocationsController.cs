@@ -12,7 +12,7 @@ namespace PortalForge.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class LocationsController : ControllerBase
+public class LocationsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<LocationsController> _logger;
@@ -58,8 +58,8 @@ public class LocationsController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<CreateCachedLocationResult>> AddCachedLocation([FromBody] CreateCachedLocationRequest request)
     {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null)
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
         {
             return Unauthorized();
         }
@@ -71,7 +71,7 @@ public class LocationsController : ControllerBase
             Latitude = request.Latitude,
             Longitude = request.Longitude,
             Type = request.Type,
-            CreatedBy = Guid.Parse(userIdClaim)
+            CreatedBy = userId
         };
 
         var result = await _mediator.Send(command);

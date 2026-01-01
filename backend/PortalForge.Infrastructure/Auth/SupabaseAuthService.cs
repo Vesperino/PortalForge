@@ -14,7 +14,8 @@ namespace PortalForge.Infrastructure.Auth;
 
 public class SupabaseAuthService : ISupabaseAuthService
 {
-    private readonly Client _supabaseClient;
+    private readonly ISupabaseClientFactory _clientFactory;
+    private readonly Lazy<Task<Client>> _lazyClient;
     private readonly ApplicationDbContext _dbContext;
     private readonly IEmailService _emailService;
     private readonly ILogger<SupabaseAuthService> _logger;
@@ -27,12 +28,14 @@ public class SupabaseAuthService : ISupabaseAuthService
     public SupabaseAuthService(
         IOptions<SupabaseSettings> supabaseSettings,
         IOptions<AppSettings> appSettings,
+        ISupabaseClientFactory clientFactory,
         ApplicationDbContext dbContext,
         IEmailService emailService,
         EmailVerificationTracker verificationTracker,
         ILogger<SupabaseAuthService> logger)
     {
         var settings = supabaseSettings.Value;
+        _clientFactory = clientFactory;
         _dbContext = dbContext;
         _emailService = emailService;
         _verificationTracker = verificationTracker;
@@ -42,15 +45,10 @@ public class SupabaseAuthService : ISupabaseAuthService
         _supabaseKey = settings.Key;
         _supabaseServiceRoleKey = settings.ServiceRoleKey;
 
-        var options = new SupabaseOptions
-        {
-            AutoRefreshToken = true,
-            AutoConnectRealtime = false
-        };
-
-        _supabaseClient = new Client(settings.Url, settings.Key, options);
-        _supabaseClient.InitializeAsync().Wait();
+        _lazyClient = new Lazy<Task<Client>>(() => _clientFactory.CreateClientAsync());
     }
+
+    private Task<Client> GetClientAsync() => _lazyClient.Value;
 
     public async Task<AuthResult> RegisterAsync(string email, string password, string firstName, string lastName)
     {
@@ -95,7 +93,8 @@ public class SupabaseAuthService : ISupabaseAuthService
             };
 
             _logger.LogInformation("Registering user with redirect URL: {RedirectUrl}", redirectUrl);
-            var signUpResponse = await _supabaseClient.Auth.SignUp(email, password, signUpOptions);
+            var client = await GetClientAsync();
+            var signUpResponse = await client.Auth.SignUp(email, password, signUpOptions);
 
             if (signUpResponse?.User == null)
             {
@@ -159,7 +158,8 @@ public class SupabaseAuthService : ISupabaseAuthService
         {
             _logger.LogInformation("Attempting login for email: {Email}", email);
 
-            var signInResponse = await _supabaseClient.Auth.SignIn(email, password);
+            var client = await GetClientAsync();
+            var signInResponse = await client.Auth.SignIn(email, password);
 
             if (signInResponse?.User == null)
             {
@@ -218,7 +218,8 @@ public class SupabaseAuthService : ISupabaseAuthService
         {
             _logger.LogInformation("Attempting sign in for email: {Email}", email);
 
-            var signInResponse = await _supabaseClient.Auth.SignIn(email, password);
+            var client = await GetClientAsync();
+            var signInResponse = await client.Auth.SignIn(email, password);
 
             if (signInResponse?.User == null)
             {
@@ -262,7 +263,8 @@ public class SupabaseAuthService : ISupabaseAuthService
         try
         {
             _logger.LogInformation("Attempting logout");
-            await _supabaseClient.Auth.SignOut();
+            var client = await GetClientAsync();
+            await client.Auth.SignOut();
             _logger.LogInformation("User logged out successfully");
             return true;
         }
@@ -366,7 +368,8 @@ public class SupabaseAuthService : ISupabaseAuthService
         {
             _logger.LogInformation("Sending password reset email to: {Email}", email);
 
-            await _supabaseClient.Auth.ResetPasswordForEmail(email);
+            var client = await GetClientAsync();
+            await client.Auth.ResetPasswordForEmail(email);
 
             var resetLink = $"{_frontendUrl}/reset-password?email={email}";
             await _emailService.SendPasswordResetEmailAsync(email, resetLink);
@@ -387,7 +390,8 @@ public class SupabaseAuthService : ISupabaseAuthService
         {
             _logger.LogInformation("Attempting password reset");
 
-            var updateResponse = await _supabaseClient.Auth.Update(new UserAttributes
+            var client = await GetClientAsync();
+            var updateResponse = await client.Auth.Update(new UserAttributes
             {
                 Password = newPassword
             });
@@ -402,7 +406,7 @@ public class SupabaseAuthService : ISupabaseAuthService
                 };
             }
 
-            var currentUser = _supabaseClient.Auth.CurrentUser;
+            var currentUser = client.Auth.CurrentUser;
             if (currentUser?.Email != null)
             {
                 // Send confirmation email
@@ -564,7 +568,8 @@ public class SupabaseAuthService : ISupabaseAuthService
             _logger.LogInformation("Attempting to get user ID from access token");
 
             // Get user from Supabase using the access token
-            var user = await _supabaseClient.Auth.GetUser(accessToken);
+            var client = await GetClientAsync();
+            var user = await client.Auth.GetUser(accessToken);
 
             if (user == null)
             {

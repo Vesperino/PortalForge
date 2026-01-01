@@ -13,7 +13,7 @@ namespace PortalForge.Api.Controllers;
 [ApiController]
 [Route("api/admin/system-settings")]
 [Authorize(Roles = "Admin")]
-public class SystemSettingsController : ControllerBase
+public class SystemSettingsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<SystemSettingsController> _logger;
@@ -54,8 +54,8 @@ public class SystemSettingsController : ControllerBase
     [HttpPut]
     public async Task<ActionResult<UpdateSettingsResult>> UpdateSettings([FromBody] List<UpdateSettingRequest> updates)
     {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null)
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
         {
             return Unauthorized();
         }
@@ -67,7 +67,7 @@ public class SystemSettingsController : ControllerBase
                 Key = u.Key,
                 Value = u.Value
             }).ToList(),
-            UpdatedBy = Guid.Parse(userIdClaim)
+            UpdatedBy = userId
         };
 
         var result = await _mediator.Send(command);

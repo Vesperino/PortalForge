@@ -15,7 +15,7 @@ namespace PortalForge.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class PositionsController : ControllerBase
+public class PositionsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<PositionsController> _logger;

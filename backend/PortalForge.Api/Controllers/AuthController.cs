@@ -64,7 +64,7 @@ public class AuthController : BaseController
 
         var response = new AuthResponseDto
         {
-            User = result.User,
+            User = result.User!,
             AccessToken = result.AccessToken ?? string.Empty,
             RefreshToken = result.RefreshToken ?? string.Empty
         };

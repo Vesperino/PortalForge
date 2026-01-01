@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Api.DTOs.Requests.ChatAI;
 using PortalForge.Application.Interfaces;
 using PortalForge.Application.UseCases.ChatAI.Commands.SendChatMessage;
 using PortalForge.Application.UseCases.ChatAI.Commands.TranslateText;
@@ -139,23 +140,4 @@ public class ChatAIController : BaseController
             return Ok(false);
         }
     }
-}
-
-/// <summary>
-/// Response model for translation requests.
-/// </summary>
-public class TranslationResponse
-{
-    public string TranslatedText { get; set; } = string.Empty;
-    public string SourceLanguage { get; set; } = string.Empty;
-    public string TargetLanguage { get; set; } = string.Empty;
-}
-
-/// <summary>
-/// Response model for chat requests.
-/// </summary>
-public class ChatResponse
-{
-    public string Message { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty;
 }

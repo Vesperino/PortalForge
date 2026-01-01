@@ -12,7 +12,7 @@ namespace PortalForge.Api.Controllers;
 [ApiController]
 [Route("api/users")]
 [Authorize]
-public class PublicUsersController : ControllerBase
+public class PublicUsersController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<PublicUsersController> _logger;

@@ -60,4 +60,15 @@ public abstract class BaseController : ControllerBase
 
         return null;
     }
+
+    /// <summary>
+    /// Gets the current user's ID from the JWT token.
+    /// Returns Guid.Empty if the user ID is not found or invalid.
+    /// </summary>
+    /// <returns>The user ID if found and valid, otherwise Guid.Empty.</returns>
+    protected Guid GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+    }
 }

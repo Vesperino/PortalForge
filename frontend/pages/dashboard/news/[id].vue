@@ -4,6 +4,8 @@ import { useAuthStore } from '~/stores/auth'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
+const { sanitizeHtml } = useSanitize()
+
 definePageMeta({
   layout: 'default',
   middleware: ['auth', 'verified']
@@ -194,6 +196,8 @@ const getAuthorName = (currentNews: News) => {
   return 'Unknown author'
 }
 
+const sanitizedContent = computed(() => news.value ? sanitizeHtml(news.value.content) : '')
+
 onMounted(() => {
   loadNews()
 })
@@ -355,7 +359,7 @@ onBeforeUnmount(() => {
               <!-- Content -->
               <div
                 class="prose prose-lg dark:prose-invert max-w-none text-gray-900 dark:text-gray-100"
-                v-html="news.content"
+                v-html="sanitizedContent"
               />
 
               <!-- Event Details -->

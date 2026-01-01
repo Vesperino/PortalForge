@@ -12,7 +12,7 @@ namespace PortalForge.Api.Controllers;
 [ApiController]
 [Route("api/admin/[controller]")]
 [Authorize]
-public class PermissionsController : ControllerBase
+public class PermissionsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<PermissionsController> _logger;
@@ -54,9 +54,8 @@ public class PermissionsController : ControllerBase
     {
         try
         {
-            // Get current user ID from claims
-            var currentUserIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(currentUserIdString) || !Guid.TryParse(currentUserIdString, out var currentUserId))
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == Guid.Empty)
             {
                 return Unauthorized();
             }
