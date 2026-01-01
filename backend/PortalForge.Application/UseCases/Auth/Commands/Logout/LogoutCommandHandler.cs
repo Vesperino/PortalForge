@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Exceptions;
 
 namespace PortalForge.Application.UseCases.Auth.Commands.Logout;
 
@@ -26,7 +27,7 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Unit>
         if (!result)
         {
             _logger.LogWarning("Logout failed");
-            throw new Exception("Logout failed");
+            throw new BusinessException("Logout failed. Please try again.");
         }
 
         _logger.LogInformation("User logged out successfully");

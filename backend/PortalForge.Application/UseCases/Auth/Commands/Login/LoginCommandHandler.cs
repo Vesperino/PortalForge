@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Common.Models;
+using PortalForge.Application.Exceptions;
 using PortalForge.Application.UseCases.Auth.DTOs;
 
 namespace PortalForge.Application.UseCases.Auth.Commands.Login;
@@ -38,7 +39,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResult>
         if (!authResult.Success)
         {
             _logger.LogWarning("Login failed for user: {Email}", request.Email);
-            throw new Exception(authResult.ErrorMessage ?? "Login failed");
+            throw new ValidationException("Invalid email or password");
         }
 
         _logger.LogInformation("User logged in successfully: {UserId}", authResult.UserId);

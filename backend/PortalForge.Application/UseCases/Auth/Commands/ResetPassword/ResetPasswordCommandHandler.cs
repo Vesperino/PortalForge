@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Exceptions;
 
 namespace PortalForge.Application.UseCases.Auth.Commands.ResetPassword;
 
@@ -31,7 +32,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
         if (!result)
         {
             _logger.LogWarning("Password reset failed for: {Email}", request.Email);
-            throw new Exception("Failed to send password reset email");
+            throw new BusinessException("Failed to send password reset email. Please try again later.");
         }
 
         _logger.LogInformation("Password reset email sent to: {Email}", request.Email);

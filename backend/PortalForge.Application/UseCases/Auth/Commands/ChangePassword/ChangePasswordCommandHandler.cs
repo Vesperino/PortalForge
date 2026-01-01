@@ -1,5 +1,6 @@
 using MediatR;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Exceptions;
 
 namespace PortalForge.Application.UseCases.Auth.Commands.ChangePassword;
 
@@ -22,14 +23,14 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
         var user = await _unitOfWork.UserRepository.GetByIdAsync(request.UserId);
         if (user == null)
         {
-            throw new Exception("User not found");
+            throw new NotFoundException("User not found");
         }
 
         // Verify current password by attempting to sign in
         var loginResult = await _authService.SignInAsync(user.Email, request.CurrentPassword);
         if (loginResult.AccessToken == null || loginResult.RefreshToken == null)
         {
-            throw new Exception("Current password is incorrect");
+            throw new ValidationException("Current password is incorrect");
         }
 
         // Change password in Supabase
@@ -39,7 +40,7 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
             request.NewPassword);
         if (!changeResult)
         {
-            throw new Exception("Failed to change password");
+            throw new BusinessException("Failed to change password. Please try again later.");
         }
 
         // Update MustChangePassword flag in database
