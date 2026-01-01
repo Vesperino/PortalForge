@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using PortalForge.Application.Common.Interfaces;
@@ -16,6 +17,7 @@ public class ApproveRequestStepCommandHandlerTests
     private readonly Mock<IRequestCommentRepository> _mockRequestCommentRepo;
     private readonly Mock<INotificationService> _mockNotificationService;
     private readonly Mock<IVacationScheduleService> _mockVacationService;
+    private readonly Mock<ILogger<ApproveRequestStepCommandHandler>> _mockLogger;
     private readonly ApproveRequestStepCommandHandler _handler;
 
     public ApproveRequestStepCommandHandlerTests()
@@ -25,12 +27,14 @@ public class ApproveRequestStepCommandHandlerTests
         _mockRequestCommentRepo = new Mock<IRequestCommentRepository>();
         _mockNotificationService = new Mock<INotificationService>();
         _mockVacationService = new Mock<IVacationScheduleService>();
+        _mockLogger = new Mock<ILogger<ApproveRequestStepCommandHandler>>();
         _mockUnitOfWork.Setup(u => u.RequestRepository).Returns(_mockRequestRepo.Object);
         _mockUnitOfWork.Setup(u => u.RequestCommentRepository).Returns(_mockRequestCommentRepo.Object);
         _handler = new ApproveRequestStepCommandHandler(
             _mockUnitOfWork.Object,
             _mockNotificationService.Object,
-            _mockVacationService.Object);
+            _mockVacationService.Object,
+            _mockLogger.Object);
     }
 
     [Fact]

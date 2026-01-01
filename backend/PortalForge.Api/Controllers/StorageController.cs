@@ -14,7 +14,7 @@ namespace PortalForge.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class StorageController : ControllerBase
+public class StorageController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<StorageController> _logger;
@@ -35,6 +35,17 @@ public class StorageController : ControllerBase
     {
         try
         {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { message = "No file provided" });
+            }
+
+            const long maxFileSize = 10 * 1024 * 1024; // 10MB
+            if (file.Length > maxFileSize)
+            {
+                return BadRequest(new { message = "File size exceeds maximum allowed (10MB)" });
+            }
+
             using var fileStream = file.OpenReadStream();
 
             var command = new UploadNewsImageCommand
@@ -60,7 +71,7 @@ public class StorageController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error uploading file");
-            return StatusCode(500, new { message = "Error uploading file", error = ex.Message });
+            return StatusCode(500, new { message = "Error uploading file" });
         }
     }
 
@@ -70,6 +81,17 @@ public class StorageController : ControllerBase
     {
         try
         {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { message = "No file provided" });
+            }
+
+            const long maxFileSize = 10 * 1024 * 1024; // 10MB
+            if (file.Length > maxFileSize)
+            {
+                return BadRequest(new { message = "File size exceeds maximum allowed (10MB)" });
+            }
+
             using var fileStream = file.OpenReadStream();
 
             var command = new UploadServiceIconCommand
@@ -95,7 +117,7 @@ public class StorageController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error uploading service icon");
-            return StatusCode(500, new { message = "Error uploading service icon", error = ex.Message });
+            return StatusCode(500, new { message = "Error uploading service icon" });
         }
     }
 
@@ -104,6 +126,17 @@ public class StorageController : ControllerBase
     {
         try
         {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { message = "No file provided" });
+            }
+
+            const long maxFileSize = 10 * 1024 * 1024; // 10MB
+            if (file.Length > maxFileSize)
+            {
+                return BadRequest(new { message = "File size exceeds maximum allowed (10MB)" });
+            }
+
             using var fileStream = file.OpenReadStream();
 
             var command = new UploadCommentAttachmentCommand
@@ -129,7 +162,7 @@ public class StorageController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error uploading comment attachment");
-            return StatusCode(500, new { message = "Error uploading comment attachment", error = ex.Message });
+            return StatusCode(500, new { message = "Error uploading comment attachment" });
         }
     }
 
@@ -150,7 +183,7 @@ public class StorageController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting file");
-            return StatusCode(500, new { message = "Error deleting file", error = ex.Message });
+            return StatusCode(500, new { message = "Error deleting file" });
         }
     }
 
@@ -170,12 +203,16 @@ public class StorageController : ControllerBase
                 return BadRequest(new { message = "Invalid file path" });
             }
 
-            // Check for path traversal attempts
-            if (relativePath.Contains("..") || relativePath.Contains("\\"))
+            // Decode URL to catch encoded path traversal attempts
+            var decodedPath = Uri.UnescapeDataString(relativePath);
+            if (decodedPath.Contains("..") || decodedPath.Contains("\\") || decodedPath.Contains("%"))
             {
                 _logger.LogWarning("Path traversal attempt detected: {RelativePath}", relativePath);
                 return BadRequest(new { message = "Invalid file path" });
             }
+
+            // Use the decoded path for further processing
+            relativePath = decodedPath;
 
             // Normalize path separators
             relativePath = relativePath.Replace("\\", "/");

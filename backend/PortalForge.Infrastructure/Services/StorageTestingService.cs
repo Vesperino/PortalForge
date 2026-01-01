@@ -55,7 +55,7 @@ public class StorageTestingService : IStorageTestingService
             }
             catch (Exception ex)
             {
-                result.Message = $"Cannot create base path: {ex.Message}";
+                result.Message = "Cannot create base path. Check directory permissions.";
                 _logger.LogError(ex, "Cannot create base path {BasePath}", basePath);
             }
         }
@@ -88,7 +88,7 @@ public class StorageTestingService : IStorageTestingService
                 }
                 catch (Exception ex)
                 {
-                    subdirTest.Error = ex.Message;
+                    subdirTest.Error = "Failed to create subdirectory. Check permissions.";
                     _logger.LogError(ex, "Cannot create subdirectory {FullPath}", fullPath);
                 }
             }
@@ -165,7 +165,7 @@ public class StorageTestingService : IStorageTestingService
         }
         catch (Exception ex)
         {
-            result.Message = $"❌ Date-based path test failed: {ex.Message}. File serving may not work correctly!";
+            result.Message = "❌ Date-based path test failed. File serving may not work correctly. Check server logs for details.";
             result.Success = false;
             _logger.LogError(ex, "File serving endpoint test failed");
         }

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Api.DTOs.Requests.ChatAI;
 using PortalForge.Application.Interfaces;
 using PortalForge.Application.UseCases.ChatAI.Commands.SendChatMessage;
 using PortalForge.Application.UseCases.ChatAI.Commands.TranslateText;
@@ -60,7 +61,7 @@ public class ChatAIController : BaseController
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during translation for user {UserId}", userId);
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred during translation" });
         }
     }
 
@@ -99,7 +100,7 @@ public class ChatAIController : BaseController
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during chat for user {UserId}", userId);
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred during chat processing" });
         }
     }
 
@@ -108,7 +109,7 @@ public class ChatAIController : BaseController
     /// </summary>
     /// <returns>Result indicating whether the connection is successful.</returns>
     [HttpGet("test-connection")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<bool>> TestConnection(
         [FromServices] IOpenAIService openAIService,
         [FromQuery] string? testApiKey = null)
@@ -139,23 +140,4 @@ public class ChatAIController : BaseController
             return Ok(false);
         }
     }
-}
-
-/// <summary>
-/// Response model for translation requests.
-/// </summary>
-public class TranslationResponse
-{
-    public string TranslatedText { get; set; } = string.Empty;
-    public string SourceLanguage { get; set; } = string.Empty;
-    public string TargetLanguage { get; set; } = string.Empty;
-}
-
-/// <summary>
-/// Response model for chat requests.
-/// </summary>
-public class ChatResponse
-{
-    public string Message { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty;
 }

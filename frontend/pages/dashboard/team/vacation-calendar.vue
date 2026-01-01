@@ -158,15 +158,13 @@ const handleMonthChange = (newDate: Date) => {
 }
 
 // Handle vacation click (show details modal)
-const handleVacationClick = (vacation: VacationSchedule) => {
+const handleVacationClick = (_vacation: VacationSchedule) => {
   // TODO: Open modal with vacation details
-  console.log('Vacation clicked:', vacation)
 }
 
 // Handle day click (calendar grid view)
-const handleDayClick = (day: CalendarDay) => {
+const handleDayClick = (_day: CalendarDay) => {
   // TODO: Show modal with all vacations for this day
-  console.log('Day clicked:', day)
 }
 
 // Export to PDF

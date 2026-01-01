@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Exceptions;
 using PortalForge.Application.UseCases.Auth.Commands.Logout;
 
 namespace PortalForge.Tests.Unit.Application.UseCases.Auth.Commands.Logout;
@@ -58,7 +59,7 @@ public class LogoutCommandHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<Exception>()
-            .WithMessage("Logout failed");
+        await act.Should().ThrowAsync<BusinessException>()
+            .WithMessage("Logout failed. Please try again.");
     }
 }

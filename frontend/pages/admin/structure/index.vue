@@ -500,8 +500,6 @@ const saveQuickEdit = async () => {
       updatedBy: editingUser.value.id
     }
 
-    console.log('Saving user with data:', updateData)  // Debug log
-
     await $fetch(`${apiUrl}/api/admin/users/${editingUser.value.id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),

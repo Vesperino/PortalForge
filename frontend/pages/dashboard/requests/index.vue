@@ -928,9 +928,8 @@ const closeQuizModal = () => {
   selectedQuizStep.value = null
 }
 
-const handleQuizSubmit = async (score: number, passed: boolean, answers: Record<string, string>) => {
+const handleQuizSubmit = async (_score: number, _passed: boolean, _answers: Record<string, string>) => {
   // Handle quiz submission here
-  console.log('Quiz submitted:', { score, passed, answers })
   closeQuizModal()
   await loadMyRequests() // Reload requests
 }

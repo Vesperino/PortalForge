@@ -2,6 +2,7 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Exceptions;
 using PortalForge.Application.Interfaces;
 using PortalForge.Application.Services;
 using PortalForge.Domain.Entities;
@@ -40,14 +41,14 @@ public class SubmitRequestCommandHandler
         var template = await _unitOfWork.RequestTemplateRepository.GetByIdAsync(command.RequestTemplateId);
         if (template == null)
         {
-            throw new Exception("Request template not found");
+            throw new NotFoundException("Request template not found");
         }
 
         // Get submitter
         var submitter = await _unitOfWork.UserRepository.GetByIdAsync(command.SubmittedById);
         if (submitter == null)
         {
-            throw new Exception("User not found");
+            throw new NotFoundException("User not found");
         }
 
         // Validate vacation availability if this is a vacation request
@@ -149,7 +150,7 @@ public class SubmitRequestCommandHandler
                     _logger.LogError(
                         "No approver found for step {StepOrder} after validation passed. This is a programming error.",
                         stepTemplate.StepOrder);
-                    throw new Exception(
+                    throw new BusinessException(
                         $"Failed to resolve approver for step {stepTemplate.StepOrder}. Please contact HR.");
                 }
 
@@ -208,7 +209,7 @@ public class SubmitRequestCommandHandler
             var formData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(formDataJson);
             if (formData == null)
             {
-                throw new Exception("Invalid form data");
+                throw new ValidationException("Invalid form data");
             }
 
             // Extract required fields from form data
@@ -249,28 +250,28 @@ public class SubmitRequestCommandHandler
             // Validate required fields
             if (string.IsNullOrEmpty(leaveTypeStr))
             {
-                throw new Exception("Typ urlopu jest wymagany");
+                throw new ValidationException("Typ urlopu jest wymagany");
             }
 
             if (!startDate.HasValue)
             {
-                throw new Exception("Data rozpoczęcia jest wymagana");
+                throw new ValidationException("Data rozpoczęcia jest wymagana");
             }
 
             if (!endDate.HasValue)
             {
-                throw new Exception("Data zakończenia jest wymagana");
+                throw new ValidationException("Data zakończenia jest wymagana");
             }
 
             if (endDate.Value < startDate.Value)
             {
-                throw new Exception("Data zakończenia nie może być wcześniejsza niż data rozpoczęcia");
+                throw new ValidationException("Data zakończenia nie może być wcześniejsza niż data rozpoczęcia");
             }
 
             // Parse leave type
             if (!Enum.TryParse<LeaveType>(leaveTypeStr, out var leaveType))
             {
-                throw new Exception($"Nieprawidłowy typ urlopu: {leaveTypeStr}");
+                throw new ValidationException($"Nieprawidłowy typ urlopu: {leaveTypeStr}");
             }
 
             // Check vacation availability
@@ -285,7 +286,7 @@ public class SubmitRequestCommandHandler
                 _logger.LogWarning(
                     "Vacation validation failed for user {UserId}: {ErrorMessage}",
                     userId, errorMessage);
-                throw new Exception(errorMessage ?? "Nie możesz wziąć tego urlopu");
+                throw new BusinessException(errorMessage ?? "Nie możesz wziąć tego urlopu");
             }
 
             _logger.LogInformation(
@@ -295,7 +296,7 @@ public class SubmitRequestCommandHandler
         catch (JsonException ex)
         {
             _logger.LogError(ex, "Error parsing vacation request form data");
-            throw new Exception("Błąd parsowania danych formularza");
+            throw new ValidationException("Błąd parsowania danych formularza");
         }
     }
 }

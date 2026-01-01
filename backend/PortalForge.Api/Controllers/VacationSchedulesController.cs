@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Api.DTOs.Requests.Vacations;
 using PortalForge.Application.DTOs;
 using PortalForge.Application.Interfaces;
 using PortalForge.Application.Services;
@@ -17,32 +18,29 @@ namespace PortalForge.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/vacation-schedules")]
-public class VacationSchedulesController : ControllerBase
+public class VacationSchedulesController : BaseController
 {
     private readonly IVacationScheduleService _vacationService;
     private readonly IVacationCalculationService _vacationCalculationService;
     private readonly IMediator _mediator;
     private readonly ILogger<VacationSchedulesController> _logger;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService _currentUserService;
 
     public VacationSchedulesController(
         IVacationScheduleService vacationService,
         IVacationCalculationService vacationCalculationService,
         IMediator mediator,
         ILogger<VacationSchedulesController> logger,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUserService)
     {
         _vacationService = vacationService;
         _vacationCalculationService = vacationCalculationService;
         _mediator = mediator;
         _logger = logger;
         _unitOfWork = unitOfWork;
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -50,7 +48,7 @@ public class VacationSchedulesController : ControllerBase
     /// </summary>
     private async Task<bool> CanViewDepartmentAsync(Guid departmentId)
     {
-        var userId = GetCurrentUserId();
+        var userId = _currentUserService.UserId;
         if (userId == Guid.Empty)
         {
             return false;
@@ -122,10 +120,10 @@ public class VacationSchedulesController : ControllerBase
     {
         _logger.LogInformation(
             "Validating vacation for user {UserId}: {LeaveType} from {StartDate} to {EndDate}",
-            GetCurrentUserId(), request.LeaveType, request.StartDate, request.EndDate);
+            _currentUserService.UserId, request.LeaveType, request.StartDate, request.EndDate);
 
         var (canTake, errorMessage) = await _vacationCalculationService.CanTakeVacationAsync(
-            GetCurrentUserId(),
+            _currentUserService.UserId,
             request.StartDate,
             request.EndDate,
             request.LeaveType);
@@ -181,7 +179,7 @@ public class VacationSchedulesController : ControllerBase
         {
             _logger.LogWarning(
                 "User {UserId} attempted to access department {DepartmentId} calendar without permission",
-                GetCurrentUserId(), departmentId);
+                _currentUserService.UserId, departmentId);
             return Forbid();
         }
 
@@ -232,11 +230,7 @@ public class VacationSchedulesController : ControllerBase
     [ProducesResponseType(typeof(List<VacationSchedule>), 200)]
     public async Task<ActionResult<List<VacationSchedule>>> GetMyVacations([FromQuery] int? year)
     {
-        var userId = GetCurrentUserId();
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized("User ID not found in token");
-        }
+        var userId = _currentUserService.UserId;
 
         _logger.LogInformation("Getting my vacations for user {UserId} (year={Year})", userId, year);
         var all = await _unitOfWork.VacationScheduleRepository.GetByUserAsync(userId);
@@ -324,12 +318,12 @@ public class VacationSchedulesController : ControllerBase
     {
         _logger.LogInformation(
             "Cancelling vacation {VacationId} by user {UserId}",
-            vacationId, GetCurrentUserId());
+            vacationId, _currentUserService.UserId);
 
         var command = new Application.UseCases.Vacations.Commands.CancelVacation.CancelVacationCommand
         {
             VacationScheduleId = vacationId,
-            CancelledByUserId = GetCurrentUserId(),
+            CancelledByUserId = _currentUserService.UserId,
             Reason = request.Reason
         };
 
@@ -343,11 +337,11 @@ public class VacationSchedulesController : ControllerBase
     /// </summary>
     /// <returns>Number of vacations updated</returns>
     [HttpPost("update-statuses")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(UpdateStatusesResponse), 200)]
     public async Task<ActionResult<UpdateStatusesResponse>> UpdateVacationStatuses()
     {
-        _logger.LogInformation("Manual vacation status update triggered by user {UserId}", GetCurrentUserId());
+        _logger.LogInformation("Manual vacation status update triggered by user {UserId}", _currentUserService.UserId);
 
         await _vacationService.UpdateVacationStatusesAsync();
 
@@ -358,26 +352,6 @@ public class VacationSchedulesController : ControllerBase
     }
 }
 
-public class UpdateStatusesResponse
-{
-    public string Message { get; set; } = string.Empty;
-}
 
-public class CancelVacationRequest
-{
-    public string Reason { get; set; } = string.Empty;
-}
 
-public class ValidateVacationRequest
-{
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
-    public LeaveType LeaveType { get; set; }
-}
 
-public class ValidateVacationResponse
-{
-    public bool CanTake { get; set; }
-    public string? ErrorMessage { get; set; }
-    public int RequestedDays { get; set; }
-}

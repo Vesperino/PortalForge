@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Exceptions;
 
 namespace PortalForge.Application.UseCases.Auth.Commands.VerifyEmail;
 
@@ -26,7 +27,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Uni
         if (!result)
         {
             _logger.LogWarning("Email verification failed for: {Email}", request.Email);
-            throw new Exception("Email verification failed");
+            throw new BusinessException("Email verification failed. The link may be expired or invalid.");
         }
 
         _logger.LogInformation("Email verified successfully for: {Email}", request.Email);

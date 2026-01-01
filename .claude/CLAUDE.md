@@ -1,190 +1,195 @@
-# PortalForge - Main AI Rules
+# CLAUDE.md
 
-## Important Instructions
-- NEVER add comments like "Generated with Claude Code" or similar attribution comments to any files
-- NEVER add Co-Authored-By headers or similar metadata indicating AI assistance
-- Focus on writing clean, maintainable, and well-documented code
-- Always prioritize code quality and best practices over speed
+## Wymagane Skille - PRZECZYTAJ PRZED PRACA
+
+**OBOWIAZKOWE** - stosuj przy kazdej pracy z kodem:
+- ~/.claude/skills/dotnet-enterprise.md - standardy .NET (backend)
+- ~/.claude/skills/vue-enterprise.md - standardy Vue.js (frontend)
+
+**UZUPELNIENIE PROJEKTOWE** - specyficzne dla PortalForge:
+- .claude/backend.md - ITransactionalRequest, konfiguracja bez hardkodowania
+- .claude/frontend.md - Nuxt 3 specifics, Supabase integration
+- .claude/testing.md - konwencje testow xUnit/Vitest/Playwright
+
+**WORKFLOW** - dla kazdego nowego zadania stosuj pelny przeplyw opisany nizej.
+
+**IMPORTANT INSTRUCTIONS:**
+- NEVER add comments like Generated with Claude Code or similar attribution
+- NEVER add Co-Authored-By headers or similar AI metadata
+- Focus on clean, maintainable, well-documented code
+- Prioritize code quality over speed
+
+---
 
 ## Project Overview
 
-**PortalForge** is an internal intranet portal for organizations with 200+ employees. It's a centralized communication platform that solves documentation chaos and lack of information centralization through organizational structure management, company events calendar, and internal communication.
+**PortalForge** to wewnetrzny portal intranetowy dla organizacji 200+ pracownikow.
 
 **Current Phase**: MVP Development - Phase 1 (Foundation)
-**Timeline**: 8 weeks total
 **Repository**: https://github.com/Vesperino/PortalForge.git
 
-## Detailed Rules by Technology
-
-For detailed coding standards and patterns, refer to specialized rule files:
-
-- **Backend (.NET 8.0, Clean Architecture, CQRS)**: [@backend.md](.claude/backend.md)
-  - Clean Architecture layers
-  - CQRS with MediatR
-  - Repository Pattern & Unit of Work
-  - FluentValidation examples
-  - Coding standards & best practices
-
-- **Frontend (Nuxt 3, Vue 3, TypeScript, Tailwind)**: [@frontend.md](.claude/frontend.md)
-  - Vue 3 Composition API patterns
-  - TypeScript standards
-  - Composables and Pinia stores
-  - Tailwind CSS guidelines
-  - Accessibility standards
-
-- **Testing (xUnit, Vitest, Playwright)**: [@testing.md](.claude/testing.md)
-  - Unit testing with xUnit + FluentAssertions + Moq
-  - Frontend testing with Vitest
-  - E2E testing with Playwright
-  - Test organization and naming conventions
+---
 
 ## Tech Stack
 
-### Backend
-- **Framework**: .NET 8.0 (LTS until November 2026)
-- **Architecture**: Clean Architecture + CQRS (MediatR)
-- **ORM**: Entity Framework Core
-- **Database**: PostgreSQL via Supabase
-- **Authentication**: Supabase Auth
-- **Logging**: Serilog
-- **Validation**: FluentValidation
-- **Testing**: xUnit + FluentAssertions + Moq
+| Warstwa | Technologia |
+|---------|-------------|
+| Backend | .NET 8.0, ASP.NET Core, EF Core, PostgreSQL (Supabase) |
+| Architecture | Clean Architecture + CQRS (MediatR) |
+| Frontend | Nuxt 3, Vue 3, TypeScript, Pinia, Tailwind CSS |
+| Auth | Supabase Auth |
+| Testing | xUnit + FluentAssertions + Moq, Vitest + Playwright |
+| Logging | Serilog |
+| Validation | FluentValidation |
 
-### Frontend
-- **Framework**: Nuxt 3 (Vue 3 with Composition API)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **State Management**: Pinia
-- **Testing**: Vitest (unit) + Playwright (E2E)
-- **Utils**: VueUse
+---
 
-### Infrastructure
-- **VCS**: Git + GitHub
-- **CI/CD**: GitHub Actions
-- **Containerization**: Docker
-- **Database & Auth**: Supabase
-- **Hosting**: VPS (to be configured)
+## Komendy
 
-## Project Structure (Monorepo)
+### Backend (.NET)
 
-```
-PortalForge/
-├── .ai/                              # AI Documentation & Context
-├── .claude/                          # Claude Code configuration
-│   ├── CLAUDE.md                    # This file - Main rules
-│   ├── backend.md                   # Backend-specific rules
-│   ├── frontend.md                  # Frontend-specific rules
-│   └── testing.md                   # Testing standards
-├── backend/
-│   ├── PortalForge.Api/            # Presentation Layer
-│   ├── PortalForge.Application/    # Application Layer (CQRS)
-│   ├── PortalForge.Domain/         # Domain Layer
-│   └── PortalForge.Infrastructure/ # Infrastructure Layer
-├── frontend/                        # Nuxt 3 Application
-│   ├── components/
-│   ├── composables/
-│   ├── pages/
-│   └── stores/
-├── .gitignore
-├── PortalForge.sln
-└── README.md
-```
+| Komenda | Katalog | Opis |
+|---------|---------|------|
+| dotnet restore | backend/PortalForge.Api | Restore dependencies |
+| dotnet run | backend/PortalForge.Api | Start serwera |
+| dotnet watch run | backend/PortalForge.Api | Hot reload |
+| dotnet test | backend/ | Uruchom testy |
+| dotnet ef migrations add Name | backend/PortalForge.Api | Nowa migracja |
+| dotnet ef database update | backend/PortalForge.Api | Aplikuj migracje |
 
-## Development Commands
+### Frontend (Nuxt)
 
-### Backend
-```bash
-cd backend/PortalForge.Api
-dotnet restore              # Restore dependencies
-dotnet run                  # Start server
-dotnet watch run           # Hot reload
-dotnet test                # Run tests
-dotnet ef migrations add <Name> --project ../PortalForge.Infrastructure
-dotnet ef database update --project ../PortalForge.Infrastructure
-```
+| Komenda | Katalog | Opis |
+|---------|---------|------|
+| npm install | frontend | Install dependencies |
+| npm run dev | frontend | Start dev server |
+| npm run build | frontend | Production build |
+| npm run test | frontend | Unit tests (Vitest) |
+| npm run test:e2e | frontend | E2E tests (Playwright) |
+| npm run lint | frontend | ESLint check |
 
-### Frontend
-```bash
-cd frontend
-npm install                # Install dependencies
-npm run dev                # Start dev server (http://localhost:3000)
-npm run build             # Production build
-npm run test              # Unit tests
-npm run test:e2e         # E2E tests
-npm run lint             # Lint code
-```
+---
 
-## Git Workflow & Commit Standards
+## Dostepne Skille (Slash Commands)
 
-### Branch Naming
-- `feature/feature-name` - New features
-- `fix/bug-name` - Bug fixes
-- `refactor/description` - Code refactoring
-- `docs/description` - Documentation updates
+| Skill | Opis | Kiedy uzywac |
+|-------|------|--------------|
+| /new-feature | Planowanie i implementacja nowej funkcji | Nowe feature |
+| /debug | Analiza i rozwiazywanie problemow | Bledy, bugi |
+| /test | Generowanie testow | Nowy kod |
+| /review-code | Code review wedlug standardow | Przed PR/commit |
+| /deploy | Deployment do staging/production | Release |
+| /update-docs | Aktualizacja dokumentacji | Po zakonczeniu feature |
 
-### Commit Message Convention
+---
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
+## Workflow - OBOWIAZKOWY
 
-```
-feat: add employee creation endpoint
-fix: resolve department validation issue
-docs: update API documentation
-refactor: extract validation logic to separate service
-test: add tests for employee repository
-chore: update dependencies
-style: format code with prettier
-```
+1. ANALIZA WYMAGAN
+   - Zrozum wymagania zadania
+   - Sprawdz czy jest w scope MVP (.ai/prd.md)
+   - Zaproponuj 2-3 podejscia jesli potrzeba
 
-### Commit Message Structure
+2. PLANOWANIE (/new-feature dla nowych funkcji)
+   - Rozpisz zadania na male kroki
+   - Uzyj TodoWrite do sledzenia postepu
+   - OZNACZ ZADANIA ROWNOLEGLE [PARALLEL]
 
-```
-<type>: <short description>
+3. GIT WORKFLOW
+   - Utworz branch: feature/nazwa lub fix/nazwa
+   - Conventional commits
 
-<optional detailed description>
+4. IMPLEMENTACJA - WYBIERZ TRYB:
+   - A) SEKWENCYJNIE - dla zadan z zaleznosciami
+   - B) ROWNOLEGLE (Task tool) - dla 2+ niezaleznych zadan
 
-<optional footer>
-```
+   Kazdy krok stosuje:
+   - dotnet-enterprise.md dla kodu .NET
+   - vue-enterprise.md dla kodu Vue/Nuxt
+   - /debug dla problemow
+   - /test dla nowej logiki
 
-Example:
-```
-feat: implement employee CSV import
+5. WERYFIKACJA
+   - dotnet build - ZERO WARNINGS
+   - dotnet test - WSZYSTKIE PRZECHODZA
+   - npm run build - ZERO BLEDOW
+   - npm run lint - ZERO BLEDOW
 
-Add functionality to import employees from CSV files.
-Includes validation and error reporting.
+6. CODE REVIEW (/review-code)
+   - Przejrzyj wlasne zmiany
+   - Sprawdz zgodnosc ze skillami
 
-Closes #123
-```
+7. FINALIZACJA
+   - Commit z conventional message
+   - Utworz PR lub merge
+   - /update-docs jesli potrzeba
+
+### Kiedy uzywac rownolegych agentow (Task tool)
+
+| Scenariusz | Strategia |
+|------------|-----------|
+| Feature fullstack (API + UI) | 2 agenty: backend + frontend rownolegle |
+| Wiele niezaleznych komponentow | Agent per komponent |
+| Testy + implementacja | Agent na testy, agent na kod |
+| Refactor wielu modulow | Agent per modul |
+
+---
+
+## Checklista przed Commit/PR
+
+### Backend (z dotnet-enterprise.md)
+- dotnet build - zero warnings
+- dotnet test - 100% passing
+- Kazda klasa w osobnym pliku
+- SOLID przestrzegane
+- Brak N+1 (sprawdz Include)
+- CancellationToken propagowany
+- Result pattern lub custom exceptions
+- Brak hardkodowanych wartosci
+
+### Frontend (z vue-enterprise.md)
+- npm run build - zero errors
+- npm run lint - zero errors
+- script setup lang=ts wszedzie
+- Brak any w TypeScript
+- Max 200 linii na komponent
+- Composables z prefixem use
+- data-testid dla interaktywnych elementow
+
+---
 
 ## Do NOT
 
-- ❌ **Do NOT** edit `appsettings.json` directly - use `appsettings.Development.json`
-- ❌ **Do NOT** commit secrets, API keys, or passwords
-- ❌ **Do NOT** commit `node_modules/`, `bin/`, `obj/` folders
-- ❌ **Do NOT** force push to `main` branch
-- ❌ **Do NOT** skip migrations - always generate EF migrations
-- ❌ **Do NOT** use `any` type in TypeScript
-- ❌ **Do NOT** bypass authentication/authorization checks
-- ❌ **Do NOT** ignore TypeScript/ESLint errors
-- ❌ **Do NOT** use `async void` (except event handlers)
-- ❌ **Do NOT** block async code with `.Result` or `.Wait()`
-- ❌ **Do NOT** create commands/queries without validators
-- ❌ **Do NOT** access database directly from controllers
-- ❌ **Do NOT** put business logic in controllers
+- Do NOT edit appsettings.json - use appsettings.Development.json
+- Do NOT commit secrets, API keys, passwords
+- Do NOT commit node_modules/, bin/, obj/
+- Do NOT force push to main
+- Do NOT skip migrations
+- Do NOT use any type in TypeScript
+- Do NOT bypass authentication/authorization
+- Do NOT use async void (except event handlers)
+- Do NOT block async with .Result or .Wait()
+- Do NOT create commands/queries without validators
+- Do NOT access database directly from controllers
+- Do NOT put business logic in controllers
+- Do NOT hardcode paths, URLs, or configuration values
+- Do NOT use Options API, Mixins, or Event Bus (Vue)
 
-## MVP Scope Reminders
+---
 
-### ✅ IN SCOPE (MVP)
+## MVP Scope
+
+### IN SCOPE
 - User authentication (Supabase Auth)
-- Role-based access control (Admin, Manager, HR, Marketing, Employee)
-- Organizational structure management (hierarchical tree)
+- Role-based access (Admin, Manager, HR, Marketing, Employee)
+- Organizational structure management
 - Calendar of company events
 - News system
 - User activity monitoring
 - CSV/Excel import of users
 - PDF/Excel export of org structure
 
-### ❌ OUT OF SCOPE (Future)
+### OUT OF SCOPE (Future)
 - Request system with workflows
 - Document management and versioning
 - Active Directory/LDAP integration
@@ -194,43 +199,62 @@ Closes #123
 - Internal chat/messenger
 - External API integrations
 
+---
+
 ## Key Business Rules
 
-1. **Every employee must have**: First name, Last name, Email, Department, Position, Supervisor
-2. **Only Admin/HR** can import users via CSV/Excel
-3. **Only Admin/HR/Marketing** can create news and events
-4. **Managers** can only edit their department structure
-5. **Events** are archived after 1 year
-6. **Sessions** expire after 8 hours of inactivity
-7. **Passwords** must be hashed with bcrypt
-8. **API responses** must be < 500ms for 95% of requests
-
-## Supabase Configuration
-
-**Project**: https://mqowlgphivdosieakzjb.supabase.co
-
-**Environment Variables:**
-- Frontend: `frontend/.env` (gitignored)
-  - `NUXT_PUBLIC_SUPABASE_URL`
-  - `NUXT_PUBLIC_SUPABASE_KEY` (anon key)
-- Backend: `backend/PortalForge.Api/.env` (gitignored)
-  - `SUPABASE_URL`
-  - `SUPABASE_SERVICE_ROLE_KEY` (secret!)
-  - `CONNECTION_STRING`
-
-**⚠️ SECURITY**: Never commit `.env` files! Always use `.env.example` templates.
-
-## Support & References
-
-- **Documentation**: [.ai/prd.md](../.ai/prd.md), [.ai/tech-stack.md](../.ai/tech-stack.md)
-- **.NET Docs**: https://learn.microsoft.com/en-us/dotnet/
-- **Nuxt Docs**: https://nuxt.com/docs
-- **Supabase Docs**: https://supabase.com/docs
-- **Tailwind Docs**: https://tailwindcss.com/docs
-- **MediatR Docs**: https://github.com/jbogard/MediatR/wiki
-- **FluentValidation Docs**: https://docs.fluentvalidation.net/
+1. Kazdy pracownik musi miec: First name, Last name, Email, Department, Position, Supervisor
+2. Tylko Admin/HR moze importowac przez CSV/Excel
+3. Tylko Admin/HR/Marketing moze tworzyc news i events
+4. Managers moga edytowac tylko strukture swojego dzialu
+5. Events archiwizowane po 1 roku
+6. Sessions wygasaja po 8h nieaktywnosci
+7. Passwords hashowane bcrypt
+8. API responses ponizej 500ms dla 95% requestow
 
 ---
 
-**Last Updated**: 2025-10-11
-**Version**: 2.0.0
+## Debugging Tips
+
+| Problem | Rozwiazanie |
+|---------|-------------|
+| N+1 queries | Dodaj .Include(), sprawdz .ToQueryString() |
+| Validation errors | Sprawdz FluentValidation + UnifiedValidatorService |
+| Auth errors | Sprawdz Supabase token, JWT config |
+| Vue reactivity | Uzywaj storeToRefs() dla Pinia state |
+| TypeScript errors | npm run lint dla pelnego raportu |
+| EF migrations | Sprawdz czy DbContext ma DbSet |
+
+---
+
+## Supabase Configuration
+
+Project: https://mqowlgphivdosieakzjb.supabase.co
+
+Environment Variables:
+- Frontend: frontend/.env (gitignored)
+  - NUXT_PUBLIC_SUPABASE_URL
+  - NUXT_PUBLIC_SUPABASE_KEY (anon key)
+- Backend: backend/PortalForge.Api/.env (gitignored)
+  - SUPABASE_URL
+  - SUPABASE_SERVICE_ROLE_KEY (secret!)
+  - CONNECTION_STRING
+
+SECURITY: Nigdy nie commituj .env files!
+
+---
+
+## References
+
+- Project Docs: .ai/prd.md, .ai/tech-stack.md
+- .NET: https://learn.microsoft.com/en-us/dotnet/
+- Nuxt: https://nuxt.com/docs
+- Supabase: https://supabase.com/docs
+- Tailwind: https://tailwindcss.com/docs
+- MediatR: https://github.com/jbogard/MediatR/wiki
+- FluentValidation: https://docs.fluentvalidation.net/
+
+---
+
+Last Updated: 2026-01-01
+Version: 3.0.0

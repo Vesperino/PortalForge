@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.DTOs;
 using PortalForge.Application.UseCases.Positions.Commands.CreatePosition;
 using PortalForge.Application.UseCases.Positions.Commands.DeletePosition;
@@ -15,7 +16,7 @@ namespace PortalForge.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class PositionsController : ControllerBase
+public class PositionsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<PositionsController> _logger;
@@ -60,7 +61,7 @@ public class PositionsController : ControllerBase
     /// <param name="command">Position creation data</param>
     /// <returns>ID of the created position</returns>
     [HttpPost]
-    [Authorize(Roles = "Admin,Hr")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<Guid>> Create([FromBody] CreatePositionCommand command)
     {
         var positionId = await _mediator.Send(command);
@@ -74,7 +75,7 @@ public class PositionsController : ControllerBase
     /// <param name="command">Position update data</param>
     /// <returns>No content on success</returns>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Hr")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult> Update(Guid id, [FromBody] UpdatePositionCommand command)
     {
         command.PositionId = id;
@@ -88,7 +89,7 @@ public class PositionsController : ControllerBase
     /// <param name="id">Position ID</param>
     /// <returns>No content on success</returns>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin,Hr")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult> Delete(Guid id)
     {
         var command = new DeletePositionCommand { PositionId = id };

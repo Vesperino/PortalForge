@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Api.DTOs.Requests.Locations;
+using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.UseCases.Locations.Commands.CreateCachedLocation;
 using PortalForge.Application.UseCases.Locations.Commands.DeleteCachedLocation;
 using PortalForge.Application.UseCases.Locations.Commands.GeocodeAddress;
@@ -12,17 +13,20 @@ namespace PortalForge.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class LocationsController : ControllerBase
+public class LocationsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<LocationsController> _logger;
+    private readonly ICurrentUserService _currentUserService;
 
     public LocationsController(
-        IMediator _mediator,
-        ILogger<LocationsController> logger)
+        IMediator mediator,
+        ILogger<LocationsController> logger,
+        ICurrentUserService currentUserService)
     {
-        this._mediator = _mediator;
+        _mediator = mediator;
         _logger = logger;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -55,15 +59,9 @@ public class LocationsController : ControllerBase
     /// Add a cached location (Admin only)
     /// </summary>
     [HttpPost("admin/cached")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<CreateCachedLocationResult>> AddCachedLocation([FromBody] CreateCachedLocationRequest request)
     {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null)
-        {
-            return Unauthorized();
-        }
-
         var command = new CreateCachedLocationCommand
         {
             Name = request.Name,
@@ -71,7 +69,7 @@ public class LocationsController : ControllerBase
             Latitude = request.Latitude,
             Longitude = request.Longitude,
             Type = request.Type,
-            CreatedBy = Guid.Parse(userIdClaim)
+            CreatedBy = _currentUserService.UserId
         };
 
         var result = await _mediator.Send(command);
@@ -82,7 +80,7 @@ public class LocationsController : ControllerBase
     /// Delete a cached location (Admin only)
     /// </summary>
     [HttpDelete("admin/cached/{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<DeleteCachedLocationResult>> DeleteCachedLocation(int id)
     {
         var command = new DeleteCachedLocationCommand { Id = id };

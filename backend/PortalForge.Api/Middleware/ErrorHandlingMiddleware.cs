@@ -38,26 +38,38 @@ public class ErrorHandlingMiddleware
 
             await HandleExceptionSafeAsync(context, exception);
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access attempt: {Message}", ex.Message);
+
+            var exception = new CustomException(
+                "Access denied. You do not have permission to perform this action.",
+                statusCode: HttpStatusCode.Forbidden);
+            await HandleExceptionSafeAsync(context, exception);
+        }
         catch (Exception ex)
         {
+            // Log full exception details for debugging, but never expose to client
+            var correlationId = context.TraceIdentifier;
+
             if (ex.InnerException != null)
             {
-                _logger.LogError(ex.InnerException, "Unhandled Exception (Inner): {Message}", ex.InnerException.Message);
-
-                var exception = new CustomException(
-                    ex.InnerException.Message,
-                    statusCode: HttpStatusCode.InternalServerError);
-                await HandleExceptionSafeAsync(context, exception);
+                _logger.LogError(ex.InnerException,
+                    "Unhandled Exception (Inner) [CorrelationId: {CorrelationId}]: {Message}",
+                    correlationId, ex.InnerException.Message);
             }
             else
             {
-                _logger.LogError(ex, "Unhandled Exception: {Message}", ex.Message);
-
-                var exception = new CustomException(
-                    ex.Message,
-                    statusCode: HttpStatusCode.InternalServerError);
-                await HandleExceptionSafeAsync(context, exception);
+                _logger.LogError(ex,
+                    "Unhandled Exception [CorrelationId: {CorrelationId}]: {Message}",
+                    correlationId, ex.Message);
             }
+
+            // Return generic error message to client - never expose internal exception details
+            var exception = new CustomException(
+                "An unexpected error occurred. Please try again later.",
+                statusCode: HttpStatusCode.InternalServerError);
+            await HandleExceptionSafeAsync(context, exception);
         }
     }
 

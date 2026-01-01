@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Exceptions;
 using PortalForge.Application.UseCases.Auth.Commands.ResetPassword;
 
 namespace PortalForge.Tests.Unit.Application.UseCases.Auth.Commands.ResetPassword;
@@ -79,7 +80,7 @@ public class ResetPasswordCommandHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<Exception>()
-            .WithMessage("Failed to send password reset email");
+        await act.Should().ThrowAsync<BusinessException>()
+            .WithMessage("Failed to send password reset email. Please try again later.");
     }
 }

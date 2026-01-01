@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalForge.Api.DTOs.Requests.SystemSettings;
+using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Interfaces;
 using PortalForge.Application.UseCases.SystemSettings.Commands.TestStorage;
 using PortalForge.Application.UseCases.SystemSettings.Commands.UpdateSettings;
@@ -12,18 +13,21 @@ namespace PortalForge.Api.Controllers;
 
 [ApiController]
 [Route("api/admin/system-settings")]
-[Authorize(Roles = "Admin")]
-public class SystemSettingsController : ControllerBase
+[Authorize(Policy = "AdminOnly")]
+public class SystemSettingsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<SystemSettingsController> _logger;
+    private readonly ICurrentUserService _currentUserService;
 
     public SystemSettingsController(
         IMediator mediator,
-        ILogger<SystemSettingsController> logger)
+        ILogger<SystemSettingsController> logger,
+        ICurrentUserService currentUserService)
     {
         _mediator = mediator;
         _logger = logger;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -54,12 +58,6 @@ public class SystemSettingsController : ControllerBase
     [HttpPut]
     public async Task<ActionResult<UpdateSettingsResult>> UpdateSettings([FromBody] List<UpdateSettingRequest> updates)
     {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null)
-        {
-            return Unauthorized();
-        }
-
         var command = new UpdateSettingsCommand
         {
             Settings = updates.Select(u => new UpdateSettingDto
@@ -67,7 +65,7 @@ public class SystemSettingsController : ControllerBase
                 Key = u.Key,
                 Value = u.Value
             }).ToList(),
-            UpdatedBy = Guid.Parse(userIdClaim)
+            UpdatedBy = _currentUserService.UserId
         };
 
         var result = await _mediator.Send(command);

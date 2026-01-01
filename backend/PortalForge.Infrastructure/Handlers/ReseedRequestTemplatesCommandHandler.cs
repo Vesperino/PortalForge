@@ -140,7 +140,7 @@ public class ReseedRequestTemplatesCommandHandler : IRequestHandler<ReseedReques
             return new ReseedResult
             {
                 Success = false,
-                Message = $"Błąd podczas aktualizacji szablonów: {ex.Message}",
+                Message = "Błąd podczas aktualizacji szablonów. Sprawdź logi serwera.",
                 TemplatesCreated = 0
             };
         }

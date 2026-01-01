@@ -102,7 +102,6 @@ const getCategoryLabel = (category: string) => {
 
 const downloadDocument = (document: any) => {
   // TODO: Implement actual download functionality
-  console.log('Downloading:', document.name)
   // In real implementation, this would trigger a file download
   toast.info('Pobieranie dokumentu', document.name)
 }

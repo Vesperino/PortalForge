@@ -76,7 +76,7 @@ public class SeedEmployeesCommandHandler : IRequestHandler<SeedEmployeesCommand,
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to create employee: {Email}", emp.Email);
-                errors.Add($"{emp.Email}: {ex.Message}");
+                errors.Add($"{emp.Email}: Failed to create employee");
             }
         }
 

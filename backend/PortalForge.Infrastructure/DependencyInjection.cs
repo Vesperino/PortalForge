@@ -39,8 +39,9 @@ public static class DependencyInjection
         // Register App Settings
         services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
 
-        // Register Supabase Settings and Auth Service
+        // Register Supabase Settings, Client Factory, and Auth Service
         services.Configure<SupabaseSettings>(configuration.GetSection("Supabase"));
+        services.AddSingleton<ISupabaseClientFactory, SupabaseClientFactory>();
         services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
 
         // Register File Storage Service
@@ -60,6 +61,10 @@ public static class DependencyInjection
 
         // Register HttpClient for services that need it
         services.AddHttpClient();
+
+        // Register named HttpClients for Supabase API calls
+        services.AddHttpClient("Supabase");
+        services.AddHttpClient("SupabaseAdmin");
 
         // Register Geocoding Service
         services.AddScoped<PortalForge.Application.Interfaces.IGeocodingService, PortalForge.Infrastructure.Services.GeocodingService>();
@@ -172,6 +177,13 @@ public static class DependencyInjection
         // Configure authorization policies
         services.AddAuthorization(options =>
         {
+            // Role-based policies for cleaner controller authorization
+            options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+            options.AddPolicy("HrOrAdmin", policy => policy.RequireRole("Admin", "Hr"));
+            options.AddPolicy("ManagerOrAdmin", policy => policy.RequireRole("Admin", "Manager"));
+            options.AddPolicy("MarketingOrAdmin", policy => policy.RequireRole("Admin", "Marketing"));
+            options.AddPolicy("HrManagerOrAdmin", policy => policy.RequireRole("Admin", "Hr", "Manager"));
+
             // Define all permission-based policies
             var permissions = new[]
             {

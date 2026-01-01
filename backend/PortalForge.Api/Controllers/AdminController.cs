@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Api.DTOs.Requests.Admin;
+using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.DTOs;
 using PortalForge.Application.UseCases.Admin.Commands.AdjustVacationDays;
 using PortalForge.Application.UseCases.Admin.Commands.ReseedRequestTemplates;
@@ -15,19 +17,24 @@ namespace PortalForge.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class AdminController : ControllerBase
+public class AdminController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<AdminController> _logger;
+    private readonly ICurrentUserService _currentUserService;
 
-    public AdminController(IMediator mediator, ILogger<AdminController> logger)
+    public AdminController(
+        IMediator mediator,
+        ILogger<AdminController> logger,
+        ICurrentUserService currentUserService)
     {
         _mediator = mediator;
         _logger = logger;
+        _currentUserService = currentUserService;
     }
 
     [HttpPost("seed")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<SeedAdminDataResult>> SeedData()
     {
         _logger.LogInformation("Seeding admin data...");
@@ -42,7 +49,7 @@ public class AdminController : ControllerBase
     /// Seed 40 sample employees with avatars
     /// </summary>
     [HttpPost("seed-employees")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<SeedEmployeesResult>> SeedEmployees()
     {
         _logger.LogInformation("Seeding 40 sample employees...");
@@ -58,7 +65,7 @@ public class AdminController : ControllerBase
     /// Removes old templates and creates new ones with updated structure.
     /// </summary>
     [HttpPost("reseed-request-templates")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<ReseedResult>> ReseedRequestTemplates()
     {
         _logger.LogInformation("Reseeding default request templates...");
@@ -87,23 +94,17 @@ public class AdminController : ControllerBase
     /// <param name="reason">Reason for adjustment (required for audit)</param>
     /// <returns>Result with old and new values</returns>
     [HttpPost("users/{userId}/adjust-vacation-days")]
-    [Authorize(Roles = "Admin,HR")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<AdjustVacationDaysResult>> AdjustVacationDays(
         Guid userId,
         [FromBody] AdjustVacationDaysRequest request)
     {
-        var currentUserId = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(currentUserId))
-        {
-            return Unauthorized(new { message = "User ID not found in token" });
-        }
-
         var command = new AdjustVacationDaysCommand
         {
             UserId = userId,
             AdjustmentAmount = request.AdjustmentAmount,
             Reason = request.Reason,
-            AdjustedBy = Guid.Parse(currentUserId)
+            AdjustedBy = _currentUserService.UserId
         };
 
         var result = await _mediator.Send(command);
@@ -128,7 +129,7 @@ public class AdminController : ControllerBase
     /// <param name="pageSize">Page size (default: 50, max: 100)</param>
     /// <returns>Paginated audit log entries</returns>
     [HttpGet("audit-logs")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<PagedResult<AuditLogDto>>> GetAuditLogs(
         [FromQuery] string? entityType = null,
         [FromQuery] string? action = null,
@@ -153,13 +154,3 @@ public class AdminController : ControllerBase
         return Ok(result);
     }
 }
-
-/// <summary>
-/// Request model for adjusting vacation days
-/// </summary>
-public class AdjustVacationDaysRequest
-{
-    public int AdjustmentAmount { get; set; }
-    public string Reason { get; set; } = string.Empty;
-}
-

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.DTOs;
 using PortalForge.Application.UseCases.Admin.Queries.GetPermissions;
 using PortalForge.Application.UseCases.Permissions.Commands.UpdateOrganizationalPermission;
@@ -12,15 +13,20 @@ namespace PortalForge.Api.Controllers;
 [ApiController]
 [Route("api/admin/[controller]")]
 [Authorize]
-public class PermissionsController : ControllerBase
+public class PermissionsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<PermissionsController> _logger;
+    private readonly ICurrentUserService _currentUserService;
 
-    public PermissionsController(IMediator mediator, ILogger<PermissionsController> logger)
+    public PermissionsController(
+        IMediator mediator,
+        ILogger<PermissionsController> logger,
+        ICurrentUserService currentUserService)
     {
         _mediator = mediator;
         _logger = logger;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
@@ -54,22 +60,15 @@ public class PermissionsController : ControllerBase
     {
         try
         {
-            // Get current user ID from claims
-            var currentUserIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(currentUserIdString) || !Guid.TryParse(currentUserIdString, out var currentUserId))
-            {
-                return Unauthorized();
-            }
-
             // Check if user is Admin role
-            var isAdmin = User.IsInRole("Admin");
+            var isAdmin = _currentUserService.IsInRole("Admin");
 
             // Users can view their own permissions, admins can view any
-            if (userId != currentUserId && !isAdmin)
+            if (userId != _currentUserService.UserId && !isAdmin)
             {
                 _logger.LogWarning(
                     "User {CurrentUserId} attempted to view permissions for user {TargetUserId} without authorization",
-                    currentUserId, userId);
+                    _currentUserService.UserId, userId);
                 return Forbid();
             }
 
@@ -100,7 +99,7 @@ public class PermissionsController : ControllerBase
     /// <response code="403">User is not authorized (Admin only)</response>
     /// <response code="404">User not found</response>
     [HttpPut("organizational/{userId}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     [ProducesResponseType(403)]

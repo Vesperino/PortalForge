@@ -16,9 +16,7 @@ export default defineNuxtPlugin(() => {
       // Check if still authenticated before refreshing
       if (authStore.isAuthenticated) {
         try {
-          console.log('[Token Refresh] Refreshing access token...')
           await refreshToken()
-          console.log('[Token Refresh] Token refreshed successfully')
         } catch (error) {
           console.error('[Token Refresh] Failed to refresh token', error)
           clearInterval(intervalId)

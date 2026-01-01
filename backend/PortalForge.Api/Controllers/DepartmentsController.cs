@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.DTOs;
 using PortalForge.Application.UseCases.Departments.Commands.CreateDepartment;
 using PortalForge.Application.UseCases.Departments.Commands.DeleteDepartment;
@@ -17,7 +18,7 @@ namespace PortalForge.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class DepartmentsController : ControllerBase
+public class DepartmentsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<DepartmentsController> _logger;
@@ -172,7 +173,7 @@ public class DepartmentsController : ControllerBase
     /// <param name="dto">Department creation data</param>
     /// <returns>ID of the created department</returns>
     [HttpPost]
-    [Authorize(Roles = "Admin,Hr")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<Guid>> Create([FromBody] CreateDepartmentDto dto)
     {
         var command = new CreateDepartmentCommand
@@ -195,7 +196,7 @@ public class DepartmentsController : ControllerBase
     /// <param name="dto">Department update data</param>
     /// <returns>No content on success</returns>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Hr")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult> Update(Guid id, [FromBody] UpdateDepartmentDto dto)
     {
         var command = new UpdateDepartmentCommand
@@ -219,7 +220,7 @@ public class DepartmentsController : ControllerBase
     /// <param name="id">Department ID</param>
     /// <returns>No content on success</returns>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin,Hr")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult> Delete(Guid id)
     {
         var command = new DeleteDepartmentCommand { DepartmentId = id };

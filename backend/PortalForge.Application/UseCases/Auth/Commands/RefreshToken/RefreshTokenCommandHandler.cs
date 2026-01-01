@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Common.Models;
+using PortalForge.Application.Exceptions;
 
 namespace PortalForge.Application.UseCases.Auth.Commands.RefreshToken;
 
@@ -27,7 +28,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
         if (!result.Success)
         {
             _logger.LogWarning("Token refresh failed");
-            throw new Exception(result.ErrorMessage ?? "Token refresh failed");
+            throw new BusinessException("Session expired. Please log in again.");
         }
 
         _logger.LogInformation("Token refreshed successfully");
