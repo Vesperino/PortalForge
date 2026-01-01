@@ -18,6 +18,7 @@ public class SupabaseAuthService : ISupabaseAuthService
     private readonly Lazy<Task<Client>> _lazyClient;
     private readonly ApplicationDbContext _dbContext;
     private readonly IEmailService _emailService;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<SupabaseAuthService> _logger;
     private readonly EmailVerificationTracker _verificationTracker;
     private readonly string _frontendUrl;
@@ -31,6 +32,7 @@ public class SupabaseAuthService : ISupabaseAuthService
         ISupabaseClientFactory clientFactory,
         ApplicationDbContext dbContext,
         IEmailService emailService,
+        IHttpClientFactory httpClientFactory,
         EmailVerificationTracker verificationTracker,
         ILogger<SupabaseAuthService> logger)
     {
@@ -38,6 +40,7 @@ public class SupabaseAuthService : ISupabaseAuthService
         _clientFactory = clientFactory;
         _dbContext = dbContext;
         _emailService = emailService;
+        _httpClientFactory = httpClientFactory;
         _verificationTracker = verificationTracker;
         _logger = logger;
         _frontendUrl = appSettings.Value.FrontendUrl;
@@ -295,7 +298,7 @@ public class SupabaseAuthService : ISupabaseAuthService
             // Note: We need to provide both access token and refresh token to SetSession
             // Since we only have refresh token, we use RefreshSession directly
             // First, we need to set the session using the Supabase REST API
-            using var httpClient = new HttpClient();
+            var httpClient = _httpClientFactory.CreateClient("Supabase");
             httpClient.DefaultRequestHeaders.Add("apikey", _supabaseKey);
 
             var requestBody = new
@@ -445,7 +448,7 @@ public class SupabaseAuthService : ISupabaseAuthService
             _logger.LogInformation("Attempting password update");
 
             // Use the Supabase REST API directly to update the password
-            using var httpClient = new HttpClient();
+            var httpClient = _httpClientFactory.CreateClient("Supabase");
             httpClient.DefaultRequestHeaders.Add("apikey", _supabaseKey);
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
 
@@ -488,7 +491,7 @@ public class SupabaseAuthService : ISupabaseAuthService
             _logger.LogInformation("Admin attempting to update password for user: {UserId}", userId);
 
             // Use Supabase Admin API to update user password
-            using var httpClient = new HttpClient();
+            var httpClient = _httpClientFactory.CreateClient("SupabaseAdmin");
             httpClient.DefaultRequestHeaders.Add("apikey", _supabaseServiceRoleKey);
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_supabaseServiceRoleKey}");
 
@@ -622,7 +625,7 @@ public class SupabaseAuthService : ISupabaseAuthService
             // Resend verification email via Supabase REST API
             var redirectUrl = $"{_frontendUrl}/auth/callback";
 
-            using var httpClient = new HttpClient();
+            var httpClient = _httpClientFactory.CreateClient("Supabase");
 
             var requestBody = new
             {
@@ -687,7 +690,7 @@ public class SupabaseAuthService : ISupabaseAuthService
             }
 
             // Create user via Supabase Admin API (no confirmation email sent)
-            using var httpClient = new HttpClient();
+            var httpClient = _httpClientFactory.CreateClient("SupabaseAdmin");
             httpClient.DefaultRequestHeaders.Add("apikey", _supabaseServiceRoleKey);
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_supabaseServiceRoleKey}");
 

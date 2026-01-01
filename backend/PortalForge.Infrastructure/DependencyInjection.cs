@@ -62,6 +62,10 @@ public static class DependencyInjection
         // Register HttpClient for services that need it
         services.AddHttpClient();
 
+        // Register named HttpClients for Supabase API calls
+        services.AddHttpClient("Supabase");
+        services.AddHttpClient("SupabaseAdmin");
+
         // Register Geocoding Service
         services.AddScoped<PortalForge.Application.Interfaces.IGeocodingService, PortalForge.Infrastructure.Services.GeocodingService>();
 
