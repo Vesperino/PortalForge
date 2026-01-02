@@ -39,6 +39,7 @@ export interface UpdateNewsRequest {
 export function useNewsApi() {
   const config = useRuntimeConfig()
   const apiUrl = config.public.apiUrl || 'http://localhost:5155'
+  const { handleError } = useApiError()
 
   const authStore = useAuthStore()
 
@@ -66,46 +67,71 @@ export function useNewsApi() {
     }
 
     const query = params.toString() ? `?${params.toString()}` : ''
-    const headers = getAuthHeaders()
-    const response = await $fetch(`${apiUrl}/api/news${query}`, {
-      headers
-    }) as { items: News[] }
-    return response.items
+    try {
+      const headers = getAuthHeaders()
+      const response = await $fetch(`${apiUrl}/api/news${query}`, {
+        headers
+      }) as { items: News[] }
+      return response.items
+    } catch (error) {
+      handleError(error, { customMessage: 'Nie udalo sie pobrac listy aktualnosci' })
+      throw error
+    }
   }
 
   async function fetchNewsById(id: number): Promise<News> {
-    const headers = getAuthHeaders()
-    const response = await $fetch(`${apiUrl}/api/news/${id}`, {
-      headers
-    }) as News
-    return response
+    try {
+      const headers = getAuthHeaders()
+      const response = await $fetch(`${apiUrl}/api/news/${id}`, {
+        headers
+      }) as News
+      return response
+    } catch (error) {
+      handleError(error, { customMessage: 'Nie udalo sie pobrac aktualnosci' })
+      throw error
+    }
   }
 
   async function createNews(request: CreateNewsRequest): Promise<number> {
-    const headers = getAuthHeaders()
-    const response = await $fetch(`${apiUrl}/api/news`, {
-      method: 'POST',
-      headers,
-      body: request
-    }) as number
-    return response
+    try {
+      const headers = getAuthHeaders()
+      const response = await $fetch(`${apiUrl}/api/news`, {
+        method: 'POST',
+        headers,
+        body: request
+      }) as number
+      return response
+    } catch (error) {
+      handleError(error, { customMessage: 'Nie udalo sie utworzyc aktualnosci' })
+      throw error
+    }
   }
 
   async function updateNews(id: number, request: UpdateNewsRequest): Promise<void> {
-    const headers = getAuthHeaders()
-    await $fetch(`${apiUrl}/api/news/${id}`, {
-      method: 'PUT',
-      headers,
-      body: request
-    })
+    try {
+      const headers = getAuthHeaders()
+      await $fetch(`${apiUrl}/api/news/${id}`, {
+        method: 'PUT',
+        headers,
+        body: request
+      })
+    } catch (error) {
+      handleError(error, { customMessage: 'Nie udalo sie zaktualizowac aktualnosci' })
+      throw error
+    }
   }
 
   async function deleteNews(id: number): Promise<void> {
-    const headers = getAuthHeaders()
-    await $fetch(`${apiUrl}/api/news/${id}`, {
-      method: 'DELETE',
-      headers
-    })
+    try {
+      const headers = getAuthHeaders()
+      await $fetch(`${apiUrl}/api/news/${id}`, {
+        method: 'DELETE',
+        headers
+      })
+    } catch (error) {
+      handleError(error, { customMessage: 'Nie udalo sie usunac aktualnosci' })
+      throw error
+    }
   }
 
   return {

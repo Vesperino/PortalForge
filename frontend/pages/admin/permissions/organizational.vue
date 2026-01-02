@@ -337,14 +337,18 @@ const fetchUsers = async () => {
   error.value = null
 
   try {
+    interface UsersResponse {
+      users?: User[]
+    }
+
     const response = await $fetch(`${apiUrl}/api/admin/users`, {
       headers: getAuthHeaders(),
-    }) as any
+    }) as UsersResponse | User[]
 
-    if (response && response.users && Array.isArray(response.users)) {
-      users.value = response.users as User[]
+    if (response && 'users' in response && Array.isArray(response.users)) {
+      users.value = response.users
     } else if (Array.isArray(response)) {
-      users.value = response as User[]
+      users.value = response
     } else {
       console.error('Response is not in expected format:', response)
       users.value = []
@@ -355,9 +359,9 @@ const fetchUsers = async () => {
     for (const user of users.value) {
       await loadUserPermissions(user.id)
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error fetching users:', err)
-    error.value = err.message || 'Nie udało się załadować użytkowników'
+    error.value = err instanceof Error ? err.message : 'Nie udało się załadować użytkowników'
     users.value = []
   } finally {
     loading.value = false
@@ -443,9 +447,9 @@ const savePermissions = async (userId: string) => {
     )
 
     toast.success('Uprawnienia zostały zapisane')
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error saving permissions:', err)
-    toast.error('Nie udało się zapisać uprawnień', err.message)
+    toast.error('Nie udało się zapisać uprawnień', err instanceof Error ? err.message : undefined)
   } finally {
     savingUserId.value = null
   }

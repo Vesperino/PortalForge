@@ -63,8 +63,9 @@ async function loadNews() {
     eventPlaceId.value = news.eventPlaceId || ''
     departmentId.value = news.departmentId || undefined
     hashtags.value = news.hashtags || []
-  } catch (err: any) {
-    error.value = err?.message || 'Nie udało się załadować newsa'
+  } catch (err: unknown) {
+    const errWithMessage = err as { message?: string }
+    error.value = errWithMessage?.message || 'Nie udało się załadować newsa'
     console.error(err)
   } finally {
     isLoading.value = false
@@ -114,8 +115,9 @@ async function handleSubmit() {
     setTimeout(() => {
       router.push(`/dashboard/news/${newsId.value}`)
     }, 1000)
-  } catch (err: any) {
-    error.value = err?.message || 'Nie udało się zaktualizować newsa. Spróbuj ponownie.'
+  } catch (err: unknown) {
+    const errWithMessage = err as { message?: string }
+    error.value = errWithMessage?.message || 'Nie udało się zaktualizować newsa. Spróbuj ponownie.'
     console.error(err)
   } finally {
     isSubmitting.value = false
@@ -208,10 +210,20 @@ onMounted(() => {
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Treść *
               </label>
-              <RichTextEditor
-                v-model="content"
-                @hashtags-detected="handleHashtagsDetected"
-              />
+              <Suspense>
+                <LazyRichTextEditor
+                  v-model="content"
+                  @hashtags-detected="handleHashtagsDetected"
+                />
+                <template #fallback>
+                  <div class="border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 p-4 min-h-[300px] flex items-center justify-center">
+                    <div class="text-center">
+                      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
+                      <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Ładowanie edytora...</p>
+                    </div>
+                  </div>
+                </template>
+              </Suspense>
             </div>
           </div>
         </div>
@@ -321,14 +333,29 @@ onMounted(() => {
               />
 
               <!-- Event Location -->
-              <LocationPickerOSM
-                v-model="eventLocation"
-                :latitude="eventLatitude"
-                :longitude="eventLongitude"
-                label="Lokalizacja wydarzenia"
-                @update:latitude="eventLatitude = $event"
-                @update:longitude="eventLongitude = $event"
-              />
+              <Suspense>
+                <LazyLocationPickerOSM
+                  v-model="eventLocation"
+                  :latitude="eventLatitude"
+                  :longitude="eventLongitude"
+                  label="Lokalizacja wydarzenia"
+                  @update:latitude="eventLatitude = $event"
+                  @update:longitude="eventLongitude = $event"
+                />
+                <template #fallback>
+                  <div class="space-y-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Lokalizacja wydarzenia
+                    </label>
+                    <div class="border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 p-8 flex items-center justify-center">
+                      <div class="text-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
+                        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Ładowanie mapy...</p>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </Suspense>
 
               <!-- Event ID (optional) -->
               <div>

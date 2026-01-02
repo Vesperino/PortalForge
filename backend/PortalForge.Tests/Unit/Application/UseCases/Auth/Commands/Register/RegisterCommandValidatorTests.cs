@@ -41,7 +41,7 @@ public class RegisterCommandValidatorTests
         };
 
         _userRepositoryMock
-            .Setup(x => x.GetByEmailAsync(command.Email))
+            .Setup(x => x.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -126,7 +126,7 @@ public class RegisterCommandValidatorTests
         };
 
         _userRepositoryMock
-            .Setup(x => x.GetByEmailAsync(command.Email))
+            .Setup(x => x.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
 
         // Act

@@ -111,13 +111,23 @@ public class RequestsController : BaseController
 
     /// <summary>
     /// Get request details by ID including comments and edit history
-    /// All authenticated users can view requests (handler checks ownership/approval rights)
+    /// User must be the request submitter, an approver on the request, or an admin
     /// </summary>
     [HttpGet("{requestId:guid}")]
     [Authorize]
     public async Task<ActionResult> GetRequestById(Guid requestId)
     {
-        var query = new GetRequestByIdQuery { RequestId = requestId };
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
+        var query = new GetRequestByIdQuery
+        {
+            RequestId = requestId,
+            CurrentUserId = userGuid
+        };
         var result = await _mediator.Send(query);
         return Ok(result);
     }
@@ -239,8 +249,8 @@ public class RequestsController : BaseController
         };
 
         var result = await _mediator.Send(command);
-        
-        if (!result.Success)
+
+        if (!result.IsSuccess)
         {
             return BadRequest(result.Message);
         }

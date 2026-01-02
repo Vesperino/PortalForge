@@ -16,18 +16,21 @@ public class CurrentUserService : ICurrentUserService
     {
         get
         {
-            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userIdClaim = _httpContextAccessor.HttpContext?.User?
+                .FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
         }
     }
 
-    public string? Email => _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value;
+    public string? Email => _httpContextAccessor.HttpContext?.User?
+        .FindFirst(ClaimTypes.Email)?.Value;
 
     public IReadOnlyList<string> Roles
     {
         get
         {
-            var roles = _httpContextAccessor.HttpContext?.User?.FindAll(ClaimTypes.Role)
+            var roles = _httpContextAccessor.HttpContext?.User?
+                .FindAll(ClaimTypes.Role)
                 .Select(c => c.Value)
                 .ToList() ?? new List<string>();
             return roles.AsReadOnly();

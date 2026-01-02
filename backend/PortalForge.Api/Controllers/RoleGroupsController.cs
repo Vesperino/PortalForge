@@ -31,6 +31,7 @@ public class RoleGroupsController : BaseController
     }
 
     [HttpGet]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<GetRoleGroupsResult>> GetRoleGroups(
         [FromQuery] bool includePermissions = true)
     {
@@ -46,6 +47,7 @@ public class RoleGroupsController : BaseController
     }
 
     [HttpGet("{id}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<GetRoleGroupByIdResult>> GetRoleGroupById(Guid id)
     {
         _logger.LogInformation("Getting role group by ID: {RoleGroupId}", id);
@@ -60,6 +62,7 @@ public class RoleGroupsController : BaseController
     }
 
     [HttpPost]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<CreateRoleGroupResult>> CreateRoleGroup([FromBody] CreateRoleGroupRequest request)
     {
         _logger.LogInformation("Creating role group: {Name}", request.Name);
@@ -77,6 +80,7 @@ public class RoleGroupsController : BaseController
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<UpdateRoleGroupResult>> UpdateRoleGroup(Guid id, [FromBody] UpdateRoleGroupRequest request)
     {
         _logger.LogInformation("Updating role group: {RoleGroupId}", id);
@@ -95,6 +99,7 @@ public class RoleGroupsController : BaseController
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<DeleteRoleGroupResult>> DeleteRoleGroup(Guid id)
     {
         _logger.LogInformation("Deleting role group: {RoleGroupId}", id);

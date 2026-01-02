@@ -43,9 +43,8 @@ public class SeedAdminDataCommandHandler : IRequestHandler<SeedAdminDataCommand,
 
     private async Task<int> SeedPermissions()
     {
-        // Check if permissions already exist
-        var existingPermissions = (await _unitOfWork.PermissionRepository.GetAllAsync()).ToList();
-        if (existingPermissions.Any())
+        // Check if permissions already exist using AnyAsync to avoid loading all records
+        if (await _unitOfWork.PermissionRepository.AnyAsync())
         {
             _logger.LogInformation("Permissions already exist. Skipping seed.");
             return 0;
@@ -115,15 +114,14 @@ public class SeedAdminDataCommandHandler : IRequestHandler<SeedAdminDataCommand,
 
     private async Task<int> SeedRoleGroups()
     {
-        // Check if role groups already exist
-        var existingRoleGroups = (await _unitOfWork.RoleGroupRepository.GetAllAsync()).ToList();
-        if (existingRoleGroups.Any())
+        // Check if role groups already exist using AnyAsync to avoid loading all records
+        if (await _unitOfWork.RoleGroupRepository.AnyAsync())
         {
             _logger.LogInformation("Role groups already exist. Skipping seed.");
             return 0;
         }
 
-        // Get all permissions
+        // Get all permissions (needed for assignment, so GetAllAsync is appropriate here)
         var allPermissions = (await _unitOfWork.PermissionRepository.GetAllAsync()).ToList();
 
         var roleGroupsData = new[]
@@ -228,9 +226,8 @@ public class SeedAdminDataCommandHandler : IRequestHandler<SeedAdminDataCommand,
 
     private async Task<bool> CreateDefaultAdminUser()
     {
-        // Check if admin user already exists
-        var existingAdmin = (await _unitOfWork.UserRepository.GetAllAsync())
-            .FirstOrDefault(u => u.Email == "admin@portalforge.local");
+        // Check if admin user already exists using GetByEmailAsync
+        var existingAdmin = await _unitOfWork.UserRepository.GetByEmailAsync("admin@portalforge.local");
 
         if (existingAdmin != null)
         {
@@ -238,9 +235,8 @@ public class SeedAdminDataCommandHandler : IRequestHandler<SeedAdminDataCommand,
             return false;
         }
 
-        // Get Admin role group
-        var adminRoleGroup = (await _unitOfWork.RoleGroupRepository.GetAllAsync())
-            .FirstOrDefault(rg => rg.Name == "Admin");
+        // Get Admin role group using GetByNameAsync
+        var adminRoleGroup = await _unitOfWork.RoleGroupRepository.GetByNameAsync("Admin");
 
         if (adminRoleGroup == null)
         {

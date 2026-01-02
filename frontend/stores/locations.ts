@@ -29,8 +29,8 @@ export const useLocationsStore = defineStore('locations', () => {
       }) as CachedLocation[]
       
       cachedLocations.value = response
-    } catch (err: any) {
-      error.value = err?.message || 'Failed to fetch cached locations'
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to fetch cached locations'
       console.error('fetchCachedLocations error:', err)
     } finally {
       isLoading.value = false

@@ -89,7 +89,7 @@
             <select
               :value="step.specificDepartmentRoleType || 'Head'"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-              @change="(e) => updateStep({ specificDepartmentRoleType: (e.target as HTMLSelectElement).value as any })"
+              @change="(e) => updateStep({ specificDepartmentRoleType: (e.target as HTMLSelectElement).value as DepartmentRoleType })"
             >
               <option value="Head">Kierownik działu (Head)</option>
               <option value="Director">Dyrektor działu (Director)</option>
@@ -227,13 +227,18 @@
 </template>
 
 <script setup lang="ts">
-import type { RequestApprovalStepTemplate } from '~/types/requests'
+import type { RequestApprovalStepTemplate, ApproverType, DepartmentRoleType, QuizQuestion } from '~/types/requests'
 import type { UserDto } from '~/stores/admin'
 import type { RoleGroupDto } from '~/stores/roleGroups'
 
 interface DepartmentDto {
   id: string
   name: string
+}
+
+interface QuizSaveData {
+  questions: QuizQuestion[]
+  passingScore: number
 }
 
 const props = defineProps<{
@@ -289,7 +294,7 @@ const updateStep = (updates: Partial<RequestApprovalStepTemplate>) => {
 const onApproverTypeChange = (newType: string) => {
   // Clear selections when type changes
   const updates: Partial<RequestApprovalStepTemplate> = {
-    approverType: newType as any
+    approverType: newType as ApproverType
   }
 
   if (newType !== 'SpecificUser') {
@@ -350,7 +355,7 @@ const clearDepartmentSelection = () => {
   showDepartmentDropdown.value = true
 }
 
-const handleQuizSave = (data: { questions: any[], passingScore: number }) => {
+const handleQuizSave = (data: QuizSaveData) => {
   updateStep({
     quizQuestions: data.questions,
     passingScore: data.passingScore

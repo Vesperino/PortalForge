@@ -48,12 +48,19 @@ function toggleMap() {
   showMap.value = !showMap.value
 }
 
-function handleMapClick(event: any) {
+interface GoogleMapClickEvent {
+  latLng?: {
+    lat: () => number
+    lng: () => number
+  }
+}
+
+function handleMapClick(event: GoogleMapClickEvent) {
   if (event.latLng) {
     const lat = event.latLng.lat()
     const lng = event.latLng.lng()
     markerPosition.value = { lat, lng }
-    
+
     // Reverse geocode to get address
     reverseGeocode(lat, lng)
   }

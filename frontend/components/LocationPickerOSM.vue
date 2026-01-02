@@ -16,6 +16,8 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  latitude: undefined,
+  longitude: undefined,
   label: 'Lokalizacja wydarzenia'
 })
 

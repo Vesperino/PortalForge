@@ -78,6 +78,51 @@ public class LocalFileStorageService : IFileStorageService
         return File.Exists(fullPath);
     }
 
+    public async Task<Stream?> GetFileAsync(string relativePath)
+    {
+        var settings = await GetStorageSettingsAsync();
+        var basePath = settings.GetValueOrDefault("Storage:BasePath", GetDefaultBasePath());
+
+        var fullPath = CombineWithBasePath(basePath, relativePath);
+
+        if (!File.Exists(fullPath))
+        {
+            return null;
+        }
+
+        return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+    }
+
+    public string GetFileUrl(string relativePath)
+    {
+        // Return URL for accessing the file through the API
+        var normalizedPath = relativePath.Replace("\\", "/");
+        return $"/api/storage/files/{normalizedPath}";
+    }
+
+    public Task<(bool IsValid, string? ErrorMessage)> ValidateFileAsync(
+        Stream stream,
+        string fileName,
+        string[] allowedExtensions,
+        long maxSizeBytes)
+    {
+        // Check file size
+        if (stream.Length > maxSizeBytes)
+        {
+            return Task.FromResult<(bool, string?)>((false, $"File size exceeds maximum allowed size of {maxSizeBytes / 1024 / 1024}MB"));
+        }
+
+        // Check file extension
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        if (!allowedExtensions.Contains(extension))
+        {
+            var allowed = string.Join(", ", allowedExtensions);
+            return Task.FromResult<(bool, string?)>((false, $"File type not allowed. Allowed types: {allowed}"));
+        }
+
+        return Task.FromResult<(bool, string?)>((true, null));
+    }
+
     public string GetFullPath(string relativePath)
     {
         // This method is synchronous for performance in controllers
@@ -86,6 +131,13 @@ public class LocalFileStorageService : IFileStorageService
                        ?? GetDefaultBasePath();
 
         return CombineWithBasePath(basePath, relativePath);
+    }
+
+    public string GetBasePath()
+    {
+        var basePath = _cachedSettings?.GetValueOrDefault("Storage:BasePath", GetDefaultBasePath())
+                       ?? GetDefaultBasePath();
+        return Path.GetFullPath(basePath);
     }
 
     public async Task<Dictionary<string, string>> GetStorageSettingsAsync()

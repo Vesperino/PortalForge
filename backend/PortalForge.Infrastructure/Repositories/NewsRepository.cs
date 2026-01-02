@@ -142,4 +142,61 @@ public class NewsRepository : INewsRepository
             news.Views++;
         }
     }
+
+    public async Task<(IEnumerable<News> Items, int TotalCount)> GetPaginatedAsync(
+        string? category,
+        int? departmentId,
+        bool? isEvent,
+        List<string>? hashtags,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.News
+            .Include(n => n.Author)
+            .Include(n => n.Event)
+            .Include(n => n.Hashtags)
+            .AsNoTracking()
+            .AsQueryable();
+
+        // Apply category filter
+        if (!string.IsNullOrEmpty(category) && Enum.TryParse<NewsCategory>(category, true, out var newsCategory))
+        {
+            query = query.Where(n => n.Category == newsCategory);
+        }
+
+        // Apply hashtags filter
+        if (hashtags != null && hashtags.Count > 0)
+        {
+            var normalizedHashtags = hashtags
+                .Select(h => h.StartsWith("#") ? h.ToLower() : $"#{h}".ToLower())
+                .ToList();
+
+            query = query.Where(n => n.Hashtags.Any(h => normalizedHashtags.Contains(h.NormalizedName)));
+        }
+
+        // Apply department filter
+        if (departmentId.HasValue)
+        {
+            query = query.Where(n => n.DepartmentId == null || n.DepartmentId == departmentId.Value);
+        }
+
+        // Apply event filter
+        if (isEvent.HasValue)
+        {
+            query = query.Where(n => n.IsEvent == isEvent.Value);
+        }
+
+        // Get total count before pagination
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply ordering and pagination
+        var items = await query
+            .OrderByDescending(n => n.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
 }

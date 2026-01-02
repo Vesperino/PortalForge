@@ -56,7 +56,7 @@ public class EditRequestCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Request?)null);
 
         // Act
@@ -96,7 +96,7 @@ public class EditRequestCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingRequest);
 
         // Act
@@ -138,7 +138,7 @@ public class EditRequestCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingRequest);
 
         // Act
@@ -178,7 +178,7 @@ public class EditRequestCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingRequest);
 
         // Act
@@ -188,7 +188,7 @@ public class EditRequestCommandHandlerTests
         result.Should().Be(MediatR.Unit.Value);
         existingRequest.FormData.Should().Be("{\"new\":\"data\"}");
 
-        _unitOfWorkMock.Verify(x => x.RequestRepository.UpdateAsync(existingRequest), Times.Once);
+        _unitOfWorkMock.Verify(x => x.RequestRepository.UpdateAsync(existingRequest, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -220,7 +220,7 @@ public class EditRequestCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingRequest);
 
         // Act
@@ -260,7 +260,7 @@ public class EditRequestCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingRequest);
 
         // Act
@@ -328,7 +328,7 @@ public class EditRequestCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingRequest);
 
         // Act
@@ -392,7 +392,7 @@ public class EditRequestCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingRequest);
 
         // Act
@@ -438,7 +438,7 @@ public class EditRequestCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingRequest);
 
         // Act
@@ -477,7 +477,7 @@ public class EditRequestCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingRequest);
 
         // Act

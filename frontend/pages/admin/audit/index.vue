@@ -101,8 +101,8 @@ const fetchLogs = async () => {
 
     logs.value = response.items
     totalCount.value = response.totalCount
-  } catch (err: any) {
-    error.value = err.message || 'Nie udało się pobrać logów audytu'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się pobrać logów audytu'
     console.error('Error fetching audit logs:', err)
   } finally {
     isLoading.value = false

@@ -35,7 +35,6 @@ public class DepartmentRepository : IDepartmentRepository
             .Include(d => d.Director)
             .Include(d => d.HeadOfDepartmentSubstitute)
             .Include(d => d.DirectorSubstitute)
-            .Include(d => d.Employees)
             .ToListAsync();
     }
 
@@ -67,7 +66,6 @@ public class DepartmentRepository : IDepartmentRepository
     {
         department.CreatedAt = DateTime.UtcNow;
         await _context.Departments.AddAsync(department);
-        await _context.SaveChangesAsync();
         return department;
     }
 
@@ -75,7 +73,6 @@ public class DepartmentRepository : IDepartmentRepository
     {
         department.UpdatedAt = DateTime.UtcNow;
         _context.Departments.Update(department);
-        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(Guid id)
@@ -85,7 +82,6 @@ public class DepartmentRepository : IDepartmentRepository
         {
             department.IsActive = false;
             department.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
         }
     }
 }

@@ -205,9 +205,10 @@ async function handleDelete(): Promise<void> {
     // Close modal
     showDeleteModal.value = false
     roleGroupToDelete.value = null
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting role group:', error)
-    deleteError.value = error?.data?.message || 'Nie udało się usunąć grupy ról'
+    const errorData = error as { data?: { message?: string } }
+    deleteError.value = errorData?.data?.message || 'Nie udało się usunąć grupy ról'
   } finally {
     isDeleting.value = false
   }

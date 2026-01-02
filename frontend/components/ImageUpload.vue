@@ -18,6 +18,9 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  label: undefined,
+  required: false,
+  error: undefined,
   maxSizeMB: 5,
   acceptedFormats: () => ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 })
@@ -82,9 +85,10 @@ async function handleFileChange(event: Event) {
       emit('update:modelValue', response.url)
       uploadProgress.value = 100
     }
-  } catch (error: any) {
-    console.error('Upload error:', error)
-    uploadError.value = error?.data?.message || 'Nie udało się przesłać pliku'
+  } catch (err: unknown) {
+    console.error('Upload error:', err)
+    const errorData = err as { data?: { message?: string } }
+    uploadError.value = errorData?.data?.message || 'Nie udało się przesłać pliku'
   } finally {
     isUploading.value = false
     // Reset file input
@@ -114,7 +118,7 @@ function handlePaste(event: ClipboardEvent) {
           target: {
             files: [file]
           }
-        } as any
+        } as unknown as Event
         handleFileChange(fakeEvent)
       }
       break
@@ -124,17 +128,18 @@ function handlePaste(event: ClipboardEvent) {
 </script>
 
 <template>
-  <div class="space-y-2">
-    <label v-if="label" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+  <div class="space-y-2" data-testid="image-upload-container">
+    <label v-if="label" class="block text-sm font-medium text-gray-700 dark:text-gray-300" data-testid="image-upload-label">
       {{ label }}
       <span v-if="required" class="text-red-500">*</span>
     </label>
-    
+
     <!-- Upload Area -->
     <div
       v-if="!previewUrl"
       class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer"
       :class="{ 'border-red-500 dark:border-red-500': error || uploadError }"
+      data-testid="image-upload-dropzone"
       @click="triggerFileInput"
       @paste="handlePaste"
     >
@@ -143,6 +148,7 @@ function handlePaste(event: ClipboardEvent) {
         type="file"
         class="hidden"
         :accept="acceptedFormats.join(',')"
+        data-testid="image-upload-input"
         @change="handleFileChange"
       >
       
@@ -174,16 +180,18 @@ function handlePaste(event: ClipboardEvent) {
     </div>
     
     <!-- Preview -->
-    <div v-else class="relative">
+    <div v-else class="relative" data-testid="image-upload-preview-container">
       <img
         :src="previewUrl"
         alt="Preview"
         class="w-full h-64 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+        data-testid="image-upload-preview"
       >
       <button
         type="button"
         class="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
         title="Usuń obrazek"
+        data-testid="image-upload-remove-btn"
         @click="removeImage"
       >
         ❌
@@ -195,8 +203,8 @@ function handlePaste(event: ClipboardEvent) {
     <p v-if="uploadError" class="text-sm text-red-600 dark:text-red-400">{{ uploadError }}</p>
     
     <!-- URL Input (fallback) -->
-    <details class="text-sm">
-      <summary class="cursor-pointer text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+    <details class="text-sm" data-testid="image-upload-url-details">
+      <summary class="cursor-pointer text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" data-testid="image-upload-url-summary">
         Lub wklej URL obrazka
       </summary>
       <div class="mt-2 flex gap-2">
@@ -205,6 +213,7 @@ function handlePaste(event: ClipboardEvent) {
           type="url"
           class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm"
           placeholder="https://example.com/image.jpg"
+          data-testid="image-upload-url-input"
           @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
         >
       </div>

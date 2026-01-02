@@ -22,7 +22,7 @@ public class ChangePasswordCommandValidatorTests
     private void SetupDefaultMocks()
     {
         // Setup default mocks for empty/invalid values that trigger async validation
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(It.IsAny<Guid>()))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Domain.Entities.User?)null);
     }
 
@@ -39,7 +39,7 @@ public class ChangePasswordCommandValidatorTests
         };
 
         // Override default mock for valid case
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Domain.Entities.User { Id = userId });
 
         // Act
@@ -61,7 +61,7 @@ public class ChangePasswordCommandValidatorTests
             NewPassword = "NewPassword123!"
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(Guid.Empty))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(Guid.Empty, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Domain.Entities.User?)null);
 
         // Act
@@ -84,7 +84,7 @@ public class ChangePasswordCommandValidatorTests
             NewPassword = "NewPassword123!"
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Domain.Entities.User { Id = userId });
 
         // Act
@@ -107,7 +107,7 @@ public class ChangePasswordCommandValidatorTests
             NewPassword = string.Empty
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Domain.Entities.User { Id = userId });
 
         // Act
@@ -132,7 +132,7 @@ public class ChangePasswordCommandValidatorTests
             NewPassword = newPassword
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Domain.Entities.User { Id = userId });
 
         // Act
@@ -161,7 +161,7 @@ public class ChangePasswordCommandValidatorTests
             NewPassword = newPassword
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Domain.Entities.User { Id = userId });
 
         // Act
@@ -184,7 +184,7 @@ public class ChangePasswordCommandValidatorTests
             NewPassword = "Password123!"
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Domain.Entities.User { Id = userId });
 
         // Act
@@ -209,7 +209,7 @@ public class ChangePasswordCommandValidatorTests
             NewPassword = "NewSecure!Password456"
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Domain.Entities.User { Id = userId });
 
         // Act

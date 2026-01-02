@@ -35,8 +35,8 @@ export const usePermissionsStore = defineStore('permissions', {
 
         this.permissions = response.permissions
         this.permissionsByCategory = response.permissionsByCategory
-      } catch (err: any) {
-        this.error = err.message || 'Failed to fetch permissions'
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Failed to fetch permissions'
         console.error('Error fetching permissions:', err)
       } finally {
         this.loading = false

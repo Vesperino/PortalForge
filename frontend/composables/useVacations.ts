@@ -97,12 +97,28 @@ export function useVacations() {
   }
 
   /**
+   * Vacation entry from my vacations endpoint
+   */
+  interface MyVacationEntry {
+    id: string
+    startDate: string
+    endDate: string
+    status: string
+    substitute?: {
+      id: string
+      firstName: string
+      lastName: string
+    } | null
+    createdAt?: string
+  }
+
+  /**
    * Get my vacations (all statuses), optional year filter
    */
-  async function getMyVacations(year?: number) {
+  async function getMyVacations(year?: number): Promise<MyVacationEntry[]> {
     const headers = getAuthHeaders()
     const q = year ? `?year=${year}` : ''
-    return await $fetch(`${apiUrl}/api/vacation-schedules/my${q}`, { headers }) as any[]
+    return await $fetch(`${apiUrl}/api/vacation-schedules/my${q}`, { headers }) as MyVacationEntry[]
   }
 
   /**

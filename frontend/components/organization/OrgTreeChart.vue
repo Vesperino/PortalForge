@@ -46,9 +46,13 @@ const convertToOrgChartData = (emp: Employee): OrganizationChartNode => {
 
 const data = computed(() => convertToOrgChartData(props.employee))
 
-const handleNodeClick = (event: any) => {
+interface NodeSelectEvent {
+  node?: OrganizationChartNode
+}
+
+const handleNodeClick = (event: NodeSelectEvent | OrganizationChartNode) => {
   // PrimeVue passes event object with node property
-  const node = event.node || event
+  const node = (event as NodeSelectEvent).node || event
   const employee = employeeLookup.get(node.key as string)
   if (employee) {
     emit('selectEmployee', employee)

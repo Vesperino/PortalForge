@@ -5,7 +5,6 @@ using PortalForge.Application.Common.Interfaces;
 using PortalForge.Api.DTOs.Requests.Vacations;
 using PortalForge.Application.DTOs;
 using PortalForge.Application.Interfaces;
-using PortalForge.Application.Services;
 using PortalForge.Domain.Entities;
 using PortalForge.Domain.Enums;
 using System.Security.Claims;
@@ -20,7 +19,8 @@ namespace PortalForge.Api.Controllers;
 [Route("api/vacation-schedules")]
 public class VacationSchedulesController : BaseController
 {
-    private readonly IVacationScheduleService _vacationService;
+    private readonly IVacationSubstituteService _vacationSubstituteService;
+    private readonly IVacationStatusService _vacationStatusService;
     private readonly IVacationCalculationService _vacationCalculationService;
     private readonly IMediator _mediator;
     private readonly ILogger<VacationSchedulesController> _logger;
@@ -28,14 +28,16 @@ public class VacationSchedulesController : BaseController
     private readonly ICurrentUserService _currentUserService;
 
     public VacationSchedulesController(
-        IVacationScheduleService vacationService,
+        IVacationSubstituteService vacationSubstituteService,
+        IVacationStatusService vacationStatusService,
         IVacationCalculationService vacationCalculationService,
         IMediator mediator,
         ILogger<VacationSchedulesController> logger,
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService)
     {
-        _vacationService = vacationService;
+        _vacationSubstituteService = vacationSubstituteService;
+        _vacationStatusService = vacationStatusService;
         _vacationCalculationService = vacationCalculationService;
         _mediator = mediator;
         _logger = logger;
@@ -191,7 +193,7 @@ public class VacationSchedulesController : BaseController
             "Getting team calendar for department {DepartmentId}, {Year}-{Month:D2}",
             departmentId, year, month);
 
-        var calendar = await _vacationService.GetTeamCalendarAsync(
+        var calendar = await _vacationSubstituteService.GetTeamCalendarAsync(
             departmentId.Value,
             startDate,
             endDate);
@@ -217,7 +219,7 @@ public class VacationSchedulesController : BaseController
 
         _logger.LogInformation("Getting substitutions for user {UserId}", userId);
 
-        var substitutions = await _vacationService.GetMySubstitutionsAsync(userId);
+        var substitutions = await _vacationSubstituteService.GetMySubstitutionsAsync(userId);
 
         return Ok(substitutions);
     }
@@ -339,11 +341,12 @@ public class VacationSchedulesController : BaseController
     [HttpPost("update-statuses")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(UpdateStatusesResponse), 200)]
-    public async Task<ActionResult<UpdateStatusesResponse>> UpdateVacationStatuses()
+    public async Task<ActionResult<UpdateStatusesResponse>> UpdateVacationStatuses(
+        CancellationToken cancellationToken)
     {
         _logger.LogInformation("Manual vacation status update triggered by user {UserId}", _currentUserService.UserId);
 
-        await _vacationService.UpdateVacationStatusesAsync();
+        await _vacationStatusService.UpdateVacationStatusesAsync(cancellationToken);
 
         return Ok(new UpdateStatusesResponse
         {

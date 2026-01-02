@@ -67,7 +67,8 @@ const loadPermissions = async () => {
     // Check if user is Admin or HR - they should see all departments
     // Be robust to different role shapes/cases (string enum vs array of roles)
     const userRole = authStore.user?.role
-    const rolesArray = (authStore.user as any)?.roles as string[] | undefined
+    const user = authStore.user as { roles?: string[] } | null
+    const rolesArray = user?.roles
     const hasRole = (r?: string) => !!r && (
       r.toLowerCase() === 'admin' || r.toLowerCase() === 'hr'
     )
@@ -115,9 +116,9 @@ const loadPermissions = async () => {
     } else {
       error.value = 'Brak dostępnych działów do wyświetlenia'
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error loading permissions:', err)
-    error.value = err.message || 'Nie udało się załadować uprawnień'
+    error.value = err instanceof Error ? err.message : 'Nie udało się załadować uprawnień'
   } finally {
     isLoadingPermissions.value = false
   }
@@ -143,9 +144,9 @@ const fetchCalendarData = async () => {
     ) as VacationCalendar
 
     calendarData.value = response
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error fetching calendar data:', err)
-    error.value = err.message || 'Nie udało się pobrać danych kalendarza'
+    error.value = err instanceof Error ? err.message : 'Nie udało się pobrać danych kalendarza'
   } finally {
     isLoading.value = false
   }
@@ -181,7 +182,7 @@ const handleExportPdf = async () => {
     )
 
     // Create download link
-    const blob = new Blob([response as any], { type: 'application/pdf' })
+    const blob = new Blob([response as BlobPart], { type: 'application/pdf' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -190,9 +191,10 @@ const handleExportPdf = async () => {
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Export PDF error:', err)
-    if (err.statusCode === 501) {
+    const errorData = err as { statusCode?: number }
+    if (errorData.statusCode === 501) {
       toast.info('Eksport PDF będzie dostępny w przyszłej wersji', 'Użyj eksportu Excel jako alternatywy.')
     } else {
       toast.error('Nie udało się wyeksportować do PDF')
@@ -214,7 +216,7 @@ const handleExportExcel = async () => {
     )
 
     // Create download link
-    const blob = new Blob([response as any], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const blob = new Blob([response as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -223,9 +225,10 @@ const handleExportExcel = async () => {
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Export Excel error:', err)
-    if (err.statusCode === 501) {
+    const errorData = err as { statusCode?: number }
+    if (errorData.statusCode === 501) {
       toast.info('Eksport Excel będzie dostępny w przyszłej wersji')
     } else {
       toast.error('Nie udało się wyeksportować do Excel')

@@ -28,11 +28,14 @@ export const useAuthStore = defineStore('auth', () => {
 
   const setTokens = (access: string, refresh: string) => {
     accessToken.value = access
+    // Refresh token is stored only in HttpOnly cookie by the backend
+    // We keep it in memory for the current session only (not in localStorage for XSS protection)
     refreshToken.value = refresh
 
     if (typeof window !== 'undefined') {
+      // Only store access token in localStorage
+      // Refresh token is handled via HttpOnly cookie for security
       localStorage.setItem('accessToken', access)
-      localStorage.setItem('refreshToken', refresh)
     }
   }
 
@@ -53,7 +56,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('user')
       localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
+      // Note: refresh token cookie is cleared by the backend on logout
     }
   }
 
@@ -66,7 +69,8 @@ export const useAuthStore = defineStore('auth', () => {
       try {
         const storedUser = localStorage.getItem('user')
         const storedAccessToken = localStorage.getItem('accessToken')
-        const storedRefreshToken = localStorage.getItem('refreshToken')
+        // Note: refresh token is not stored in localStorage for security
+        // It's only available via HttpOnly cookie managed by the backend
 
         if (storedUser) {
           user.value = JSON.parse(storedUser) as User
@@ -74,14 +78,10 @@ export const useAuthStore = defineStore('auth', () => {
         if (storedAccessToken) {
           accessToken.value = storedAccessToken
         }
-        if (storedRefreshToken) {
-          refreshToken.value = storedRefreshToken
-        }
       } catch (error) {
         console.error('Failed to hydrate from localStorage:', error)
         localStorage.removeItem('user')
         localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
       }
     }
   }

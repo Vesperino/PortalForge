@@ -73,9 +73,16 @@ public class NotificationsController : BaseController
     [HttpPatch("{id}/mark-read")]
     public async Task<ActionResult> MarkAsRead(Guid id)
     {
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
         var command = new MarkAsReadCommand
         {
-            NotificationId = id
+            NotificationId = id,
+            UserId = userGuid
         };
 
         await _mediator.Send(command);

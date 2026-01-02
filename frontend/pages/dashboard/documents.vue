@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Document } from '~/types'
+
 definePageMeta({
   layout: 'default',
   middleware: ['auth', 'verified']
@@ -10,7 +12,7 @@ const toast = useNotificationToast()
 const selectedCategory = ref<string>('all')
 const searchQuery = ref<string>('')
 
-const allDocuments = ref<any[]>([])
+const allDocuments = ref<Document[]>([])
 
 const categories = [
   { value: 'all', label: 'Wszystkie' },
@@ -26,13 +28,13 @@ const filteredDocuments = computed(() => {
   let filtered = allDocuments.value
 
   if (selectedCategory.value !== 'all') {
-    filtered = filtered.filter((doc: any) => doc.category === selectedCategory.value)
+    filtered = filtered.filter((doc: Document) => doc.category === selectedCategory.value)
   }
 
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter((doc: any) =>
-      doc.title?.toLowerCase().includes(query) ||
+    filtered = filtered.filter((doc: Document) =>
+      doc.name?.toLowerCase().includes(query) ||
       doc.description?.toLowerCase().includes(query)
     )
   }
@@ -100,7 +102,7 @@ const getCategoryLabel = (category: string) => {
   return labels[category] || category
 }
 
-const downloadDocument = (document: any) => {
+const downloadDocument = (document: Document) => {
   // TODO: Implement actual download functionality
   // In real implementation, this would trigger a file download
   toast.info('Pobieranie dokumentu', document.name)

@@ -30,6 +30,7 @@ public class PermissionsController : BaseController
     }
 
     [HttpGet]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<GetPermissionsResult>> GetPermissions(
         [FromQuery] string? category)
     {

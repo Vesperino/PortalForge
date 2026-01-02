@@ -9,4 +9,6 @@ namespace PortalForge.Application.UseCases.Requests.Queries.GetRequestById;
 public class GetRequestByIdQuery : IRequest<RequestDetailDto>
 {
     public Guid RequestId { get; set; }
+
+    public Guid CurrentUserId { get; set; }
 }

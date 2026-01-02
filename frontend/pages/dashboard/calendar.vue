@@ -75,8 +75,8 @@ async function loadNewsEvents() {
     // Fetch only news items that are events
     const newsData = await fetchAllNews(undefined, undefined, true)
     allNewsEvents.value = newsData
-  } catch (err: any) {
-    error.value = err?.message || 'Nie udało się załadować wydarzeń'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się załadować wydarzeń'
     console.error('loadNewsEvents error:', err)
   } finally {
     isLoading.value = false

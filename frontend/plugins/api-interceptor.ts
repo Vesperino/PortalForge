@@ -7,7 +7,7 @@ export default defineNuxtPlugin(() => {
 
   // Track if we're currently refreshing to avoid multiple refresh attempts
   let isRefreshing = false
-  let refreshPromise: Promise<any> | null = null
+  let refreshPromise: Promise<void> | null = null
 
   // Add global fetch interceptor
   globalThis.$fetch = $fetch.create({
@@ -15,7 +15,7 @@ export default defineNuxtPlugin(() => {
       // Add auth token to all requests if available
       if (authStore.accessToken) {
         options.headers = options.headers || {}
-        ;(options.headers as any)['Authorization'] = `Bearer ${authStore.accessToken}`
+        ;(options.headers as Record<string, string>)['Authorization'] = `Bearer ${authStore.accessToken}`
       }
     },
 

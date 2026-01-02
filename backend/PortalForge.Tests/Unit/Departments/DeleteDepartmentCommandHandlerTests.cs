@@ -84,7 +84,7 @@ public class DeleteDepartmentCommandHandlerTests
         _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(departmentId))
             .ReturnsAsync(existingDepartment);
 
-        _mockUnitOfWork.Setup(u => u.UserRepository.UpdateAsync(It.IsAny<User>()))
+        _mockUnitOfWork.Setup(u => u.UserRepository.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var command = new DeleteDepartmentCommand { DepartmentId = departmentId };
@@ -96,8 +96,8 @@ public class DeleteDepartmentCommandHandlerTests
         Assert.Equal(MediatR.Unit.Value, result);
         Assert.Null(employee1.DepartmentId);
         Assert.Null(employee2.DepartmentId);
-        _mockUnitOfWork.Verify(u => u.UserRepository.UpdateAsync(employee1), Times.Once);
-        _mockUnitOfWork.Verify(u => u.UserRepository.UpdateAsync(employee2), Times.Once);
+        _mockUnitOfWork.Verify(u => u.UserRepository.UpdateAsync(employee1, It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.UserRepository.UpdateAsync(employee2, It.IsAny<CancellationToken>()), Times.Once);
         _mockUnitOfWork.Verify(u => u.DepartmentRepository.DeleteAsync(departmentId), Times.Once);
     }
 
@@ -159,7 +159,7 @@ public class DeleteDepartmentCommandHandlerTests
         _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(departmentId))
             .ReturnsAsync(existingDepartment);
 
-        _mockUnitOfWork.Setup(u => u.UserRepository.UpdateAsync(It.IsAny<User>()))
+        _mockUnitOfWork.Setup(u => u.UserRepository.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _mockUnitOfWork.Setup(u => u.DepartmentRepository.UpdateAsync(It.IsAny<Department>()))
@@ -176,8 +176,8 @@ public class DeleteDepartmentCommandHandlerTests
         // Verify employees unassigned
         Assert.Null(employee1.DepartmentId);
         Assert.Null(employee2.DepartmentId);
-        _mockUnitOfWork.Verify(u => u.UserRepository.UpdateAsync(employee1), Times.Once);
-        _mockUnitOfWork.Verify(u => u.UserRepository.UpdateAsync(employee2), Times.Once);
+        _mockUnitOfWork.Verify(u => u.UserRepository.UpdateAsync(employee1, It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.UserRepository.UpdateAsync(employee2, It.IsAny<CancellationToken>()), Times.Once);
 
         // Verify subdepartments promoted to root
         Assert.Null(subDept1.ParentDepartmentId);
@@ -213,7 +213,7 @@ public class DeleteDepartmentCommandHandlerTests
 
         // Assert
         Assert.Equal(MediatR.Unit.Value, result);
-        _mockUnitOfWork.Verify(u => u.UserRepository.UpdateAsync(It.IsAny<User>()), Times.Never);
+        _mockUnitOfWork.Verify(u => u.UserRepository.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
         _mockUnitOfWork.Verify(u => u.DepartmentRepository.UpdateAsync(It.IsAny<Department>()), Times.Never);
         _mockUnitOfWork.Verify(u => u.DepartmentRepository.DeleteAsync(departmentId), Times.Once);
     }

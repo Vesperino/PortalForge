@@ -16,7 +16,9 @@ public class ApproveRequestStepCommandHandlerTests
     private readonly Mock<IRequestRepository> _mockRequestRepo;
     private readonly Mock<IRequestCommentRepository> _mockRequestCommentRepo;
     private readonly Mock<INotificationService> _mockNotificationService;
-    private readonly Mock<IVacationScheduleService> _mockVacationService;
+    private readonly Mock<IVacationCreationService> _mockVacationCreationService;
+    private readonly Mock<IVacationSubstituteService> _mockVacationSubstituteService;
+    private readonly Mock<IVacationDaysDeductionService> _mockVacationDaysDeductionService;
     private readonly Mock<ILogger<ApproveRequestStepCommandHandler>> _mockLogger;
     private readonly ApproveRequestStepCommandHandler _handler;
 
@@ -26,14 +28,18 @@ public class ApproveRequestStepCommandHandlerTests
         _mockRequestRepo = new Mock<IRequestRepository>();
         _mockRequestCommentRepo = new Mock<IRequestCommentRepository>();
         _mockNotificationService = new Mock<INotificationService>();
-        _mockVacationService = new Mock<IVacationScheduleService>();
+        _mockVacationCreationService = new Mock<IVacationCreationService>();
+        _mockVacationSubstituteService = new Mock<IVacationSubstituteService>();
+        _mockVacationDaysDeductionService = new Mock<IVacationDaysDeductionService>();
         _mockLogger = new Mock<ILogger<ApproveRequestStepCommandHandler>>();
         _mockUnitOfWork.Setup(u => u.RequestRepository).Returns(_mockRequestRepo.Object);
         _mockUnitOfWork.Setup(u => u.RequestCommentRepository).Returns(_mockRequestCommentRepo.Object);
         _handler = new ApproveRequestStepCommandHandler(
             _mockUnitOfWork.Object,
             _mockNotificationService.Object,
-            _mockVacationService.Object,
+            _mockVacationCreationService.Object,
+            _mockVacationSubstituteService.Object,
+            _mockVacationDaysDeductionService.Object,
             _mockLogger.Object);
     }
 
@@ -63,7 +69,7 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         var command = new ApproveRequestStepCommand
@@ -78,12 +84,12 @@ public class ApproveRequestStepCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.Success);
+        Assert.True(result.IsSuccess);
         Assert.Equal("Request fully approved", result.Message);
         Assert.Equal(ApprovalStepStatus.Approved, request.ApprovalSteps.First().Status);
         Assert.Equal(RequestStatus.Approved, request.Status);
         Assert.NotNull(request.CompletedAt);
-        
+
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.Once);
     }
 
@@ -123,7 +129,7 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         var command = new ApproveRequestStepCommand
@@ -137,7 +143,7 @@ public class ApproveRequestStepCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.Success);
+        Assert.True(result.IsSuccess);
         Assert.Equal("Step approved, moved to next approver", result.Message);
         Assert.Equal(ApprovalStepStatus.Approved, request.ApprovalSteps.ElementAt(0).Status);
         Assert.Equal(ApprovalStepStatus.InReview, request.ApprovalSteps.ElementAt(1).Status);
@@ -168,7 +174,7 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         var command = new ApproveRequestStepCommand
@@ -182,7 +188,7 @@ public class ApproveRequestStepCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.Success);
+        Assert.False(result.IsSuccess);
         Assert.Contains("Unauthorized", result.Message);
     }
 
@@ -211,7 +217,7 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         var command = new ApproveRequestStepCommand
@@ -225,7 +231,7 @@ public class ApproveRequestStepCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert - Quiz is informational only, approval should succeed
-        Assert.True(result.Success);
+        Assert.True(result.IsSuccess);
         Assert.Equal(ApprovalStepStatus.Approved, request.ApprovalSteps.First().Status);
         Assert.Equal(RequestStatus.Approved, request.Status);
     }
@@ -256,7 +262,7 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         var command = new ApproveRequestStepCommand
@@ -271,7 +277,7 @@ public class ApproveRequestStepCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert - Approver can approve even if quiz was failed
-        Assert.True(result.Success);
+        Assert.True(result.IsSuccess);
         Assert.Equal(ApprovalStepStatus.Approved, request.ApprovalSteps.First().Status);
         Assert.Equal(RequestStatus.Approved, request.Status);
         Assert.Contains("special circumstances", request.ApprovalSteps.First().Comment ?? "");
@@ -322,11 +328,11 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         // Setup: approver2 is on vacation, return substitute
-        _mockVacationService.Setup(v => v.GetActiveSubstituteAsync(approver2Id))
+        _mockVacationSubstituteService.Setup(v => v.GetActiveSubstituteAsync(approver2Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(substitute);
 
         var command = new ApproveRequestStepCommand
@@ -340,7 +346,7 @@ public class ApproveRequestStepCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.Success);
+        Assert.True(result.IsSuccess);
 
         // Step 2 should now be assigned to substitute, not original approver
         var step2 = request.ApprovalSteps.ElementAt(1);
@@ -390,11 +396,11 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         // Setup: approver2 is NOT on vacation, return null
-        _mockVacationService.Setup(v => v.GetActiveSubstituteAsync(approver2Id))
+        _mockVacationSubstituteService.Setup(v => v.GetActiveSubstituteAsync(approver2Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         var command = new ApproveRequestStepCommand
@@ -408,7 +414,7 @@ public class ApproveRequestStepCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.Success);
+        Assert.True(result.IsSuccess);
 
         // Step 2 should still be assigned to original approver
         var step2 = request.ApprovalSteps.ElementAt(1);
@@ -421,4 +427,3 @@ public class ApproveRequestStepCommandHandlerTests
             Times.Once);
     }
 }
-

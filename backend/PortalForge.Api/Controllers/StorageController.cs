@@ -19,34 +19,33 @@ public class StorageController : BaseController
     private readonly IMediator _mediator;
     private readonly ILogger<StorageController> _logger;
     private readonly IFileStorageService _fileStorageService;
+    private readonly IFileValidationService _fileValidationService;
 
     public StorageController(
         IMediator mediator,
         ILogger<StorageController> logger,
-        IFileStorageService fileStorageService)
+        IFileStorageService fileStorageService,
+        IFileValidationService fileValidationService)
     {
         _mediator = mediator;
         _logger = logger;
         _fileStorageService = fileStorageService;
+        _fileValidationService = fileValidationService;
     }
 
     [HttpPost("upload/news-image")]
+    [Authorize(Policy = "MarketingOrAdmin")]
     public async Task<ActionResult<UploadImageResponse>> UploadNewsImage(IFormFile file)
     {
         try
         {
-            if (file == null || file.Length == 0)
+            var validationResult = _fileValidationService.ValidateImageUpload(file?.FileName, file?.Length ?? 0);
+            if (!validationResult.IsValid)
             {
-                return BadRequest(new { message = "No file provided" });
+                return BadRequest(new { message = validationResult.ErrorMessage });
             }
 
-            const long maxFileSize = 10 * 1024 * 1024; // 10MB
-            if (file.Length > maxFileSize)
-            {
-                return BadRequest(new { message = "File size exceeds maximum allowed (10MB)" });
-            }
-
-            using var fileStream = file.OpenReadStream();
+            using var fileStream = file!.OpenReadStream();
 
             var command = new UploadNewsImageCommand
             {
@@ -81,18 +80,13 @@ public class StorageController : BaseController
     {
         try
         {
-            if (file == null || file.Length == 0)
+            var validationResult = _fileValidationService.ValidateImageUpload(file?.FileName, file?.Length ?? 0);
+            if (!validationResult.IsValid)
             {
-                return BadRequest(new { message = "No file provided" });
+                return BadRequest(new { message = validationResult.ErrorMessage });
             }
 
-            const long maxFileSize = 10 * 1024 * 1024; // 10MB
-            if (file.Length > maxFileSize)
-            {
-                return BadRequest(new { message = "File size exceeds maximum allowed (10MB)" });
-            }
-
-            using var fileStream = file.OpenReadStream();
+            using var fileStream = file!.OpenReadStream();
 
             var command = new UploadServiceIconCommand
             {
@@ -122,22 +116,18 @@ public class StorageController : BaseController
     }
 
     [HttpPost("upload/comment-attachment")]
+    [Authorize]
     public async Task<ActionResult<UploadImageResponse>> UploadCommentAttachment(IFormFile file)
     {
         try
         {
-            if (file == null || file.Length == 0)
+            var validationResult = _fileValidationService.ValidateAttachmentUpload(file?.FileName, file?.Length ?? 0);
+            if (!validationResult.IsValid)
             {
-                return BadRequest(new { message = "No file provided" });
+                return BadRequest(new { message = validationResult.ErrorMessage });
             }
 
-            const long maxFileSize = 10 * 1024 * 1024; // 10MB
-            if (file.Length > maxFileSize)
-            {
-                return BadRequest(new { message = "File size exceeds maximum allowed (10MB)" });
-            }
-
-            using var fileStream = file.OpenReadStream();
+            using var fileStream = file!.OpenReadStream();
 
             var command = new UploadCommentAttachmentCommand
             {
@@ -167,6 +157,7 @@ public class StorageController : BaseController
     }
 
     [HttpDelete("delete/news-image")]
+    [Authorize(Policy = "MarketingOrAdmin")]
     public async Task<ActionResult> DeleteNewsImage([FromQuery] string filePath)
     {
         try
@@ -188,11 +179,12 @@ public class StorageController : BaseController
     }
 
     /// <summary>
-    /// Serves files from local storage with authorization
-    /// Supports full relative paths including date-based subfolders (e.g., new-images/2025-11-05/file.png)
+    /// Serves files from local storage.
+    /// Public paths (images, news-images, service-icons) are accessible without authentication.
+    /// Private paths (comment-attachments, request-attachments) require authentication.
     /// </summary>
     [HttpGet("files/{**relativePath}")]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<IActionResult> GetFile(string relativePath)
     {
         try
@@ -203,9 +195,13 @@ public class StorageController : BaseController
                 return BadRequest(new { message = "Invalid file path" });
             }
 
-            // Decode URL to catch encoded path traversal attempts
+            // Decode URL to catch encoded path traversal attempts (including double encoding)
             var decodedPath = Uri.UnescapeDataString(relativePath);
-            if (decodedPath.Contains("..") || decodedPath.Contains("\\") || decodedPath.Contains("%"))
+            // Decode again to catch double-encoded attempts like %252e%252e
+            var doubleDecodedPath = Uri.UnescapeDataString(decodedPath);
+
+            // Check for path traversal patterns in both decoded versions
+            if (ContainsPathTraversalPattern(decodedPath) || ContainsPathTraversalPattern(doubleDecodedPath))
             {
                 _logger.LogWarning("Path traversal attempt detected: {RelativePath}", relativePath);
                 return BadRequest(new { message = "Invalid file path" });
@@ -216,6 +212,24 @@ public class StorageController : BaseController
 
             // Normalize path separators
             relativePath = relativePath.Replace("\\", "/");
+
+            // Additional security: Validate resolved path is within allowed directory
+            var basePath = _fileStorageService.GetBasePath();
+            var resolvedPath = Path.GetFullPath(Path.Combine(basePath, relativePath));
+            if (!resolvedPath.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("Path traversal attempt via path resolution: {RelativePath} resolved to {ResolvedPath}", relativePath, resolvedPath);
+                return BadRequest(new { message = "Invalid file path" });
+            }
+
+            // Check if path requires authentication (private files)
+            var privatePaths = new[] { "comment-attachments", "request-attachments", "sick-leaves", "documents" };
+            var isPrivatePath = privatePaths.Any(p => relativePath.StartsWith(p, StringComparison.OrdinalIgnoreCase));
+
+            if (isPrivatePath && !User.Identity?.IsAuthenticated == true)
+            {
+                return Unauthorized(new { message = "Authentication required for this resource" });
+            }
 
             // Check if file exists
             if (!await _fileStorageService.FileExistsAsync(relativePath))
@@ -275,6 +289,33 @@ public class StorageController : BaseController
             _logger.LogError(ex, "Error serving file: {RelativePath}", relativePath);
             return StatusCode(500, new { message = "Error serving file" });
         }
+    }
+
+    /// <summary>
+    /// Checks if a path contains any path traversal patterns.
+    /// </summary>
+    private static bool ContainsPathTraversalPattern(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return false;
+
+        // Check for common path traversal patterns
+        var dangerousPatterns = new[]
+        {
+            "..",           // Parent directory
+            "..\\",         // Windows parent
+            "../",          // Unix parent
+            "\\",           // Backslash (normalize to forward slash)
+            "%",            // URL encoding remnants after decode
+            "\0",           // Null byte injection
+            "..%",          // Partial encoded traversal
+            "%2e",          // Encoded dot
+            "%2f",          // Encoded forward slash
+            "%5c",          // Encoded backslash
+        };
+
+        var lowerPath = path.ToLowerInvariant();
+        return dangerousPatterns.Any(pattern => lowerPath.Contains(pattern.ToLowerInvariant()));
     }
 }
 

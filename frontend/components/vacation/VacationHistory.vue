@@ -43,7 +43,7 @@ const formatDateRange = (startDate: Date, endDate: Date) => {
   return start === end ? start : `${start} - ${end}`
 }
 
-const getStatusColor = (status: any) => {
+const getStatusColor = (status: string) => {
   const statusLower = String(status ?? '').toLowerCase()
 
   // Generic statuses used in requests

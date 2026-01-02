@@ -82,7 +82,7 @@ public class AuthController : BaseController
 
         Response.Cookies.Delete("refresh_token");
 
-        return Ok(new { message = "Wylogowano pomyślnie" });
+        return Ok(new { message = "Logged out successfully" });
     }
 
     [HttpPost("refresh-token")]
@@ -123,7 +123,7 @@ public class AuthController : BaseController
 
         await _mediator.Send(command);
 
-        return Ok(new { message = "Email z linkiem do resetowania hasła został wysłany" });
+        return Ok(new { message = "Password reset link has been sent to your email" });
     }
 
     [HttpPost("verify-email")]
@@ -138,7 +138,7 @@ public class AuthController : BaseController
 
         await _mediator.Send(command);
 
-        return Ok(new { message = "Email zweryfikowany pomyślnie" });
+        return Ok(new { message = "Email verified successfully" });
     }
 
     [HttpPost("resend-verification")]
@@ -154,10 +154,10 @@ public class AuthController : BaseController
 
         if (!result)
         {
-            return BadRequest(new { message = "Nie udało się wysłać emaila weryfikacyjnego. Możliwe przyczyny: email został już zweryfikowany, użytkownik nie istnieje, lub limit czasowy (2 minuty) nie upłynął od ostatniego wysłania." });
+            return BadRequest(new { message = "Failed to send verification email. Possible reasons: email already verified, user does not exist, or rate limit (2 minutes) has not elapsed since last send." });
         }
 
-        return Ok(new { message = "Email weryfikacyjny został wysłany ponownie" });
+        return Ok(new { message = "Verification email has been resent" });
     }
 
     [HttpGet("me")]

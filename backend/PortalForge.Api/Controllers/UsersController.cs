@@ -33,6 +33,7 @@ public class UsersController : BaseController
     }
 
     [HttpGet]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<GetUsersResult>> GetUsers(
         [FromQuery] string? searchTerm,
         [FromQuery] string? department,
@@ -64,6 +65,7 @@ public class UsersController : BaseController
     }
 
     [HttpGet("{id}")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<AdminUserDto>> GetUserById(Guid id)
     {
         _logger.LogInformation("Getting user by ID: {UserId}", id);
@@ -74,6 +76,7 @@ public class UsersController : BaseController
     }
 
     [HttpPost]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<CreateUserResult>> CreateUser([FromBody] CreateUserRequest request)
     {
         _logger.LogInformation("Creating new user: {Email}", request.Email);
@@ -98,6 +101,7 @@ public class UsersController : BaseController
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<UpdateUserResult>> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
     {
         _logger.LogInformation("Updating user: {UserId}", id);
@@ -124,6 +128,7 @@ public class UsersController : BaseController
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<DeleteUserResult>> DeleteUser(Guid id)
     {
         _logger.LogInformation("Deleting user: {UserId}", id);
@@ -142,6 +147,7 @@ public class UsersController : BaseController
     /// Bulk assign multiple employees to a department
     /// </summary>
     [HttpPost("bulk-assign-department")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<int>> BulkAssignDepartment([FromBody] BulkAssignDepartmentRequest request)
     {
         _logger.LogInformation("Bulk assigning {Count} employees to department {DepartmentId}",
@@ -163,11 +169,25 @@ public class UsersController : BaseController
     }
 
     /// <summary>
-    /// Get user's vacation summary (allowance, used days, remaining days)
+    /// Get user's vacation summary (allowance, used days, remaining days).
+    /// Users can view their own summary, HR/Admin can view any user's summary.
     /// </summary>
     [HttpGet("{userId:guid}/vacation-summary")]
+    [Authorize]
     public async Task<ActionResult<Application.UseCases.Users.Queries.GetUserVacationSummary.VacationSummaryDto>> GetVacationSummary(Guid userId)
     {
+        // SECURITY: Check if user can access this vacation summary
+        var currentUserId = _currentUserService.UserId;
+        var isHrOrAdmin = _currentUserService.IsInRole("Admin") || _currentUserService.IsInRole("Hr");
+
+        if (userId != currentUserId && !isHrOrAdmin)
+        {
+            _logger.LogWarning(
+                "User {CurrentUserId} attempted to access vacation summary for user {TargetUserId} without authorization",
+                currentUserId, userId);
+            return Forbid();
+        }
+
         _logger.LogInformation("Getting vacation summary for user {UserId}", userId);
 
         var query = new Application.UseCases.Users.Queries.GetUserVacationSummary.GetUserVacationSummaryQuery

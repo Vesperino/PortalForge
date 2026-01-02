@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Common.Settings;
 
 namespace PortalForge.Infrastructure.BackgroundJobs;
 
@@ -11,13 +13,16 @@ namespace PortalForge.Infrastructure.BackgroundJobs;
 public class UpdateVacationAllowancesJob
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly VacationSettings _vacationSettings;
     private readonly ILogger<UpdateVacationAllowancesJob> _logger;
 
     public UpdateVacationAllowancesJob(
         IUnitOfWork unitOfWork,
+        IOptions<VacationSettings> vacationSettings,
         ILogger<UpdateVacationAllowancesJob> logger)
     {
         _unitOfWork = unitOfWork;
+        _vacationSettings = vacationSettings.Value;
         _logger = logger;
     }
 
@@ -26,7 +31,7 @@ public class UpdateVacationAllowancesJob
     /// Runs on January 1st at 00:00 to:
     /// 1. Calculate unused vacation days from previous year
     /// 2. Move unused days to CarriedOverVacationDays (expire Sep 30)
-    /// 3. Reset annual vacation counters (26 days standard)
+    /// 3. Reset annual vacation counters (uses configured DefaultAnnualDays)
     /// 4. Reset on-demand and circumstantial leave counters
     /// </summary>
     public async Task ExecuteAsync()
@@ -65,9 +70,8 @@ public class UpdateVacationAllowancesJob
                         user.Id, user.Email);
                 }
 
-                // Reset annual vacation allowance
-                // TODO: In future, read from employment contract (EmploymentDetails table)
-                user.AnnualVacationDays = 26; // Standard 26 days per Polish Labor Law
+                // Reset annual vacation allowance using configured default
+                user.AnnualVacationDays = _vacationSettings.DefaultAnnualDays;
 
                 // Reset all counters for the new year
                 user.VacationDaysUsed = 0;

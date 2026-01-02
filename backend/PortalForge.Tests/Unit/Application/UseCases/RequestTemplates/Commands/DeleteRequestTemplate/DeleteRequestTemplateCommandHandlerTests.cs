@@ -48,13 +48,13 @@ public class DeleteRequestTemplateCommandHandlerTests
             ApprovalStepTemplates = new List<RequestApprovalStepTemplate>()
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(template);
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByTemplateIdAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByTemplateIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Request>());
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.DeleteAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.DeleteAsync(templateId, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _unitOfWorkMock.Setup(x => x.AuditLogRepository.CreateAsync(It.IsAny<AuditLog>()))
@@ -71,9 +71,9 @@ public class DeleteRequestTemplateCommandHandlerTests
         result.Success.Should().BeTrue();
         result.Message.Should().Be("Template deleted successfully");
 
-        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.GetByIdAsync(templateId), Times.Once);
-        _unitOfWorkMock.Verify(x => x.RequestRepository.GetByTemplateIdAsync(templateId), Times.Once);
-        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.DeleteAsync(templateId), Times.Once);
+        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.GetByIdAsync(templateId, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(x => x.RequestRepository.GetByTemplateIdAsync(templateId, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.DeleteAsync(templateId, It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWorkMock.Verify(x => x.AuditLogRepository.CreateAsync(It.Is<AuditLog>(a =>
             a.UserId == deletedBy &&
             a.Action == "DeleteRequestTemplate" &&
@@ -94,7 +94,7 @@ public class DeleteRequestTemplateCommandHandlerTests
             DeletedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((RequestTemplate?)null);
 
         // Act
@@ -104,8 +104,8 @@ public class DeleteRequestTemplateCommandHandlerTests
         await act.Should().ThrowAsync<NotFoundException>()
             .WithMessage($"Request template with ID {templateId} not found");
 
-        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.GetByIdAsync(templateId), Times.Once);
-        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.DeleteAsync(It.IsAny<Guid>()), Times.Never);
+        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.GetByIdAsync(templateId, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Never);
     }
 
@@ -139,13 +139,13 @@ public class DeleteRequestTemplateCommandHandlerTests
             }
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(template);
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByTemplateIdAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByTemplateIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Request>());
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.DeleteAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.DeleteAsync(templateId, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _unitOfWorkMock.Setup(x => x.AuditLogRepository.CreateAsync(It.IsAny<AuditLog>()))
@@ -193,13 +193,13 @@ public class DeleteRequestTemplateCommandHandlerTests
             ApprovalStepTemplates = new List<RequestApprovalStepTemplate>()
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(template);
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByTemplateIdAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByTemplateIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Request>());
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.DeleteAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.DeleteAsync(templateId, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _unitOfWorkMock.Setup(x => x.AuditLogRepository.CreateAsync(It.IsAny<AuditLog>()))

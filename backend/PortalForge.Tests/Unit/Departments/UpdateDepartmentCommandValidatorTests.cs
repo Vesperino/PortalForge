@@ -127,7 +127,7 @@ public class UpdateDepartmentCommandValidatorTests
         _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(departmentId))
             .ReturnsAsync(new Department { Id = departmentId });
 
-        _mockUnitOfWork.Setup(u => u.UserRepository.GetByIdAsync(headId))
+        _mockUnitOfWork.Setup(u => u.UserRepository.GetByIdAsync(headId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         var command = new UpdateDepartmentCommand
@@ -159,7 +159,7 @@ public class UpdateDepartmentCommandValidatorTests
         _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(parentId))
             .ReturnsAsync(new Department { Id = parentId, IsActive = true });
 
-        _mockUnitOfWork.Setup(u => u.UserRepository.GetByIdAsync(headId))
+        _mockUnitOfWork.Setup(u => u.UserRepository.GetByIdAsync(headId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = headId, IsActive = true });
 
         var command = new UpdateDepartmentCommand

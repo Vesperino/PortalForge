@@ -54,7 +54,7 @@ public class NewsController : BaseController
     }
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Policy = "MarketingOrAdmin")]
     public async Task<ActionResult<int>> Create([FromBody] CreateNewsRequestDto request)
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var authorId);
@@ -85,12 +85,19 @@ public class NewsController : BaseController
     }
 
     [HttpPut("{id}")]
-    [Authorize]
+    [Authorize(Policy = "MarketingOrAdmin")]
     public async Task<ActionResult> Update(int id, [FromBody] UpdateNewsRequestDto request)
     {
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var currentUserId);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
         var command = new UpdateNewsCommand
         {
             NewsId = id,
+            CurrentUserId = currentUserId,
             Title = request.Title,
             Content = request.Content,
             Excerpt = request.Excerpt,
@@ -110,10 +117,16 @@ public class NewsController : BaseController
     }
 
     [HttpDelete("{id}")]
-    [Authorize]
+    [Authorize(Policy = "MarketingOrAdmin")]
     public async Task<ActionResult> Delete(int id)
     {
-        var command = new DeleteNewsCommand { NewsId = id };
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var currentUserId);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
+        var command = new DeleteNewsCommand { NewsId = id, CurrentUserId = currentUserId };
         await _mediator.Send(command);
         return NoContent();
     }

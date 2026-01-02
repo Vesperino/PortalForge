@@ -277,7 +277,7 @@ const loadTemplates = async () => {
     loading.value = true
     error.value = ''
     templates.value = await getAllTemplates()
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error loading templates:', err)
     error.value = 'Nie udało się załadować szablonów. Spróbuj ponownie później.'
   } finally {
@@ -317,12 +317,12 @@ const handleDelete = async (templateId: string) => {
     templates.value = templates.value.filter(t => t.id !== templateId)
 
     toast.success('Sukces!', 'Szablon został usunięty pomyślnie')
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error deleting template:', err)
 
-    // Check if error is due to template being used
-    if (err.data?.errors && Array.isArray(err.data.errors)) {
-      const errorMessage = err.data.errors.join(', ')
+    const errorData = err as { data?: { errors?: string[] } }
+    if (errorData.data?.errors && Array.isArray(errorData.data.errors)) {
+      const errorMessage = errorData.data.errors.join(', ')
       toast.error('Nie można usunąć szablonu', errorMessage)
     } else {
       toast.error('Błąd', 'Nie udało się usunąć szablonu. Spróbuj ponownie później.')
@@ -349,7 +349,7 @@ const seedTemplates = async () => {
     await loadTemplates()
 
     toast.success('Sukces!', 'Przykładowe szablony zostały załadowane pomyślnie')
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error seeding templates:', err)
     toast.error('Błąd', 'Nie udało się załadować przykładowych szablonów. Spróbuj ponownie później.')
   } finally {

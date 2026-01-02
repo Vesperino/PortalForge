@@ -52,7 +52,7 @@ public class CancelVacationCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.VacationScheduleRepository.GetByIdAsync(vacationId))
+        _unitOfWorkMock.Setup(x => x.VacationScheduleRepository.GetByIdAsync(vacationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((VacationSchedule?)null);
 
         // Act
@@ -94,8 +94,8 @@ public class CancelVacationCommandHandlerTests
         vacation.Status.Should().Be(VacationStatus.Cancelled);
         employee.VacationDaysUsed.Should().Be(5, "10 - 5 (vacation days) = 5");
 
-        _unitOfWorkMock.Verify(x => x.VacationScheduleRepository.UpdateAsync(vacation), Times.Once);
-        _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(employee), Times.Once);
+        _unitOfWorkMock.Verify(x => x.VacationScheduleRepository.UpdateAsync(vacation, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(employee, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // REMOVED: Test was flaky due to DateTime.UtcNow usage in handler authorization check.
@@ -429,13 +429,13 @@ public class CancelVacationCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(It.IsAny<CancelVacationCommand>()))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.VacationScheduleRepository.GetByIdAsync(vacation.Id))
+        _unitOfWorkMock.Setup(x => x.VacationScheduleRepository.GetByIdAsync(vacation.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(vacation);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(cancelledBy.Id))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(cancelledBy.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(cancelledBy);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(employee.Id))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(employee.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(employee);
     }
 }

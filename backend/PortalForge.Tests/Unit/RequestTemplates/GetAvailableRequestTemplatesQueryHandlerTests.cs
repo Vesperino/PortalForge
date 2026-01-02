@@ -66,9 +66,9 @@ public class GetAvailableRequestTemplatesQueryHandlerTests
             }
         };
 
-        _mockUserRepo.Setup(r => r.GetByIdAsync(userId))
+        _mockUserRepo.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _mockTemplateRepo.Setup(r => r.GetAvailableForUserAsync("IT"))
+        _mockTemplateRepo.Setup(r => r.GetAvailableForUserAsync("IT", It.IsAny<CancellationToken>()))
             .ReturnsAsync(templates);
 
         var query = new GetAvailableRequestTemplatesQuery { UserId = userId };
@@ -89,7 +89,7 @@ public class GetAvailableRequestTemplatesQueryHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
 
-        _mockUserRepo.Setup(r => r.GetByIdAsync(userId))
+        _mockUserRepo.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         var query = new GetAvailableRequestTemplatesQuery { UserId = userId };
@@ -136,9 +136,9 @@ public class GetAvailableRequestTemplatesQueryHandlerTests
             }
         };
 
-        _mockUserRepo.Setup(r => r.GetByIdAsync(userId))
+        _mockUserRepo.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _mockTemplateRepo.Setup(r => r.GetAvailableForUserAsync("IT"))
+        _mockTemplateRepo.Setup(r => r.GetAvailableForUserAsync("IT", It.IsAny<CancellationToken>()))
             .ReturnsAsync(templates);
 
         var query = new GetAvailableRequestTemplatesQuery { UserId = userId };

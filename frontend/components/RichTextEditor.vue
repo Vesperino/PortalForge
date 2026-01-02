@@ -202,13 +202,14 @@ function toggleCodeBlock() {
 
 <template>
   <div class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
-    <div v-if="editor" class="bg-gray-100 dark:bg-gray-700 border-b border-gray-300 dark:border-gray-600 p-2 flex flex-wrap gap-1">
+    <div v-if="editor" class="bg-gray-100 dark:bg-gray-700 border-b border-gray-300 dark:border-gray-600 p-2 flex flex-wrap gap-1" data-testid="rich-editor-toolbar">
       <!-- Formatowanie tekstu -->
       <button
         type="button"
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('bold') }"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 font-bold text-gray-700 dark:text-gray-200 transition-colors"
         title="Pogrubienie"
+        data-testid="rich-editor-bold-btn"
         @click="toggleBold"
       >
         B
@@ -218,6 +219,7 @@ function toggleCodeBlock() {
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('italic') }"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 italic text-gray-700 dark:text-gray-200 transition-colors"
         title="Kursywa"
+        data-testid="rich-editor-italic-btn"
         @click="toggleItalic"
       >
         I
@@ -227,6 +229,7 @@ function toggleCodeBlock() {
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('underline') }"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 underline text-gray-700 dark:text-gray-200 transition-colors"
         title="Podkreślenie"
+        data-testid="rich-editor-underline-btn"
         @click="toggleUnderline"
       >
         U
@@ -240,6 +243,7 @@ function toggleCodeBlock() {
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('heading', { level: 1 }) }"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Nagłówek 1"
+        data-testid="rich-editor-h1-btn"
         @click="toggleHeading(1)"
       >
         H1
@@ -249,6 +253,7 @@ function toggleCodeBlock() {
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('heading', { level: 2 }) }"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Nagłówek 2"
+        data-testid="rich-editor-h2-btn"
         @click="toggleHeading(2)"
       >
         H2
@@ -258,6 +263,7 @@ function toggleCodeBlock() {
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('heading', { level: 3 }) }"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Nagłówek 3"
+        data-testid="rich-editor-h3-btn"
         @click="toggleHeading(3)"
       >
         H3
@@ -271,6 +277,7 @@ function toggleCodeBlock() {
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive({ textAlign: 'left' }) }"
         class="px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Wyrównaj do lewej"
+        data-testid="rich-editor-align-left-btn"
         @click="setTextAlign('left')"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -282,6 +289,7 @@ function toggleCodeBlock() {
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive({ textAlign: 'center' }) }"
         class="px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Wyśrodkuj"
+        data-testid="rich-editor-align-center-btn"
         @click="setTextAlign('center')"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,6 +301,7 @@ function toggleCodeBlock() {
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive({ textAlign: 'right' }) }"
         class="px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Wyrównaj do prawej"
+        data-testid="rich-editor-align-right-btn"
         @click="setTextAlign('right')"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -304,6 +313,7 @@ function toggleCodeBlock() {
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive({ textAlign: 'justify' }) }"
         class="px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Wyjustuj"
+        data-testid="rich-editor-align-justify-btn"
         @click="setTextAlign('justify')"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -319,6 +329,7 @@ function toggleCodeBlock() {
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('bulletList') }"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Lista punktowana"
+        data-testid="rich-editor-bullet-list-btn"
         @click="toggleBulletList"
       >
         • Lista
@@ -328,6 +339,7 @@ function toggleCodeBlock() {
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('orderedList') }"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Lista numerowana"
+        data-testid="rich-editor-ordered-list-btn"
         @click="toggleOrderedList"
       >
         1. Lista
@@ -341,6 +353,7 @@ function toggleCodeBlock() {
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('codeBlock') }"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors font-mono"
         title="Blok kodu"
+        data-testid="rich-editor-code-btn"
         @click="toggleCodeBlock"
       >
         &lt;/&gt; Kod
@@ -353,6 +366,7 @@ function toggleCodeBlock() {
         type="button"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Kolor tekstu"
+        data-testid="rich-editor-color-btn"
         @click="setTextColor"
       >
         🎨 Kolor
@@ -366,6 +380,7 @@ function toggleCodeBlock() {
         :class="{ 'bg-blue-500 text-white dark:bg-blue-600': editor.isActive('link') }"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Dodaj link"
+        data-testid="rich-editor-link-btn"
         @click="addLink"
       >
         🔗 Link
@@ -375,6 +390,7 @@ function toggleCodeBlock() {
         type="button"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Usuń link"
+        data-testid="rich-editor-unlink-btn"
         @click="removeLink"
       >
         ❌ Unlink
@@ -387,6 +403,7 @@ function toggleCodeBlock() {
         type="button"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Dodaj obrazek"
+        data-testid="rich-editor-image-btn"
         @click="addImage"
       >
         🖼️ Obrazek
@@ -395,6 +412,7 @@ function toggleCodeBlock() {
         type="button"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Dodaj YouTube"
+        data-testid="rich-editor-youtube-btn"
         @click="addYoutube"
       >
         ▶️ YouTube
@@ -407,6 +425,7 @@ function toggleCodeBlock() {
         type="button"
         class="px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200 transition-colors"
         title="Wstaw tabelę"
+        data-testid="rich-editor-table-btn"
         @click="insertTable"
       >
         📊 Tabela
@@ -470,7 +489,7 @@ function toggleCodeBlock() {
         </button>
       </template>
     </div>
-    <EditorContent :editor="editor" class="prose dark:prose-invert max-w-none p-4 min-h-[300px] focus:outline-none text-gray-900 dark:text-gray-100" />
+    <EditorContent :editor="editor" class="prose dark:prose-invert max-w-none p-4 min-h-[300px] focus:outline-none text-gray-900 dark:text-gray-100" data-testid="rich-editor-content" />
   </div>
 </template>
 

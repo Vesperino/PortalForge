@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using PortalForge.Application.Interfaces;
+using PortalForge.Application.Common.Interfaces;
 
 namespace PortalForge.Infrastructure.Services;
 
@@ -222,6 +222,11 @@ public class FileStorageService : IFileStorageService
         // Normalize path separators
         var normalizedPath = relativePath.Replace("/", Path.DirectorySeparatorChar.ToString());
         return Path.Combine(_uploadsPath, normalizedPath);
+    }
+
+    public string GetBasePath()
+    {
+        return Path.GetFullPath(_uploadsPath);
     }
 
     #region Private Helper Methods

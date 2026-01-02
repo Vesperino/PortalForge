@@ -24,7 +24,7 @@ const imageZoom = ref(100)
 const imageRotation = ref(0)
 
 // PDF component loaded dynamically
-const pdfComponent = ref<any>(null)
+const pdfComponent = ref<unknown>(null)
 const pdfSource = ref<string>('')
 
 // Determine file type from extension
@@ -249,6 +249,7 @@ onUnmounted(() => {
     <div
       v-if="visible"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      data-testid="file-preview-modal-backdrop"
       @click.self="closeModal"
     >
       <!-- Modal Container -->
@@ -277,16 +278,18 @@ onUnmounted(() => {
               <button
                 class="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 title="Pomniejsz"
+                data-testid="file-preview-zoom-out-btn"
                 @click="zoomOut"
               >
                 <ZoomOut class="w-5 h-5" />
               </button>
-              <span class="text-sm text-gray-600 dark:text-gray-400 min-w-[4rem] text-center">
+              <span class="text-sm text-gray-600 dark:text-gray-400 min-w-[4rem] text-center" data-testid="file-preview-zoom-level">
                 {{ imageZoom }}%
               </span>
               <button
                 class="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 title="Powiększ"
+                data-testid="file-preview-zoom-in-btn"
                 @click="zoomIn"
               >
                 <ZoomIn class="w-5 h-5" />
@@ -294,6 +297,7 @@ onUnmounted(() => {
               <button
                 class="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 title="Obróć"
+                data-testid="file-preview-rotate-btn"
                 @click="rotate"
               >
                 <RotateCw class="w-5 h-5" />
@@ -305,6 +309,7 @@ onUnmounted(() => {
             <button
               class="p-2 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="Pobierz plik"
+              data-testid="file-preview-download-btn"
               @click="downloadFile"
             >
               <Download class="w-5 h-5" />
@@ -314,6 +319,7 @@ onUnmounted(() => {
             <button
               class="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               :title="isFullscreen ? 'Normalny widok' : 'Pełny ekran'"
+              data-testid="file-preview-fullscreen-btn"
               @click="toggleFullscreen"
             >
               <Minimize2 v-if="isFullscreen" class="w-5 h-5" />
@@ -324,6 +330,7 @@ onUnmounted(() => {
             <button
               class="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="Zamknij (ESC)"
+              data-testid="file-preview-close-btn"
               @click="closeModal"
             >
               <X class="w-5 h-5" />

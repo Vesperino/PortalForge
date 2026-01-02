@@ -71,8 +71,8 @@ const fetchUsers = async () => {
     ) as { users: User[] }
 
     users.value = response.users
-  } catch (err: any) {
-    error.value = err.message || 'Nie udało się pobrać listy użytkowników'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się pobrać listy użytkowników'
     console.error('Error fetching users:', err)
   } finally {
     isLoading.value = false
@@ -145,7 +145,7 @@ const _updateVacationAllowance = async () => {
     selectedUser.value = null
 
     toast.success('Sukces!', `Dni urlopowe skorygowane z ${response.oldValue} na ${response.newValue}`)
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error adjusting vacation days:', err)
     toast.error('Nie udało się skorygować dni urlopowych')
   } finally {
@@ -206,7 +206,7 @@ const saveVacation = async () => {
     selectedUser.value!.annualVacationDays = newValue
     toast.success('Limit urlopów został zaktualizowany (zapisano w audycie)')
     showEditModal.value = false
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.error('Nie udało się zaktualizować limitu urlopów')
     console.error('Error updating vacation allowance:', err)
   } finally {

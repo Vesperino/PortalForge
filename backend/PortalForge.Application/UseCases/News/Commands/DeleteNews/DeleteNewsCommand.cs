@@ -6,4 +6,5 @@ namespace PortalForge.Application.UseCases.News.Commands.DeleteNews;
 public class DeleteNewsCommand : IRequest<Unit>, ITransactionalRequest
 {
     public int NewsId { get; set; }
+    public Guid CurrentUserId { get; set; }
 }

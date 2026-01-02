@@ -38,14 +38,14 @@ public class SubmitRequestCommandHandler
         CancellationToken cancellationToken)
     {
         // Get template with approval steps
-        var template = await _unitOfWork.RequestTemplateRepository.GetByIdAsync(command.RequestTemplateId);
+        var template = await _unitOfWork.RequestTemplateRepository.GetByIdAsync(command.RequestTemplateId, cancellationToken);
         if (template == null)
         {
             throw new NotFoundException("Request template not found");
         }
 
         // Get submitter
-        var submitter = await _unitOfWork.UserRepository.GetByIdAsync(command.SubmittedById);
+        var submitter = await _unitOfWork.UserRepository.GetByIdAsync(command.SubmittedById, cancellationToken);
         if (submitter == null)
         {
             throw new NotFoundException("User not found");
@@ -59,8 +59,7 @@ public class SubmitRequestCommandHandler
 
         // Generate request number
         var year = DateTime.UtcNow.Year;
-        var allRequests = await _unitOfWork.RequestRepository.GetAllAsync();
-        var requestCount = allRequests.Count() + 1;
+        var requestCount = await _unitOfWork.RequestRepository.CountAsync(cancellationToken) + 1;
         var requestNumber = $"REQ-{year}-{requestCount:D4}";
 
         // Create request
@@ -175,7 +174,7 @@ public class SubmitRequestCommandHandler
             }
         }
 
-        await _unitOfWork.RequestRepository.CreateAsync(request);
+        await _unitOfWork.RequestRepository.CreateAsync(request, cancellationToken);
         await _unitOfWork.SaveChangesAsync();
 
         // Send notifications to first step approvers

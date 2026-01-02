@@ -36,8 +36,8 @@ export function useChatAI() {
       const data = await response.json()
       translationResult.value = data.translatedText
     }
-    catch (err: any) {
-      error.value = err?.message || 'Translation failed'
+    catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Translation failed'
       console.error('Translation error:', err)
     }
     finally {
@@ -48,7 +48,7 @@ export function useChatAI() {
   /**
    * Sends chat message to OpenAI API
    */
-  async function sendChatMessage(message: string, conversationHistory?: any[]) {
+  async function sendChatMessage(message: string, conversationHistory?: Array<{ role: string; content: string }>) {
     isChatting.value = true
     chatResult.value = ''
     error.value = null
@@ -74,8 +74,8 @@ export function useChatAI() {
       const data = await response.json()
       chatResult.value = data.message
     }
-    catch (err: any) {
-      error.value = err?.message || 'Chat failed'
+    catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Chat failed'
       console.error('Chat error:', err)
     }
     finally {
@@ -100,7 +100,7 @@ export function useChatAI() {
 
       return response
     }
-    catch (err: any) {
+    catch (err: unknown) {
       console.error('Connection test failed:', err)
       return false
     }

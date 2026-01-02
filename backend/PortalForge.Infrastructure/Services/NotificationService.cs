@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.Services;
 using PortalForge.Domain.Entities;
@@ -9,13 +10,16 @@ public class NotificationService : INotificationService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IEmailService _emailService;
+    private readonly ILogger<NotificationService> _logger;
 
     public NotificationService(
         IUnitOfWork unitOfWork,
-        IEmailService emailService)
+        IEmailService emailService,
+        ILogger<NotificationService> logger)
     {
         _unitOfWork = unitOfWork;
         _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task CreateNotificationAsync(
@@ -95,10 +99,9 @@ public class NotificationService : INotificationService
                 actionUrl: actionUrl,
                 actionButtonText: actionButtonText);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Don't let email failures break notification creation
-            // Logging is handled in EmailService
+            _logger.LogWarning(ex, "Failed to send email notification for user {UserId}, type {NotificationType}", userId, type);
         }
     }
 

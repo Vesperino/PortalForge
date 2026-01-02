@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Exceptions;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Domain.Entities;
 using System.Text.RegularExpressions;
 
 namespace PortalForge.Application.UseCases.News.Commands.UpdateNews;
@@ -32,6 +33,20 @@ public class UpdateNewsCommandHandler : IRequestHandler<UpdateNewsCommand, Unit>
         if (news == null)
         {
             throw new NotFoundException($"News with ID {request.NewsId} not found");
+        }
+
+        var currentUser = await _unitOfWork.UserRepository.GetByIdAsync(request.CurrentUserId);
+        if (currentUser == null)
+        {
+            throw new NotFoundException($"User with ID {request.CurrentUserId} not found");
+        }
+
+        var isAdmin = currentUser.Role == UserRole.Admin;
+        var isAuthor = news.AuthorId == request.CurrentUserId;
+
+        if (!isAuthor && !isAdmin)
+        {
+            throw new ForbiddenException("Możesz modyfikować tylko własne aktualności lub musisz być administratorem");
         }
 
         if (request.EventId.HasValue)

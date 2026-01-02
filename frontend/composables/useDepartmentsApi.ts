@@ -21,9 +21,10 @@ export const useDepartmentsApi = () => {
         credentials: 'include'
       })
       return response
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching departments:', error)
-      throw new Error(error?.data?.message || 'Failed to fetch departments')
+      const err = error as { data?: { message?: string } }
+      throw new Error(err?.data?.message || 'Failed to fetch departments')
     }
   }
 

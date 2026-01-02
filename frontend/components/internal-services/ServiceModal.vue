@@ -251,7 +251,7 @@ async function loadDepartments() {
       headers: getAuthHeaders()
     })
     departmentsTree.value = response
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error loading departments:', err)
   }
 }
@@ -270,8 +270,8 @@ async function handleSubmit() {
       toast.success('Serwis został utworzony')
     }
     emit('saved')
-  } catch (err: any) {
-    toast.error('Nie udało się zapisać serwisu', err.message)
+  } catch (err: unknown) {
+    toast.error('Nie udało się zapisać serwisu', err instanceof Error ? err.message : 'Nieznany błąd')
   } finally {
     saving.value = false
   }

@@ -1,7 +1,9 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Common.Settings;
 using PortalForge.Domain.Entities;
 using PortalForge.Domain.Enums;
 using PortalForge.Infrastructure.Services;
@@ -11,14 +13,22 @@ namespace PortalForge.Tests.Unit.Infrastructure.Services;
 public class VacationCalculationServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<IOptions<VacationSettings>> _vacationSettingsMock;
     private readonly Mock<ILogger<VacationCalculationService>> _loggerMock;
     private readonly VacationCalculationService _service;
 
     public VacationCalculationServiceTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
+        _vacationSettingsMock = new Mock<IOptions<VacationSettings>>();
+        _vacationSettingsMock.Setup(x => x.Value).Returns(new VacationSettings
+        {
+            DefaultAnnualDays = 26,
+            MaxOnDemandDays = 4,
+            MaxCircumstantialDaysPerEvent = 2
+        });
         _loggerMock = new Mock<ILogger<VacationCalculationService>>();
-        _service = new VacationCalculationService(_unitOfWorkMock.Object, _loggerMock.Object);
+        _service = new VacationCalculationService(_unitOfWorkMock.Object, _vacationSettingsMock.Object, _loggerMock.Object);
     }
 
     #region CalculateProportionalVacationDays Tests
@@ -229,7 +239,7 @@ public class VacationCalculationServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -241,7 +251,7 @@ public class VacationCalculationServiceTests
 
         // Assert
         result.CanTake.Should().BeFalse();
-        result.ErrorMessage.Should().Be("Użytkownik nie istnieje");
+        result.ErrorMessage.Should().Be("User does not exist");
     }
 
     [Fact]
@@ -250,7 +260,7 @@ public class VacationCalculationServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         var user = CreateTestUser(userId);
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act - end date before start date
@@ -262,7 +272,7 @@ public class VacationCalculationServiceTests
 
         // Assert
         result.CanTake.Should().BeFalse();
-        result.ErrorMessage.Should().Be("Nieprawidłowy zakres dat urlopu");
+        result.ErrorMessage.Should().Be("Invalid vacation date range");
     }
 
     [Fact]
@@ -273,7 +283,7 @@ public class VacationCalculationServiceTests
         var user = CreateTestUser(userId);
         user.OnDemandVacationDaysUsed = 4; // All 4 days used
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -285,7 +295,7 @@ public class VacationCalculationServiceTests
 
         // Assert
         result.CanTake.Should().BeFalse();
-        result.ErrorMessage.Should().Be("Wykorzystano już wszystkie 4 dni urlopu na żądanie w tym roku");
+        result.ErrorMessage.Should().Be("All 4 on-demand vacation days have been used this year");
     }
 
     [Fact]
@@ -296,7 +306,7 @@ public class VacationCalculationServiceTests
         var user = CreateTestUser(userId);
         user.OnDemandVacationDaysUsed = 2; // 2 used, 2 remaining
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act - requesting 3 days (Mon-Wed)
@@ -308,7 +318,7 @@ public class VacationCalculationServiceTests
 
         // Assert
         result.CanTake.Should().BeFalse();
-        result.ErrorMessage.Should().Be("Możesz wziąć jeszcze 2 dni urlopu na żądanie");
+        result.ErrorMessage.Should().Be("You can take 2 more on-demand vacation days");
     }
 
     [Fact]
@@ -319,7 +329,7 @@ public class VacationCalculationServiceTests
         var user = CreateTestUser(userId);
         user.OnDemandVacationDaysUsed = 2; // 2 used, 2 remaining
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act - requesting 2 days (Mon-Tue)
@@ -341,7 +351,7 @@ public class VacationCalculationServiceTests
         var userId = Guid.NewGuid();
         var user = CreateTestUser(userId);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act - requesting 3 days (Mon-Wed)
@@ -353,7 +363,7 @@ public class VacationCalculationServiceTests
 
         // Assert
         result.CanTake.Should().BeFalse();
-        result.ErrorMessage.Should().Be("Urlop okolicznościowy to maksymalnie 2 dni na wydarzenie");
+        result.ErrorMessage.Should().Be("Circumstantial leave is limited to 2 days per event");
     }
 
     [Fact]
@@ -363,7 +373,7 @@ public class VacationCalculationServiceTests
         var userId = Guid.NewGuid();
         var user = CreateTestUser(userId);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act - requesting 2 days (Mon-Tue)
@@ -389,7 +399,7 @@ public class VacationCalculationServiceTests
         user.CarriedOverVacationDays = 0;
         // TotalAvailableVacationDays = 10 - 5 + 0 = 5 days
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act - requesting 10 days (2 weeks)
@@ -401,7 +411,7 @@ public class VacationCalculationServiceTests
 
         // Assert
         result.CanTake.Should().BeFalse();
-        result.ErrorMessage.Should().Be("Brak wystarczającej liczby dni urlopu. Dostępne: 5 dni");
+        result.ErrorMessage.Should().Be("Insufficient vacation days available. Available: 5 days");
     }
 
     [Fact]
@@ -415,7 +425,7 @@ public class VacationCalculationServiceTests
         user.CarriedOverVacationDays = 5;
         // TotalAvailableVacationDays = 26 - 10 + 5 = 21 days
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act - requesting 10 days (2 weeks)
@@ -441,7 +451,7 @@ public class VacationCalculationServiceTests
         user.CarriedOverVacationDays = 0;
         // No vacation days available
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act - sick leave should always be allowed
@@ -467,7 +477,7 @@ public class VacationCalculationServiceTests
         var userId = Guid.NewGuid();
         var year = 2025;
 
-        _unitOfWorkMock.Setup(x => x.VacationScheduleRepository.GetAllAsync())
+        _unitOfWorkMock.Setup(x => x.VacationScheduleRepository.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<VacationSchedule>());
 
         // Act
@@ -504,7 +514,7 @@ public class VacationCalculationServiceTests
             }
         };
 
-        _unitOfWorkMock.Setup(x => x.VacationScheduleRepository.GetAllAsync())
+        _unitOfWorkMock.Setup(x => x.VacationScheduleRepository.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(vacations);
 
         // Act
@@ -557,7 +567,7 @@ public class VacationCalculationServiceTests
             }
         };
 
-        _unitOfWorkMock.Setup(x => x.VacationScheduleRepository.GetAllAsync())
+        _unitOfWorkMock.Setup(x => x.VacationScheduleRepository.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(vacations);
 
         // Act
@@ -587,7 +597,7 @@ public class VacationCalculationServiceTests
             }
         };
 
-        _unitOfWorkMock.Setup(x => x.VacationScheduleRepository.GetAllAsync())
+        _unitOfWorkMock.Setup(x => x.VacationScheduleRepository.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(vacations);
 
         // Act
@@ -606,7 +616,7 @@ public class VacationCalculationServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -627,7 +637,7 @@ public class VacationCalculationServiceTests
         user.CarriedOverVacationDays = 5;
         // TotalAvailableVacationDays = 26 - 10 + 5 = 21
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -648,7 +658,7 @@ public class VacationCalculationServiceTests
         user.CarriedOverVacationDays = 0;
         // TotalAvailableVacationDays = 20 - 5 + 0 = 15
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -669,7 +679,7 @@ public class VacationCalculationServiceTests
         user.CarriedOverVacationDays = 8;
         // TotalAvailableVacationDays = 26 - 26 + 8 = 8
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PortalForge.Application.Exceptions;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.UseCases.Requests.DTOs;
+using PortalForge.Domain.Entities;
 
 namespace PortalForge.Application.UseCases.Requests.Queries.GetRequestById;
 
@@ -12,15 +13,18 @@ public class GetRequestByIdQueryHandler : IRequestHandler<GetRequestByIdQuery, R
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<GetRequestByIdQueryHandler> _logger;
     private readonly IConfiguration _configuration;
+    private readonly ICurrentUserService _currentUserService;
 
     public GetRequestByIdQueryHandler(
         IUnitOfWork unitOfWork,
         ILogger<GetRequestByIdQueryHandler> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ICurrentUserService currentUserService)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
         _configuration = configuration;
+        _currentUserService = currentUserService;
     }
 
     public async Task<RequestDetailDto> Handle(GetRequestByIdQuery request, CancellationToken cancellationToken)
@@ -33,6 +37,16 @@ public class GetRequestByIdQueryHandler : IRequestHandler<GetRequestByIdQuery, R
         {
             _logger.LogWarning("Request not found: {RequestId}", request.RequestId);
             throw new NotFoundException($"Request with ID {request.RequestId} not found");
+        }
+
+        var hasAccess = await HasAccessToRequestAsync(req, request.CurrentUserId);
+        if (!hasAccess)
+        {
+            _logger.LogWarning(
+                "Access denied to request {RequestId} for user {UserId}",
+                request.RequestId,
+                request.CurrentUserId);
+            throw new ForbiddenException("You do not have permission to view this request");
         }
 
         // Get comments
@@ -147,5 +161,27 @@ public class GetRequestByIdQueryHandler : IRequestHandler<GetRequestByIdQuery, R
             _logger.LogWarning(ex, "Failed to parse attachments JSON: {Json}", attachmentsJson);
             return new List<string>();
         }
+    }
+
+    private Task<bool> HasAccessToRequestAsync(Request request, Guid currentUserId)
+    {
+        if (request.SubmittedById == currentUserId)
+        {
+            return Task.FromResult(true);
+        }
+
+        var isApprover = request.ApprovalSteps.Any(s => s.ApproverId == currentUserId);
+        if (isApprover)
+        {
+            return Task.FromResult(true);
+        }
+
+        var isAdmin = _currentUserService.IsInRole(UserRole.Admin.ToString());
+        if (isAdmin)
+        {
+            return Task.FromResult(true);
+        }
+
+        return Task.FromResult(false);
     }
 }

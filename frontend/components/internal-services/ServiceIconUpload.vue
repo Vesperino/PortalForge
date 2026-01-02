@@ -73,9 +73,10 @@ async function handleFileChange(event: Event) {
       previewUrl.value = response.url
       emit('update:modelValue', response.url)
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Upload error:', error)
-    uploadError.value = error?.data?.message || 'Nie udało się przesłać pliku'
+    const errorData = error as { data?: { message?: string } }
+    uploadError.value = errorData?.data?.message || 'Nie udało się przesłać pliku'
   } finally {
     isUploading.value = false
     if (target) {

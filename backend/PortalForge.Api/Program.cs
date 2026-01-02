@@ -77,20 +77,17 @@ builder.Services.AddSwaggerGen(options =>
 // Register seeders
 builder.Services.AddScoped<DefaultRequestTemplatesSeeder>();
 
-// Configure CORS for frontend
+// Configure CORS for frontend - use configuration for allowed origins
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? new[] { "https://krablab.pl", "http://localhost:3000", "http://localhost:3001" };
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins(
-                  "https://krablab.pl",
-                  "http://krablab.pl",
-                  "http://localhost:3000",
-                  "http://localhost:3001",
-                  "https://83.168.107.39",
-                  "http://83.168.107.39")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
+        policy.WithOrigins(allowedOrigins)
+              .WithHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With")
+              .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
               .AllowCredentials();
     });
 });
@@ -127,14 +124,17 @@ if (!string.IsNullOrEmpty(pathBase))
 }
 
 // Configure the HTTP request pipeline.
-// Enable Swagger in all environments for MVP development
-app.UseSwagger();
-app.UseSwaggerUI(options =>
+// Only enable Swagger in Development environment for security
+if (app.Environment.IsDevelopment())
 {
-    // Swagger endpoint relative to current path
-    options.SwaggerEndpoint("v1/swagger.json", "PortalForge API v1");
-    options.RoutePrefix = "swagger"; // Access at /portalforge/be/swagger
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        // Swagger endpoint relative to current path
+        options.SwaggerEndpoint("v1/swagger.json", "PortalForge API v1");
+        options.RoutePrefix = "swagger"; // Access at /portalforge/be/swagger
+    });
+}
 
 // Only use HTTPS redirection in Development
 // In Production, the reverse proxy (Caddy) handles SSL termination

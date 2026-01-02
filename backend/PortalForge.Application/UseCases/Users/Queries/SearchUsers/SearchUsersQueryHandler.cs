@@ -27,31 +27,28 @@ public class SearchUsersQueryHandler : IRequestHandler<SearchUsersQuery, List<Us
             return new List<UserSearchDto>();
         }
 
-        var users = (await _unitOfWork.UserRepository.GetAllAsync())
-            .Where(u => request.OnlyActive ? u.IsActive : true)
-            .Where(u =>
-                u.FirstName.Contains(request.Query, StringComparison.OrdinalIgnoreCase) ||
-                u.LastName.Contains(request.Query, StringComparison.OrdinalIgnoreCase) ||
-                u.Email.Contains(request.Query, StringComparison.OrdinalIgnoreCase) ||
-                (!string.IsNullOrEmpty(u.Department) && u.Department.Contains(request.Query, StringComparison.OrdinalIgnoreCase)) ||
-                (!string.IsNullOrEmpty(u.Position) && u.Position.Contains(request.Query, StringComparison.OrdinalIgnoreCase)))
-            .Where(u => !request.DepartmentId.HasValue || u.DepartmentId == request.DepartmentId.Value)
-            .Take(request.Limit)
-            .Select(u => new UserSearchDto
-            {
-                Id = u.Id.ToString(),
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                Email = u.Email,
-                Position = u.Position,
-                Department = u.Department,
-                DepartmentId = u.DepartmentId?.ToString(),
-                ProfilePhotoUrl = u.ProfilePhotoUrl
-            })
-            .ToList();
+        // Use server-side filtering instead of loading all users into memory
+        var users = await _unitOfWork.UserRepository.SearchAsync(
+            request.Query,
+            request.OnlyActive,
+            request.DepartmentId,
+            request.Limit,
+            cancellationToken);
 
-        _logger.LogInformation("Found {Count} users matching query: {Query}", users.Count, request.Query);
+        var result = users.Select(u => new UserSearchDto
+        {
+            Id = u.Id.ToString(),
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            Email = u.Email,
+            Position = u.Position,
+            Department = u.Department,
+            DepartmentId = u.DepartmentId?.ToString(),
+            ProfilePhotoUrl = u.ProfilePhotoUrl
+        }).ToList();
 
-        return users;
+        _logger.LogInformation("Found {Count} users matching query: {Query}", result.Count, request.Query);
+
+        return result;
     }
 }
