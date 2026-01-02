@@ -57,9 +57,10 @@ public class RequestsController : BaseController
 
     /// <summary>
     /// Get requests pending approval by current user
+    /// Returns empty list if user has no requests to approve
     /// </summary>
     [HttpGet("to-approve")]
-    [Authorize(Policy = "RequirePermission:requests.approve")]
+    [Authorize]
     public async Task<ActionResult> GetRequestsToApprove()
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
@@ -75,9 +76,10 @@ public class RequestsController : BaseController
 
     /// <summary>
     /// Get pending approvals (requests awaiting current user's approval)
+    /// Returns empty list if user has no pending approvals
     /// </summary>
     [HttpGet("pending-approvals")]
-    [Authorize(Policy = "RequirePermission:requests.approve")]
+    [Authorize]
     public async Task<ActionResult> GetPendingApprovals()
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
@@ -93,9 +95,10 @@ public class RequestsController : BaseController
 
     /// <summary>
     /// Get approvals history (requests approved/rejected by current user)
+    /// Returns empty list if user has no approval history
     /// </summary>
     [HttpGet("approvals-history")]
-    [Authorize(Policy = "RequirePermission:requests.approve")]
+    [Authorize]
     public async Task<ActionResult> GetApprovalsHistory()
     {
         var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
