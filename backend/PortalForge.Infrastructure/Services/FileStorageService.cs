@@ -224,6 +224,11 @@ public class FileStorageService : IFileStorageService
         return Path.Combine(_uploadsPath, normalizedPath);
     }
 
+    public string GetBasePath()
+    {
+        return Path.GetFullPath(_uploadsPath);
+    }
+
     #region Private Helper Methods
 
     /// <summary>

@@ -195,9 +195,13 @@ public class StorageController : BaseController
                 return BadRequest(new { message = "Invalid file path" });
             }
 
-            // Decode URL to catch encoded path traversal attempts
+            // Decode URL to catch encoded path traversal attempts (including double encoding)
             var decodedPath = Uri.UnescapeDataString(relativePath);
-            if (decodedPath.Contains("..") || decodedPath.Contains("\\") || decodedPath.Contains("%"))
+            // Decode again to catch double-encoded attempts like %252e%252e
+            var doubleDecodedPath = Uri.UnescapeDataString(decodedPath);
+
+            // Check for path traversal patterns in both decoded versions
+            if (ContainsPathTraversalPattern(decodedPath) || ContainsPathTraversalPattern(doubleDecodedPath))
             {
                 _logger.LogWarning("Path traversal attempt detected: {RelativePath}", relativePath);
                 return BadRequest(new { message = "Invalid file path" });
@@ -208,6 +212,15 @@ public class StorageController : BaseController
 
             // Normalize path separators
             relativePath = relativePath.Replace("\\", "/");
+
+            // Additional security: Validate resolved path is within allowed directory
+            var basePath = _fileStorageService.GetBasePath();
+            var resolvedPath = Path.GetFullPath(Path.Combine(basePath, relativePath));
+            if (!resolvedPath.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("Path traversal attempt via path resolution: {RelativePath} resolved to {ResolvedPath}", relativePath, resolvedPath);
+                return BadRequest(new { message = "Invalid file path" });
+            }
 
             // Check if path requires authentication (private files)
             var privatePaths = new[] { "comment-attachments", "request-attachments", "sick-leaves", "documents" };
@@ -278,5 +291,31 @@ public class StorageController : BaseController
         }
     }
 
+    /// <summary>
+    /// Checks if a path contains any path traversal patterns.
+    /// </summary>
+    private static bool ContainsPathTraversalPattern(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return false;
+
+        // Check for common path traversal patterns
+        var dangerousPatterns = new[]
+        {
+            "..",           // Parent directory
+            "..\\",         // Windows parent
+            "../",          // Unix parent
+            "\\",           // Backslash (normalize to forward slash)
+            "%",            // URL encoding remnants after decode
+            "\0",           // Null byte injection
+            "..%",          // Partial encoded traversal
+            "%2e",          // Encoded dot
+            "%2f",          // Encoded forward slash
+            "%5c",          // Encoded backslash
+        };
+
+        var lowerPath = path.ToLowerInvariant();
+        return dangerousPatterns.Any(pattern => lowerPath.Contains(pattern.ToLowerInvariant()));
+    }
 }
 

@@ -133,6 +133,13 @@ public class LocalFileStorageService : IFileStorageService
         return CombineWithBasePath(basePath, relativePath);
     }
 
+    public string GetBasePath()
+    {
+        var basePath = _cachedSettings?.GetValueOrDefault("Storage:BasePath", GetDefaultBasePath())
+                       ?? GetDefaultBasePath();
+        return Path.GetFullPath(basePath);
+    }
+
     public async Task<Dictionary<string, string>> GetStorageSettingsAsync()
     {
         // Return cached settings if still valid

@@ -135,4 +135,33 @@ public class UserRepository : IUserRepository
             _context.Users.Remove(user);
         }
     }
+
+    public async Task<List<User>> SearchAsync(
+        string query,
+        bool onlyActive,
+        Guid? departmentId,
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        var searchLower = query.ToLower();
+
+        var dbQuery = _context.Users
+            .AsNoTracking()
+            .Where(u => !onlyActive || u.IsActive)
+            .Where(u =>
+                u.FirstName.ToLower().Contains(searchLower) ||
+                u.LastName.ToLower().Contains(searchLower) ||
+                u.Email.ToLower().Contains(searchLower) ||
+                (u.Department != null && u.Department.ToLower().Contains(searchLower)) ||
+                (u.Position != null && u.Position.ToLower().Contains(searchLower)));
+
+        if (departmentId.HasValue)
+        {
+            dbQuery = dbQuery.Where(u => u.DepartmentId == departmentId.Value);
+        }
+
+        return await dbQuery
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+    }
 }

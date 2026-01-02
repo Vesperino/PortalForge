@@ -62,4 +62,10 @@ public interface IFileStorageService
     /// <param name="relativePath">Relative path to the file.</param>
     /// <returns>Full file system path.</returns>
     string GetFullPath(string relativePath);
+
+    /// <summary>
+    /// Gets the base storage path used for path validation.
+    /// </summary>
+    /// <returns>The base storage directory path.</returns>
+    string GetBasePath();
 }

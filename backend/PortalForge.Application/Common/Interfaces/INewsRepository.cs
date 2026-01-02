@@ -19,4 +19,16 @@ public interface INewsRepository
     Task UpdateAsync(News news);
     Task DeleteAsync(int id);
     Task IncrementViewsAsync(int id);
+
+    /// <summary>
+    /// Gets paginated news with server-side filtering.
+    /// </summary>
+    Task<(IEnumerable<News> Items, int TotalCount)> GetPaginatedAsync(
+        string? category,
+        int? departmentId,
+        bool? isEvent,
+        List<string>? hashtags,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default);
 }

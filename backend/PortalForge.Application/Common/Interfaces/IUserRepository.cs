@@ -28,4 +28,15 @@ public interface IUserRepository
     Task<Guid> CreateAsync(User user, CancellationToken cancellationToken = default);
     Task UpdateAsync(User user, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Searches users by query string with server-side filtering.
+    /// Searches in FirstName, LastName, Email, Department, and Position.
+    /// </summary>
+    Task<List<User>> SearchAsync(
+        string query,
+        bool onlyActive,
+        Guid? departmentId,
+        int limit,
+        CancellationToken cancellationToken = default);
 }

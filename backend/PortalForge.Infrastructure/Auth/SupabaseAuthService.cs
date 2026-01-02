@@ -440,7 +440,7 @@ public class SupabaseAuthService : ISupabaseAuthService
             }
 
             var currentUser = client.Auth.CurrentUser;
-            if (currentUser?.Email != null)
+            if (currentUser?.Email != null && Guid.TryParse(currentUser.Id, out var userId))
             {
                 // Send confirmation email
                 await _emailService.SendPasswordChangedEmailAsync(currentUser.Email);
@@ -449,7 +449,7 @@ public class SupabaseAuthService : ISupabaseAuthService
                 return new AuthResult
                 {
                     Success = true,
-                    UserId = Guid.Parse(currentUser.Id),
+                    UserId = userId,
                     Email = currentUser.Email
                 };
             }
@@ -610,8 +610,14 @@ public class SupabaseAuthService : ISupabaseAuthService
                 return null;
             }
 
+            if (!Guid.TryParse(user.Id, out var userId))
+            {
+                _logger.LogWarning("Invalid user ID format: {UserId}", user.Id);
+                return null;
+            }
+
             _logger.LogInformation("Successfully extracted user ID: {UserId}", user.Id);
-            return Guid.Parse(user.Id);
+            return userId;
         }
         catch (Exception ex)
         {

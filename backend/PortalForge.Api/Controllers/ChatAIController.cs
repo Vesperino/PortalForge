@@ -106,13 +106,14 @@ public class ChatAIController : BaseController
 
     /// <summary>
     /// Tests the OpenAI API configuration and connection.
+    /// API key is passed in request body for security (not in URL/query params).
     /// </summary>
     /// <returns>Result indicating whether the connection is successful.</returns>
-    [HttpGet("test-connection")]
+    [HttpPost("test-connection")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<bool>> TestConnection(
         [FromServices] IOpenAIService openAIService,
-        [FromQuery] string? testApiKey = null)
+        [FromBody] TestConnectionRequest? request = null)
     {
         if (GetUserIdOrUnauthorized(out var userId) is ActionResult errorResult)
         {
@@ -123,10 +124,10 @@ public class ChatAIController : BaseController
 
         try
         {
-            // If a test API key is provided, use it; otherwise use the configured one
-            if (!string.IsNullOrEmpty(testApiKey))
+            // If a test API key is provided in the body, use it; otherwise use the configured one
+            if (!string.IsNullOrEmpty(request?.TestApiKey))
             {
-                var result = await openAIService.TestConnectionAsync(testApiKey);
+                var result = await openAIService.TestConnectionAsync(request.TestApiKey);
                 return Ok(result);
             }
 
@@ -140,4 +141,15 @@ public class ChatAIController : BaseController
             return Ok(false);
         }
     }
+}
+
+/// <summary>
+/// Request model for testing OpenAI connection.
+/// </summary>
+public class TestConnectionRequest
+{
+    /// <summary>
+    /// Optional API key to test. If not provided, uses the configured key.
+    /// </summary>
+    public string? TestApiKey { get; set; }
 }
