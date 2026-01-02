@@ -85,7 +85,7 @@ public class VacationCalculationService : IVacationCalculationService
         if (user == null)
         {
             _logger.LogWarning("User {UserId} not found for vacation validation", userId);
-            return (false, "Użytkownik nie istnieje");
+            return (false, "User does not exist");
         }
 
         // 2. Calculate requested days (business days only)
@@ -93,7 +93,7 @@ public class VacationCalculationService : IVacationCalculationService
 
         if (requestedDays <= 0)
         {
-            return (false, "Nieprawidłowy zakres dat urlopu");
+            return (false, "Invalid vacation date range");
         }
 
         // 3. Validate based on leave type
@@ -108,7 +108,7 @@ public class VacationCalculationService : IVacationCalculationService
                     _logger.LogInformation(
                         "User {UserId} exhausted on-demand vacation ({Used}/{Max} used)",
                         userId, onDemandUsed, maxOnDemandDays);
-                    return (false, $"Wykorzystano już wszystkie {maxOnDemandDays} dni urlopu na żądanie w tym roku");
+                    return (false, $"All {maxOnDemandDays} on-demand vacation days have been used this year");
                 }
 
                 var remainingOnDemand = maxOnDemandDays - onDemandUsed;
@@ -117,7 +117,7 @@ public class VacationCalculationService : IVacationCalculationService
                     _logger.LogInformation(
                         "User {UserId} requesting {RequestedDays} on-demand days but only {Remaining} available",
                         userId, requestedDays, remainingOnDemand);
-                    return (false, $"Możesz wziąć jeszcze {remainingOnDemand} dni urlopu na żądanie");
+                    return (false, $"You can take {remainingOnDemand} more on-demand vacation days");
                 }
                 break;
 
@@ -129,7 +129,7 @@ public class VacationCalculationService : IVacationCalculationService
                     _logger.LogInformation(
                         "User {UserId} requesting {RequestedDays} circumstantial days (max {Max})",
                         userId, requestedDays, maxCircumstantialDays);
-                    return (false, $"Urlop okolicznościowy to maksymalnie {maxCircumstantialDays} dni na wydarzenie");
+                    return (false, $"Circumstantial leave is limited to {maxCircumstantialDays} days per event");
                 }
                 break;
 
@@ -142,7 +142,7 @@ public class VacationCalculationService : IVacationCalculationService
                     _logger.LogInformation(
                         "User {UserId} requesting {RequestedDays} annual vacation days but only {Available} available",
                         userId, requestedDays, availableDays);
-                    return (false, $"Brak wystarczającej liczby dni urlopu. Dostępne: {availableDays} dni");
+                    return (false, $"Insufficient vacation days available. Available: {availableDays} days");
                 }
                 break;
 
@@ -153,7 +153,7 @@ public class VacationCalculationService : IVacationCalculationService
 
             default:
                 _logger.LogWarning("Unknown leave type {LeaveType} for user {UserId}", leaveType, userId);
-                return (false, "Nieznany typ urlopu");
+                return (false, "Unknown leave type");
         }
 
         _logger.LogInformation(

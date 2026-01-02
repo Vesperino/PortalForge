@@ -1,20 +1,19 @@
 export default defineNuxtRouteMiddleware((to) => {
   const authStore = useAuthStore()
-  
-  // Sprawdź czy użytkownik jest zalogowany
+
+  // Check if user is authenticated
   if (!authStore.isAuthenticated) {
     return
   }
-  
-  // Sprawdź czy użytkownik musi zmienić hasło
+
+  // Check if user must change password
   const mustChangePassword = authStore.user?.mustChangePassword === true
-  
-  // Jeśli użytkownik musi zmienić hasło i nie jest na stronie zmiany hasła
+
+  // If user must change password and is not on the change password page
   if (mustChangePassword && to.path !== '/auth/change-password' && to.path !== '/auth/logout') {
     return navigateTo('/auth/change-password')
   }
-  
-  // Jeśli użytkownik nie musi zmieniać hasła i jest na stronie zmiany hasła (próbuje wejść ręcznie)
-  // pozwól mu tam wejść (może chce zmienić hasło dobrowolnie)
-})
 
+  // If user doesn't need to change password and is on the change password page (manual navigation)
+  // allow them to access it (they may want to change password voluntarily)
+})

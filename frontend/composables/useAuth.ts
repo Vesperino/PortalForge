@@ -23,13 +23,13 @@ export function useAuth() {
         }
       }) as LoginResponse
 
-      // Zapisz tokeny
+      // Save tokens
       authStore.setTokens(response.accessToken, response.refreshToken)
 
-      // Zapisz użytkownika
+      // Save user data
       authStore.setUser(response.user)
 
-      // Sprawdź czy użytkownik musi zmienić hasło
+      // Check if user must change password
       if (response.user.mustChangePassword) {
         await router.push('/auth/change-password')
       }
@@ -38,13 +38,13 @@ export function useAuth() {
     } catch (error: unknown) {
       console.error('Login error:', error)
       const errorData = error as { data?: { message?: string } }
-      throw new Error(errorData?.data?.message || 'Nieprawidłowy email lub hasło')
+      throw new Error(errorData?.data?.message || 'Invalid email or password')
     }
   }
 
   async function logout() {
     try {
-      // Wywołaj backend logout jeśli jest token
+      // Call backend logout if token exists
       if (authStore.accessToken) {
         await $fetch(`${apiUrl}/api/auth/logout`, {
           method: 'POST',
@@ -56,7 +56,7 @@ export function useAuth() {
     } catch (error) {
       console.error('Logout error:', error)
     } finally {
-      // Zawsze wyczyść lokalnie
+      // Always clear local state
       authStore.clearUser()
       // Avoid redundant navigation
       if (router.currentRoute.value.path !== '/auth/login') {

@@ -251,7 +251,7 @@ public class VacationCalculationServiceTests
 
         // Assert
         result.CanTake.Should().BeFalse();
-        result.ErrorMessage.Should().Be("Użytkownik nie istnieje");
+        result.ErrorMessage.Should().Be("User does not exist");
     }
 
     [Fact]
@@ -272,7 +272,7 @@ public class VacationCalculationServiceTests
 
         // Assert
         result.CanTake.Should().BeFalse();
-        result.ErrorMessage.Should().Be("Nieprawidłowy zakres dat urlopu");
+        result.ErrorMessage.Should().Be("Invalid vacation date range");
     }
 
     [Fact]
@@ -295,7 +295,7 @@ public class VacationCalculationServiceTests
 
         // Assert
         result.CanTake.Should().BeFalse();
-        result.ErrorMessage.Should().Be("Wykorzystano już wszystkie 4 dni urlopu na żądanie w tym roku");
+        result.ErrorMessage.Should().Be("All 4 on-demand vacation days have been used this year");
     }
 
     [Fact]
@@ -318,7 +318,7 @@ public class VacationCalculationServiceTests
 
         // Assert
         result.CanTake.Should().BeFalse();
-        result.ErrorMessage.Should().Be("Możesz wziąć jeszcze 2 dni urlopu na żądanie");
+        result.ErrorMessage.Should().Be("You can take 2 more on-demand vacation days");
     }
 
     [Fact]
@@ -363,7 +363,7 @@ public class VacationCalculationServiceTests
 
         // Assert
         result.CanTake.Should().BeFalse();
-        result.ErrorMessage.Should().Be("Urlop okolicznościowy to maksymalnie 2 dni na wydarzenie");
+        result.ErrorMessage.Should().Be("Circumstantial leave is limited to 2 days per event");
     }
 
     [Fact]
@@ -411,7 +411,7 @@ public class VacationCalculationServiceTests
 
         // Assert
         result.CanTake.Should().BeFalse();
-        result.ErrorMessage.Should().Be("Brak wystarczającej liczby dni urlopu. Dostępne: 5 dni");
+        result.ErrorMessage.Should().Be("Insufficient vacation days available. Available: 5 days");
     }
 
     [Fact]

@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using PortalForge.Domain.Entities;
+using PortalForge.Domain.Enums;
 using PortalForge.Infrastructure.Persistence;
 using PortalForge.Infrastructure.Repositories;
 using Xunit;
@@ -11,6 +12,7 @@ public class NewsRepositoryTests : IDisposable
 {
     private readonly ApplicationDbContext _context;
     private readonly NewsRepository _repository;
+    private readonly User _testAuthor;
 
     public NewsRepositoryTests()
     {
@@ -20,6 +22,19 @@ public class NewsRepositoryTests : IDisposable
 
         _context = new ApplicationDbContext(options);
         _repository = new NewsRepository(_context);
+
+        // Create a test author that will be used by all news items
+        _testAuthor = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "author@test.com",
+            FirstName = "Test",
+            LastName = "Author",
+            Role = UserRole.Admin,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Users.Add(_testAuthor);
+        _context.SaveChanges();
     }
 
     public void Dispose()
@@ -33,7 +48,7 @@ public class NewsRepositoryTests : IDisposable
         // Arrange
         for (int i = 0; i < 25; i++)
         {
-            await _context.News.AddAsync(CreateNews($"News {i}", i % 2 == 0));
+            _context.News.Add(CreateNews($"News {i}", i % 2 == 0));
         }
         await _context.SaveChangesAsync();
 
@@ -61,7 +76,7 @@ public class NewsRepositoryTests : IDisposable
         var update = CreateNews("Update", isEvent: false);
         update.Category = NewsCategory.Product;
 
-        await _context.News.AddRangeAsync(announcement, update);
+        _context.News.AddRange(announcement, update);
         await _context.SaveChangesAsync();
 
         // Act
@@ -86,7 +101,7 @@ public class NewsRepositoryTests : IDisposable
         var news = CreateNews("Regular News", isEvent: false);
         var eventNews = CreateNews("Event News", isEvent: true);
 
-        await _context.News.AddRangeAsync(news, eventNews);
+        _context.News.AddRange(news, eventNews);
         await _context.SaveChangesAsync();
 
         // Act
@@ -117,7 +132,7 @@ public class NewsRepositoryTests : IDisposable
         var otherDeptNews = CreateNews("Other Dept News", isEvent: false);
         otherDeptNews.DepartmentId = 10;
 
-        await _context.News.AddRangeAsync(globalNews, deptNews, otherDeptNews);
+        _context.News.AddRange(globalNews, deptNews, otherDeptNews);
         await _context.SaveChangesAsync();
 
         // Act - Department 5 should see global news + department 5 news
@@ -146,7 +161,7 @@ public class NewsRepositoryTests : IDisposable
         var newNews = CreateNews("New News", isEvent: false);
         newNews.CreatedAt = DateTime.UtcNow;
 
-        await _context.News.AddRangeAsync(oldNews, newNews);
+        _context.News.AddRange(oldNews, newNews);
         await _context.SaveChangesAsync();
 
         // Act
@@ -159,6 +174,7 @@ public class NewsRepositoryTests : IDisposable
             pageSize: 10);
 
         // Assert
+        items.Should().HaveCount(2);
         items.First().Title.Should().Be("New News");
         items.Last().Title.Should().Be("Old News");
     }
@@ -169,7 +185,7 @@ public class NewsRepositoryTests : IDisposable
         // Arrange
         for (int i = 0; i < 25; i++)
         {
-            await _context.News.AddAsync(CreateNews($"News {i}", false));
+            _context.News.Add(CreateNews($"News {i}", false));
         }
         await _context.SaveChangesAsync();
 
@@ -187,7 +203,7 @@ public class NewsRepositoryTests : IDisposable
         items.Should().HaveCount(5);
     }
 
-    private static News CreateNews(string title, bool isEvent)
+    private News CreateNews(string title, bool isEvent)
     {
         return new News
         {
@@ -198,6 +214,7 @@ public class NewsRepositoryTests : IDisposable
             Category = NewsCategory.Announcement,
             CreatedAt = DateTime.UtcNow,
             Views = 0,
+            AuthorId = _testAuthor.Id,
             Hashtags = new List<Hashtag>()
         };
     }

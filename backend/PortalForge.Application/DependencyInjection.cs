@@ -21,6 +21,9 @@ public static class DependencyInjection
         services.AddMediatR(assembly, Assembly.Load("PortalForge.Infrastructure"));
 
         // Register pipeline behaviors
+        // ValidationBehavior runs first to validate the request before any other processing
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PortalForge.Application.Common.Behaviors.ValidationBehavior<,>));
+        // AuthorizationBehavior runs second to check if the user is authorized
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PortalForge.Application.Common.Behaviors.AuthorizationBehavior<,>));
 
         // Register validators automatically
