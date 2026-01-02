@@ -66,6 +66,10 @@ globalThis.useIconMapping = vi.fn(() => ({
   getIconifyName: vi.fn((name: string) => `icon-${name}`)
 }))
 
+// Mock useNotificationToast composable - this is imported directly in useApiError
+import { useNotificationToast as actualUseNotificationToast } from '~/composables/useNotificationToast'
+globalThis.useNotificationToast = actualUseNotificationToast
+
 // Mock localStorage
 const localStorageMock = {
   getItem: vi.fn(),
