@@ -205,11 +205,12 @@ public class StorageController : BaseController
     }
 
     /// <summary>
-    /// Serves files from local storage with authorization
-    /// Supports full relative paths including date-based subfolders (e.g., new-images/2025-11-05/file.png)
+    /// Serves files from local storage.
+    /// Public paths (images, news-images, service-icons) are accessible without authentication.
+    /// Private paths (comment-attachments, request-attachments) require authentication.
     /// </summary>
     [HttpGet("files/{**relativePath}")]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<IActionResult> GetFile(string relativePath)
     {
         try
@@ -233,6 +234,15 @@ public class StorageController : BaseController
 
             // Normalize path separators
             relativePath = relativePath.Replace("\\", "/");
+
+            // Check if path requires authentication (private files)
+            var privatePaths = new[] { "comment-attachments", "request-attachments", "sick-leaves", "documents" };
+            var isPrivatePath = privatePaths.Any(p => relativePath.StartsWith(p, StringComparison.OrdinalIgnoreCase));
+
+            if (isPrivatePath && !User.Identity?.IsAuthenticated == true)
+            {
+                return Unauthorized(new { message = "Authentication required for this resource" });
+            }
 
             // Check if file exists
             if (!await _fileStorageService.FileExistsAsync(relativePath))
