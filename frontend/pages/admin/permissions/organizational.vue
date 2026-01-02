@@ -355,9 +355,9 @@ const fetchUsers = async () => {
     for (const user of users.value) {
       await loadUserPermissions(user.id)
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error fetching users:', err)
-    error.value = err.message || 'Nie udało się załadować użytkowników'
+    error.value = err instanceof Error ? err.message : 'Nie udało się załadować użytkowników'
     users.value = []
   } finally {
     loading.value = false
@@ -443,9 +443,9 @@ const savePermissions = async (userId: string) => {
     )
 
     toast.success('Uprawnienia zostały zapisane')
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error saving permissions:', err)
-    toast.error('Nie udało się zapisać uprawnień', err.message)
+    toast.error('Nie udało się zapisać uprawnień', err instanceof Error ? err.message : undefined)
   } finally {
     savingUserId.value = null
   }

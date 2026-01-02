@@ -25,11 +25,30 @@ public class UserRoleGroupRepository : IUserRoleGroupRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<UserRoleGroup>> GetByUserIdsAsync(IEnumerable<Guid> userIds)
+    {
+        var userIdList = userIds.ToList();
+        return await _context.UserRoleGroups
+            .Include(urg => urg.RoleGroup)
+            .Where(urg => userIdList.Contains(urg.UserId))
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<UserRoleGroup>> GetByRoleGroupIdAsync(Guid roleGroupId)
     {
         return await _context.UserRoleGroups
             .Include(urg => urg.User)
             .Where(urg => urg.RoleGroupId == roleGroupId)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<UserRoleGroup>> GetByRoleGroupIdsAsync(IEnumerable<Guid> roleGroupIds)
+    {
+        var roleGroupIdList = roleGroupIds.ToList();
+        return await _context.UserRoleGroups
+            .Where(urg => roleGroupIdList.Contains(urg.RoleGroupId))
             .AsNoTracking()
             .ToListAsync();
     }

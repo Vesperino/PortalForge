@@ -21,8 +21,8 @@ export const useNotificationsStore = defineStore('notifications', {
       try {
         const { getNotifications } = useRequestsApi()
         this.notifications = await getNotifications(unreadOnly)
-      } catch (error: any) {
-        this.error = error.message || 'Failed to fetch notifications'
+      } catch (error: unknown) {
+        this.error = error instanceof Error ? error.message : 'Failed to fetch notifications'
         console.error('Error fetching notifications:', error)
       } finally {
         this.loading = false
@@ -51,7 +51,7 @@ export const useNotificationsStore = defineStore('notifications', {
           notification.readAt = new Date().toISOString()
           this.unreadCount = Math.max(0, this.unreadCount - 1)
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error marking notification as read:', error)
         throw error
       }
@@ -70,7 +70,7 @@ export const useNotificationsStore = defineStore('notifications', {
           }
         })
         this.unreadCount = 0
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error marking all notifications as read:', error)
         throw error
       }

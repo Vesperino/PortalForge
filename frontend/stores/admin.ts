@@ -111,8 +111,8 @@ export const useAdminStore = defineStore('admin', {
         this.pageNumber = response.pageNumber
         this.pageSize = response.pageSize
         this.totalPages = response.totalPages
-      } catch (err: any) {
-        this.error = err.message || 'Failed to fetch users'
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Failed to fetch users'
         console.error('Error fetching users:', err)
       } finally {
         this.loading = false
@@ -138,8 +138,8 @@ export const useAdminStore = defineStore('admin', {
 
         this.currentUser = user
         return user
-      } catch (err: any) {
-        this.error = err.message || 'Failed to fetch user'
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Failed to fetch user'
         console.error('Error fetching user:', err)
         throw err
       } finally {
@@ -168,8 +168,8 @@ export const useAdminStore = defineStore('admin', {
         )
 
         return response
-      } catch (err: any) {
-        this.error = err.message || 'Failed to create user'
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Failed to create user'
         console.error('Error creating user:', err)
         throw err
       } finally {
@@ -198,8 +198,8 @@ export const useAdminStore = defineStore('admin', {
         )
 
         return response
-      } catch (err: any) {
-        this.error = err.message || 'Failed to update user'
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Failed to update user'
         console.error('Error updating user:', err)
         throw err
       } finally {
@@ -227,8 +227,8 @@ export const useAdminStore = defineStore('admin', {
 
         // Remove from local state
         this.users = this.users.filter(u => u.id !== userId)
-      } catch (err: any) {
-        this.error = err.message || 'Failed to delete user'
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Failed to delete user'
         console.error('Error deleting user:', err)
         throw err
       } finally {

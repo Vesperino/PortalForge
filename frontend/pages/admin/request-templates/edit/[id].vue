@@ -464,9 +464,9 @@ const loadTemplate = async () => {
     roleGroups.value = groupsResult
     departments.value = departmentsResult
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error loading template:', err)
-    error.value = err.message || 'Nie udało się załadować szablonu'
+    error.value = err instanceof Error ? err.message : 'Nie udało się załadować szablonu'
   } finally {
     loading.value = false
     loadingData.value = false
@@ -587,9 +587,10 @@ const saveTemplate = async () => {
     setTimeout(() => {
       router.push('/admin/request-templates')
     }, 1000)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating template:', error)
-    const errorMessage = error?.response?.data?.message || error?.message || 'Nieznany błąd'
+    const errorData = error as { response?: { data?: { message?: string } }; message?: string }
+    const errorMessage = errorData?.response?.data?.message || errorData?.message || 'Nieznany błąd'
     toast.error('Błąd podczas aktualizacji szablonu', errorMessage)
   } finally {
     saving.value = false

@@ -33,8 +33,8 @@ async function handleLogin() {
     if (!response.user.mustChangePassword) {
       await router.push('/dashboard')
     }
-  } catch (err: any) {
-    error.value = err.message || 'Wystąpił błąd podczas logowania'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Wystąpił błąd podczas logowania'
     console.error('Login error:', err)
   } finally {
     isLoading.value = false

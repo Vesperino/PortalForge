@@ -264,7 +264,7 @@ const loadDepartments = async () => {
       headers: getAuthHeaders()
     })
     departments.value = response
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error loading departments:', err)
   }
 }
@@ -290,8 +290,8 @@ const handleSubmit = async () => {
 
     await adminStore.createUser(form.value)
     await navigateTo('/admin/users')
-  } catch (err: any) {
-    error.value = err.message || 'Nie udało się utworzyć użytkownika'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się utworzyć użytkownika'
   } finally {
     loading.value = false
   }

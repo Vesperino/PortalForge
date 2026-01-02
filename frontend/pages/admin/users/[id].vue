@@ -270,7 +270,7 @@ const loadDepartments = async () => {
       headers: getAuthHeaders()
     })
     departments.value = response
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error loading departments:', err)
   }
 }
@@ -318,8 +318,8 @@ const loadUser = async () => {
       isActive: user.isActive,
       NewPassword: undefined,  // PascalCase to match backend
     }
-  } catch (err: any) {
-    error.value = err.message || 'Nie udało się załadować danych użytkownika'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się załadować danych użytkownika'
   } finally {
     loading.value = false
   }
@@ -358,8 +358,8 @@ const handleSubmit = async () => {
     showSuccessToast()
 
     await navigateTo('/admin/users')
-  } catch (err: any) {
-    error.value = err.message || 'Nie udało się zaktualizować użytkownika'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się zaktualizować użytkownika'
   } finally {
     loading.value = false
   }

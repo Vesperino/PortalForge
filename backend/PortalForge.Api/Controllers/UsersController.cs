@@ -74,6 +74,7 @@ public class UsersController : BaseController
     }
 
     [HttpPost]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<CreateUserResult>> CreateUser([FromBody] CreateUserRequest request)
     {
         _logger.LogInformation("Creating new user: {Email}", request.Email);
@@ -98,6 +99,7 @@ public class UsersController : BaseController
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<UpdateUserResult>> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
     {
         _logger.LogInformation("Updating user: {UserId}", id);
@@ -124,6 +126,7 @@ public class UsersController : BaseController
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<DeleteUserResult>> DeleteUser(Guid id)
     {
         _logger.LogInformation("Deleting user: {UserId}", id);
@@ -142,6 +145,7 @@ public class UsersController : BaseController
     /// Bulk assign multiple employees to a department
     /// </summary>
     [HttpPost("bulk-assign-department")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<int>> BulkAssignDepartment([FromBody] BulkAssignDepartmentRequest request)
     {
         _logger.LogInformation("Bulk assigning {Count} employees to department {DepartmentId}",

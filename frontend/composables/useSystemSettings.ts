@@ -29,8 +29,8 @@ export function useSystemSettings() {
       
       settings.value = response
       return response
-    } catch (err: any) {
-      error.value = err?.message || 'Failed to fetch settings'
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to fetch settings'
       console.error('getSettings error:', err)
       throw err
     } finally {
@@ -52,8 +52,8 @@ export function useSystemSettings() {
       
       // Refresh settings after update
       await getSettings()
-    } catch (err: any) {
-      error.value = err?.message || 'Failed to update settings'
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to update settings'
       console.error('updateSettings error:', err)
       throw err
     } finally {
@@ -61,7 +61,7 @@ export function useSystemSettings() {
     }
   }
 
-  async function testStorage(): Promise<any> {
+  async function testStorage(): Promise<unknown> {
     isLoading.value = true
     error.value = null
 
@@ -71,10 +71,10 @@ export function useSystemSettings() {
         method: 'POST',
         headers
       })
-      
+
       return response
-    } catch (err: any) {
-      error.value = err?.message || 'Failed to test storage'
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to test storage'
       console.error('testStorage error:', err)
       throw err
     } finally {

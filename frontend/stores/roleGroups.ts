@@ -48,8 +48,8 @@ export const useRoleGroupsStore = defineStore('roleGroups', {
         ) as GetRoleGroupsResult
 
         this.roleGroups = response.roleGroups
-      } catch (err: any) {
-        this.error = err.message || 'Failed to fetch role groups'
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Failed to fetch role groups'
         console.error('Error fetching role groups:', err)
       } finally {
         this.loading = false

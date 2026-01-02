@@ -208,9 +208,10 @@ async function handleSubmit(): Promise<void> {
 
     // Redirect to roles list
     await router.push('/admin/roles')
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating role group:', error)
-    errorMessage.value = error?.data?.message || 'Nie udało się utworzyć grupy ról'
+    const errorData = error as { data?: { message?: string } }
+    errorMessage.value = errorData?.data?.message || 'Nie udało się utworzyć grupy ról'
   } finally {
     isSubmitting.value = false
   }

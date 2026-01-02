@@ -325,9 +325,10 @@ export const useRequestsApi = () => {
         }
       ) as { count: number }
       return response.count
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Silently handle errors for unread count - backend might not be fully implemented
-      if (error?.statusCode !== 502 && error?.statusCode !== 404) {
+      const err = error as { statusCode?: number }
+      if (err?.statusCode !== 502 && err?.statusCode !== 404) {
         console.error('Error fetching unread count:', error)
       }
       return 0 // Return 0 instead of throwing

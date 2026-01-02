@@ -82,9 +82,10 @@ async function handleFileChange(event: Event) {
       emit('update:modelValue', response.url)
       uploadProgress.value = 100
     }
-  } catch (error: any) {
-    console.error('Upload error:', error)
-    uploadError.value = error?.data?.message || 'Nie udało się przesłać pliku'
+  } catch (err: unknown) {
+    console.error('Upload error:', err)
+    const errorData = err as { data?: { message?: string } }
+    uploadError.value = errorData?.data?.message || 'Nie udało się przesłać pliku'
   } finally {
     isUploading.value = false
     // Reset file input

@@ -100,9 +100,10 @@ async function submitQuiz() {
     } else {
       error.value = response.message || 'Nie udało się wysłać quizu'
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Quiz submission error:', err)
-    error.value = err?.data?.message || 'Wystąpił błąd podczas wysyłania quizu'
+    const errorData = err as { data?: { message?: string } }
+    error.value = errorData?.data?.message || 'Wystąpił błąd podczas wysyłania quizu'
   } finally {
     isSubmitting.value = false
   }

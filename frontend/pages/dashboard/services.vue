@@ -76,8 +76,8 @@ async function loadServices() {
   error.value = null
   try {
     services.value = await fetchMyServices()
-  } catch (err: any) {
-    error.value = err.message || 'Nie udało się załadować serwisów'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się załadować serwisów'
     console.error('Error loading services:', err)
   } finally {
     loading.value = false

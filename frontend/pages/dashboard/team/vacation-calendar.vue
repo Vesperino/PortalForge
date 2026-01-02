@@ -115,9 +115,9 @@ const loadPermissions = async () => {
     } else {
       error.value = 'Brak dostępnych działów do wyświetlenia'
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error loading permissions:', err)
-    error.value = err.message || 'Nie udało się załadować uprawnień'
+    error.value = err instanceof Error ? err.message : 'Nie udało się załadować uprawnień'
   } finally {
     isLoadingPermissions.value = false
   }
@@ -143,9 +143,9 @@ const fetchCalendarData = async () => {
     ) as VacationCalendar
 
     calendarData.value = response
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error fetching calendar data:', err)
-    error.value = err.message || 'Nie udało się pobrać danych kalendarza'
+    error.value = err instanceof Error ? err.message : 'Nie udało się pobrać danych kalendarza'
   } finally {
     isLoading.value = false
   }
@@ -190,9 +190,10 @@ const handleExportPdf = async () => {
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Export PDF error:', err)
-    if (err.statusCode === 501) {
+    const errorData = err as { statusCode?: number }
+    if (errorData.statusCode === 501) {
       toast.info('Eksport PDF będzie dostępny w przyszłej wersji', 'Użyj eksportu Excel jako alternatywy.')
     } else {
       toast.error('Nie udało się wyeksportować do PDF')
@@ -223,9 +224,10 @@ const handleExportExcel = async () => {
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Export Excel error:', err)
-    if (err.statusCode === 501) {
+    const errorData = err as { statusCode?: number }
+    if (errorData.statusCode === 501) {
       toast.info('Eksport Excel będzie dostępny w przyszłej wersji')
     } else {
       toast.error('Nie udało się wyeksportować do Excel')

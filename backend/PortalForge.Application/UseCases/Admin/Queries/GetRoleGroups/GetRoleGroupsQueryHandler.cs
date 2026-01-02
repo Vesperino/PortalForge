@@ -22,45 +22,45 @@ public class GetRoleGroupsQueryHandler : IRequestHandler<GetRoleGroupsQuery, Get
         _logger.LogInformation("Getting all role groups");
 
         var roleGroups = (await _unitOfWork.RoleGroupRepository.GetAllAsync()).ToList();
-        var roleGroupDtos = new List<RoleGroupDto>();
+        var roleGroupIds = roleGroups.Select(rg => rg.Id).ToList();
 
-        foreach (var roleGroup in roleGroups)
+        // Batch load all user role groups for counting (prevents N+1 query)
+        var allUserRoleGroups = await _unitOfWork.UserRoleGroupRepository.GetByRoleGroupIdsAsync(roleGroupIds);
+        var userCountLookup = allUserRoleGroups
+            .GroupBy(urg => urg.RoleGroupId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        // Batch load all role group permissions if needed (prevents N+1 query)
+        Dictionary<Guid, List<PermissionDto>> permissionsLookup = new();
+        if (request.IncludePermissions)
         {
-            var permissions = new List<PermissionDto>();
+            var allRoleGroupPermissions = await _unitOfWork.RoleGroupPermissionRepository.GetByRoleGroupIdsAsync(roleGroupIds);
 
-            if (request.IncludePermissions)
-            {
-                var roleGroupPermissions = await _unitOfWork.RoleGroupPermissionRepository.GetByRoleGroupIdAsync(roleGroup.Id);
-                var permissionIds = roleGroupPermissions.Select(rgp => rgp.PermissionId).ToList();
-                var allPermissions = (await _unitOfWork.PermissionRepository.GetAllAsync())
-                    .Where(p => permissionIds.Contains(p.Id))
-                    .ToList();
-
-                permissions = allPermissions.Select(p => new PermissionDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    Category = p.Category
-                }).ToList();
-            }
-
-            // Count users in this role group
-            var userRoleGroups = await _unitOfWork.UserRoleGroupRepository.GetByRoleGroupIdAsync(roleGroup.Id);
-            var userCount = userRoleGroups.Count();
-
-            roleGroupDtos.Add(new RoleGroupDto
-            {
-                Id = roleGroup.Id,
-                Name = roleGroup.Name,
-                Description = roleGroup.Description,
-                IsSystemRole = roleGroup.IsSystemRole,
-                CreatedAt = roleGroup.CreatedAt,
-                UpdatedAt = roleGroup.UpdatedAt,
-                Permissions = permissions,
-                UserCount = userCount
-            });
+            permissionsLookup = allRoleGroupPermissions
+                .GroupBy(rgp => rgp.RoleGroupId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(rgp => new PermissionDto
+                    {
+                        Id = rgp.Permission.Id,
+                        Name = rgp.Permission.Name,
+                        Description = rgp.Permission.Description,
+                        Category = rgp.Permission.Category
+                    }).ToList()
+                );
         }
+
+        var roleGroupDtos = roleGroups.Select(roleGroup => new RoleGroupDto
+        {
+            Id = roleGroup.Id,
+            Name = roleGroup.Name,
+            Description = roleGroup.Description,
+            IsSystemRole = roleGroup.IsSystemRole,
+            CreatedAt = roleGroup.CreatedAt,
+            UpdatedAt = roleGroup.UpdatedAt,
+            Permissions = permissionsLookup.TryGetValue(roleGroup.Id, out var permissions) ? permissions : new List<PermissionDto>(),
+            UserCount = userCountLookup.TryGetValue(roleGroup.Id, out var count) ? count : 0
+        }).ToList();
 
         _logger.LogInformation("Found {Count} role groups", roleGroupDtos.Count);
 

@@ -248,11 +248,12 @@ const submitQuiz = async () => {
 
     // Emit completed regardless of pass/fail - approver will see result and decide
     emit('quizCompleted')
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error submitting quiz:', error)
+    const errorData = error as { data?: { message?: string } }
     quizResult.value = {
       success: false,
-      message: error.data?.message || 'Nie udało się wysłać odpowiedzi. Spróbuj ponownie.',
+      message: errorData.data?.message || 'Nie udało się wysłać odpowiedzi. Spróbuj ponownie.',
       score: 0,
       passed: false,
       requiredScore: props.passingScore

@@ -35,9 +35,10 @@ export function useAuth() {
       }
 
       return response
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error)
-      throw new Error(error?.data?.message || 'Nieprawidłowy email lub hasło')
+      const errorData = error as { data?: { message?: string } }
+      throw new Error(errorData?.data?.message || 'Nieprawidłowy email lub hasło')
     }
   }
 

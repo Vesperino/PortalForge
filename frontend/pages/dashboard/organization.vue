@@ -48,8 +48,8 @@ const loadData = async () => {
       loadDepartments(),
       loadAllUsers()
     ])
-  } catch (err: any) {
-    error.value = err.message || 'Nie udało się pobrać danych'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się pobrać danych'
     console.error('Error loading data:', err)
   } finally {
     isLoading.value = false
@@ -63,7 +63,7 @@ const loadDepartments = async () => {
       headers: getAuthHeaders()
     })
     departments.value = response
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error loading departments:', err)
   }
 }
@@ -75,7 +75,7 @@ const loadAllUsers = async () => {
       headers: getAuthHeaders()
     })
     allEmployees.value = response.users || []
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error loading users:', err)
   }
 }

@@ -31,6 +31,7 @@ public class StorageController : BaseController
     }
 
     [HttpPost("upload/news-image")]
+    [Authorize(Policy = "MarketingOrAdmin")]
     public async Task<ActionResult<UploadImageResponse>> UploadNewsImage(IFormFile file)
     {
         try
@@ -167,6 +168,7 @@ public class StorageController : BaseController
     }
 
     [HttpDelete("delete/news-image")]
+    [Authorize(Policy = "MarketingOrAdmin")]
     public async Task<ActionResult> DeleteNewsImage([FromQuery] string filePath)
     {
         try

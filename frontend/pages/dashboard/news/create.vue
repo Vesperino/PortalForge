@@ -80,8 +80,8 @@ async function handleSubmit() {
     setTimeout(() => {
       router.push(`/dashboard/news/${newsId}`)
     }, 1000)
-  } catch (err: any) {
-    error.value = err?.message || 'Nie udało się utworzyć newsa. Spróbuj ponownie.'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się utworzyć newsa. Spróbuj ponownie.'
     console.error(err)
   } finally {
     isSubmitting.value = false

@@ -23,6 +23,16 @@ public class RoleGroupPermissionRepository : IRoleGroupPermissionRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<RoleGroupPermission>> GetByRoleGroupIdsAsync(IEnumerable<Guid> roleGroupIds)
+    {
+        var roleGroupIdList = roleGroupIds.ToList();
+        return await _context.RoleGroupPermissions
+            .Include(rgp => rgp.Permission)
+            .Where(rgp => roleGroupIdList.Contains(rgp.RoleGroupId))
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<RoleGroupPermission>> GetByPermissionIdAsync(Guid permissionId)
     {
         return await _context.RoleGroupPermissions

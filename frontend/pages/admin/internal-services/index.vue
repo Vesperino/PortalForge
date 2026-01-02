@@ -251,8 +251,8 @@ async function loadServices() {
   error.value = null
   try {
     services.value = await fetchAllServices()
-  } catch (err: any) {
-    error.value = err.message || 'Nie udało się załadować serwisów'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się załadować serwisów'
     console.error('Error loading services:', err)
   } finally {
     loading.value = false
@@ -285,8 +285,8 @@ async function confirmDelete(service: InternalService) {
       await deleteService(service.id)
       await loadServices()
       toast.success('Serwis został usunięty')
-    } catch (err: any) {
-      toast.error('Nie udało się usunąć serwisu', err.message)
+    } catch (err: unknown) {
+      toast.error('Nie udało się usunąć serwisu', err instanceof Error ? err.message : undefined)
     }
   }
 }

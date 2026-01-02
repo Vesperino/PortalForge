@@ -124,8 +124,8 @@ const loadDepartmentTree = async () => {
       headers: getAuthHeaders()
     })
     departmentTree.value = response
-  } catch (err: any) {
-    error.value = err.message || 'Nie udało się pobrać struktury organizacyjnej'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się pobrać struktury organizacyjnej'
     console.error('Error loading department tree:', err)
   }
 }
@@ -145,8 +145,8 @@ const loadAllUsers = async () => {
       console.error('Unexpected response format:', response)
       allUsers.value = []
     }
-  } catch (err: any) {
-    error.value = err.message || 'Nie udało się pobrać listy pracowników'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się pobrać listy pracowników'
     console.error('Error loading users:', err)
     allUsers.value = []
   }

@@ -540,9 +540,10 @@ const saveTemplate = async () => {
     setTimeout(() => {
       navigateTo('/admin/request-templates')
     }, 1000)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating template:', error)
-    const errorMessage = error?.response?.data?.message || error?.message || 'Nieznany błąd'
+    const errorData = error as { response?: { data?: { message?: string } }; message?: string }
+    const errorMessage = errorData?.response?.data?.message || errorData?.message || 'Nieznany błąd'
     toast.error('Błąd podczas tworzenia szablonu', errorMessage)
   } finally {
     saving.value = false

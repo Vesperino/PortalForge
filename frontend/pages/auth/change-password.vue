@@ -75,8 +75,9 @@ async function handleChangePassword() {
       router.push('/dashboard')
     }, 2000)
     
-  } catch (err: any) {
-    error.value = err?.data?.message || 'Wystąpił błąd podczas zmiany hasła'
+  } catch (err: unknown) {
+    const errorData = err as { data?: { message?: string } }
+    error.value = errorData?.data?.message || 'Wystąpił błąd podczas zmiany hasła'
     console.error('Change password error:', err)
   } finally {
     isLoading.value = false

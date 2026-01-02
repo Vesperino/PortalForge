@@ -219,11 +219,12 @@ const loadRequest = async () => {
         console.warn('Failed to load request template for details mapping', e)
       }
     }
-  } catch (err: any) {
-    if (err.statusCode === 404) {
+  } catch (err: unknown) {
+    const errorData = err as { statusCode?: number; message?: string }
+    if (errorData.statusCode === 404) {
       error.value = 'Wniosek nie został znaleziony'
     } else {
-      error.value = err.message || 'Nie udało się pobrać szczegółów wniosku'
+      error.value = errorData.message || 'Nie udało się pobrać szczegółów wniosku'
     }
     console.error('Error loading request:', err)
   } finally {
@@ -249,8 +250,8 @@ const handleApprove = async () => {
     // Close modal and reset
     showApproveModal.value = false
     approveComment.value = ''
-  } catch (err: any) {
-    error.value = err.message || 'Nie udało się zatwierdzić wniosku'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się zatwierdzić wniosku'
     console.error('Error approving request:', err)
   } finally {
     isSubmitting.value = false
@@ -280,8 +281,8 @@ const handleReject = async () => {
     // Close modal and reset
     showRejectModal.value = false
     rejectComment.value = ''
-  } catch (err: any) {
-    error.value = err.message || 'Nie udało się odrzucić wniosku'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Nie udało się odrzucić wniosku'
     console.error('Error rejecting request:', err)
   } finally {
     isSubmitting.value = false
@@ -309,7 +310,7 @@ const handleAddComment = async (data: { comment: string; attachments: File[] }) 
 
     // Reload request to get new comment
     await loadRequest()
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error adding comment:', err)
     toast.error('Nie udało się dodać komentarza')
   }

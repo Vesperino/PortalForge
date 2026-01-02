@@ -77,42 +77,37 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, GetUsersResul
             .Take(request.PageSize)
             .ToList();
 
-        // Get role groups for each user
-        var userDtos = new List<AdminUserDto>();
-        foreach (var user in users)
-        {
-            var userRoleGroups = await _unitOfWork.UserRoleGroupRepository.GetByUserIdAsync(user.Id);
-            var roleGroupIds = userRoleGroups.Select(urg => urg.RoleGroupId).ToList();
-            var roleGroups = (await _unitOfWork.RoleGroupRepository.GetAllAsync())
-                .Where(rg => roleGroupIds.Contains(rg.Id))
-                .Select(rg => rg.Name)
-                .ToList();
+        // Batch load role groups for all users (prevents N+1 query)
+        var userIds = users.Select(u => u.Id).ToList();
+        var allUserRoleGroups = await _unitOfWork.UserRoleGroupRepository.GetByUserIdsAsync(userIds);
+        var userRoleGroupsLookup = allUserRoleGroups
+            .GroupBy(urg => urg.UserId)
+            .ToDictionary(g => g.Key, g => g.Select(urg => urg.RoleGroup.Name).ToList());
 
-            userDtos.Add(new AdminUserDto
-            {
-                Id = user.Id,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Department = user.Department,
-                DepartmentId = user.DepartmentId,
-                Position = user.Position,
-                PositionId = user.PositionId,
-                Role = user.Role.ToString(),
-                IsActive = user.IsActive,
-                IsEmailVerified = user.IsEmailVerified,
-                MustChangePassword = user.MustChangePassword,
-                PhoneNumber = user.PhoneNumber,
-                ProfilePhotoUrl = user.ProfilePhotoUrl,
-                CreatedAt = user.CreatedAt,
-                LastLoginAt = user.LastLoginAt,
-                RoleGroups = roleGroups,
-                AnnualVacationDays = user.AnnualVacationDays ?? 26,
-                VacationDaysUsed = user.VacationDaysUsed ?? 0,
-                OnDemandVacationDaysUsed = user.OnDemandVacationDaysUsed ?? 0,
-                CarriedOverVacationDays = user.CarriedOverVacationDays ?? 0
-            });
-        }
+        var userDtos = users.Select(user => new AdminUserDto
+        {
+            Id = user.Id,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Department = user.Department,
+            DepartmentId = user.DepartmentId,
+            Position = user.Position,
+            PositionId = user.PositionId,
+            Role = user.Role.ToString(),
+            IsActive = user.IsActive,
+            IsEmailVerified = user.IsEmailVerified,
+            MustChangePassword = user.MustChangePassword,
+            PhoneNumber = user.PhoneNumber,
+            ProfilePhotoUrl = user.ProfilePhotoUrl,
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt,
+            RoleGroups = userRoleGroupsLookup.TryGetValue(user.Id, out var roleGroups) ? roleGroups : new List<string>(),
+            AnnualVacationDays = user.AnnualVacationDays ?? 26,
+            VacationDaysUsed = user.VacationDaysUsed ?? 0,
+            OnDemandVacationDaysUsed = user.OnDemandVacationDaysUsed ?? 0,
+            CarriedOverVacationDays = user.CarriedOverVacationDays ?? 0
+        }).ToList();
 
         _logger.LogInformation("Found {Count} users (total: {TotalCount})", userDtos.Count, totalCount);
 

@@ -115,8 +115,8 @@ async function handleAddCategory() {
     newCategoryName.value = ''
     toast.success('Kategoria została dodana')
     emit('saved')
-  } catch (err: any) {
-    toast.error('Nie udało się dodać kategorii', err.message)
+  } catch (err: unknown) {
+    toast.error('Nie udało się dodać kategorii', err instanceof Error ? err.message : 'Nieznany błąd')
   }
 }
 
@@ -128,8 +128,8 @@ async function handleDeleteCategory(id: string) {
       await deleteCategory(id)
       toast.success('Kategoria została usunięta')
       emit('saved')
-    } catch (err: any) {
-      toast.error('Nie udało się usunąć kategorii', err.message)
+    } catch (err: unknown) {
+      toast.error('Nie udało się usunąć kategorii', err instanceof Error ? err.message : 'Nieznany błąd')
     }
   }
 }

@@ -73,9 +73,9 @@ const fetchVacationData = async () => {
     vacationSummary.value = await getUserVacationSummary(currentUser.value.id)
     // Load my vacations for history (selected year)
     myVacations.value = await getMyVacations(selectedYear.value)
-  } catch (error: any) {
-    console.error('Error fetching vacation data:', error)
-    vacationError.value = error.message || 'Nie udało się pobrać danych urlopowych'
+  } catch (err: unknown) {
+    console.error('Error fetching vacation data:', err)
+    vacationError.value = err instanceof Error ? err.message : 'Nie udało się pobrać danych urlopowych'
   } finally {
     isLoadingVacation.value = false
   }
