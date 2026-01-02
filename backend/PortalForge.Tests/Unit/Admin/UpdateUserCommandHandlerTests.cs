@@ -56,13 +56,13 @@ public class UpdateUserCommandHandlerTests
             IsActive = true
         };
 
-        _mockUnitOfWork.Setup(u => u.UserRepository.GetByIdAsync(userId))
+        _mockUnitOfWork.Setup(u => u.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
 
         _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(departmentId))
             .ReturnsAsync(department);
 
-        _mockUnitOfWork.Setup(u => u.UserRoleGroupRepository.DeleteByUserIdAsync(userId))
+        _mockUnitOfWork.Setup(u => u.UserRoleGroupRepository.DeleteByUserIdAsync(userId, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _mockUnitOfWork.Setup(u => u.PositionRepository.GetByNameAsync(It.IsAny<string>()))
@@ -96,7 +96,7 @@ public class UpdateUserCommandHandlerTests
                 user.Id == userId &&
                 user.DepartmentId == departmentId &&
                 user.Department == "IT Department"
-            )), Times.Once);
+            ), It.IsAny<CancellationToken>()), Times.Once);
 
         _mockUnitOfWork.Verify(u => u.DepartmentRepository.GetByIdAsync(departmentId), Times.Once);
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.Exactly(2));
@@ -107,7 +107,7 @@ public class UpdateUserCommandHandlerTests
     {
         var userId = Guid.NewGuid();
 
-        _mockUnitOfWork.Setup(u => u.UserRepository.GetByIdAsync(userId))
+        _mockUnitOfWork.Setup(u => u.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         var command = new UpdateUserCommand

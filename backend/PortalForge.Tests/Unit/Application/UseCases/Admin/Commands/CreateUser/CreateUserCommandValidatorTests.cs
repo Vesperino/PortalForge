@@ -23,7 +23,7 @@ public class CreateUserCommandValidatorTests
     private void SetupDefaultMocks()
     {
         // Setup default mocks for empty/invalid values that trigger async validation
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(It.IsAny<string>()))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(It.IsAny<Guid>()))
@@ -160,7 +160,7 @@ public class CreateUserCommandValidatorTests
         };
 
         // Override default mock to return existing user
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = Guid.NewGuid(), Email = command.Email });
 
         // Act
@@ -190,7 +190,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -221,7 +221,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -250,7 +250,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -283,7 +283,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -311,7 +311,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -342,7 +342,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -371,7 +371,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -401,7 +401,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -432,7 +432,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -461,7 +461,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -491,7 +491,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -520,7 +520,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -552,7 +552,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(departmentId))
@@ -585,7 +585,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -612,7 +612,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -641,7 +641,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -675,7 +675,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -705,7 +705,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -735,7 +735,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -762,7 +762,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -794,7 +794,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -830,7 +830,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -857,7 +857,7 @@ public class CreateUserCommandValidatorTests
             CreatedBy = Guid.Empty
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act

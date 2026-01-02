@@ -58,7 +58,7 @@ public class LoginCommandHandlerTests
             .ReturnsAsync(expectedAuthResult);
 
         _unitOfWorkMock
-            .Setup(x => x.UserRepository.GetByIdAsync(expectedAuthResult.UserId!.Value))
+            .Setup(x => x.UserRepository.GetByIdAsync(expectedAuthResult.UserId!.Value, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Domain.Entities.User
             {
                 Id = expectedAuthResult.UserId.Value,

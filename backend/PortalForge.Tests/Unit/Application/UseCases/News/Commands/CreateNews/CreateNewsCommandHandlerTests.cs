@@ -45,7 +45,7 @@ public class CreateNewsCommandHandlerTests
 
         var author = new User { Id = authorId, Email = "test@example.com" };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(authorId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(authorId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(author);
 
         _unitOfWorkMock.Setup(x => x.HashtagRepository.GetOrCreateHashtagsAsync(It.IsAny<List<string>>()))
@@ -82,7 +82,7 @@ public class CreateNewsCommandHandlerTests
             Category = "Announcement"
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(It.IsAny<Guid>()))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -112,7 +112,7 @@ public class CreateNewsCommandHandlerTests
         var author = new User { Id = authorId, Email = "test@example.com" };
         var eventEntity = new Event { Id = eventId, Title = "Test Event" };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(authorId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(authorId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(author);
         _unitOfWorkMock.Setup(x => x.EventRepository.GetByIdAsync(eventId))
             .ReturnsAsync(eventEntity);

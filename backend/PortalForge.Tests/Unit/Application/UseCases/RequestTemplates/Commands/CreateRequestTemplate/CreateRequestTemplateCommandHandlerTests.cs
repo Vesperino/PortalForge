@@ -61,7 +61,7 @@ public class CreateRequestTemplateCommandHandlerTests
         };
 
         RequestTemplate? capturedTemplate = null;
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.CreateAsync(It.IsAny<RequestTemplate>()))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.CreateAsync(It.IsAny<RequestTemplate>(), It.IsAny<CancellationToken>()))
             .Callback<RequestTemplate>(t => capturedTemplate = t)
             .ReturnsAsync((RequestTemplate t) => t.Id);
 
@@ -87,7 +87,7 @@ public class CreateRequestTemplateCommandHandlerTests
         capturedTemplate.Fields.Should().HaveCount(1);
         capturedTemplate.ApprovalStepTemplates.Should().HaveCount(1);
 
-        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.CreateAsync(It.IsAny<RequestTemplate>()), Times.Once);
+        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.CreateAsync(It.IsAny<RequestTemplate>(), It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Once);
     }
 
@@ -128,7 +128,7 @@ public class CreateRequestTemplateCommandHandlerTests
         };
 
         RequestTemplate? capturedTemplate = null;
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.CreateAsync(It.IsAny<RequestTemplate>()))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.CreateAsync(It.IsAny<RequestTemplate>(), It.IsAny<CancellationToken>()))
             .Callback<RequestTemplate>(t => capturedTemplate = t)
             .ReturnsAsync((RequestTemplate t) => t.Id);
 
@@ -165,7 +165,7 @@ public class CreateRequestTemplateCommandHandlerTests
         };
 
         RequestTemplate? capturedTemplate = null;
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.CreateAsync(It.IsAny<RequestTemplate>()))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.CreateAsync(It.IsAny<RequestTemplate>(), It.IsAny<CancellationToken>()))
             .Callback<RequestTemplate>(t => capturedTemplate = t)
             .ReturnsAsync((RequestTemplate t) => t.Id);
 
@@ -206,7 +206,7 @@ public class CreateRequestTemplateCommandHandlerTests
         };
 
         RequestTemplate? capturedTemplate = null;
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.CreateAsync(It.IsAny<RequestTemplate>()))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.CreateAsync(It.IsAny<RequestTemplate>(), It.IsAny<CancellationToken>()))
             .Callback<RequestTemplate>(t => capturedTemplate = t)
             .ReturnsAsync((RequestTemplate t) => t.Id);
 
@@ -262,7 +262,7 @@ public class CreateRequestTemplateCommandHandlerTests
         };
 
         RequestTemplate? capturedTemplate = null;
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.CreateAsync(It.IsAny<RequestTemplate>()))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.CreateAsync(It.IsAny<RequestTemplate>(), It.IsAny<CancellationToken>()))
             .Callback<RequestTemplate>(t => capturedTemplate = t)
             .ReturnsAsync((RequestTemplate t) => t.Id);
 

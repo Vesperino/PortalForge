@@ -23,7 +23,7 @@ public class UpdateUserCommandValidatorTests
     private void SetupDefaultMocks()
     {
         // Setup default mocks for empty/invalid values that trigger async validation
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(It.IsAny<Guid>()))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(It.IsAny<Guid>()))
@@ -57,7 +57,7 @@ public class UpdateUserCommandValidatorTests
         };
 
         // Override default mocks for valid case
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(departmentId))
@@ -116,7 +116,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -146,7 +146,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -177,7 +177,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -206,7 +206,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -236,7 +236,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -267,7 +267,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -296,7 +296,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -326,7 +326,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -355,7 +355,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -388,7 +388,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(departmentId))
@@ -421,7 +421,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -448,7 +448,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -477,7 +477,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -510,7 +510,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         _unitOfWorkMock.Setup(x => x.PositionRepository.GetByIdAsync(positionId))
@@ -543,7 +543,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -574,7 +574,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -604,7 +604,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -634,7 +634,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -661,7 +661,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -693,7 +693,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -729,7 +729,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.NewGuid()
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act
@@ -756,7 +756,7 @@ public class UpdateUserCommandValidatorTests
             UpdatedBy = Guid.Empty
         };
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = userId });
 
         // Act

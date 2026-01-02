@@ -59,7 +59,7 @@ public class NewsRepositoryTests : IDisposable
         announcement.Category = NewsCategory.Announcement;
 
         var update = CreateNews("Update", isEvent: false);
-        update.Category = NewsCategory.Update;
+        update.Category = NewsCategory.Product;
 
         await _context.News.AddRangeAsync(announcement, update);
         await _context.SaveChangesAsync();
@@ -195,7 +195,7 @@ public class NewsRepositoryTests : IDisposable
             Content = $"Content for {title}",
             Excerpt = $"Excerpt for {title}",
             IsEvent = isEvent,
-            Category = NewsCategory.General,
+            Category = NewsCategory.Announcement,
             CreatedAt = DateTime.UtcNow,
             Views = 0,
             Hashtags = new List<Hashtag>()

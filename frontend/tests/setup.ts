@@ -2,6 +2,7 @@ import { vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { readonly, ref, computed } from 'vue'
 import { useAuthStore as authStoreComposable } from '~/stores/auth'
+import { useNotificationToast as actualUseNotificationToast } from '~/composables/useNotificationToast'
 
 // Create and activate a Pinia instance for tests
 setActivePinia(createPinia())
@@ -67,7 +68,6 @@ globalThis.useIconMapping = vi.fn(() => ({
 }))
 
 // Mock useNotificationToast composable - this is imported directly in useApiError
-import { useNotificationToast as actualUseNotificationToast } from '~/composables/useNotificationToast'
 globalThis.useNotificationToast = actualUseNotificationToast
 
 // Mock localStorage

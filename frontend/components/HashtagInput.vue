@@ -14,6 +14,7 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   allowCustom: true,
   suggestions: () => [],
+  label: undefined,
   placeholder: 'Dodaj hashtag...'
 })
 

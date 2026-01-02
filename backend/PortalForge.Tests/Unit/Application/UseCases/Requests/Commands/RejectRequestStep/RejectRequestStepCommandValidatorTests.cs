@@ -23,10 +23,10 @@ public class RejectRequestStepCommandValidatorTests
     private void SetupDefaultMocks()
     {
         // Setup default mocks for empty/invalid values that trigger async validation
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(It.IsAny<Guid>()))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Request?)null);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(It.IsAny<Guid>()))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
     }
 
@@ -47,10 +47,10 @@ public class RejectRequestStepCommandValidatorTests
         };
 
         // Override default mocks for valid case
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Request { Id = requestId });
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(approverId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(approverId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = approverId });
 
         // Act
@@ -73,7 +73,7 @@ public class RejectRequestStepCommandValidatorTests
             Reason = "Valid reason"
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(Guid.Empty))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(Guid.Empty, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Request?)null);
 
         // Act
@@ -97,7 +97,7 @@ public class RejectRequestStepCommandValidatorTests
             Reason = "Valid reason"
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Request { Id = requestId });
 
         // Act
@@ -123,10 +123,10 @@ public class RejectRequestStepCommandValidatorTests
             Reason = "Valid reason"
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Request { Id = requestId });
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(Guid.Empty))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(Guid.Empty, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -152,10 +152,10 @@ public class RejectRequestStepCommandValidatorTests
             Reason = string.Empty
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Request { Id = requestId });
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(approverId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(approverId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = approverId });
 
         // Act
@@ -183,10 +183,10 @@ public class RejectRequestStepCommandValidatorTests
             Reason = "Short" // Less than 10 characters
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Request { Id = requestId });
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(approverId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(approverId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = approverId });
 
         // Act
@@ -214,10 +214,10 @@ public class RejectRequestStepCommandValidatorTests
             Reason = new string('a', 1001) // 1001 characters
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Request { Id = requestId });
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(approverId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(approverId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = approverId });
 
         // Act
@@ -245,7 +245,7 @@ public class RejectRequestStepCommandValidatorTests
             Reason = "Valid rejection reason"
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Request?)null);
 
         // Act
@@ -273,10 +273,10 @@ public class RejectRequestStepCommandValidatorTests
             Reason = "Valid rejection reason"
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId))
+        _unitOfWorkMock.Setup(x => x.RequestRepository.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Request { Id = requestId });
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(approverId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(approverId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act

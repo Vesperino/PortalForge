@@ -75,7 +75,7 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             .Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(newDepartmentId))
@@ -89,7 +89,7 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
 
         user.DepartmentId.Should().Be(newDepartmentId);
 
-        _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(user), Times.Once);
+        _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Once);
 
         _auditLogServiceMock.Verify(x => x.LogActionAsync(
@@ -118,7 +118,7 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             .Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(command.UserId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(command.UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -128,7 +128,7 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
         await act.Should().ThrowAsync<NotFoundException>()
             .WithMessage($"User with ID {command.UserId} not found");
 
-        _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(It.IsAny<User>()), Times.Never);
+        _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -157,7 +157,7 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             .Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(newDepartmentId))
@@ -170,7 +170,7 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
         await act.Should().ThrowAsync<NotFoundException>()
             .WithMessage($"Department with ID {newDepartmentId} not found");
 
-        _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(It.IsAny<User>()), Times.Never);
+        _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -208,13 +208,13 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             .Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(newDepartmentId))
             .ReturnsAsync(newDepartment);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(newSupervisorId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(newSupervisorId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -224,7 +224,7 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
         await act.Should().ThrowAsync<NotFoundException>()
             .WithMessage($"New supervisor with ID {newSupervisorId} not found");
 
-        _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(It.IsAny<User>()), Times.Never);
+        _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     // NOTE: This test has been removed because pending requests are no longer reassigned during department transfers.
@@ -267,7 +267,7 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             .Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(oldDepartmentId))
@@ -326,7 +326,7 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             .Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(newDepartmentId))
@@ -468,7 +468,7 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
             .Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(command.UserId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(command.UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         _unitOfWorkMock.Setup(x => x.DepartmentRepository.GetByIdAsync(newDepartmentId))
@@ -476,7 +476,7 @@ public class TransferEmployeeToDepartmentCommandHandlerTests
 
         if (command.NewSupervisorId.HasValue)
         {
-            _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(command.NewSupervisorId.Value))
+            _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(command.NewSupervisorId.Value, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new User { Id = command.NewSupervisorId.Value, Role = UserRole.Manager });
         }
     }

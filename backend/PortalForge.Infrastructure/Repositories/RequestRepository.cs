@@ -27,7 +27,7 @@ public class RequestRepository : IRequestRepository
                     .ThenInclude(qa => qa.QuizQuestion)
             .Include(r => r.ApprovalSteps)
                 .ThenInclude(aps => aps.ApprovalStepTemplate)
-                    .ThenInclude(ast => ast.QuizQuestions)
+                    .ThenInclude(ast => ast!.QuizQuestions)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
     }
 
@@ -62,7 +62,7 @@ public class RequestRepository : IRequestRepository
                 .ThenInclude(aps => aps.Approver)
             .Include(r => r.ApprovalSteps)
                 .ThenInclude(aps => aps.ApprovalStepTemplate)
-                    .ThenInclude(ast => ast.QuizQuestions)
+                    .ThenInclude(ast => ast!.QuizQuestions)
             .Include(r => r.ApprovalSteps)
                 .ThenInclude(aps => aps.QuizAnswers)
             .Where(r => r.ApprovalSteps.Any(aps => aps.ApproverId == approverId))

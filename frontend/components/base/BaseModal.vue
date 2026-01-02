@@ -14,6 +14,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  title: undefined,
   size: 'md',
   showCloseButton: true,
   closeOnBackdrop: true,

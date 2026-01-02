@@ -58,10 +58,10 @@ public class UpdateRequestTemplateCommandHandlerTests
             CreatedAt = DateTime.UtcNow.AddDays(-10)
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingTemplate);
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.UpdateAsync(It.IsAny<RequestTemplate>()))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.UpdateAsync(It.IsAny<RequestTemplate>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _unitOfWorkMock.Setup(x => x.SaveChangesAsync())
@@ -82,7 +82,7 @@ public class UpdateRequestTemplateCommandHandlerTests
         existingTemplate.IsActive.Should().BeFalse();
         existingTemplate.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 
-        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.GetByIdAsync(templateId), Times.Once);
+        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.GetByIdAsync(templateId, It.IsAny<CancellationToken>()), Times.Once);
         // Note: UpdateAsync is not called because EF Core change tracking handles updates automatically
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Once);
     }
@@ -99,7 +99,7 @@ public class UpdateRequestTemplateCommandHandlerTests
             Description = "Updated Description"
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((RequestTemplate?)null);
 
         // Act
@@ -110,8 +110,8 @@ public class UpdateRequestTemplateCommandHandlerTests
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("not found");
 
-        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.GetByIdAsync(templateId), Times.Once);
-        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.UpdateAsync(It.IsAny<RequestTemplate>()), Times.Never);
+        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.GetByIdAsync(templateId, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(x => x.RequestTemplateRepository.UpdateAsync(It.IsAny<RequestTemplate>(), It.IsAny<CancellationToken>()), Times.Never);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Never);
     }
 
@@ -163,10 +163,10 @@ public class UpdateRequestTemplateCommandHandlerTests
             CreatedAt = DateTime.UtcNow.AddDays(-10)
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingTemplate);
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.UpdateAsync(It.IsAny<RequestTemplate>()))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.UpdateAsync(It.IsAny<RequestTemplate>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _unitOfWorkMock.Setup(x => x.SaveChangesAsync())
@@ -232,10 +232,10 @@ public class UpdateRequestTemplateCommandHandlerTests
             CreatedAt = DateTime.UtcNow.AddDays(-10)
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingTemplate);
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.UpdateAsync(It.IsAny<RequestTemplate>()))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.UpdateAsync(It.IsAny<RequestTemplate>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _unitOfWorkMock.Setup(x => x.SaveChangesAsync())
@@ -315,10 +315,10 @@ public class UpdateRequestTemplateCommandHandlerTests
             CreatedAt = DateTime.UtcNow.AddDays(-10)
         };
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.GetByIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingTemplate);
 
-        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.UpdateAsync(It.IsAny<RequestTemplate>()))
+        _unitOfWorkMock.Setup(x => x.RequestTemplateRepository.UpdateAsync(It.IsAny<RequestTemplate>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _unitOfWorkMock.Setup(x => x.SaveChangesAsync())

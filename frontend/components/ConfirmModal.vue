@@ -80,6 +80,7 @@ export interface ConfirmModalProps {
 }
 
 const props = withDefaults(defineProps<ConfirmModalProps>(), {
+  message: undefined,
   confirmText: 'Potwierdź',
   cancelText: 'Anuluj',
   variant: 'info',

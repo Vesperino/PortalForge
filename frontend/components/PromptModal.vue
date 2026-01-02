@@ -74,6 +74,7 @@ export interface PromptModalProps {
 }
 
 const props = withDefaults(defineProps<PromptModalProps>(), {
+  message: undefined,
   placeholder: '',
   defaultValue: ''
 })

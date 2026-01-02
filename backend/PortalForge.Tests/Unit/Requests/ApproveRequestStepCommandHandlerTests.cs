@@ -69,7 +69,7 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         var command = new ApproveRequestStepCommand
@@ -129,7 +129,7 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         var command = new ApproveRequestStepCommand
@@ -174,7 +174,7 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         var command = new ApproveRequestStepCommand
@@ -217,7 +217,7 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         var command = new ApproveRequestStepCommand
@@ -262,7 +262,7 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         var command = new ApproveRequestStepCommand
@@ -328,7 +328,7 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         // Setup: approver2 is on vacation, return substitute
@@ -396,7 +396,7 @@ public class ApproveRequestStepCommandHandlerTests
             }
         };
 
-        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+        _mockRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(request);
 
         // Setup: approver2 is NOT on vacation, return null

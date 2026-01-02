@@ -18,6 +18,9 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  label: undefined,
+  required: false,
+  error: undefined,
   maxSizeMB: 5,
   acceptedFormats: () => ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 })

@@ -53,7 +53,7 @@ public class UpdateUserVacationAllowanceCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act
@@ -98,10 +98,10 @@ public class UpdateUserVacationAllowanceCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.UpdateAsync(It.IsAny<User>()))
+        _unitOfWorkMock.Setup(x => x.UserRepository.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -111,7 +111,7 @@ public class UpdateUserVacationAllowanceCommandHandlerTests
         result.Should().Be(MediatR.Unit.Value);
         user.AnnualVacationDays.Should().Be(30, "vacation allowance should be updated");
 
-        _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(user), Times.Once);
+        _unitOfWorkMock.Verify(x => x.UserRepository.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public class UpdateUserVacationAllowanceCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -191,7 +191,7 @@ public class UpdateUserVacationAllowanceCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -236,7 +236,7 @@ public class UpdateUserVacationAllowanceCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -275,7 +275,7 @@ public class UpdateUserVacationAllowanceCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -320,7 +320,7 @@ public class UpdateUserVacationAllowanceCommandHandlerTests
         _validatorServiceMock.Setup(x => x.ValidateAsync(command))
             .Returns(Task.CompletedTask);
 
-        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId))
+        _unitOfWorkMock.Setup(x => x.UserRepository.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act

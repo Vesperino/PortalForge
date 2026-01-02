@@ -117,7 +117,7 @@ public class CreateDepartmentCommandValidatorTests
         // Arrange
         var headId = Guid.NewGuid();
 
-        _mockUnitOfWork.Setup(u => u.UserRepository.GetByIdAsync(headId))
+        _mockUnitOfWork.Setup(u => u.UserRepository.GetByIdAsync(headId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         var command = new CreateDepartmentCommand
@@ -144,7 +144,7 @@ public class CreateDepartmentCommandValidatorTests
         _mockUnitOfWork.Setup(u => u.DepartmentRepository.GetByIdAsync(parentId))
             .ReturnsAsync(new Department { Id = parentId, IsActive = true });
 
-        _mockUnitOfWork.Setup(u => u.UserRepository.GetByIdAsync(headId))
+        _mockUnitOfWork.Setup(u => u.UserRepository.GetByIdAsync(headId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = headId, IsActive = true });
 
         var command = new CreateDepartmentCommand
