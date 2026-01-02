@@ -12,20 +12,23 @@ public class ApproveRequestStepCommandHandler
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notificationService;
-    private readonly IVacationScheduleService _vacationService;
+    private readonly IVacationCreationService _vacationCreationService;
+    private readonly IVacationSubstituteService _vacationSubstituteService;
     private readonly IVacationDaysDeductionService _vacationDaysDeductionService;
     private readonly ILogger<ApproveRequestStepCommandHandler> _logger;
 
     public ApproveRequestStepCommandHandler(
         IUnitOfWork unitOfWork,
         INotificationService notificationService,
-        IVacationScheduleService vacationService,
+        IVacationCreationService vacationCreationService,
+        IVacationSubstituteService vacationSubstituteService,
         IVacationDaysDeductionService vacationDaysDeductionService,
         ILogger<ApproveRequestStepCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _notificationService = notificationService;
-        _vacationService = vacationService;
+        _vacationCreationService = vacationCreationService;
+        _vacationSubstituteService = vacationSubstituteService;
         _vacationDaysDeductionService = vacationDaysDeductionService;
         _logger = logger;
     }
@@ -34,7 +37,7 @@ public class ApproveRequestStepCommandHandler
         ApproveRequestStepCommand command,
         CancellationToken cancellationToken)
     {
-        var request = await _unitOfWork.RequestRepository.GetByIdAsync(command.RequestId);
+        var request = await _unitOfWork.RequestRepository.GetByIdAsync(command.RequestId, cancellationToken);
         if (request == null)
         {
             return ApproveRequestStepResult.Failure("Request not found");
@@ -138,7 +141,7 @@ public class ApproveRequestStepCommandHandler
 
     private async Task ActivateNextStepAsync(Request request, RequestApprovalStep nextStep)
     {
-        var substitute = await _vacationService.GetActiveSubstituteAsync(nextStep.ApproverId);
+        var substitute = await _vacationSubstituteService.GetActiveSubstituteAsync(nextStep.ApproverId);
         if (substitute != null)
         {
             nextStep.ApproverId = substitute.Id;
@@ -179,7 +182,7 @@ public class ApproveRequestStepCommandHandler
 
         try
         {
-            await _vacationService.CreateFromApprovedRequestAsync(request);
+            await _vacationCreationService.CreateFromApprovedRequestAsync(request);
         }
         catch (Exception ex)
         {

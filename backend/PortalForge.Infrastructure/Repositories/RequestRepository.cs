@@ -15,7 +15,7 @@ public class RequestRepository : IRequestRepository
         _context = context;
     }
 
-    public async Task<Request?> GetByIdAsync(Guid id)
+    public async Task<Request?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Requests
             .Include(r => r.RequestTemplate)
@@ -28,20 +28,20 @@ public class RequestRepository : IRequestRepository
             .Include(r => r.ApprovalSteps)
                 .ThenInclude(aps => aps.ApprovalStepTemplate)
                     .ThenInclude(ast => ast.QuizQuestions)
-            .FirstOrDefaultAsync(r => r.Id == id);
+            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
     }
 
-    public async Task<IEnumerable<Request>> GetAllAsync()
+    public async Task<IEnumerable<Request>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Requests
             .Include(r => r.RequestTemplate)
             .Include(r => r.SubmittedBy)
             .OrderByDescending(r => r.SubmittedAt)
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Request>> GetBySubmitterAsync(Guid submitterId)
+    public async Task<IEnumerable<Request>> GetBySubmitterAsync(Guid submitterId, CancellationToken cancellationToken = default)
     {
         return await _context.Requests
             .Include(r => r.RequestTemplate)
@@ -50,10 +50,10 @@ public class RequestRepository : IRequestRepository
             .Where(r => r.SubmittedById == submitterId)
             .OrderByDescending(r => r.SubmittedAt)
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Request>> GetByApproverAsync(Guid approverId)
+    public async Task<IEnumerable<Request>> GetByApproverAsync(Guid approverId, CancellationToken cancellationToken = default)
     {
         return await _context.Requests
             .Include(r => r.RequestTemplate)
@@ -68,10 +68,10 @@ public class RequestRepository : IRequestRepository
             .Where(r => r.ApprovalSteps.Any(aps => aps.ApproverId == approverId))
             .OrderByDescending(r => r.SubmittedAt)
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Request>> GetByStatusAsync(RequestStatus status)
+    public async Task<IEnumerable<Request>> GetByStatusAsync(RequestStatus status, CancellationToken cancellationToken = default)
     {
         return await _context.Requests
             .Include(r => r.RequestTemplate)
@@ -79,10 +79,10 @@ public class RequestRepository : IRequestRepository
             .Where(r => r.Status == status)
             .OrderByDescending(r => r.SubmittedAt)
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Request>> GetByTemplateIdAsync(Guid templateId)
+    public async Task<IEnumerable<Request>> GetByTemplateIdAsync(Guid templateId, CancellationToken cancellationToken = default)
     {
         return await _context.Requests
             .Include(r => r.RequestTemplate)
@@ -90,20 +90,20 @@ public class RequestRepository : IRequestRepository
             .Where(r => r.RequestTemplateId == templateId)
             .OrderByDescending(r => r.SubmittedAt)
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<Request?> GetByRequestNumberAsync(string requestNumber)
+    public async Task<Request?> GetByRequestNumberAsync(string requestNumber, CancellationToken cancellationToken = default)
     {
         return await _context.Requests
             .Include(r => r.RequestTemplate)
             .Include(r => r.SubmittedBy)
             .Include(r => r.ApprovalSteps.OrderBy(aps => aps.StepOrder))
                 .ThenInclude(aps => aps.Approver)
-            .FirstOrDefaultAsync(r => r.RequestNumber == requestNumber);
+            .FirstOrDefaultAsync(r => r.RequestNumber == requestNumber, cancellationToken);
     }
 
-    public async Task<IEnumerable<Request>> GetPendingRequestsByUserAsync(Guid userId)
+    public async Task<IEnumerable<Request>> GetPendingRequestsByUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _context.Requests
             .Include(r => r.RequestTemplate)
@@ -114,28 +114,32 @@ public class RequestRepository : IRequestRepository
                        (r.Status == RequestStatus.Draft ||
                         r.Status == RequestStatus.InReview ||
                         r.Status == RequestStatus.AwaitingSurvey))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<Guid> CreateAsync(Request request)
+    public async Task<int> CountAsync(CancellationToken cancellationToken = default)
     {
-        await _context.Requests.AddAsync(request);
+        return await _context.Requests.CountAsync(cancellationToken);
+    }
+
+    public async Task<Guid> CreateAsync(Request request, CancellationToken cancellationToken = default)
+    {
+        await _context.Requests.AddAsync(request, cancellationToken);
         return request.Id;
     }
 
-    public async Task UpdateAsync(Request request)
+    public async Task UpdateAsync(Request request, CancellationToken cancellationToken = default)
     {
         _context.Requests.Update(request);
         await Task.CompletedTask;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var request = await _context.Requests.FindAsync(id);
+        var request = await _context.Requests.FindAsync(new object[] { id }, cancellationToken);
         if (request != null)
         {
             _context.Requests.Remove(request);
         }
     }
 }
-

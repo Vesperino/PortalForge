@@ -16,7 +16,8 @@ public class ApproveRequestStepCommandHandlerTests
     private readonly Mock<IRequestRepository> _mockRequestRepo;
     private readonly Mock<IRequestCommentRepository> _mockRequestCommentRepo;
     private readonly Mock<INotificationService> _mockNotificationService;
-    private readonly Mock<IVacationScheduleService> _mockVacationService;
+    private readonly Mock<IVacationCreationService> _mockVacationCreationService;
+    private readonly Mock<IVacationSubstituteService> _mockVacationSubstituteService;
     private readonly Mock<IVacationDaysDeductionService> _mockVacationDaysDeductionService;
     private readonly Mock<ILogger<ApproveRequestStepCommandHandler>> _mockLogger;
     private readonly ApproveRequestStepCommandHandler _handler;
@@ -27,7 +28,8 @@ public class ApproveRequestStepCommandHandlerTests
         _mockRequestRepo = new Mock<IRequestRepository>();
         _mockRequestCommentRepo = new Mock<IRequestCommentRepository>();
         _mockNotificationService = new Mock<INotificationService>();
-        _mockVacationService = new Mock<IVacationScheduleService>();
+        _mockVacationCreationService = new Mock<IVacationCreationService>();
+        _mockVacationSubstituteService = new Mock<IVacationSubstituteService>();
         _mockVacationDaysDeductionService = new Mock<IVacationDaysDeductionService>();
         _mockLogger = new Mock<ILogger<ApproveRequestStepCommandHandler>>();
         _mockUnitOfWork.Setup(u => u.RequestRepository).Returns(_mockRequestRepo.Object);
@@ -35,7 +37,8 @@ public class ApproveRequestStepCommandHandlerTests
         _handler = new ApproveRequestStepCommandHandler(
             _mockUnitOfWork.Object,
             _mockNotificationService.Object,
-            _mockVacationService.Object,
+            _mockVacationCreationService.Object,
+            _mockVacationSubstituteService.Object,
             _mockVacationDaysDeductionService.Object,
             _mockLogger.Object);
     }
@@ -329,7 +332,7 @@ public class ApproveRequestStepCommandHandlerTests
             .ReturnsAsync(request);
 
         // Setup: approver2 is on vacation, return substitute
-        _mockVacationService.Setup(v => v.GetActiveSubstituteAsync(approver2Id))
+        _mockVacationSubstituteService.Setup(v => v.GetActiveSubstituteAsync(approver2Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(substitute);
 
         var command = new ApproveRequestStepCommand
@@ -397,7 +400,7 @@ public class ApproveRequestStepCommandHandlerTests
             .ReturnsAsync(request);
 
         // Setup: approver2 is NOT on vacation, return null
-        _mockVacationService.Setup(v => v.GetActiveSubstituteAsync(approver2Id))
+        _mockVacationSubstituteService.Setup(v => v.GetActiveSubstituteAsync(approver2Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         var command = new ApproveRequestStepCommand

@@ -15,10 +15,10 @@ public class GetMyRequestsQueryHandler
     }
 
     public async Task<GetMyRequestsResult> Handle(
-        GetMyRequestsQuery request, 
+        GetMyRequestsQuery request,
         CancellationToken cancellationToken)
     {
-        var requests = await _unitOfWork.RequestRepository.GetBySubmitterAsync(request.UserId);
+        var requests = await _unitOfWork.RequestRepository.GetBySubmitterAsync(request.UserId, cancellationToken);
 
         var requestDtos = requests.Select(r => new RequestDto
         {

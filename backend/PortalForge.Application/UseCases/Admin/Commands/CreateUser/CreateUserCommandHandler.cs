@@ -27,8 +27,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
         _logger.LogInformation("Creating user: {Email} by admin: {AdminId}", request.Email, request.CreatedBy);
 
         // Check if user already exists
-        var existingUser = (await _unitOfWork.UserRepository.GetAllAsync())
-            .FirstOrDefault(u => u.Email == request.Email);
+        var existingUser = await _unitOfWork.UserRepository.GetByEmailAsync(request.Email, cancellationToken);
 
         if (existingUser != null)
         {
@@ -55,8 +54,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
         }
 
         // Get the created user from database (created by SupabaseAuthService)
-        var user = (await _unitOfWork.UserRepository.GetAllAsync())
-            .FirstOrDefault(u => u.Email == request.Email);
+        var user = await _unitOfWork.UserRepository.GetByEmailAsync(request.Email, cancellationToken);
 
         if (user == null)
         {

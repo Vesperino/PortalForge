@@ -14,9 +14,9 @@ public interface IVacationCalculationService
     /// based on months worked in the first year.
     /// </summary>
     /// <param name="employmentStartDate">Date when employee started working</param>
-    /// <param name="annualDays">Total annual vacation days (default: 26 for &lt; 10 years service)</param>
+    /// <param name="annualDays">Total annual vacation days (default: uses configured VacationSettings.DefaultAnnualDays)</param>
     /// <returns>Number of vacation days employee is entitled to (rounded up to full days)</returns>
-    int CalculateProportionalVacationDays(DateTime employmentStartDate, int annualDays = 26);
+    int CalculateProportionalVacationDays(DateTime employmentStartDate, int annualDays = 0);
 
     /// <summary>
     /// Checks if user can take vacation on specified dates.

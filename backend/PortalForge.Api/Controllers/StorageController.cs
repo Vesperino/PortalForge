@@ -19,15 +19,18 @@ public class StorageController : BaseController
     private readonly IMediator _mediator;
     private readonly ILogger<StorageController> _logger;
     private readonly IFileStorageService _fileStorageService;
+    private readonly IFileValidationService _fileValidationService;
 
     public StorageController(
         IMediator mediator,
         ILogger<StorageController> logger,
-        IFileStorageService fileStorageService)
+        IFileStorageService fileStorageService,
+        IFileValidationService fileValidationService)
     {
         _mediator = mediator;
         _logger = logger;
         _fileStorageService = fileStorageService;
+        _fileValidationService = fileValidationService;
     }
 
     [HttpPost("upload/news-image")]
@@ -36,23 +39,13 @@ public class StorageController : BaseController
     {
         try
         {
-            if (file == null || file.Length == 0)
+            var validationResult = _fileValidationService.ValidateImageUpload(file?.FileName, file?.Length ?? 0);
+            if (!validationResult.IsValid)
             {
-                return BadRequest(new { message = "No file provided" });
+                return BadRequest(new { message = validationResult.ErrorMessage });
             }
 
-            const long maxFileSize = 10 * 1024 * 1024; // 10MB
-            if (file.Length > maxFileSize)
-            {
-                return BadRequest(new { message = "File size exceeds maximum allowed (10MB)" });
-            }
-
-            if (!IsAllowedFileType(file.FileName, AllowedImageExtensions))
-            {
-                return BadRequest(new { message = "Invalid file type. Allowed: jpg, jpeg, png, gif, webp, svg" });
-            }
-
-            using var fileStream = file.OpenReadStream();
+            using var fileStream = file!.OpenReadStream();
 
             var command = new UploadNewsImageCommand
             {
@@ -87,23 +80,13 @@ public class StorageController : BaseController
     {
         try
         {
-            if (file == null || file.Length == 0)
+            var validationResult = _fileValidationService.ValidateImageUpload(file?.FileName, file?.Length ?? 0);
+            if (!validationResult.IsValid)
             {
-                return BadRequest(new { message = "No file provided" });
+                return BadRequest(new { message = validationResult.ErrorMessage });
             }
 
-            const long maxFileSize = 10 * 1024 * 1024; // 10MB
-            if (file.Length > maxFileSize)
-            {
-                return BadRequest(new { message = "File size exceeds maximum allowed (10MB)" });
-            }
-
-            if (!IsAllowedFileType(file.FileName, AllowedImageExtensions))
-            {
-                return BadRequest(new { message = "Invalid file type. Allowed: jpg, jpeg, png, gif, webp, svg" });
-            }
-
-            using var fileStream = file.OpenReadStream();
+            using var fileStream = file!.OpenReadStream();
 
             var command = new UploadServiceIconCommand
             {
@@ -133,27 +116,18 @@ public class StorageController : BaseController
     }
 
     [HttpPost("upload/comment-attachment")]
+    [Authorize]
     public async Task<ActionResult<UploadImageResponse>> UploadCommentAttachment(IFormFile file)
     {
         try
         {
-            if (file == null || file.Length == 0)
+            var validationResult = _fileValidationService.ValidateAttachmentUpload(file?.FileName, file?.Length ?? 0);
+            if (!validationResult.IsValid)
             {
-                return BadRequest(new { message = "No file provided" });
+                return BadRequest(new { message = validationResult.ErrorMessage });
             }
 
-            const long maxFileSize = 10 * 1024 * 1024; // 10MB
-            if (file.Length > maxFileSize)
-            {
-                return BadRequest(new { message = "File size exceeds maximum allowed (10MB)" });
-            }
-
-            if (!IsAllowedFileType(file.FileName, AllowedAttachmentExtensions))
-            {
-                return BadRequest(new { message = "Invalid file type. Allowed: images, documents (pdf, doc, docx, xls, xlsx, txt, csv), zip" });
-            }
-
-            using var fileStream = file.OpenReadStream();
+            using var fileStream = file!.OpenReadStream();
 
             var command = new UploadCommentAttachmentCommand
             {
@@ -304,26 +278,5 @@ public class StorageController : BaseController
         }
     }
 
-    private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"
-    };
-
-    private static readonly HashSet<string> AllowedDocumentExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt", ".csv"
-    };
-
-    private static readonly HashSet<string> AllowedAttachmentExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg",
-        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt", ".csv", ".zip"
-    };
-
-    private static bool IsAllowedFileType(string fileName, HashSet<string> allowedExtensions)
-    {
-        var extension = Path.GetExtension(fileName);
-        return !string.IsNullOrEmpty(extension) && allowedExtensions.Contains(extension);
-    }
 }
 

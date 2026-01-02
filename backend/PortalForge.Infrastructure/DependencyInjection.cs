@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Common.Settings;
 using PortalForge.Infrastructure.Auth;
 using PortalForge.Infrastructure.Email;
 using PortalForge.Infrastructure.Email.Models;
@@ -39,16 +40,23 @@ public static class DependencyInjection
         // Register App Settings
         services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
 
+        // Register Vacation Settings
+        services.Configure<VacationSettings>(configuration.GetSection(VacationSettings.SectionName));
+
+        // Register File Upload Settings
+        services.Configure<FileUploadSettings>(configuration.GetSection(FileUploadSettings.SectionName));
+
         // Register Supabase Settings, Client Factory, and Auth Service
         services.Configure<SupabaseSettings>(configuration.GetSection("Supabase"));
         services.AddSingleton<ISupabaseClientFactory, SupabaseClientFactory>();
         services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
 
-        // Register File Storage Service
-        services.AddScoped<PortalForge.Application.Interfaces.IFileStorageService, PortalForge.Infrastructure.Services.FileStorageService>();
+        // Register File Storage Service for Common.Interfaces
+        services.AddScoped<PortalForge.Application.Common.Interfaces.IFileStorageService, PortalForge.Infrastructure.Services.FileStorageService>();
 
-        // Register File Storage Service Adapter for Common.Interfaces (temporary solution until interfaces are unified)
-        services.AddScoped<PortalForge.Application.Common.Interfaces.IFileStorageService, PortalForge.Infrastructure.Services.FileStorageServiceAdapter>();
+
+        // Register File Validation Service
+        services.AddScoped<IFileValidationService, PortalForge.Infrastructure.Services.FileValidationService>();
 
         // Register Notification Service
         services.AddScoped<PortalForge.Application.Services.INotificationService, PortalForge.Infrastructure.Services.NotificationService>();

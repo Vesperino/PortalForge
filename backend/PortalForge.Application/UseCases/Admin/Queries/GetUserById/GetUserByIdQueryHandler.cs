@@ -32,8 +32,7 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, AdminUs
         // Get role groups
         var userRoleGroups = await _unitOfWork.UserRoleGroupRepository.GetByUserIdAsync(user.Id);
         var roleGroupIds = userRoleGroups.Select(urg => urg.RoleGroupId).ToList();
-        var roleGroups = (await _unitOfWork.RoleGroupRepository.GetAllAsync())
-            .Where(rg => roleGroupIds.Contains(rg.Id))
+        var roleGroups = (await _unitOfWork.RoleGroupRepository.GetByIdsAsync(roleGroupIds))
             .Select(rg => rg.Name)
             .ToList();
 

@@ -35,6 +35,13 @@ public class UserRepository : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<User?> GetFirstByRoleAsync(UserRole role, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users
+            .Where(u => u.Role == role)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<(IEnumerable<User> Users, int TotalCount)> GetFilteredAsync(
         string? searchTerm,
         string? department,

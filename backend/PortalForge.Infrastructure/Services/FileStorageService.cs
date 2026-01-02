@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using PortalForge.Application.Interfaces;
+using PortalForge.Application.Common.Interfaces;
 
 namespace PortalForge.Infrastructure.Services;
 

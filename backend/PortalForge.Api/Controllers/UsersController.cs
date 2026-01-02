@@ -169,11 +169,25 @@ public class UsersController : BaseController
     }
 
     /// <summary>
-    /// Get user's vacation summary (allowance, used days, remaining days)
+    /// Get user's vacation summary (allowance, used days, remaining days).
+    /// Users can view their own summary, HR/Admin can view any user's summary.
     /// </summary>
     [HttpGet("{userId:guid}/vacation-summary")]
+    [Authorize]
     public async Task<ActionResult<Application.UseCases.Users.Queries.GetUserVacationSummary.VacationSummaryDto>> GetVacationSummary(Guid userId)
     {
+        // SECURITY: Check if user can access this vacation summary
+        var currentUserId = _currentUserService.UserId;
+        var isHrOrAdmin = _currentUserService.IsInRole("Admin") || _currentUserService.IsInRole("Hr");
+
+        if (userId != currentUserId && !isHrOrAdmin)
+        {
+            _logger.LogWarning(
+                "User {CurrentUserId} attempted to access vacation summary for user {TargetUserId} without authorization",
+                currentUserId, userId);
+            return Forbid();
+        }
+
         _logger.LogInformation("Getting vacation summary for user {UserId}", userId);
 
         var query = new Application.UseCases.Users.Queries.GetUserVacationSummary.GetUserVacationSummaryQuery

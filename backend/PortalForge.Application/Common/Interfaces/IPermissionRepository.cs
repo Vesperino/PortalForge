@@ -8,6 +8,13 @@ public interface IPermissionRepository
     Task<Permission?> GetByNameAsync(string name);
     Task<IEnumerable<Permission>> GetAllAsync();
     Task<IEnumerable<Permission>> GetByCategoryAsync(string category);
+
+    /// <summary>
+    /// Checks if any permissions exist in the database.
+    /// Used by seed handlers to avoid loading all records.
+    /// </summary>
+    Task<bool> AnyAsync();
+
     Task<Guid> CreateAsync(Permission permission);
     Task UpdateAsync(Permission permission);
     Task DeleteAsync(Guid id);

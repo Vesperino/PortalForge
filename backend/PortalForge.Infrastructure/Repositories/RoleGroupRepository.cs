@@ -40,6 +40,16 @@ public class RoleGroupRepository : IRoleGroupRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<RoleGroup>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        var idList = ids.ToList();
+        return await _context.RoleGroups
+            .Where(rg => idList.Contains(rg.Id))
+            .OrderBy(rg => rg.Name)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<RoleGroup>> GetSystemRolesAsync()
     {
         return await _context.RoleGroups
@@ -47,6 +57,11 @@ public class RoleGroupRepository : IRoleGroupRepository
             .OrderBy(rg => rg.Name)
             .AsNoTracking()
             .ToListAsync();
+    }
+
+    public async Task<bool> AnyAsync()
+    {
+        return await _context.RoleGroups.AnyAsync();
     }
 
     public async Task<IEnumerable<User>> GetUsersInGroupAsync(Guid roleGroupId)

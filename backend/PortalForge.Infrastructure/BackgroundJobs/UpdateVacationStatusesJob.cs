@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using PortalForge.Application.Services;
+using PortalForge.Application.Common.Interfaces;
 
 namespace PortalForge.Infrastructure.BackgroundJobs;
 
@@ -34,14 +34,14 @@ public class UpdateVacationStatusesJob
         try
         {
             using var scope = _serviceProvider.CreateScope();
-            var vacationService = scope.ServiceProvider
-                .GetRequiredService<IVacationScheduleService>();
+            var vacationStatusService = scope.ServiceProvider
+                .GetRequiredService<IVacationStatusService>();
 
-            // Update vacation statuses (Scheduled → Active, Active → Completed)
-            await vacationService.UpdateVacationStatusesAsync();
+            // Update vacation statuses (Scheduled -> Active, Active -> Completed)
+            await vacationStatusService.UpdateVacationStatusesAsync(cancellationToken);
 
             // Process approved sick leave requests (create SickLeave records)
-            await vacationService.ProcessApprovedSickLeaveRequestsAsync();
+            await vacationStatusService.ProcessApprovedSickLeaveRequestsAsync(cancellationToken);
 
             _logger.LogInformation("Vacation status update and sick leave processing completed successfully");
         }

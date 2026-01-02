@@ -16,10 +16,10 @@ public class GetRequestsToApproveQueryHandler
     }
 
     public async Task<GetRequestsToApproveResult> Handle(
-        GetRequestsToApproveQuery request, 
+        GetRequestsToApproveQuery request,
         CancellationToken cancellationToken)
     {
-        var allRequests = await _unitOfWork.RequestRepository.GetByApproverAsync(request.ApproverId);
+        var allRequests = await _unitOfWork.RequestRepository.GetByApproverAsync(request.ApproverId, cancellationToken);
         
         // Filter to only requests that have a step in InReview status for this approver
         var requestsToApprove = allRequests

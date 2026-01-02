@@ -12,6 +12,7 @@ import type {
 export const useRequestsApi = () => {
   const config = useRuntimeConfig()
   const { getAuthHeaders } = useAuth()
+  const { handleError } = useApiError()
 
   // Request Templates
   const getAvailableTemplates = async () => {
@@ -24,7 +25,7 @@ export const useRequestsApi = () => {
       ) as { templates: RequestTemplate[] }
       return response.templates
     } catch (error) {
-      console.error('Error fetching available templates:', error)
+      handleError(error, { customMessage: 'Nie udalo sie pobrac dostepnych szablonow' })
       throw error
     }
   }
@@ -39,7 +40,7 @@ export const useRequestsApi = () => {
       ) as { templates: RequestTemplate[] }
       return response.templates
     } catch (error) {
-      console.error('Error fetching all templates:', error)
+      handleError(error, { customMessage: 'Nie udalo sie pobrac listy szablonow' })
       throw error
     }
   }
@@ -54,7 +55,7 @@ export const useRequestsApi = () => {
       ) as { template: RequestTemplate }
       return response.template
     } catch (error) {
-      console.error('Error fetching template:', error)
+      handleError(error, { customMessage: 'Nie udalo sie pobrac szablonu' })
       throw error
     }
   }
@@ -71,7 +72,7 @@ export const useRequestsApi = () => {
       ) as { id: string; message: string }
       return response
     } catch (error) {
-      console.error('Error creating template:', error)
+      handleError(error, { customMessage: 'Nie udalo sie utworzyc szablonu' })
       throw error
     }
   }
@@ -88,7 +89,7 @@ export const useRequestsApi = () => {
       ) as { success: boolean; message: string }
       return response
     } catch (error) {
-      console.error('Error updating template:', error)
+      handleError(error, { customMessage: 'Nie udalo sie zaktualizowac szablonu' })
       throw error
     }
   }
@@ -104,7 +105,7 @@ export const useRequestsApi = () => {
       ) as { success: boolean; message: string }
       return response
     } catch (error) {
-      console.error('Error deleting template:', error)
+      handleError(error, { customMessage: 'Nie udalo sie usunac szablonu' })
       throw error
     }
   }
@@ -120,7 +121,7 @@ export const useRequestsApi = () => {
       ) as { message: string; count: number }
       return response
     } catch (error) {
-      console.error('Error seeding templates:', error)
+      handleError(error, { customMessage: 'Nie udalo sie zainicjowac szablonow' })
       throw error
     }
   }
@@ -136,7 +137,7 @@ export const useRequestsApi = () => {
       ) as { requests: Request[] }
       return response.requests
     } catch (error) {
-      console.error('Error fetching my requests:', error)
+      handleError(error, { customMessage: 'Nie udalo sie pobrac Twoich wnioskow' })
       throw error
     }
   }
@@ -151,7 +152,7 @@ export const useRequestsApi = () => {
       ) as { requests: Request[] }
       return response.requests
     } catch (error) {
-      console.error('Error fetching requests to approve:', error)
+      handleError(error, { customMessage: 'Nie udalo sie pobrac wnioskow do zatwierdzenia' })
       throw error
     }
   }
@@ -171,7 +172,7 @@ export const useRequestsApi = () => {
       ) as { id: string; requestNumber: string; message: string }
       return response
     } catch (error) {
-      console.error('Error submitting request:', error)
+      handleError(error, { customMessage: 'Nie udalo sie zlozyc wniosku' })
       throw error
     }
   }
@@ -188,7 +189,7 @@ export const useRequestsApi = () => {
       ) as { success: boolean; message: string }
       return response
     } catch (error) {
-      console.error('Error approving request step:', error)
+      handleError(error, { customMessage: 'Nie udalo sie zatwierdzic kroku wniosku' })
       throw error
     }
   }
@@ -205,7 +206,7 @@ export const useRequestsApi = () => {
       ) as { success: boolean; message: string }
       return response
     } catch (error) {
-      console.error('Error rejecting request step:', error)
+      handleError(error, { customMessage: 'Nie udalo sie odrzucic kroku wniosku' })
       throw error
     }
   }
@@ -220,7 +221,7 @@ export const useRequestsApi = () => {
       ) as { requests: Request[] }
       return response.requests
     } catch (error) {
-      console.error('Error fetching pending approvals:', error)
+      handleError(error, { customMessage: 'Nie udalo sie pobrac oczekujacych zatwierdzen' })
       throw error
     }
   }
@@ -235,7 +236,7 @@ export const useRequestsApi = () => {
       ) as { items: Request[] }
       return response.items
     } catch (error) {
-      console.error('Error fetching approvals history:', error)
+      handleError(error, { customMessage: 'Nie udalo sie pobrac historii zatwierdzen' })
       throw error
     }
   }
@@ -250,7 +251,7 @@ export const useRequestsApi = () => {
       )
       return response
     } catch (error) {
-      console.error('Error fetching request details:', error)
+      handleError(error, { customMessage: 'Nie udalo sie pobrac szczegolow wniosku' })
       throw error
     }
   }
@@ -295,7 +296,7 @@ export const useRequestsApi = () => {
       const result = await response.json()
       return result as string
     } catch (error) {
-      console.error('Error adding comment:', error)
+      handleError(error, { customMessage: 'Nie udalo sie dodac komentarza' })
       throw error
     }
   }
@@ -311,7 +312,7 @@ export const useRequestsApi = () => {
       ) as { notifications: Notification[] }
       return response.notifications
     } catch (error) {
-      console.error('Error fetching notifications:', error)
+      handleError(error, { customMessage: 'Nie udalo sie pobrac powiadomien' })
       throw error
     }
   }
@@ -345,7 +346,7 @@ export const useRequestsApi = () => {
         }
       )
     } catch (error) {
-      console.error('Error marking notification as read:', error)
+      handleError(error, { customMessage: 'Nie udalo sie oznaczyc powiadomienia jako przeczytane' })
       throw error
     }
   }
@@ -360,7 +361,7 @@ export const useRequestsApi = () => {
         }
       )
     } catch (error) {
-      console.error('Error marking all notifications as read:', error)
+      handleError(error, { customMessage: 'Nie udalo sie oznaczyc wszystkich powiadomien jako przeczytane' })
       throw error
     }
   }

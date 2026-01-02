@@ -54,7 +54,7 @@ public class SubmitRequestCommandHandlerTests
         var templateId = Guid.NewGuid();
         var submitterId = Guid.NewGuid();
 
-        _mockTemplateRepo.Setup(r => r.GetByIdAsync(templateId))
+        _mockTemplateRepo.Setup(r => r.GetByIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((RequestTemplate?)null);
 
         var command = new SubmitRequestCommand
@@ -90,12 +90,12 @@ public class SubmitRequestCommandHandlerTests
             LastName = "Employee"
         };
 
-        _mockTemplateRepo.Setup(r => r.GetByIdAsync(templateId))
+        _mockTemplateRepo.Setup(r => r.GetByIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(template);
-        _mockUserRepo.Setup(r => r.GetByIdAsync(submitterId))
+        _mockUserRepo.Setup(r => r.GetByIdAsync(submitterId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(submitter);
-        _mockRequestRepo.Setup(r => r.GetAllAsync())
-            .ReturnsAsync(new List<Request>());
+        _mockRequestRepo.Setup(r => r.CountAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
 
         var command = new SubmitRequestCommand
         {
@@ -111,7 +111,7 @@ public class SubmitRequestCommandHandlerTests
         // Assert
         Assert.NotEqual(Guid.Empty, result.Id);
         _mockRequestRepo.Verify(r => r.CreateAsync(
-            It.Is<Request>(req => req.Status == RequestStatus.Approved)),
+            It.Is<Request>(req => req.Status == RequestStatus.Approved), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -154,12 +154,12 @@ public class SubmitRequestCommandHandlerTests
             LastName = "Employee"
         };
 
-        _mockTemplateRepo.Setup(r => r.GetByIdAsync(templateId))
+        _mockTemplateRepo.Setup(r => r.GetByIdAsync(templateId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(template);
-        _mockUserRepo.Setup(r => r.GetByIdAsync(employeeId))
+        _mockUserRepo.Setup(r => r.GetByIdAsync(employeeId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(employee);
-        _mockRequestRepo.Setup(r => r.GetAllAsync())
-            .ReturnsAsync(new List<Request>());
+        _mockRequestRepo.Setup(r => r.CountAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
 
         // RoutingService returns manager (normal approval)
         _mockRoutingService.Setup(s => s.ResolveApproverAsync(
@@ -186,7 +186,7 @@ public class SubmitRequestCommandHandlerTests
                 req.ApprovalSteps.Count == 1 &&
                 req.ApprovalSteps.First().ApproverId == managerId &&
                 req.ApprovalSteps.First().Status == ApprovalStepStatus.InReview
-            )),
+            ), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

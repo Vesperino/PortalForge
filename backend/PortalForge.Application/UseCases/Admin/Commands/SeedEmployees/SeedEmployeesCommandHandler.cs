@@ -31,9 +31,9 @@ public class SeedEmployeesCommandHandler : IRequestHandler<SeedEmployeesCommand,
         var result = new SeedEmployeesResult();
         var errors = new List<string>();
 
-        // Get first admin user as creator
-        var adminUser = (await _unitOfWork.UserRepository.GetAllAsync())
-            .FirstOrDefault(u => u.Role == Domain.Entities.UserRole.Admin);
+        // Get first admin user as creator using GetFirstByRoleAsync
+        var adminUser = await _unitOfWork.UserRepository.GetFirstByRoleAsync(
+            Domain.Entities.UserRole.Admin, cancellationToken);
 
         if (adminUser == null)
         {

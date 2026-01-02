@@ -26,6 +26,7 @@ export function useOrganization() {
   const config = useRuntimeConfig()
   const apiUrl = config.public.apiUrl
   const { getAuthHeaders } = useAuth()
+  const { handleError } = useApiError()
 
   const departments = ref<DepartmentTreeDto[]>([])
   const allEmployees = ref<OrganizationEmployee[]>([])
@@ -39,7 +40,7 @@ export function useOrganization() {
       })
       departments.value = response
     } catch (err: unknown) {
-      console.error('Error loading departments:', err)
+      handleError(err, { customMessage: 'Nie udalo sie pobrac struktury dzialow' })
       throw err
     }
   }
@@ -51,7 +52,7 @@ export function useOrganization() {
       })
       allEmployees.value = response.users || []
     } catch (err: unknown) {
-      console.error('Error loading users:', err)
+      handleError(err, { customMessage: 'Nie udalo sie pobrac listy pracownikow' })
       throw err
     }
   }
@@ -67,7 +68,6 @@ export function useOrganization() {
       ])
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'Nie udalo sie pobrac danych'
-      console.error('Error loading data:', err)
     } finally {
       isLoading.value = false
     }

@@ -46,6 +46,11 @@ public class PermissionRepository : IPermissionRepository
             .ToListAsync();
     }
 
+    public async Task<bool> AnyAsync()
+    {
+        return await _context.Permissions.AnyAsync();
+    }
+
     public async Task<Guid> CreateAsync(Permission permission)
     {
         await _context.Permissions.AddAsync(permission);

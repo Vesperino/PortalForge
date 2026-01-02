@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Application.Common.Settings;
 using PortalForge.Application.Interfaces;
 using PortalForge.Domain.Enums;
 
@@ -12,13 +14,16 @@ namespace PortalForge.Infrastructure.Services;
 public class VacationCalculationService : IVacationCalculationService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly VacationSettings _vacationSettings;
     private readonly ILogger<VacationCalculationService> _logger;
 
     public VacationCalculationService(
         IUnitOfWork unitOfWork,
+        IOptions<VacationSettings> vacationSettings,
         ILogger<VacationCalculationService> logger)
     {
         _unitOfWork = unitOfWork;
+        _vacationSettings = vacationSettings.Value;
         _logger = logger;
     }
 
@@ -29,8 +34,14 @@ public class VacationCalculationService : IVacationCalculationService
     /// Formula: (annualDays / 12) * months remaining in year
     /// Rounding: Always round UP to full days (per Polish law)
     /// </summary>
-    public int CalculateProportionalVacationDays(DateTime employmentStartDate, int annualDays = 26)
+    public int CalculateProportionalVacationDays(DateTime employmentStartDate, int annualDays = 0)
     {
+        // Use configured default if not specified
+        if (annualDays <= 0)
+        {
+            annualDays = _vacationSettings.DefaultAnnualDays;
+        }
+
         var currentYear = DateTime.UtcNow.Year;
         var startYear = employmentStartDate.Year;
 
@@ -89,17 +100,18 @@ public class VacationCalculationService : IVacationCalculationService
         switch (leaveType)
         {
             case LeaveType.OnDemand:
-                // On-demand vacation: max 4 days per year (Polish law)
+                // On-demand vacation: max configured days per year (Polish law default: 4)
+                var maxOnDemandDays = _vacationSettings.MaxOnDemandDays;
                 var onDemandUsed = user.OnDemandVacationDaysUsed ?? 0;
-                if (onDemandUsed >= 4)
+                if (onDemandUsed >= maxOnDemandDays)
                 {
                     _logger.LogInformation(
-                        "User {UserId} exhausted on-demand vacation (4/4 used)",
-                        userId);
-                    return (false, "Wykorzystano już wszystkie 4 dni urlopu na żądanie w tym roku");
+                        "User {UserId} exhausted on-demand vacation ({Used}/{Max} used)",
+                        userId, onDemandUsed, maxOnDemandDays);
+                    return (false, $"Wykorzystano już wszystkie {maxOnDemandDays} dni urlopu na żądanie w tym roku");
                 }
 
-                var remainingOnDemand = 4 - onDemandUsed;
+                var remainingOnDemand = maxOnDemandDays - onDemandUsed;
                 if (requestedDays > remainingOnDemand)
                 {
                     _logger.LogInformation(
@@ -110,13 +122,14 @@ public class VacationCalculationService : IVacationCalculationService
                 break;
 
             case LeaveType.Circumstantial:
-                // Circumstantial leave: typically 2 days per event (Polish law)
-                if (requestedDays > 2)
+                // Circumstantial leave: max configured days per event (Polish law default: 2)
+                var maxCircumstantialDays = _vacationSettings.MaxCircumstantialDaysPerEvent;
+                if (requestedDays > maxCircumstantialDays)
                 {
                     _logger.LogInformation(
-                        "User {UserId} requesting {RequestedDays} circumstantial days (max 2)",
-                        userId, requestedDays);
-                    return (false, "Urlop okolicznościowy to maksymalnie 2 dni na wydarzenie");
+                        "User {UserId} requesting {RequestedDays} circumstantial days (max {Max})",
+                        userId, requestedDays, maxCircumstantialDays);
+                    return (false, $"Urlop okolicznościowy to maksymalnie {maxCircumstantialDays} dni na wydarzenie");
                 }
                 break;
 
@@ -200,7 +213,7 @@ public class VacationCalculationService : IVacationCalculationService
 
         _logger.LogDebug(
             "User {UserId} has {Available} vacation days available (Annual: {Annual}, Used: {Used}, Carried: {Carried})",
-            userId, available, user.AnnualVacationDays ?? 26, user.VacationDaysUsed ?? 0, user.CarriedOverVacationDays ?? 0);
+            userId, available, user.AnnualVacationDays ?? _vacationSettings.DefaultAnnualDays, user.VacationDaysUsed ?? 0, user.CarriedOverVacationDays ?? 0);
 
         return available;
     }

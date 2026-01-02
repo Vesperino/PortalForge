@@ -66,30 +66,14 @@ function getDeptIndent(level: number): string {
 </script>
 
 <template>
-  <div
-    v-if="isOpen && user"
-    class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+  <BaseModal
+    :is-open="isOpen && user !== null"
+    title="Szybka edycja pracownika"
+    size="lg"
+    @close="handleClose"
   >
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full">
-      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-          Szybka edycja pracownika
-        </h2>
-        <button
-          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-          data-testid="close-quick-edit"
-          @click="handleClose"
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <div class="p-6 space-y-5">
+    <template v-if="user">
+      <div class="space-y-5" data-testid="quick-edit-modal">
         <div class="flex items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
           <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
             {{ getInitials(user.firstName || '', user.lastName || '') }}
@@ -110,7 +94,7 @@ function getDeptIndent(level: number): string {
             :value="formData.departmentName"
             required
             class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            data-testid="department-select"
+            data-testid="quick-edit-department-select"
             @change="handleDepartmentChange"
           >
             <option value="">Wybierz dzial</option>
@@ -133,15 +117,19 @@ function getDeptIndent(level: number): string {
             :initial-position-name="formData.position"
             placeholder="Wpisz lub wybierz stanowisko..."
             required
+            data-testid="quick-edit-position-input"
             @update:model-value="handlePositionUpdate"
             @update:position-name="handlePositionNameUpdate"
           />
         </div>
       </div>
+    </template>
 
-      <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+    <template #footer>
+      <div class="flex items-center justify-end gap-3">
         <button
           class="px-5 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          data-testid="quick-edit-cancel-btn"
           @click="handleClose"
         >
           Anuluj
@@ -149,7 +137,7 @@ function getDeptIndent(level: number): string {
         <button
           class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
           :disabled="isLoading || !formData.departmentName || !formData.position"
-          data-testid="save-quick-edit"
+          data-testid="quick-edit-save-btn"
           @click="handleSave"
         >
           <span v-if="isLoading" class="flex items-center gap-2">
@@ -162,6 +150,6 @@ function getDeptIndent(level: number): string {
           <span v-else>Zapisz zmiany</span>
         </button>
       </div>
-    </div>
-  </div>
+    </template>
+  </BaseModal>
 </template>
