@@ -122,7 +122,8 @@ public static class DependencyInjection
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = false, // Disable issuer validation for Supabase tokens
+                ValidateIssuer = true,
+                ValidIssuer = "https://mqowlgphivdosieakzjb.supabase.co/auth/v1",
                 ValidateAudience = true,
                 ValidAudience = "authenticated",
                 ValidateLifetime = true,

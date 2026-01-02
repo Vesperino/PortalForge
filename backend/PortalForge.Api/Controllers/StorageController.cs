@@ -47,6 +47,11 @@ public class StorageController : BaseController
                 return BadRequest(new { message = "File size exceeds maximum allowed (10MB)" });
             }
 
+            if (!IsAllowedFileType(file.FileName, AllowedImageExtensions))
+            {
+                return BadRequest(new { message = "Invalid file type. Allowed: jpg, jpeg, png, gif, webp, svg" });
+            }
+
             using var fileStream = file.OpenReadStream();
 
             var command = new UploadNewsImageCommand
@@ -93,6 +98,11 @@ public class StorageController : BaseController
                 return BadRequest(new { message = "File size exceeds maximum allowed (10MB)" });
             }
 
+            if (!IsAllowedFileType(file.FileName, AllowedImageExtensions))
+            {
+                return BadRequest(new { message = "Invalid file type. Allowed: jpg, jpeg, png, gif, webp, svg" });
+            }
+
             using var fileStream = file.OpenReadStream();
 
             var command = new UploadServiceIconCommand
@@ -136,6 +146,11 @@ public class StorageController : BaseController
             if (file.Length > maxFileSize)
             {
                 return BadRequest(new { message = "File size exceeds maximum allowed (10MB)" });
+            }
+
+            if (!IsAllowedFileType(file.FileName, AllowedAttachmentExtensions))
+            {
+                return BadRequest(new { message = "Invalid file type. Allowed: images, documents (pdf, doc, docx, xls, xlsx, txt, csv), zip" });
             }
 
             using var fileStream = file.OpenReadStream();
@@ -277,6 +292,28 @@ public class StorageController : BaseController
             _logger.LogError(ex, "Error serving file: {RelativePath}", relativePath);
             return StatusCode(500, new { message = "Error serving file" });
         }
+    }
+
+    private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"
+    };
+
+    private static readonly HashSet<string> AllowedDocumentExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt", ".csv"
+    };
+
+    private static readonly HashSet<string> AllowedAttachmentExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg",
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt", ".csv", ".zip"
+    };
+
+    private static bool IsAllowedFileType(string fileName, HashSet<string> allowedExtensions)
+    {
+        var extension = Path.GetExtension(fileName);
+        return !string.IsNullOrEmpty(extension) && allowedExtensions.Contains(extension);
     }
 }
 

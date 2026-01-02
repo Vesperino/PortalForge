@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using PortalForge.Application.Exceptions;
 using PortalForge.Application.Common.Interfaces;
+using PortalForge.Domain.Entities;
 
 namespace PortalForge.Application.UseCases.News.Commands.DeleteNews;
 
@@ -27,6 +28,20 @@ public class DeleteNewsCommandHandler : IRequestHandler<DeleteNewsCommand, Unit>
         {
             _logger.LogWarning("News with ID {NewsId} not found - cannot delete", request.NewsId);
             throw new NotFoundException($"News with ID {request.NewsId} not found");
+        }
+
+        var currentUser = await _unitOfWork.UserRepository.GetByIdAsync(request.CurrentUserId);
+        if (currentUser == null)
+        {
+            throw new NotFoundException($"User with ID {request.CurrentUserId} not found");
+        }
+
+        var isAdmin = currentUser.Role == UserRole.Admin;
+        var isAuthor = news.AuthorId == request.CurrentUserId;
+
+        if (!isAuthor && !isAdmin)
+        {
+            throw new ForbiddenException("Możesz modyfikować tylko własne aktualności lub musisz być administratorem");
         }
 
         _logger.LogInformation("Found news to delete - ID: {NewsId}, Title: {Title}, HasEvent: {HasEvent}, HashtagCount: {HashtagCount}",

@@ -89,8 +89,8 @@ builder.Services.AddCors(options =>
                   "http://localhost:3001",
                   "https://83.168.107.39",
                   "http://83.168.107.39")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
+              .WithHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With")
+              .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
               .AllowCredentials();
     });
 });

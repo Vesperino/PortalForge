@@ -6,6 +6,7 @@ namespace PortalForge.Application.UseCases.News.Commands.UpdateNews;
 public class UpdateNewsCommand : IRequest<Unit>, ITransactionalRequest
 {
     public int NewsId { get; set; }
+    public Guid CurrentUserId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public string Excerpt { get; set; } = string.Empty;

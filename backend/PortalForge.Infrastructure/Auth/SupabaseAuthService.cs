@@ -110,9 +110,19 @@ public class SupabaseAuthService : ISupabaseAuthService
             }
 
             // Create user in our database
+            if (signUpResponse.User?.Id is null)
+            {
+                _logger.LogError("User creation failed - no user ID returned from Supabase for email: {Email}", email);
+                return new AuthResult
+                {
+                    Success = false,
+                    ErrorMessage = "Registration failed - no user ID returned"
+                };
+            }
+
             var user = new DomainUser
             {
-                Id = Guid.Parse(signUpResponse.User!.Id),
+                Id = Guid.Parse(signUpResponse.User.Id),
                 Email = email,
                 FirstName = firstName,
                 LastName = lastName,
@@ -175,7 +185,17 @@ public class SupabaseAuthService : ISupabaseAuthService
             }
 
             // Update last login time and get email verification status
-            var userId = Guid.Parse(signInResponse.User!.Id);
+            if (signInResponse.User?.Id is null)
+            {
+                _logger.LogError("Login succeeded but no user ID returned from Supabase for email: {Email}", email);
+                return new AuthResult
+                {
+                    Success = false,
+                    ErrorMessage = "Login failed - invalid user data"
+                };
+            }
+
+            var userId = Guid.Parse(signInResponse.User.Id);
             var user = await _dbContext.Users.FindAsync(userId);
 
             bool isEmailVerified = false;
@@ -234,7 +254,17 @@ public class SupabaseAuthService : ISupabaseAuthService
                 };
             }
 
-            var userId = Guid.Parse(signInResponse.User!.Id);
+            if (signInResponse.User?.Id is null)
+            {
+                _logger.LogError("Sign in succeeded but no user ID returned from Supabase for email: {Email}", email);
+                return new AuthResult
+                {
+                    Success = false,
+                    ErrorMessage = "Sign in failed - invalid user data"
+                };
+            }
+
+            var userId = Guid.Parse(signInResponse.User.Id);
 
             DateTime? expiresAt = signInResponse.ExpiresAt() != default
                 ? signInResponse.ExpiresAt()

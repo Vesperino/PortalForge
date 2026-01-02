@@ -52,22 +52,35 @@ public class CancelVacationCommandHandler : IRequestHandler<CancelVacationComman
 
         // 3. Check authorization
         var isAdmin = cancelledBy.Role == UserRole.Admin;
+        var isOwner = vacation.UserId == request.CancelledByUserId;
         var isApprover = vacation.SourceRequest?.ApprovalSteps
             .Any(s => s.ApproverId == request.CancelledByUserId && s.Status == ApprovalStepStatus.Approved) ?? false;
 
+        var today = DateTime.UtcNow.Date;
+        var hasVacationStarted = vacation.StartDate <= today;
         var daysSinceStart = (DateTime.UtcNow - vacation.StartDate).Days;
 
         if (!isAdmin)
         {
-            if (!isApprover)
+            if (isOwner)
+            {
+                if (hasVacationStarted)
+                {
+                    throw new ValidationException(
+                        "Możesz anulować własny urlop tylko przed jego rozpoczęciem");
+                }
+            }
+            else if (isApprover)
+            {
+                if (daysSinceStart > 1)
+                {
+                    throw new ValidationException(
+                        "Przełożony może anulować urlop tylko do 1 dnia po jego rozpoczęciu. Skontaktuj się z administratorem.");
+                }
+            }
+            else
             {
                 throw new ForbiddenException("Nie masz uprawnień do anulowania tego urlopu");
-            }
-
-            if (daysSinceStart > 1)
-            {
-                throw new ValidationException(
-                    "Przełożony może anulować urlop tylko do 1 dnia po jego rozpoczęciu. Skontaktuj się z administratorem.");
             }
         }
 
