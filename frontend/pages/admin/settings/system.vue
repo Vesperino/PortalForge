@@ -10,7 +10,12 @@ const { testConnection } = useChatAI()
 const activeTab = ref<'storage' | 'ai'>('storage')
 const localSettings = ref<Record<string, string>>({})
 const isTesting = ref(false)
-const testResult = ref<any>(null)
+interface StorageTestResult {
+  success: boolean
+  message?: string
+}
+
+const testResult = ref<StorageTestResult | null>(null)
 const saveMessage = ref<string | null>(null)
 const saveError = ref<string | null>(null)
 const isTestingConnection = ref(false)
@@ -62,8 +67,9 @@ async function handleSave() {
       saveMessage.value = null
     }, 3000)
   }
-  catch (error: any) {
-    saveError.value = error?.message || 'Nie udało się zapisać ustawień'
+  catch (error: unknown) {
+    const errorData = error as { message?: string }
+    saveError.value = errorData?.message || 'Nie udało się zapisać ustawień'
   }
 }
 

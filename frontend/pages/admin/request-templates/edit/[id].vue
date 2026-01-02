@@ -400,7 +400,12 @@ const templateId = computed(() => route.params.id as string)
 // Load users, role groups, and departments
 const users = ref<UserDto[]>([])
 const roleGroups = ref<RoleGroupDto[]>([])
-const departments = ref<any[]>([])
+interface SimpleDepartment {
+  id: string
+  name: string
+}
+
+const departments = ref<SimpleDepartment[]>([])
 const loadingData = ref(true)
 
 const loading = ref(true)

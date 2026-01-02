@@ -67,7 +67,8 @@ const loadPermissions = async () => {
     // Check if user is Admin or HR - they should see all departments
     // Be robust to different role shapes/cases (string enum vs array of roles)
     const userRole = authStore.user?.role
-    const rolesArray = (authStore.user as any)?.roles as string[] | undefined
+    const user = authStore.user as { roles?: string[] } | null
+    const rolesArray = user?.roles
     const hasRole = (r?: string) => !!r && (
       r.toLowerCase() === 'admin' || r.toLowerCase() === 'hr'
     )
@@ -181,7 +182,7 @@ const handleExportPdf = async () => {
     )
 
     // Create download link
-    const blob = new Blob([response as any], { type: 'application/pdf' })
+    const blob = new Blob([response as BlobPart], { type: 'application/pdf' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -215,7 +216,7 @@ const handleExportExcel = async () => {
     )
 
     // Create download link
-    const blob = new Blob([response as any], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const blob = new Blob([response as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

@@ -153,7 +153,7 @@ export interface UpdateRequestTemplateDto {
 export interface SubmitRequestDto {
   requestTemplateId: string
   priority: RequestPriority
-  formData: Record<string, any>
+  formData: Record<string, unknown>
 }
 
 export interface ApproveStepDto {
@@ -162,6 +162,51 @@ export interface ApproveStepDto {
 
 export interface RejectStepDto {
   reason: string
+}
+
+export interface ApprovalHistoryItem {
+  requestId: string
+  stepId: string
+  requestNumber: string
+  templateName: string
+  templateIcon: string
+  submittedByName: string
+  submittedAt: string
+  decision: 'Approved' | 'Rejected'
+  finishedAt?: string
+  comment?: string
+}
+
+export interface RequestWithDetails extends Request {
+  comments?: RequestComment[]
+  attachments?: string[]
+  editHistory?: RequestEditHistoryItem[]
+}
+
+export interface RequestComment {
+  id: string
+  userId: string
+  userName: string
+  comment: string
+  attachments: string[]
+  createdAt: string
+}
+
+export interface RequestEditHistoryItem {
+  id: string
+  editedById: string
+  editedByName: string
+  editedAt: string
+  fieldName: string
+  oldValue: string
+  newValue: string
+}
+
+export type RequestTab = 'new' | 'my-requests' | 'to-approve' | 'approved-by-me'
+
+export interface StatusBadgeConfig {
+  class: string
+  label: string
 }
 
 export interface Notification {

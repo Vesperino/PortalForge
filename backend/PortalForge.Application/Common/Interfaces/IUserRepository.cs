@@ -4,10 +4,21 @@ namespace PortalForge.Application.Common.Interfaces;
 
 public interface IUserRepository
 {
-    Task<User?> GetByIdAsync(Guid id);
-    Task<User?> GetByEmailAsync(string email);
-    Task<IEnumerable<User>> GetAllAsync();
-    Task<Guid> CreateAsync(User user);
-    Task UpdateAsync(User user);
-    Task DeleteAsync(Guid id);
+    Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
+    Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<(IEnumerable<User> Users, int TotalCount)> GetFilteredAsync(
+        string? searchTerm,
+        string? department,
+        string? position,
+        string? role,
+        bool? isActive,
+        int pageNumber,
+        int pageSize,
+        string? sortBy,
+        bool sortDescending,
+        CancellationToken cancellationToken = default);
+    Task<Guid> CreateAsync(User user, CancellationToken cancellationToken = default);
+    Task UpdateAsync(User user, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

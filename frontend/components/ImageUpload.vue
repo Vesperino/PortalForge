@@ -115,7 +115,7 @@ function handlePaste(event: ClipboardEvent) {
           target: {
             files: [file]
           }
-        } as any
+        } as unknown as Event
         handleFileChange(fakeEvent)
       }
       break

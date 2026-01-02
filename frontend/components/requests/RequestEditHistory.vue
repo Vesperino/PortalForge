@@ -73,7 +73,7 @@ const formatFieldName = (key: string): string => {
     .trim()
 }
 
-const formatValue = (value: any): string => {
+const formatValue = (value: unknown): string => {
   if (value === null || value === undefined) return '-'
   if (typeof value === 'boolean') return value ? 'Tak' : 'Nie'
   if (typeof value === 'object') return JSON.stringify(value)

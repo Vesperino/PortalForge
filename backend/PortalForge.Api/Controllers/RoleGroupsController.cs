@@ -31,6 +31,7 @@ public class RoleGroupsController : BaseController
     }
 
     [HttpGet]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<GetRoleGroupsResult>> GetRoleGroups(
         [FromQuery] bool includePermissions = true)
     {
@@ -46,6 +47,7 @@ public class RoleGroupsController : BaseController
     }
 
     [HttpGet("{id}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<GetRoleGroupByIdResult>> GetRoleGroupById(Guid id)
     {
         _logger.LogInformation("Getting role group by ID: {RoleGroupId}", id);

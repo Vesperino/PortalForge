@@ -51,8 +51,8 @@ function onSelect(event: { value: Position }) {
 }
 
 // Keep position name in sync when typing; coerce objects to string; clear ID if no exact match
-watch(positionInput, (val: any) => {
-  const name = typeof val === 'string' ? val : (val && typeof val === 'object' && 'name' in val ? (val as any).name : '')
+watch(positionInput, (val: string | Position | null) => {
+  const name = typeof val === 'string' ? val : (val && typeof val === 'object' && 'name' in val ? val.name : '')
   if (typeof val !== 'string') {
     // Coerce model back to string to prevent sending objects in requests
     positionInput.value = name

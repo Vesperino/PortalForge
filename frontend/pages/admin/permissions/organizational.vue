@@ -337,14 +337,18 @@ const fetchUsers = async () => {
   error.value = null
 
   try {
+    interface UsersResponse {
+      users?: User[]
+    }
+
     const response = await $fetch(`${apiUrl}/api/admin/users`, {
       headers: getAuthHeaders(),
-    }) as any
+    }) as UsersResponse | User[]
 
-    if (response && response.users && Array.isArray(response.users)) {
-      users.value = response.users as User[]
+    if (response && 'users' in response && Array.isArray(response.users)) {
+      users.value = response.users
     } else if (Array.isArray(response)) {
-      users.value = response as User[]
+      users.value = response
     } else {
       console.error('Response is not in expected format:', response)
       users.value = []

@@ -24,7 +24,7 @@ const imageZoom = ref(100)
 const imageRotation = ref(0)
 
 // PDF component loaded dynamically
-const pdfComponent = ref<any>(null)
+const pdfComponent = ref<unknown>(null)
 const pdfSource = ref<string>('')
 
 // Determine file type from extension

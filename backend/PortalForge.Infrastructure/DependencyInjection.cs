@@ -56,6 +56,12 @@ public static class DependencyInjection
         // Register Vacation Calculation Service
         services.AddScoped<PortalForge.Application.Interfaces.IVacationCalculationService, PortalForge.Infrastructure.Services.VacationCalculationService>();
 
+        // Register Vacation Form Data Service
+        services.AddScoped<PortalForge.Application.Common.Interfaces.IVacationFormDataService, PortalForge.Infrastructure.Services.VacationFormDataService>();
+
+        // Register Vacation Days Deduction Service
+        services.AddScoped<PortalForge.Application.Common.Interfaces.IVacationDaysDeductionService, PortalForge.Infrastructure.Services.VacationDaysDeductionService>();
+
         // Register Audit Log Service
         services.AddScoped<PortalForge.Application.Interfaces.IAuditLogService, PortalForge.Infrastructure.Services.AuditLogService>();
 

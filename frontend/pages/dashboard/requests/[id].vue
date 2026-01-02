@@ -7,6 +7,13 @@ import RequestQuizAnswersDisplay from '~/components/requests/RequestQuizAnswersD
 import RequestAttachments from '~/components/requests/RequestAttachments.vue'
 import RequestComments from '~/components/requests/RequestComments.vue'
 import RequestEditHistory from '~/components/requests/RequestEditHistory.vue'
+import type { Request, RequestTemplate, RequestApprovalStep } from '~/types/requests'
+
+// Extended user type to support PascalCase Id
+interface UserWithId {
+  id?: string
+  Id?: string
+}
 
 definePageMeta({
   layout: 'default',
@@ -22,8 +29,8 @@ const toast = useNotificationToast()
 const requestId = route.params.id as string
 
 // State
-const request = ref<any | null>(null)
-const template = ref<any | null>(null)
+const request = ref<Request | null>(null)
+const template = ref<RequestTemplate | null>(null)
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 
@@ -40,8 +47,9 @@ const showQuizForm = ref(false)
 // Check if current user is the request submitter
 const isRequestSubmitter = computed(() => {
   if (!request.value || !authStore.user) return false
-  const submitterId = request.value.submittedById || (request.value as any).SubmittedById
-  const userId = authStore.user.id || (authStore.user as any).Id
+  const submitterId = request.value.submittedById
+  const user = authStore.user as UserWithId
+  const userId = user.id || user.Id
   return submitterId === userId
 })
 
@@ -49,23 +57,24 @@ const isRequestSubmitter = computed(() => {
 const isCurrentApprover = computed(() => {
   if (!request.value || !authStore.user) return false
 
-  const currentStep = request.value.approvalSteps.find((s: any) =>
-    s.status === 'InReview' || s.Status === 'InReview'
+  const currentStepItem = request.value.approvalSteps.find((s: RequestApprovalStep) =>
+    s.status === 'InReview'
   )
 
-  if (!currentStep) return false
+  if (!currentStepItem) return false
 
-  const approverId = currentStep.approverId || currentStep.ApproverId
-  const userId = authStore.user.id || authStore.user.Id
+  const approverId = currentStepItem.approverId
+  const user = authStore.user as UserWithId
+  const userId = user.id || user.Id
 
   return approverId === userId
 })
 
 // Get current approval step
-const currentStep = computed(() => {
-  if (!request.value) return null
-  return request.value.approvalSteps.find((s: any) =>
-    s.status === 'InReview' || s.Status === 'InReview'
+const currentStep = computed((): RequestApprovalStep | undefined => {
+  if (!request.value) return undefined
+  return request.value.approvalSteps.find((s: RequestApprovalStep) =>
+    s.status === 'InReview'
   )
 })
 
@@ -73,35 +82,37 @@ const currentStep = computed(() => {
 const canAddComment = computed(() => {
   if (!request.value || !authStore.user) return false
 
+  const user = authStore.user as UserWithId
+  const userId = user.id || user.Id
+
   // Submitter can always comment
-  if (request.value.submittedById === authStore.user.id) return true
+  if (request.value.submittedById === userId) return true
 
   // Approvers can comment
-  const isApprover = request.value.approvalSteps.some((s: any) => s.approverId === authStore.user.id)
+  const isApprover = request.value.approvalSteps.some((s: RequestApprovalStep) => s.approverId === userId)
   return isApprover
 })
 
 // Quiz-related computed properties
-// Note: Backend returns PascalCase, so we need to check both camelCase and PascalCase
 const requiresQuiz = computed(() => {
   const step = currentStep.value
-  return step?.requiresQuiz === true || (step as any)?.RequiresQuiz === true
+  return step?.requiresQuiz === true
 })
 
 const quizPassed = computed(() => {
   const step = currentStep.value
-  return step?.quizPassed === true || (step as any)?.QuizPassed === true
+  return step?.quizPassed === true
 })
 
 const quizScore = computed(() => {
   const step = currentStep.value
-  return step?.quizScore ?? (step as any)?.QuizScore
+  return step?.quizScore
 })
 
 const hasQuizQuestions = computed(() => {
   const step = currentStep.value
-  const questions = step?.quizQuestions || (step as any)?.QuizQuestions
-  return questions?.length > 0
+  const questions = step?.quizQuestions
+  return questions && questions.length > 0
 })
 
 const canApprove = computed(() => {
@@ -114,14 +125,14 @@ const canApprove = computed(() => {
 const formattedFormData = computed(() => {
   if (!request.value?.formData) return []
   try {
-    const data = JSON.parse(request.value.formData)
+    const data = JSON.parse(request.value.formData) as Record<string, unknown>
     const fields = template.value?.fields || []
     const labelById = new Map<string, string>()
 
     // Map field IDs to labels - handle both string and Guid types
     for (const f of fields) {
       // Handle both `id` and `Id` properties (backend uses `Id`, frontend uses `id`)
-      const fieldId = (f.id || (f as any).Id)?.toString().toLowerCase()
+      const fieldId = (f.id || f.Id)?.toString().toLowerCase()
       if (fieldId) {
         labelById.set(fieldId, f.label)
       }
@@ -148,7 +159,7 @@ const formatFieldName = (key: string): string => {
 }
 
 // Format field value
-const formatFieldValue = (value: any): string => {
+const formatFieldValue = (value: unknown): string => {
   if (value === null || value === undefined) return '-'
   if (typeof value === 'boolean') return value ? 'Tak' : 'Nie'
   if (typeof value === 'object') return JSON.stringify(value, null, 2)

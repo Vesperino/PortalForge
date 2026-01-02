@@ -2,7 +2,12 @@ namespace PortalForge.Application.UseCases.Requests.Commands.ApproveRequestStep;
 
 public class ApproveRequestStepResult
 {
-    public bool Success { get; set; }
-    public string Message { get; set; } = string.Empty;
-}
+    public bool IsSuccess { get; init; }
+    public string Message { get; init; } = string.Empty;
 
+    public static ApproveRequestStepResult Success(string message) =>
+        new() { IsSuccess = true, Message = message };
+
+    public static ApproveRequestStepResult Failure(string message) =>
+        new() { IsSuccess = false, Message = message };
+}

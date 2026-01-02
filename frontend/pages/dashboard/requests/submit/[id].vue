@@ -358,7 +358,7 @@ const templateId = route.params.id as string
 const template = ref<RequestTemplate | null>(null)
 const loading = ref(true)
 const error = ref('')
-const formData = ref<Record<string, any>>({})
+const formData = ref<Record<string, unknown>>({})
 const priority = ref<RequestPriority>('Standard')
 const submitting = ref(false)
 
@@ -536,7 +536,7 @@ const submitRequest = async () => {
 
     toast.success('Wniosek został złożony pomyślnie!', `Numer wniosku: ${result.requestNumber}`)
     navigateTo('/dashboard/requests')
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error submitting request:', err)
 
     // Show specific error message if available
@@ -544,7 +544,8 @@ const submitRequest = async () => {
     // - err?.data?.error (from global error handler)
     // - err?.data?.message (from validation errors)
     // - err?.message (from network/client errors)
-    const errorMessage = err?.data?.error || err?.data?.message || err?.message || 'Błąd podczas składania wniosku'
+    const errorData = err as { data?: { error?: string; message?: string }; message?: string }
+    const errorMessage = errorData?.data?.error || errorData?.data?.message || errorData?.message || 'Błąd podczas składania wniosku'
     toast.error('Błąd podczas składania wniosku', errorMessage)
   } finally {
     submitting.value = false

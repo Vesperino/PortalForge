@@ -33,6 +33,7 @@ public class UsersController : BaseController
     }
 
     [HttpGet]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<GetUsersResult>> GetUsers(
         [FromQuery] string? searchTerm,
         [FromQuery] string? department,
@@ -64,6 +65,7 @@ public class UsersController : BaseController
     }
 
     [HttpGet("{id}")]
+    [Authorize(Policy = "HrOrAdmin")]
     public async Task<ActionResult<AdminUserDto>> GetUserById(Guid id)
     {
         _logger.LogInformation("Getting user by ID: {UserId}", id);

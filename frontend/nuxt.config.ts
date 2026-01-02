@@ -33,8 +33,9 @@ const createIconSubset = (collection: IconifyJSON, names: string[]): IconifyJSON
       if (alias.parent) {
         includeIcon(alias.parent)
       }
-      if (Array.isArray((alias as any).aliases)) {
-        ;((alias as any).aliases as string[]).forEach(includeIcon)
+      const aliasWithNested = alias as { aliases?: string[] }
+      if (Array.isArray(aliasWithNested.aliases)) {
+        aliasWithNested.aliases.forEach(includeIcon)
       }
       return
     }

@@ -22,69 +22,27 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, GetUsersResul
         _logger.LogInformation("Getting users with filters: SearchTerm={SearchTerm}, Department={Department}, Role={Role}",
             request.SearchTerm, request.Department, request.Role);
 
-        // Get all users with their role groups
-        var allUsers = await _unitOfWork.UserRepository.GetAllAsync();
-        var query = allUsers.AsQueryable();
+        var (users, totalCount) = await _unitOfWork.UserRepository.GetFilteredAsync(
+            request.SearchTerm,
+            request.Department,
+            request.Position,
+            request.Role,
+            request.IsActive,
+            request.PageNumber,
+            request.PageSize,
+            request.SortBy,
+            request.SortDescending,
+            cancellationToken);
 
-        // Apply filters
-        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-        {
-            var searchLower = request.SearchTerm.ToLower();
-            query = query.Where(u =>
-                u.Email.ToLower().Contains(searchLower) ||
-                u.FirstName.ToLower().Contains(searchLower) ||
-                u.LastName.ToLower().Contains(searchLower));
-        }
+        var usersList = users.ToList();
 
-        if (!string.IsNullOrWhiteSpace(request.Department))
-        {
-            query = query.Where(u => u.Department == request.Department);
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.Position))
-        {
-            query = query.Where(u => u.Position == request.Position);
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.Role))
-        {
-            query = query.Where(u => u.Role.ToString() == request.Role);
-        }
-
-        if (request.IsActive.HasValue)
-        {
-            query = query.Where(u => u.IsActive == request.IsActive.Value);
-        }
-
-        // Get total count before pagination
-        var totalCount = query.Count();
-
-        // Apply sorting
-        query = request.SortBy?.ToLower() switch
-        {
-            "email" => request.SortDescending ? query.OrderByDescending(u => u.Email) : query.OrderBy(u => u.Email),
-            "firstname" => request.SortDescending ? query.OrderByDescending(u => u.FirstName) : query.OrderBy(u => u.FirstName),
-            "lastname" => request.SortDescending ? query.OrderByDescending(u => u.LastName) : query.OrderBy(u => u.LastName),
-            "department" => request.SortDescending ? query.OrderByDescending(u => u.Department) : query.OrderBy(u => u.Department),
-            "position" => request.SortDescending ? query.OrderByDescending(u => u.Position) : query.OrderBy(u => u.Position),
-            "createdat" => request.SortDescending ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt),
-            _ => request.SortDescending ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt)
-        };
-
-        // Apply pagination
-        var users = query
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
-            .ToList();
-
-        // Batch load role groups for all users (prevents N+1 query)
-        var userIds = users.Select(u => u.Id).ToList();
-        var allUserRoleGroups = await _unitOfWork.UserRoleGroupRepository.GetByUserIdsAsync(userIds);
+        var userIds = usersList.Select(u => u.Id).ToList();
+        var allUserRoleGroups = await _unitOfWork.UserRoleGroupRepository.GetByUserIdsAsync(userIds, cancellationToken);
         var userRoleGroupsLookup = allUserRoleGroups
             .GroupBy(urg => urg.UserId)
             .ToDictionary(g => g.Key, g => g.Select(urg => urg.RoleGroup.Name).ToList());
 
-        var userDtos = users.Select(user => new AdminUserDto
+        var userDtos = usersList.Select(user => new AdminUserDto
         {
             Id = user.Id,
             Email = user.Email,

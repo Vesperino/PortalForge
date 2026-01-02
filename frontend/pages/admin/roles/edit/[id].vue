@@ -208,9 +208,10 @@ onMounted(async () => {
 
     // Fetch permissions
     await permissionsStore.fetchPermissions()
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching role group:', error)
-    errorMessage.value = error?.data?.message || 'Nie udało się załadować grupy ról'
+    const errorData = error as { data?: { message?: string } }
+    errorMessage.value = errorData?.data?.message || 'Nie udało się załadować grupy ról'
   } finally {
     isLoading.value = false
   }
@@ -264,9 +265,10 @@ async function handleSubmit(): Promise<void> {
 
     // Redirect to roles list
     await router.push('/admin/roles')
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating role group:', error)
-    errorMessage.value = error?.data?.message || 'Nie udało się zaktualizować grupy ról'
+    const errorData = error as { data?: { message?: string } }
+    errorMessage.value = errorData?.data?.message || 'Nie udało się zaktualizować grupy ról'
   } finally {
     isSubmitting.value = false
   }

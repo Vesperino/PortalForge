@@ -35,10 +35,24 @@ const stats = computed(() => ({
   lastLogin: currentUser.value.lastLoginAt ? new Date(currentUser.value.lastLoginAt) : null
 }))
 
+// My vacation entry type
+interface MyVacationEntry {
+  id: string
+  startDate: string
+  endDate: string
+  status: string
+  substitute?: {
+    id: string
+    firstName: string
+    lastName: string
+  } | null
+  createdAt?: string
+}
+
 // Vacation API integration
 const { getUserVacationSummary, getMyVacations } = useVacations()
 const vacationSummary = ref<VacationSummary | null>(null)
-const myVacations = ref<any[]>([])
+const myVacations = ref<MyVacationEntry[]>([])
 const selectedYear = ref<number>(new Date().getFullYear())
 const availableYears = computed<number[]>(() => {
   const y = new Date().getFullYear()
@@ -47,7 +61,7 @@ const availableYears = computed<number[]>(() => {
 
 // Vacation details modal
 const showVacationModal = ref(false)
-const selectedVacation = ref<any | null>(null)
+const selectedVacation = ref<MyVacationEntry | null>(null)
 const openVacationDetails = (id: string | number) => {
   const found = myVacations.value.find(v => v.id === id)
   if (found) {

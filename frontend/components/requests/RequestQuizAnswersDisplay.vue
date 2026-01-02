@@ -23,10 +23,16 @@ interface Props {
 
 const props = defineProps<Props>()
 
+interface QuizOptionParsed {
+  value: string
+  label: string
+  isCorrect?: boolean
+}
+
 // Parse options JSON
-const parseOptions = (optionsJson: string) => {
+const parseOptions = (optionsJson: string): QuizOptionParsed[] => {
   try {
-    return JSON.parse(optionsJson)
+    return JSON.parse(optionsJson) as QuizOptionParsed[]
   } catch {
     return []
   }
@@ -48,7 +54,7 @@ const questionsWithAnswers = computed(() => {
     .map(question => {
       const answer = answersMap.value.get(question.id)
       const options = parseOptions(question.options)
-      const correctOption = options.find((opt: any) => opt.isCorrect)
+      const correctOption = options.find((opt: QuizOptionParsed) => opt.isCorrect)
 
       return {
         question: question.question,
@@ -152,7 +158,7 @@ const questionsWithAnswers = computed(() => {
       >
         <p>
           <span class="font-medium text-red-600 dark:text-red-400">Wybrano:</span>
-          {{ item.options.find((o: any) => o.value === item.selectedAnswer)?.label }}
+          {{ item.options.find((o: QuizOptionParsed) => o.value === item.selectedAnswer)?.label }}
         </p>
         <p>
           <span class="font-medium text-green-600 dark:text-green-400">Poprawna odpowiedź:</span>
