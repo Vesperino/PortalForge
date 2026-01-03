@@ -8,6 +8,7 @@ using PortalForge.Application.UseCases.Requests.Commands.EditRequest;
 using PortalForge.Application.UseCases.Requests.Commands.RejectRequestStep;
 using PortalForge.Application.UseCases.Requests.Commands.SubmitRequest;
 using PortalForge.Application.UseCases.Requests.Commands.SubmitQuizAnswers;
+using PortalForge.Application.UseCases.Requests.Queries.GetAllRequests;
 using PortalForge.Application.UseCases.Requests.Queries.GetMyRequests;
 using PortalForge.Application.UseCases.Requests.Queries.GetPendingApprovals;
 using PortalForge.Application.UseCases.Requests.Queries.GetRequestById;
@@ -34,6 +35,25 @@ public class RequestsController : BaseController
         _mediator = mediator;
         _logger = logger;
         _fileStorageService = fileStorageService;
+    }
+
+    /// <summary>
+    /// Get all requests (Admin/HR only)
+    /// Returns all requests in the system for administrative purposes
+    /// </summary>
+    [HttpGet("all")]
+    [Authorize(Policy = "HrOrAdmin")]
+    public async Task<ActionResult> GetAllRequests()
+    {
+        var unauthorizedResult = GetUserIdOrUnauthorized(out var userGuid);
+        if (unauthorizedResult != null)
+        {
+            return unauthorizedResult;
+        }
+
+        var query = new GetAllRequestsQuery { CurrentUserId = userGuid };
+        var result = await _mediator.Send(query);
+        return Ok(result);
     }
 
     /// <summary>

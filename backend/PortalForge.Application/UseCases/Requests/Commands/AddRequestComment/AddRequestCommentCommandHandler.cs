@@ -18,17 +18,20 @@ public class AddRequestCommentCommandHandler : IRequestHandler<AddRequestComment
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notificationService;
     private readonly IUnifiedValidatorService _validatorService;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<AddRequestCommentCommandHandler> _logger;
 
     public AddRequestCommentCommandHandler(
         IUnitOfWork unitOfWork,
         INotificationService notificationService,
         IUnifiedValidatorService validatorService,
+        ICurrentUserService currentUserService,
         ILogger<AddRequestCommentCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _notificationService = notificationService;
         _validatorService = validatorService;
+        _currentUserService = currentUserService;
         _logger = logger;
     }
 
@@ -44,12 +47,14 @@ public class AddRequestCommentCommandHandler : IRequestHandler<AddRequestComment
         var user = await _unitOfWork.UserRepository.GetByIdAsync(request.UserId)
             ?? throw new NotFoundException($"User with ID {request.UserId} not found");
 
-        // 3. Authorization check - only submitter and approvers can comment
+        // 3. Authorization check - submitter, approvers, Admin and HR can comment
         var isSubmitter = existingRequest.SubmittedById == request.UserId;
         var isApprover = existingRequest.ApprovalSteps
             .Any(s => s.ApproverId == request.UserId);
+        var isAdmin = _currentUserService.IsInRole("Admin");
+        var isHR = _currentUserService.IsInRole("HR");
 
-        if (!isSubmitter && !isApprover)
+        if (!isSubmitter && !isApprover && !isAdmin && !isHR)
         {
             throw new ForbiddenException("Możesz komentować tylko wnioski, w których jesteś składającym lub zatwierdzającym");
         }
