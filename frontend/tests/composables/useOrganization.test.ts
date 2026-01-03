@@ -4,10 +4,13 @@ import { useOrganization, type OrganizationEmployee, type OrganizationFilters } 
 import { useAuthStore } from '~/stores/auth'
 import type { DepartmentTreeDto } from '~/types/department'
 
+declare const clearNuxtState: () => void
+
 describe('useOrganization', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    clearNuxtState()
 
     const authStore = useAuthStore()
     authStore.accessToken = 'mock-token'
