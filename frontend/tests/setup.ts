@@ -43,6 +43,20 @@ globalThis.readonly = readonly
 globalThis.ref = ref
 globalThis.computed = computed
 
+// Mock Nuxt's useState - stores state by key to simulate global state sharing
+const stateStore = new Map<string, ReturnType<typeof ref>>()
+globalThis.useState = <T>(key: string, init?: () => T) => {
+  if (!stateStore.has(key)) {
+    stateStore.set(key, ref(init ? init() : undefined))
+  }
+  return stateStore.get(key) as ReturnType<typeof ref<T>>
+}
+
+// Function to clear useState store between tests
+globalThis.clearNuxtState = () => {
+  stateStore.clear()
+}
+
 // Mock useAuth composable
 globalThis.useAuth = vi.fn(() => ({
   login: vi.fn(),
