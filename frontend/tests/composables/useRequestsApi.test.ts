@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useRequestsApi } from '~/composables/useRequestsApi'
 import { useAuthStore } from '~/stores/auth'
-import type { RequestTemplate, Request, SubmitRequestDto, Notification } from '~/types/requests'
+import type { RequestTemplate, Request, ApprovalHistoryItem, SubmitRequestDto, Notification } from '~/types/requests'
 
 describe('useRequestsApi', () => {
   beforeEach(() => {
@@ -404,14 +404,14 @@ describe('useRequestsApi', () => {
 
     describe('getApprovalsHistory', () => {
       it('should fetch approvals history successfully', async () => {
-        const mockRequests: Request[] = []
+        const mockItems: ApprovalHistoryItem[] = []
 
-        global.$fetch = vi.fn().mockResolvedValue({ items: mockRequests })
+        global.$fetch = vi.fn().mockResolvedValue({ items: mockItems })
 
         const { getApprovalsHistory } = useRequestsApi()
         const result = await getApprovalsHistory()
 
-        expect(result).toEqual(mockRequests)
+        expect(result).toEqual(mockItems)
         expect(global.$fetch).toHaveBeenCalledWith(
           'http://localhost:5155/api/requests/approvals-history',
           expect.any(Object)
