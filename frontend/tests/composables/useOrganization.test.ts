@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useOrganization, type OrganizationEmployee, type OrganizationFilters } from '~/composables/useOrganization'
 import { useAuthStore } from '~/stores/auth'
+import { UserRole } from '~/types/auth'
 import type { DepartmentTreeDto } from '~/types/department'
 
 declare const clearNuxtState: () => void
@@ -14,6 +15,13 @@ describe('useOrganization', () => {
 
     const authStore = useAuthStore()
     authStore.accessToken = 'mock-token'
+    authStore.user = {
+      id: 'user-1',
+      email: 'john@example.com',
+      isEmailVerified: true,
+      role: UserRole.Admin,
+      departmentId: 'dept-1'
+    }
   })
 
   afterEach(() => {

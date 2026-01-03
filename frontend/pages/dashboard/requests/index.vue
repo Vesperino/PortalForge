@@ -165,8 +165,8 @@ const filteredRequests = computed((): Request[] => {
     const query = requestSearch.value.toLowerCase()
     result = result.filter(
       (r: Request) =>
-        r.requestNumber.toLowerCase().includes(query) ||
-        r.requestTemplateName.toLowerCase().includes(query)
+        (r.requestNumber || '').toLowerCase().includes(query) ||
+        (r.requestTemplateName || '').toLowerCase().includes(query)
     )
   }
 
@@ -179,9 +179,9 @@ const filteredApprovals = computed((): Request[] => {
   const query = approvalSearch.value.toLowerCase()
   return pendingApprovals.value.filter(
     (r: Request) =>
-      r.requestNumber.toLowerCase().includes(query) ||
-      r.requestTemplateName.toLowerCase().includes(query) ||
-      r.submittedByName?.toLowerCase().includes(query)
+      (r.requestNumber || '').toLowerCase().includes(query) ||
+      (r.requestTemplateName || '').toLowerCase().includes(query) ||
+      (r.submittedByName || '').toLowerCase().includes(query)
   )
 })
 
