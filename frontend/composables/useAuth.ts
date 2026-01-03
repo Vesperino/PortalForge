@@ -43,13 +43,16 @@ export function useAuth() {
   }
 
   async function logout() {
+    const token = authStore.accessToken
+    const shouldCallBackend = token ? !isTokenExpired(token) : false
+
     try {
       // Call backend logout if token exists
-      if (authStore.accessToken) {
+      if (token && shouldCallBackend) {
         await $fetch(`${apiUrl}/api/auth/logout`, {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${authStore.accessToken}`
+            Authorization: `Bearer ${token}`
           }
         })
       }
