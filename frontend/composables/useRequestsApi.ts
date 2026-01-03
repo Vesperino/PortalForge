@@ -1,6 +1,7 @@
 import type {
   RequestTemplate,
   Request,
+  ApprovalHistoryItem,
   CreateRequestTemplateDto,
   UpdateRequestTemplateDto,
   SubmitRequestDto,
@@ -14,6 +15,27 @@ export const useRequestsApi = () => {
   const { getAuthHeaders } = useAuth()
   const { handleError } = useApiError()
 
+  const normalizeArrayResponse = <T>(response: unknown, keys: string[]): T[] => {
+    if (Array.isArray(response)) return response as T[]
+
+    if (response && typeof response === 'object') {
+      for (const key of keys) {
+        const value = (response as Record<string, unknown>)[key]
+        if (Array.isArray(value)) return value as T[]
+      }
+    }
+
+    return []
+  }
+
+  const extractTemplate = (response: unknown): RequestTemplate => {
+    if (response && typeof response === 'object' && 'template' in response) {
+      const template = (response as { template?: RequestTemplate }).template
+      if (template) return template
+    }
+    return response as RequestTemplate
+  }
+
   // Request Templates
   const getAvailableTemplates = async () => {
     try {
@@ -22,8 +44,8 @@ export const useRequestsApi = () => {
         {
           headers: getAuthHeaders()
         }
-      ) as { templates: RequestTemplate[] }
-      return response.templates
+      )
+      return normalizeArrayResponse<RequestTemplate>(response, ['templates'])
     } catch (error) {
       handleError(error, { customMessage: 'Nie udalo sie pobrac dostepnych szablonow' })
       throw error
@@ -37,8 +59,8 @@ export const useRequestsApi = () => {
         {
           headers: getAuthHeaders()
         }
-      ) as { templates: RequestTemplate[] }
-      return response.templates
+      )
+      return normalizeArrayResponse<RequestTemplate>(response, ['templates'])
     } catch (error) {
       handleError(error, { customMessage: 'Nie udalo sie pobrac listy szablonow' })
       throw error
@@ -52,8 +74,8 @@ export const useRequestsApi = () => {
         {
           headers: getAuthHeaders()
         }
-      ) as { template: RequestTemplate }
-      return response.template
+      )
+      return extractTemplate(response)
     } catch (error) {
       handleError(error, { customMessage: 'Nie udalo sie pobrac szablonu' })
       throw error
@@ -134,8 +156,8 @@ export const useRequestsApi = () => {
         {
           headers: getAuthHeaders()
         }
-      ) as { requests: Request[] }
-      return response.requests
+      )
+      return normalizeArrayResponse<Request>(response, ['requests'])
     } catch (error) {
       handleError(error, { customMessage: 'Nie udalo sie pobrac Twoich wnioskow' })
       throw error
@@ -149,8 +171,8 @@ export const useRequestsApi = () => {
         {
           headers: getAuthHeaders()
         }
-      ) as { requests: Request[] }
-      return response.requests
+      )
+      return normalizeArrayResponse<Request>(response, ['requests'])
     } catch (error) {
       handleError(error, { customMessage: 'Nie udalo sie pobrac wnioskow do zatwierdzenia' })
       throw error
@@ -218,8 +240,8 @@ export const useRequestsApi = () => {
         {
           headers: getAuthHeaders()
         }
-      ) as { requests: Request[] }
-      return response.requests
+      )
+      return normalizeArrayResponse<Request>(response, ['requests'])
     } catch (error) {
       handleError(error, { customMessage: 'Nie udalo sie pobrac oczekujacych zatwierdzen' })
       throw error
@@ -233,8 +255,8 @@ export const useRequestsApi = () => {
         {
           headers: getAuthHeaders()
         }
-      ) as { items: Request[] }
-      return response.items
+      )
+      return normalizeArrayResponse<ApprovalHistoryItem>(response, ['items', 'requests'])
     } catch (error) {
       handleError(error, { customMessage: 'Nie udalo sie pobrac historii zatwierdzen' })
       throw error

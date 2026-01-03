@@ -32,8 +32,8 @@ const filteredTemplates = computed(() => {
   return props.templates.filter(
     (t: RequestTemplate) =>
       t.name.toLowerCase().includes(query) ||
-      t.description.toLowerCase().includes(query) ||
-      t.category.toLowerCase().includes(query)
+      (t.description || '').toLowerCase().includes(query) ||
+      (t.category || '').toLowerCase().includes(query)
   )
 })
 
