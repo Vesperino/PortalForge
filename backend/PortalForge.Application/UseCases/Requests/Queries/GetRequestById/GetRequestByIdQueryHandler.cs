@@ -165,19 +165,23 @@ public class GetRequestByIdQueryHandler : IRequestHandler<GetRequestByIdQuery, R
 
     private Task<bool> HasAccessToRequestAsync(Request request, Guid currentUserId)
     {
+        // User can view their own requests
         if (request.SubmittedById == currentUserId)
         {
             return Task.FromResult(true);
         }
 
+        // Approvers can view requests assigned to them
         var isApprover = request.ApprovalSteps.Any(s => s.ApproverId == currentUserId);
         if (isApprover)
         {
             return Task.FromResult(true);
         }
 
+        // Admin and HR can view all requests
         var isAdmin = _currentUserService.IsInRole(UserRole.Admin.ToString());
-        if (isAdmin)
+        var isHR = _currentUserService.IsInRole(UserRole.HR.ToString());
+        if (isAdmin || isHR)
         {
             return Task.FromResult(true);
         }
