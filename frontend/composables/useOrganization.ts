@@ -28,10 +28,10 @@ export function useOrganization() {
   const { getAuthHeaders } = useAuth()
   const { handleError } = useApiError()
 
-  const departments = ref<DepartmentTreeDto[]>([])
-  const allEmployees = ref<OrganizationEmployee[]>([])
-  const isLoading = ref(false)
-  const error = ref<string | null>(null)
+  const departments = useState<DepartmentTreeDto[]>('org-departments', () => [])
+  const allEmployees = useState<OrganizationEmployee[]>('org-employees', () => [])
+  const isLoading = useState<boolean>('org-loading', () => false)
+  const error = useState<string | null>('org-error', () => null)
 
   const loadDepartments = async (): Promise<void> => {
     try {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus, List, ClipboardList } from 'lucide-vue-next'
+import { Plus, List, ClipboardList, CheckCircle } from 'lucide-vue-next'
 import type { RequestTab } from '~/types/requests'
 
 interface Props {
@@ -24,68 +24,97 @@ const activeTab = computed({
   set: (value: RequestTab) => emit('update:modelValue', value)
 })
 
-const getTabClass = (tab: RequestTab): string => {
-  const baseClass = 'py-4 px-1 border-b-2 font-medium text-sm transition-colors'
-  const activeClass = 'border-blue-500 text-blue-600 dark:text-blue-400'
-  const inactiveClass =
-    'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-
-  return `${baseClass} ${activeTab.value === tab ? activeClass : inactiveClass}`
-}
+const isActive = (tab: RequestTab): boolean => activeTab.value === tab
 </script>
 
 <template>
   <div
-    class="mb-6 border-b border-gray-200 dark:border-gray-700"
+    class="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-1.5 inline-flex gap-1"
     data-testid="request-tabs"
   >
-    <nav class="-mb-px flex space-x-8">
-      <button :class="getTabClass('new')" @click="activeTab = 'new'">
-        <Plus class="w-4 h-4 inline mr-2" />
-        Nowy wniosek
-      </button>
+    <button
+      :class="[
+        'flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+        isActive('new')
+          ? 'bg-blue-600 text-white shadow-sm'
+          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+      ]"
+      @click="activeTab = 'new'"
+    >
+      <Plus class="w-4 h-4" />
+      <span>Nowy wniosek</span>
+    </button>
 
-      <button
-        :class="getTabClass('my-requests')"
-        @click="activeTab = 'my-requests'"
+    <button
+      :class="[
+        'flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+        isActive('my-requests')
+          ? 'bg-blue-600 text-white shadow-sm'
+          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+      ]"
+      @click="activeTab = 'my-requests'"
+    >
+      <List class="w-4 h-4" />
+      <span>Moje wnioski</span>
+      <span
+        v-if="myRequestsCount > 0"
+        :class="[
+          'px-2 py-0.5 text-xs rounded-full',
+          isActive('my-requests')
+            ? 'bg-white/20 text-white'
+            : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200'
+        ]"
       >
-        <List class="w-4 h-4 inline mr-2" />
-        Moje wnioski
-        <span
-          v-if="myRequestsCount > 0"
-          class="ml-2 px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full"
-        >
-          {{ myRequestsCount }}
-        </span>
-      </button>
+        {{ myRequestsCount }}
+      </span>
+    </button>
 
-      <button
-        v-if="pendingApprovalsCount > 0"
-        :class="getTabClass('to-approve')"
-        @click="activeTab = 'to-approve'"
+    <button
+      v-if="pendingApprovalsCount > 0"
+      :class="[
+        'flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+        isActive('to-approve')
+          ? 'bg-orange-500 text-white shadow-sm'
+          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+      ]"
+      @click="activeTab = 'to-approve'"
+    >
+      <ClipboardList class="w-4 h-4" />
+      <span>Do zatwierdzenia</span>
+      <span
+        :class="[
+          'px-2 py-0.5 text-xs rounded-full',
+          isActive('to-approve')
+            ? 'bg-white/20 text-white'
+            : 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300'
+        ]"
       >
-        <ClipboardList class="w-4 h-4 inline mr-2" />
-        Do zatwierdzenia
-        <span
-          class="ml-2 px-2 py-0.5 text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full"
-        >
-          {{ pendingApprovalsCount }}
-        </span>
-      </button>
+        {{ pendingApprovalsCount }}
+      </span>
+    </button>
 
-      <button
-        v-if="approvalsHistoryCount > 0"
-        :class="getTabClass('approved-by-me')"
-        @click="activeTab = 'approved-by-me'"
+    <button
+      v-if="approvalsHistoryCount > 0"
+      :class="[
+        'flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+        isActive('approved-by-me')
+          ? 'bg-green-600 text-white shadow-sm'
+          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+      ]"
+      @click="activeTab = 'approved-by-me'"
+    >
+      <CheckCircle class="w-4 h-4" />
+      <span>Historia</span>
+      <span
+        :class="[
+          'px-2 py-0.5 text-xs rounded-full',
+          isActive('approved-by-me')
+            ? 'bg-white/20 text-white'
+            : 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
+        ]"
       >
-        <Icon name="heroicons:check-circle" class="w-4 h-4 inline mr-2" />
-        Zatwierdzone przeze mnie
-        <span
-          class="ml-2 px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full"
-        >
-          {{ approvalsHistoryCount }}
-        </span>
-      </button>
-    </nav>
+        {{ approvalsHistoryCount }}
+      </span>
+    </button>
   </div>
 </template>
