@@ -84,7 +84,7 @@ export function useOrganization() {
         canViewAllDepartments: !!response.canViewAllDepartments,
         visibleDepartmentIds: Array.isArray(response.visibleDepartmentIds) ? response.visibleDepartmentIds : []
       }
-    } catch (_err) {
+    } catch {
       return { canViewAllDepartments: false, visibleDepartmentIds: [] }
     }
   }
