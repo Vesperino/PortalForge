@@ -1,7 +1,6 @@
 import type { Mock } from 'vitest'
-import type { Ref, ComputedRef } from 'vue'
-import type { User, UserRole } from '../types/auth'
-import type { useAuthStore } from '../stores/auth'
+import type { Ref } from 'vue'
+import type { useAuthStore as _useAuthStore } from '../stores/auth'
 
 declare global {
   // Nuxt composables
@@ -29,7 +28,7 @@ declare global {
 
   function navigateTo(path: string): void
 
-  function useAuthStore(): ReturnType<typeof useAuthStore>
+  function useAuthStore(): ReturnType<typeof _useAuthStore>
 
   function useState<T>(key: string, init?: () => T): Ref<T>
 
