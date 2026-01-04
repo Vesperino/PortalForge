@@ -1,83 +1,83 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Header -->
       <div class="mb-8">
         <NuxtLink
           to="/admin/users"
-          class="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+          class="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mb-4"
         >
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
           Powrót do listy użytkowników
         </NuxtLink>
-        <h1 class="text-3xl font-bold text-gray-900">Edytuj Użytkownika</h1>
-        <p class="mt-2 text-gray-600">Zaktualizuj dane użytkownika</p>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Edytuj Użytkownika</h1>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Zaktualizuj dane użytkownika</p>
       </div>
 
       <!-- Loading State -->
-      <div v-if="loading && !form" class="bg-white rounded-lg shadow-md p-12 text-center">
+      <div v-if="loading && !form" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"/>
-        <p class="mt-4 text-gray-600">Ładowanie danych użytkownika...</p>
+        <p class="mt-4 text-gray-600 dark:text-gray-400">Ładowanie danych użytkownika...</p>
       </div>
 
       <!-- Error Message -->
-      <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-        <p class="text-red-800">{{ error }}</p>
+      <div v-if="error" class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+        <p class="text-red-800 dark:text-red-300">{{ error }}</p>
       </div>
 
       <!-- Form -->
-      <form v-if="form" class="bg-white rounded-lg shadow-md p-6" @submit.prevent="handleSubmit">
+      <form v-if="form" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6" @submit.prevent="handleSubmit">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Email (read-only) -->
           <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Email
             </label>
             <input
               :value="currentUser?.email"
               type="email"
               disabled
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
             >
           </div>
 
           <!-- First Name -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Imię <span class="text-red-500">*</span>
             </label>
             <input
               v-model="form.firstName"
               type="text"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
           </div>
 
           <!-- Last Name -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Nazwisko <span class="text-red-500">*</span>
             </label>
             <input
               v-model="form.lastName"
               type="text"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
           </div>
 
           <!-- Department -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Dział <span class="text-red-500">*</span>
             </label>
             <select
               v-model="form.department"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               @change="handleDepartmentChange"
             >
               <option value="">Wybierz dział</option>
@@ -93,11 +93,12 @@
 
           <!-- Position -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Stanowisko <span class="text-red-500">*</span>
             </label>
             <PositionAutocomplete
               :model-value="positionId"
+              :initial-position-name="positionName"
               placeholder="Wpisz lub wybierz stanowisko..."
               required
               @update:model-value="handlePositionUpdate"
@@ -107,7 +108,7 @@
 
           <!-- Phone Number -->
           <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Numer telefonu
             </label>
             <input
@@ -115,28 +116,28 @@
               type="tel"
               placeholder="+48123456789"
               :class="[
-                'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:border-transparent',
-                phoneError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                'w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:border-transparent',
+                phoneError ? 'border-red-300 dark:border-red-600 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
               ]"
               @input="validatePhone"
             >
-            <p v-if="phoneError" class="mt-1 text-xs text-red-600">
+            <p v-if="phoneError" class="mt-1 text-xs text-red-600 dark:text-red-400">
               {{ phoneError }}
             </p>
-            <p v-else class="mt-1 text-xs text-gray-500">
+            <p v-else class="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Format: +48123456789 lub 123456789 (bez spacji)
             </p>
           </div>
 
           <!-- Role -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Rola <span class="text-red-500">*</span>
             </label>
             <select
               v-model="form.role"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="Employee">Employee</option>
               <option value="Manager">Manager</option>
@@ -148,10 +149,10 @@
 
           <!-- Role Groups -->
           <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Grupy Ról
             </label>
-            <div v-if="roleGroupsStore.loading" class="text-gray-500">
+            <div v-if="roleGroupsStore.loading" class="text-gray-500 dark:text-gray-400">
               Ładowanie grup ról...
             </div>
             <div v-else class="space-y-2">
@@ -164,11 +165,11 @@
                   v-model="form.roleGroupIds"
                   type="checkbox"
                   :value="roleGroup.id"
-                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
                 >
-                <span class="ml-2 text-sm text-gray-700">
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                   {{ roleGroup.name }}
-                  <span class="text-gray-500">({{ roleGroup.description }})</span>
+                  <span class="text-gray-500 dark:text-gray-400">({{ roleGroup.description }})</span>
                 </span>
               </label>
             </div>
@@ -176,7 +177,7 @@
 
           <!-- New Password -->
           <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Resetuj hasło
             </label>
             <input
@@ -184,15 +185,15 @@
               type="password"
               placeholder="Pozostaw puste, aby nie zmieniać hasła"
               :class="[
-                'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:border-transparent',
-                passwordError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                'w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:border-transparent',
+                passwordError ? 'border-red-300 dark:border-red-600 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
               ]"
               @input="validatePassword"
             >
-            <p v-if="passwordError" class="mt-1 text-xs text-red-600">
+            <p v-if="passwordError" class="mt-1 text-xs text-red-600 dark:text-red-400">
               {{ passwordError }}
             </p>
-            <p v-else class="mt-1 text-xs text-gray-500">
+            <p v-else class="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Pozostaw puste, aby nie zmieniać hasła. Hasło musi zawierać minimum 8 znaków, w tym wielką literę, małą literę i cyfrę.
             </p>
           </div>
@@ -203,9 +204,9 @@
               <input
                 v-model="form.isActive"
                 type="checkbox"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
               >
-              <span class="ml-2 text-sm text-gray-700">
+              <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                 Konto aktywne
               </span>
             </label>
@@ -216,7 +217,7 @@
         <div class="mt-6 flex justify-end space-x-4">
           <NuxtLink
             to="/admin/users"
-            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             Anuluj
           </NuxtLink>
