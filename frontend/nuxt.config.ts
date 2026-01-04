@@ -113,8 +113,8 @@ export default defineNuxtConfig({
       { path: '~/components/layout', pathPrefix: false },
       { path: '~/components/base', pathPrefix: false },
       { path: '~/components/vacation', pathPrefix: false },
-      // Root components (no subfolder)
-      { path: '~/components', pathPrefix: false, ignore: ['**/admin/**', '**/common/**', '**/internal-services/**'] },
+      // Root components (no subfolder) - ignore all subdirectories configured above
+      { path: '~/components', pathPrefix: false, ignore: ['**/admin/**', '**/common/**', '**/internal-services/**', '**/organization/**', '**/requests/**', '**/layout/**', '**/base/**', '**/vacation/**'] },
       // These folders use path prefix in template (e.g., <CommonUserAutocomplete>)
       { path: '~/components/admin', pathPrefix: true },
       { path: '~/components/common', pathPrefix: true },
