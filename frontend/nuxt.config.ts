@@ -102,6 +102,16 @@ export default defineNuxtConfig({
     fallback: 'light',
   },
 
+  // Component auto-import configuration
+  components: {
+    dirs: [
+      {
+        path: '~/components',
+        pathPrefix: false, // Allow using component names without directory prefix
+      },
+    ],
+  },
+
   css: ['~/assets/css/main.css'],
 
   typescript: {

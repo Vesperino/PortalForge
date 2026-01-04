@@ -88,18 +88,6 @@ watch(() => route.path, (newPath) => {
       </div>
     </div>
 
-    <!-- Debug panel - remove after fixing -->
-    <div class="bg-yellow-100 dark:bg-yellow-900 p-4 rounded-lg text-sm">
-      <p><strong>Debug:</strong></p>
-      <p>isLoading: {{ isLoading }}</p>
-      <p>error: {{ error }}</p>
-      <p>viewMode: {{ viewMode }}</p>
-      <p>departments.length: {{ departments.length }}</p>
-      <p>departmentsFlat.length: {{ departmentsFlat.length }}</p>
-      <p>allEmployees.length: {{ allEmployees.length }}</p>
-      <p v-if="departmentsFlat.length > 0">First dept: {{ departmentsFlat[0]?.name }}</p>
-    </div>
-
     <OrgFilters
       v-model:view-mode="viewMode"
       v-model:search-query="searchQuery"
