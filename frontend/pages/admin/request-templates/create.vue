@@ -76,13 +76,19 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Kategoria *
             </label>
-            <input
+            <select
               v-model="form.category"
-              type="text"
               required
-              placeholder="np. Hardware, Software, HR"
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
+              <option value="">Wybierz kategorię</option>
+              <option value="General">Ogólne</option>
+              <option value="HR">HR / Kadry</option>
+              <option value="IT">IT / Technologie</option>
+              <option value="Finance">Finanse</option>
+              <option value="Operations">Operacje</option>
+              <option value="Other">Inne</option>
+            </select>
           </div>
 
           <div>
@@ -201,16 +207,19 @@
                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                         >
                           <option value="Text">Tekst</option>
-                          <option value="Textarea">Pole tekstowe</option>
+                          <option value="TextArea">Pole tekstowe</option>
                           <option value="Number">Liczba</option>
-                          <option value="Select">Lista wyboru</option>
+                          <option value="Dropdown">Lista wyboru</option>
                           <option value="Date">Data</option>
                           <option value="Checkbox">Checkbox</option>
+                          <option value="Email">Email</option>
+                          <option value="Phone">Telefon</option>
+                          <option value="File">Plik</option>
                         </select>
                       </div>
                     </div>
 
-                    <div v-if="field.fieldType !== 'Select' && field.fieldType !== 'Checkbox'">
+                    <div v-if="field.fieldType !== 'Dropdown' && field.fieldType !== 'Checkbox'">
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Placeholder
                       </label>
@@ -222,8 +231,8 @@
                       >
                     </div>
 
-                    <!-- Options for Select and Checkbox -->
-                    <div v-if="field.fieldType === 'Select' || field.fieldType === 'Checkbox'" class="space-y-2">
+                    <!-- Options for Dropdown and Checkbox -->
+                    <div v-if="field.fieldType === 'Dropdown' || field.fieldType === 'Checkbox'" class="space-y-2">
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Opcje do wyboru
                       </label>

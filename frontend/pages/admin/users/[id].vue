@@ -342,10 +342,14 @@ const handleSubmit = async () => {
   try {
     // Update position with the current value from autocomplete
     form.value.position = positionName.value
-    form.value.positionId = positionId.value
+    // Convert empty string to null for Guid? fields
+    form.value.positionId = positionId.value && positionId.value.trim() !== '' ? positionId.value : null
 
-    // Ensure departmentId is set
-    form.value.departmentId = departmentId.value
+    // Ensure departmentId is set (convert empty string to null)
+    form.value.departmentId = departmentId.value && departmentId.value.trim() !== '' ? departmentId.value : null
+
+    // Filter out any invalid/empty roleGroupIds
+    form.value.roleGroupIds = (form.value.roleGroupIds || []).filter(id => id && id.trim() !== '')
 
     // Remove NewPassword if empty
     if (!form.value.NewPassword || form.value.NewPassword.trim() === '') {

@@ -355,7 +355,7 @@ onUnmounted(() => {
       v-if="hasChildren && isExpanded"
       class="department-children"
     >
-      <DepartmentTree
+      <AdminDepartmentTree
         v-for="child in department.children"
         :key="child.id"
         :department="child"

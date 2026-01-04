@@ -210,8 +210,8 @@
 import type { InternalService, InternalServiceCategory } from '~/types/internal-services'
 
 definePageMeta({
-  middleware: 'auth',
-  layout: 'dashboard'
+  middleware: ['auth', 'verified', 'admin'],
+  layout: 'default'
 })
 
 const { fetchAllServices, deleteService, fetchAllCategories } = useInternalServicesApi()
