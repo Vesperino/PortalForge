@@ -356,9 +356,8 @@ const fetchUsers = async () => {
       return
     }
 
-    for (const user of users.value) {
-      await loadUserPermissions(user.id)
-    }
+    // Load all permissions in parallel to avoid N+1 issue
+    await Promise.all(users.value.map(user => loadUserPermissions(user.id)))
   } catch (err: unknown) {
     console.error('Error fetching users:', err)
     error.value = err instanceof Error ? err.message : 'Nie udało się załadować użytkowników'

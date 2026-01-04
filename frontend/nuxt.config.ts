@@ -103,23 +103,21 @@ export default defineNuxtConfig({
   },
 
   // Component auto-import configuration
-  // Folders where filename includes folder name (e.g., base/BaseButton.vue) use pathPrefix: false
-  // Folders where prefix is used in template (e.g., <AdminStructureDepartmentTree>) use pathPrefix: true
-  components: {
-    dirs: [
-      // These folders don't need path prefix (filename includes folder name or is unique)
-      { path: '~/components/organization', pathPrefix: false },
-      { path: '~/components/requests', pathPrefix: false },
-      { path: '~/components/base', pathPrefix: false },
-      { path: '~/components/vacation', pathPrefix: false },
-      // Root components
-      { path: '~/components', pathPrefix: false, ignore: ['**/admin/**', '**/common/**', '**/internal-services/**', '**/organization/**', '**/requests/**', '**/base/**', '**/vacation/**'] },
-      // These folders use path prefix in template (e.g., <CommonUserAutocomplete>)
-      { path: '~/components/admin', pathPrefix: true },
-      { path: '~/components/common', pathPrefix: true },
-      { path: '~/components/internal-services', pathPrefix: true },
-    ],
-  },
+  // Components are registered based on their folder structure
+  components: [
+    // Folders where filename includes folder name - no prefix needed
+    { path: '~/components/organization', pathPrefix: false },
+    { path: '~/components/requests', pathPrefix: false },
+    { path: '~/components/base', pathPrefix: false },
+    { path: '~/components/vacation', pathPrefix: false },
+    // Root components - excludes nested folders that have their own config
+    { path: '~/components', pathPrefix: false, ignore: ['**/admin/**', '**/common/**', '**/internal-services/**', '**/organization/**', '**/requests/**', '**/base/**', '**/vacation/**'] },
+    // Folders with explicit prefix + pathPrefix for nested folders
+    // e.g., admin/structure/DepartmentTree.vue -> AdminStructureDepartmentTree
+    { path: '~/components/admin', prefix: 'Admin', pathPrefix: true },
+    { path: '~/components/common', prefix: 'Common', pathPrefix: true },
+    { path: '~/components/internal-services', prefix: 'InternalServices', pathPrefix: true },
+  ],
 
   css: ['~/assets/css/main.css'],
 
