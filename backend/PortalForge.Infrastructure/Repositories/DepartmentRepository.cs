@@ -35,6 +35,7 @@ public class DepartmentRepository : IDepartmentRepository
             .Include(d => d.Director)
             .Include(d => d.HeadOfDepartmentSubstitute)
             .Include(d => d.DirectorSubstitute)
+            .Include(d => d.Employees.Where(e => e.IsActive))
             .ToListAsync();
     }
 

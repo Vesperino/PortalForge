@@ -19,8 +19,15 @@ export const useRequestsApi = () => {
     if (Array.isArray(response)) return response as T[]
 
     if (response && typeof response === 'object') {
+      const responseObj = response as Record<string, unknown>
       for (const key of keys) {
-        const value = (response as Record<string, unknown>)[key]
+        // Check both exact key and case variations (camelCase/PascalCase)
+        const value = responseObj[key] ?? responseObj[key.charAt(0).toUpperCase() + key.slice(1)]
+        if (Array.isArray(value)) return value as T[]
+      }
+      // Fallback: search for any array property in the response
+      for (const propKey of Object.keys(responseObj)) {
+        const value = responseObj[propKey]
         if (Array.isArray(value)) return value as T[]
       }
     }
