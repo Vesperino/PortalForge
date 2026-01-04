@@ -33,10 +33,9 @@ public class SubmitRequestCommandValidator : AbstractValidator<SubmitRequestComm
             .MaximumLength(10000).WithMessage("Form data cannot exceed 10000 characters")
             .Must(BeValidJson).WithMessage("Form data must be valid JSON");
 
-        // Validate approval structure
+        // Validate approval structure using Custom to add multiple specific errors
         RuleFor(x => x)
-            .MustAsync(ValidateApprovalStructure)
-            .WithMessage("Cannot submit request: {ValidationErrors}");
+            .CustomAsync(ValidateApprovalStructureAsync);
     }
 
     private async Task<bool> RequestTemplateExists(Guid requestTemplateId, CancellationToken cancellationToken)
@@ -73,15 +72,16 @@ public class SubmitRequestCommandValidator : AbstractValidator<SubmitRequestComm
         }
     }
 
-    private async Task<bool> ValidateApprovalStructure(
+    private async Task ValidateApprovalStructureAsync(
         SubmitRequestCommand command,
+        ValidationContext<SubmitRequestCommand> context,
         CancellationToken cancellationToken)
     {
         // Get the template with approval steps
         var template = await _unitOfWork.RequestTemplateRepository.GetByIdAsync(command.RequestTemplateId);
         if (template == null || !template.RequiresApproval)
         {
-            return true; // No approval required, validation passes
+            return; // No approval required, validation passes
         }
 
         // Validate the approval structure
@@ -91,11 +91,11 @@ public class SubmitRequestCommandValidator : AbstractValidator<SubmitRequestComm
 
         if (!isValid)
         {
-            // Store errors in the validation context for the error message
-            var errorMessage = string.Join("; ", errors);
-            throw new ValidationException($"Cannot submit request: {errorMessage}");
+            // Add each error as a separate validation failure
+            foreach (var error in errors)
+            {
+                context.AddFailure("ApprovalStructure", error);
+            }
         }
-
-        return true;
     }
 }

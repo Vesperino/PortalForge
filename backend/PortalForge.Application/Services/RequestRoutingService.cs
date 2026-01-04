@@ -242,6 +242,8 @@ public class RequestRoutingService : IRequestRoutingService
 
     /// <summary>
     /// Resolves department head (manager) from submitter's department.
+    /// If submitter is the head, escalates to department director or parent department.
+    /// Handles cases where user is head of multiple departments in the hierarchy.
     /// </summary>
     private async Task<User?> ResolveDepartmentHeadAsync(User submitter)
     {
@@ -258,23 +260,75 @@ public class RequestRoutingService : IRequestRoutingService
             return null;
         }
 
-        if (dept.HeadOfDepartment == null)
+        // If department has a head who is not the submitter, use them
+        if (dept.HeadOfDepartment != null && dept.HeadOfDepartment.Id != submitter.Id)
         {
-            _logger.LogWarning("Department {DepartmentId} has no head assigned", dept.Id);
-            return null;
+            return dept.HeadOfDepartment;
         }
 
-        if (dept.HeadOfDepartment.Id == submitter.Id)
+        // Submitter is the department head (or no head assigned) - need to escalate
+        _logger.LogInformation(
+            "User {UserId} is the head of department {DepartmentId} or no head assigned - escalating approval",
+            submitter.Id, dept.Id);
+
+        // First, try to use the department director (if exists and is not the submitter)
+        if (dept.Director != null && dept.Director.Id != submitter.Id)
         {
-            _logger.LogWarning("User {UserId} is the head of their own department - cannot approve own request", submitter.Id);
-            return null;
+            _logger.LogInformation(
+                "Escalating to department director {DirectorId} for user {UserId}",
+                dept.Director.Id, submitter.Id);
+            return dept.Director;
         }
 
-        return dept.HeadOfDepartment;
+        // Traverse up the department hierarchy to find a suitable approver
+        // (handles case where user is head of multiple departments)
+        var visitedDepartments = new HashSet<Guid> { dept.Id };
+        var currentDept = dept;
+
+        while (currentDept.ParentDepartmentId.HasValue)
+        {
+            if (visitedDepartments.Contains(currentDept.ParentDepartmentId.Value))
+            {
+                _logger.LogWarning("Circular department hierarchy detected at department {DepartmentId}", currentDept.Id);
+                break;
+            }
+
+            var parentDept = await _unitOfWork.DepartmentRepository.GetByIdAsync(currentDept.ParentDepartmentId.Value);
+            if (parentDept == null) break;
+
+            visitedDepartments.Add(parentDept.Id);
+
+            // Try parent department's head
+            if (parentDept.HeadOfDepartment != null && parentDept.HeadOfDepartment.Id != submitter.Id)
+            {
+                _logger.LogInformation(
+                    "Escalating to parent department head {HeadId} for user {UserId}",
+                    parentDept.HeadOfDepartment.Id, submitter.Id);
+                return parentDept.HeadOfDepartment;
+            }
+
+            // Try parent department's director
+            if (parentDept.Director != null && parentDept.Director.Id != submitter.Id)
+            {
+                _logger.LogInformation(
+                    "Escalating to parent department director {DirectorId} for user {UserId}",
+                    parentDept.Director.Id, submitter.Id);
+                return parentDept.Director;
+            }
+
+            currentDept = parentDept;
+        }
+
+        _logger.LogWarning(
+            "No suitable approver found for department head {UserId} in department {DepartmentId} after traversing hierarchy",
+            submitter.Id, dept.Id);
+        return null;
     }
 
     /// <summary>
     /// Resolves department director from submitter's department.
+    /// If submitter is the director, escalates to parent department.
+    /// Handles cases where user is director of multiple departments in the hierarchy.
     /// </summary>
     private async Task<User?> ResolveDepartmentDirectorAsync(User submitter)
     {
@@ -291,19 +345,60 @@ public class RequestRoutingService : IRequestRoutingService
             return null;
         }
 
-        if (dept.Director == null)
+        // If department has a director who is not the submitter, use them
+        if (dept.Director != null && dept.Director.Id != submitter.Id)
         {
-            _logger.LogWarning("Department {DepartmentId} has no director assigned", dept.Id);
-            return null;
+            return dept.Director;
         }
 
-        if (dept.Director.Id == submitter.Id)
+        // Submitter is the department director (or no director assigned) - need to escalate
+        _logger.LogInformation(
+            "User {UserId} is the director of department {DepartmentId} or no director assigned - escalating approval",
+            submitter.Id, dept.Id);
+
+        // Traverse up the department hierarchy to find a suitable approver
+        // (handles case where user is director of multiple departments)
+        var visitedDepartments = new HashSet<Guid> { dept.Id };
+        var currentDept = dept;
+
+        while (currentDept.ParentDepartmentId.HasValue)
         {
-            _logger.LogWarning("User {UserId} is the director of their own department - cannot approve own request", submitter.Id);
-            return null;
+            if (visitedDepartments.Contains(currentDept.ParentDepartmentId.Value))
+            {
+                _logger.LogWarning("Circular department hierarchy detected at department {DepartmentId}", currentDept.Id);
+                break;
+            }
+
+            var parentDept = await _unitOfWork.DepartmentRepository.GetByIdAsync(currentDept.ParentDepartmentId.Value);
+            if (parentDept == null) break;
+
+            visitedDepartments.Add(parentDept.Id);
+
+            // Try parent department's director first (since we're looking for director-level approval)
+            if (parentDept.Director != null && parentDept.Director.Id != submitter.Id)
+            {
+                _logger.LogInformation(
+                    "Escalating to parent department director {DirectorId} for user {UserId}",
+                    parentDept.Director.Id, submitter.Id);
+                return parentDept.Director;
+            }
+
+            // Try parent department's head as fallback
+            if (parentDept.HeadOfDepartment != null && parentDept.HeadOfDepartment.Id != submitter.Id)
+            {
+                _logger.LogInformation(
+                    "Escalating to parent department head {HeadId} for user {UserId}",
+                    parentDept.HeadOfDepartment.Id, submitter.Id);
+                return parentDept.HeadOfDepartment;
+            }
+
+            currentDept = parentDept;
         }
 
-        return dept.Director;
+        _logger.LogWarning(
+            "No suitable approver found for department director {UserId} in department {DepartmentId} after traversing hierarchy",
+            submitter.Id, dept.Id);
+        return null;
     }
 
     /// <summary>

@@ -113,8 +113,19 @@
             <input
               v-model="form.phoneNumber"
               type="tel"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="+48123456789"
+              :class="[
+                'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:border-transparent',
+                phoneError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+              ]"
+              @input="validatePhone"
             >
+            <p v-if="phoneError" class="mt-1 text-xs text-red-600">
+              {{ phoneError }}
+            </p>
+            <p v-else class="mt-1 text-xs text-gray-500">
+              Format: +48123456789 lub 123456789 (bez spacji)
+            </p>
           </div>
 
           <!-- Role -->
@@ -259,10 +270,28 @@ const form = ref<UpdateUserRequest | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
 const passwordError = ref<string | null>(null)
+const phoneError = ref<string | null>(null)
 const departments = ref<DepartmentTreeDto[]>([])
 const positionId = ref<string | null>(null)
 const positionName = ref<string>('')
 const departmentId = ref<string | null>(null)
+
+// Phone number validation regex (matches backend)
+const isValidPhone = (phone: string): boolean => {
+  if (!phone || phone.trim() === '') return true // Empty is valid
+  return /^\+?[1-9]\d{1,14}$/.test(phone.replace(/\s/g, ''))
+}
+
+const validatePhone = (): boolean => {
+  if (!form.value) return true
+  const phone = form.value.phoneNumber?.trim() || ''
+  if (phone && !isValidPhone(phone)) {
+    phoneError.value = 'Nieprawidłowy format numeru telefonu. Użyj formatu: +48123456789 lub 123456789'
+    return false
+  }
+  phoneError.value = null
+  return true
+}
 
 const loadDepartments = async () => {
   try {
@@ -293,9 +322,10 @@ const loadUser = async () => {
   try {
     const user = await adminStore.fetchUserById(userId)
 
-    // Map role groups names to IDs
+    // Map role groups names to IDs (case-insensitive comparison)
+    const userRoleGroupNames = (user.roleGroups || []).map((name: string) => name.toLowerCase())
     const roleGroupIds = roleGroupsStore.roleGroups
-      .filter(rg => user.roleGroups.includes(rg.name))
+      .filter(rg => userRoleGroupNames.includes(rg.name.toLowerCase()))
       .map(rg => rg.id)
 
     // Set position name for autocomplete
@@ -328,6 +358,11 @@ const loadUser = async () => {
 const handleSubmit = async () => {
   if (!form.value) return
 
+  // Validate phone number
+  if (!validatePhone()) {
+    return // Stop submission if phone validation fails
+  }
+
   // Validate password if provided
   if (form.value.NewPassword && form.value.NewPassword.trim() !== '') {
     const validationResult = validatePassword()
@@ -350,6 +385,11 @@ const handleSubmit = async () => {
 
     // Filter out any invalid/empty roleGroupIds
     form.value.roleGroupIds = (form.value.roleGroupIds || []).filter(id => id && id.trim() !== '')
+
+    // Clean phone number - remove spaces and convert empty to null
+    if (form.value.phoneNumber) {
+      form.value.phoneNumber = form.value.phoneNumber.trim().replace(/\s/g, '') || null
+    }
 
     // Remove NewPassword if empty
     if (!form.value.NewPassword || form.value.NewPassword.trim() === '') {
