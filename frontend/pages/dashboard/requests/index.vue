@@ -32,22 +32,22 @@
           v-model="requestSearch"
           :status-value="statusFilter"
           :show-status-filter="true"
-          search-placeholder="Szukaj wniosków..."
+          search-placeholder="Szukaj wnioskow..."
           @update:status-value="statusFilter = $event"
         />
 
         <RequestList
           :requests="filteredRequests"
           :loading="loadingRequests"
-          empty-title="Brak wniosków"
-          empty-message="Nie masz jeszcze żadnych wniosków. Złóż pierwszy wniosek klikając w zakładkę 'Nowy wniosek'"
+          empty-title="Brak wnioskow"
+          empty-message="Nie masz jeszcze zadnych wnioskow. Zloz pierwszy wniosek klikajac w zakladke 'Nowy wniosek'"
         />
       </div>
 
       <div v-else-if="activeTab === 'to-approve'" class="space-y-6">
         <RequestFilters
           v-model="approvalSearch"
-          search-placeholder="Szukaj wniosków..."
+          search-placeholder="Szukaj wnioskow..."
         />
 
         <PendingApprovalList
@@ -232,44 +232,52 @@ const handleQuizSubmit = async (
 }
 
 const loadTemplates = async (): Promise<void> => {
+  loadingTemplates.value = true
   try {
-    loadingTemplates.value = true
-    templates.value = await getAvailableTemplates()
+    const result = await getAvailableTemplates()
+    templates.value = result
   } catch (error) {
     console.error('Error loading templates:', error)
+    templates.value = []
   } finally {
     loadingTemplates.value = false
   }
 }
 
 const loadMyRequests = async (): Promise<void> => {
+  loadingRequests.value = true
   try {
-    loadingRequests.value = true
-    myRequests.value = await getMyRequests()
+    const result = await getMyRequests()
+    myRequests.value = result
   } catch (error) {
     console.error('Error loading requests:', error)
+    myRequests.value = []
   } finally {
     loadingRequests.value = false
   }
 }
 
 const loadPendingApprovals = async (): Promise<void> => {
+  loadingApprovals.value = true
   try {
-    loadingApprovals.value = true
-    pendingApprovals.value = await getPendingApprovals()
+    const result = await getPendingApprovals()
+    pendingApprovals.value = result
   } catch (error) {
     console.error('Error loading pending approvals:', error)
+    pendingApprovals.value = []
   } finally {
     loadingApprovals.value = false
   }
 }
 
 const loadApprovalsHistory = async (): Promise<void> => {
+  loadingApprovals.value = true
   try {
-    loadingApprovals.value = true
-    approvalsHistory.value = await getApprovalsHistory()
+    const result = await getApprovalsHistory()
+    approvalsHistory.value = result
   } catch (error) {
     console.error('Error loading approvals history:', error)
+    approvalsHistory.value = []
   } finally {
     loadingApprovals.value = false
   }
@@ -343,10 +351,26 @@ const handleReject = async (reason: string): Promise<void> => {
   }
 }
 
-onMounted(() => {
-  loadTemplates()
-  loadMyRequests()
-  loadPendingApprovals()
-  loadApprovalsHistory()
+const loadAllData = async (): Promise<void> => {
+  await Promise.all([
+    loadTemplates(),
+    loadMyRequests(),
+    loadPendingApprovals(),
+    loadApprovalsHistory()
+  ])
+}
+
+onMounted(async () => {
+  await loadAllData()
+})
+
+watch(activeTab, async (newTab) => {
+  if (newTab === 'my-requests' && myRequests.value.length === 0 && !loadingRequests.value) {
+    await loadMyRequests()
+  } else if (newTab === 'to-approve' && pendingApprovals.value.length === 0 && !loadingApprovals.value) {
+    await loadPendingApprovals()
+  } else if (newTab === 'approved-by-me' && approvalsHistory.value.length === 0 && !loadingApprovals.value) {
+    await loadApprovalsHistory()
+  }
 })
 </script>
