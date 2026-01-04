@@ -142,6 +142,7 @@ const userDisplayMeta = computed(() => {
 const { logout: performLogout } = useAuth()
 const { modalState: confirmModalState, confirm: handleConfirm, cancel: handleCancel } = useConfirmModal()
 const { modalState: promptModalState, confirm: handlePromptConfirm, cancel: handlePromptCancel } = usePromptModal()
+const { frontendVersion, backendVersion, fetchBackendVersion } = useVersion()
 
 function forceTextColorUpdate() {
   if (import.meta.client) {
@@ -206,6 +207,9 @@ onMounted(() => {
     }
 
     document.addEventListener('click', documentClickHandler)
+
+    // Fetch backend version
+    fetchBackendVersion()
   }
 })
 
@@ -308,6 +312,10 @@ watch(
         <div class="footer-links">
           <a href="#">Privacy policy</a>
           <a href="#">Contact</a>
+        </div>
+        <div class="footer-version">
+          <span class="version-badge">FE: v{{ frontendVersion }}</span>
+          <span class="version-badge">BE: v{{ backendVersion || '...' }}</span>
         </div>
       </footer>
     </div>

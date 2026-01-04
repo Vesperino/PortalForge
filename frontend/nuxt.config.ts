@@ -155,6 +155,9 @@ export default defineNuxtConfig({
     optimizeDeps: {
       exclude: ['vue-pdf-embed', 'docx-preview'],
     },
+    define: {
+      __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+    },
   },
 
   icon: {

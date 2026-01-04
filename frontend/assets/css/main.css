@@ -603,4 +603,23 @@
   .dark .footer-links a:hover {
     color: #60a5fa;
   }
+
+  .footer-version {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  .version-badge {
+    padding: 0.25rem 0.5rem;
+    background-color: #f3f4f6;
+    border-radius: 0.25rem;
+    color: #6b7280;
+  }
+
+  .dark .version-badge {
+    background-color: #374151;
+    color: #9ca3af;
+  }
 }
