@@ -307,16 +307,6 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Debug panel -->
-      <div class="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900 rounded-lg text-sm">
-        <p><strong>Debug:</strong></p>
-        <p>isLoading: {{ isLoading }}</p>
-        <p>error: {{ error }}</p>
-        <p>departmentTree.length: {{ departmentTree.length }}</p>
-        <p>allUsers.length: {{ allUsers.length }}</p>
-        <p>activeTab: {{ activeTab }}</p>
-      </div>
-
       <div
         v-if="error"
         class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3"
