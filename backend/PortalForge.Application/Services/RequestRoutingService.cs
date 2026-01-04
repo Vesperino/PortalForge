@@ -102,19 +102,30 @@ public class RequestRoutingService : IRequestRoutingService
 
             if (approver == null)
             {
+                // For DirectSupervisor and DepartmentDirector, allow auto-approval
+                // when the submitter is at the top of the hierarchy (no one to escalate to)
+                if (stepTemplate.ApproverType == ApproverType.DirectSupervisor ||
+                    stepTemplate.ApproverType == ApproverType.DepartmentDirector)
+                {
+                    _logger.LogInformation(
+                        "No approver found for step {StepOrder} (type: {ApproverType}). " +
+                        "User {UserId} is at the top of hierarchy - step will be auto-approved.",
+                        stepTemplate.StepOrder,
+                        stepTemplate.ApproverType,
+                        userId);
+                    continue; // Allow this - will be auto-approved
+                }
+
                 var errorMessage = stepTemplate.ApproverType switch
                 {
-                    ApproverType.DirectSupervisor =>
-                        "Your department does not have a head (manager) assigned. Please contact HR to resolve this before submitting requests.",
-
-                    ApproverType.DepartmentDirector =>
-                        "Your department does not have a director assigned. Please contact HR to resolve this before submitting requests.",
-
                     ApproverType.SpecificDepartment =>
                         $"The target department has no head assigned. Please contact HR.",
 
                     ApproverType.UserGroup =>
                         $"The approver group has no active members. Please contact HR.",
+
+                    ApproverType.SpecificUser =>
+                        $"The specified approver user is not available. Please contact HR.",
 
                     _ => $"Step {stepTemplate.StepOrder}: Unable to determine approver."
                 };

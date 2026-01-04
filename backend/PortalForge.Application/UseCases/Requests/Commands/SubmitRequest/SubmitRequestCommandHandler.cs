@@ -143,12 +143,41 @@ public class SubmitRequestCommandHandler
                 // Resolve approver using routing service
                 var approver = await _routingService.ResolveApproverAsync(stepTemplate, submitter);
 
+                // Handle auto-approval for top-level managers (DirectSupervisor/DepartmentDirector)
                 if (approver == null)
                 {
-                    // This should never happen due to upfront validation, but throw exception as safety net
+                    if (stepTemplate.ApproverType == ApproverType.DirectSupervisor ||
+                        stepTemplate.ApproverType == ApproverType.DepartmentDirector)
+                    {
+                        // Auto-approve this step - submitter is at top of hierarchy
+                        _logger.LogInformation(
+                            "Auto-approving step {StepOrder} for user {UserId} - no higher approver in hierarchy",
+                            stepTemplate.StepOrder,
+                            submitter.Id);
+
+                        var autoApprovedStep = new RequestApprovalStep
+                        {
+                            Id = Guid.NewGuid(),
+                            RequestId = request.Id,
+                            StepOrder = stepTemplate.StepOrder,
+                            ApproverId = submitter.Id, // Submitter auto-approves their own step
+                            Status = ApprovalStepStatus.Approved,
+                            RequiresQuiz = false, // Skip quiz for auto-approved steps
+                            PassingScore = stepTemplate.PassingScore,
+                            RequestApprovalStepTemplateId = stepTemplate.Id,
+                            StartedAt = DateTime.UtcNow,
+                            FinishedAt = DateTime.UtcNow,
+                            Comment = "Auto-approved: submitter is at top of organizational hierarchy"
+                        };
+                        request.ApprovalSteps.Add(autoApprovedStep);
+                        continue;
+                    }
+
+                    // For other approver types, this is an error
                     _logger.LogError(
-                        "No approver found for step {StepOrder} after validation passed. This is a programming error.",
-                        stepTemplate.StepOrder);
+                        "No approver found for step {StepOrder} (type: {ApproverType}) after validation passed.",
+                        stepTemplate.StepOrder,
+                        stepTemplate.ApproverType);
                     throw new BusinessException(
                         $"Failed to resolve approver for step {stepTemplate.StepOrder}. Please contact HR.");
                 }
