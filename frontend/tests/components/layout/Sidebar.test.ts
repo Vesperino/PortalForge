@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
-import Sidebar from '~/components/layout/Sidebar.vue'
+import Sidebar from '~/components/AppSidebar.vue'
 import { useAuthStore } from '~/stores/auth'
 import { UserRole } from '~/types/auth'
 
