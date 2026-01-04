@@ -10,6 +10,19 @@
         </p>
       </div>
 
+      <!-- Debug panel - remove after fixing -->
+      <div class="bg-yellow-100 dark:bg-yellow-900 p-4 rounded-lg text-sm mb-6">
+        <p><strong>Debug:</strong></p>
+        <p>activeTab: {{ activeTab }}</p>
+        <p>loadingTemplates: {{ loadingTemplates }}</p>
+        <p>loadingRequests: {{ loadingRequests }}</p>
+        <p>loadingApprovals: {{ loadingApprovals }}</p>
+        <p>templates.length: {{ templates.length }}</p>
+        <p>myRequests.length: {{ myRequests.length }}</p>
+        <p>pendingApprovals.length: {{ pendingApprovals.length }}</p>
+        <p v-if="templates.length > 0">First template: {{ templates[0]?.name }}</p>
+      </div>
+
       <RequestTabs
         v-model="activeTab"
         :my-requests-count="myRequests.length"
