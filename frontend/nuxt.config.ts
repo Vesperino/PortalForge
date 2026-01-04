@@ -103,18 +103,17 @@ export default defineNuxtConfig({
   },
 
   // Component auto-import configuration
-  // Folders where filename already includes folder name (e.g., base/BaseButton.vue) use pathPrefix: false
+  // Folders where filename includes folder name (e.g., base/BaseButton.vue) use pathPrefix: false
   // Folders where prefix is used in template (e.g., <AdminStructureDepartmentTree>) use pathPrefix: true
   components: {
     dirs: [
-      // Filename includes folder name - no prefix needed
+      // These folders don't need path prefix (filename includes folder name or is unique)
       { path: '~/components/organization', pathPrefix: false },
       { path: '~/components/requests', pathPrefix: false },
-      { path: '~/components/layout', pathPrefix: false },
       { path: '~/components/base', pathPrefix: false },
       { path: '~/components/vacation', pathPrefix: false },
-      // Root components (no subfolder) - ignore all subdirectories configured above
-      { path: '~/components', pathPrefix: false, ignore: ['**/admin/**', '**/common/**', '**/internal-services/**', '**/organization/**', '**/requests/**', '**/layout/**', '**/base/**', '**/vacation/**'] },
+      // Root components
+      { path: '~/components', pathPrefix: false, ignore: ['**/admin/**', '**/common/**', '**/internal-services/**', '**/organization/**', '**/requests/**', '**/base/**', '**/vacation/**'] },
       // These folders use path prefix in template (e.g., <CommonUserAutocomplete>)
       { path: '~/components/admin', pathPrefix: true },
       { path: '~/components/common', pathPrefix: true },

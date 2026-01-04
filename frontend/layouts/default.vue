@@ -231,7 +231,7 @@ watch(
 
 <template>
   <div class="app-layout">
-    <Sidebar :is-open="isMobileSidebarOpen" @close="closeMobileSidebar" />
+    <AppSidebar :is-open="isMobileSidebarOpen" @close="closeMobileSidebar" />
 
     <div class="app-main">
       <header class="app-header">
