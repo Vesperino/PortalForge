@@ -5,6 +5,24 @@ import { useAuthStore } from '~/stores/auth'
 import { UserRole } from '~/types/auth'
 import type { User } from '~/types/auth'
 
+// Helper to create a valid JWT token for testing
+function createMockJwt(payload: Record<string, unknown>): string {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+  const body = btoa(JSON.stringify(payload))
+  const signature = 'mock-signature'
+  return `${header}.${body}.${signature}`
+}
+
+// Create a non-expired token (exp 1 hour in the future)
+function createValidToken(): string {
+  return createMockJwt({ exp: Math.floor(Date.now() / 1000) + 3600 })
+}
+
+// Create an expired token (exp 1 hour in the past)
+function createExpiredToken(): string {
+  return createMockJwt({ exp: Math.floor(Date.now() / 1000) - 3600 })
+}
+
 describe('useAuth', () => {
   let mockRouter: { push: ReturnType<typeof vi.fn>; currentRoute: { value: { path: string } } }
 
@@ -119,8 +137,9 @@ describe('useAuth', () => {
 
   describe('logout', () => {
     it('should clear user and redirect to login page', async () => {
+      const validToken = createValidToken()
       const authStore = useAuthStore()
-      authStore.accessToken = 'test-token'
+      authStore.accessToken = validToken
       authStore.setUser({
         id: '1',
         userId: 1,
@@ -141,7 +160,7 @@ describe('useAuth', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            Authorization: 'Bearer test-token'
+            Authorization: `Bearer ${validToken}`
           })
         })
       )
@@ -152,8 +171,9 @@ describe('useAuth', () => {
     })
 
     it('should clear user even if backend logout fails', async () => {
+      const validToken = createValidToken()
       const authStore = useAuthStore()
-      authStore.accessToken = 'test-token'
+      authStore.accessToken = validToken
       authStore.setUser({
         id: '1',
         userId: 1,
@@ -173,10 +193,39 @@ describe('useAuth', () => {
       expect(authStore.accessToken).toBeNull()
     })
 
+    it('should skip backend call when token is expired', async () => {
+      const expiredToken = createExpiredToken()
+      const authStore = useAuthStore()
+      authStore.accessToken = expiredToken
+      authStore.setUser({
+        id: '1',
+        userId: 1,
+        email: 'test@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        isEmailVerified: true,
+        role: UserRole.Employee
+      })
+
+      global.$fetch = vi.fn().mockResolvedValue(undefined)
+
+      const { logout } = useAuth()
+      await logout()
+
+      // Should NOT call backend when token is expired
+      expect(global.$fetch).not.toHaveBeenCalled()
+
+      // But should still clear local state
+      expect(authStore.user).toBeNull()
+      expect(authStore.accessToken).toBeNull()
+      expect(mockRouter.push).toHaveBeenCalledWith('/auth/login')
+    })
+
     it('should not redirect if already on login page', async () => {
       mockRouter.currentRoute.value.path = '/auth/login'
+      const validToken = createValidToken()
       const authStore = useAuthStore()
-      authStore.accessToken = 'test-token'
+      authStore.accessToken = validToken
 
       global.$fetch = vi.fn().mockResolvedValue(undefined)
 
