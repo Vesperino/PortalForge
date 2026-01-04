@@ -1,8 +1,8 @@
 import { vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { readonly, ref, computed } from 'vue'
-import { useAuthStore as authStoreComposable } from '~/stores/auth'
-import { useNotificationToast as actualUseNotificationToast } from '~/composables/useNotificationToast'
+import { useAuthStore as authStoreComposable } from '../stores/auth'
+import { useNotificationToast as actualUseNotificationToast } from '../composables/useNotificationToast'
 
 // Create and activate a Pinia instance for tests
 setActivePinia(createPinia())
@@ -36,7 +36,7 @@ globalThis.navigateTo = vi.fn()
 globalThis.useAuthStore = () => authStoreComposable()
 
 // Mock global $fetch
-global.$fetch = vi.fn()
+;(globalThis as Record<string, unknown>).$fetch = vi.fn()
 
 // Mock Vue reactivity functions for composables that use them
 globalThis.readonly = readonly

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useAuth } from '~/composables/useAuth'
-import { useAuthStore } from '~/stores/auth'
-import { UserRole } from '~/types/auth'
-import type { User } from '~/types/auth'
+import { useAuth } from '../../composables/useAuth'
+import { useAuthStore } from '../../stores/auth'
+import { UserRole } from '../../types/auth'
+import type { User } from '../../types/auth'
 
 // Helper to create a valid JWT token for testing
 function createMockJwt(payload: Record<string, unknown>): string {
@@ -24,7 +24,13 @@ function createExpiredToken(): string {
 }
 
 describe('useAuth', () => {
-  let mockRouter: { push: ReturnType<typeof vi.fn>; currentRoute: { value: { path: string } } }
+  let mockRouter: {
+    push: ReturnType<typeof vi.fn>
+    replace: ReturnType<typeof vi.fn>
+    back: ReturnType<typeof vi.fn>
+    forward: ReturnType<typeof vi.fn>
+    currentRoute: { value: { path: string } }
+  }
 
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -32,9 +38,12 @@ describe('useAuth', () => {
 
     mockRouter = {
       push: vi.fn(),
+      replace: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
       currentRoute: { value: { path: '/dashboard' } }
     }
-    globalThis.useRouter = vi.fn(() => mockRouter)
+    ;(globalThis as Record<string, unknown>).useRouter = vi.fn(() => mockRouter)
   })
 
   afterEach(() => {
@@ -59,13 +68,13 @@ describe('useAuth', () => {
         refreshToken: 'refresh-token-456'
       }
 
-      global.$fetch = vi.fn().mockResolvedValue(mockResponse)
+      ;(globalThis as Record<string, unknown>).$fetch = vi.fn().mockResolvedValue(mockResponse)
 
       const { login } = useAuth()
       const result = await login('test@example.com', 'password123')
 
       expect(result).toEqual(mockResponse)
-      expect(global.$fetch).toHaveBeenCalledWith(
+      expect((globalThis as Record<string, unknown>).$fetch).toHaveBeenCalledWith(
         'http://localhost:5155/api/auth/login',
         expect.objectContaining({
           method: 'POST',
@@ -100,7 +109,7 @@ describe('useAuth', () => {
         refreshToken: 'refresh-token-456'
       }
 
-      global.$fetch = vi.fn().mockResolvedValue(mockResponse)
+      ;(globalThis as Record<string, unknown>).$fetch = vi.fn().mockResolvedValue(mockResponse)
 
       const { login } = useAuth()
       await login('test@example.com', 'password123')
@@ -115,7 +124,7 @@ describe('useAuth', () => {
         }
       }
 
-      global.$fetch = vi.fn().mockRejectedValue(mockError)
+      ;(globalThis as Record<string, unknown>).$fetch = vi.fn().mockRejectedValue(mockError)
 
       const { login } = useAuth()
 
@@ -125,7 +134,7 @@ describe('useAuth', () => {
     })
 
     it('should throw default error message when no message in response', async () => {
-      global.$fetch = vi.fn().mockRejectedValue({})
+      ;(globalThis as Record<string, unknown>).$fetch = vi.fn().mockRejectedValue({})
 
       const { login } = useAuth()
 
@@ -150,12 +159,12 @@ describe('useAuth', () => {
         role: UserRole.Employee
       })
 
-      global.$fetch = vi.fn().mockResolvedValue(undefined)
+      ;(globalThis as Record<string, unknown>).$fetch = vi.fn().mockResolvedValue(undefined)
 
       const { logout } = useAuth()
       await logout()
 
-      expect(global.$fetch).toHaveBeenCalledWith(
+      expect((globalThis as Record<string, unknown>).$fetch).toHaveBeenCalledWith(
         'http://localhost:5155/api/auth/logout',
         expect.objectContaining({
           method: 'POST',
@@ -184,7 +193,7 @@ describe('useAuth', () => {
         role: UserRole.Employee
       })
 
-      global.$fetch = vi.fn().mockRejectedValue(new Error('Network error'))
+      ;(globalThis as Record<string, unknown>).$fetch = vi.fn().mockRejectedValue(new Error('Network error'))
 
       const { logout } = useAuth()
       await logout()
@@ -207,13 +216,13 @@ describe('useAuth', () => {
         role: UserRole.Employee
       })
 
-      global.$fetch = vi.fn().mockResolvedValue(undefined)
+      ;(globalThis as Record<string, unknown>).$fetch = vi.fn().mockResolvedValue(undefined)
 
       const { logout } = useAuth()
       await logout()
 
       // Should NOT call backend when token is expired
-      expect(global.$fetch).not.toHaveBeenCalled()
+      expect((globalThis as Record<string, unknown>).$fetch).not.toHaveBeenCalled()
 
       // But should still clear local state
       expect(authStore.user).toBeNull()
@@ -227,7 +236,7 @@ describe('useAuth', () => {
       const authStore = useAuthStore()
       authStore.accessToken = validToken
 
-      global.$fetch = vi.fn().mockResolvedValue(undefined)
+      ;(globalThis as Record<string, unknown>).$fetch = vi.fn().mockResolvedValue(undefined)
 
       const { logout } = useAuth()
       await logout()
@@ -239,12 +248,12 @@ describe('useAuth', () => {
       const authStore = useAuthStore()
       authStore.accessToken = null
 
-      global.$fetch = vi.fn().mockResolvedValue(undefined)
+      ;(globalThis as Record<string, unknown>).$fetch = vi.fn().mockResolvedValue(undefined)
 
       const { logout } = useAuth()
       await logout()
 
-      expect(global.$fetch).not.toHaveBeenCalled()
+      expect((globalThis as Record<string, unknown>).$fetch).not.toHaveBeenCalled()
     })
   })
 
@@ -258,13 +267,13 @@ describe('useAuth', () => {
         refreshToken: 'new-refresh-token'
       }
 
-      global.$fetch = vi.fn().mockResolvedValue(mockResponse)
+      ;(globalThis as Record<string, unknown>).$fetch = vi.fn().mockResolvedValue(mockResponse)
 
       const { refreshToken } = useAuth()
       const result = await refreshToken()
 
       expect(result).toEqual(mockResponse)
-      expect(global.$fetch).toHaveBeenCalledWith(
+      expect((globalThis as Record<string, unknown>).$fetch).toHaveBeenCalledWith(
         'http://localhost:5155/api/auth/refresh-token',
         expect.objectContaining({
           method: 'POST',
@@ -300,7 +309,7 @@ describe('useAuth', () => {
         role: UserRole.Employee
       })
 
-      global.$fetch = vi.fn().mockRejectedValue(new Error('Token expired'))
+      ;(globalThis as Record<string, unknown>).$fetch = vi.fn().mockRejectedValue(new Error('Token expired'))
 
       const { refreshToken } = useAuth()
 
