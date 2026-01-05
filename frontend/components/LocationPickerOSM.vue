@@ -34,6 +34,18 @@ const addressSearch = ref('')
 const isSearching = ref(false)
 const searchError = ref<string | null>(null)
 
+interface NominatimResult {
+  place_id: number
+  display_name: string
+  lat: string
+  lon: string
+}
+
+const suggestions = ref<NominatimResult[]>([])
+const showSuggestions = ref(false)
+const isLoadingSuggestions = ref(false)
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
+
 let map: L.Map | null = null
 let marker: L.Marker | null = null
 
@@ -209,6 +221,7 @@ async function searchAddress() {
 
   isSearching.value = true
   searchError.value = null
+  showSuggestions.value = false
 
   try {
     const result = await locationsStore.geocodeAddress(addressSearch.value)
@@ -219,7 +232,6 @@ async function searchAddress() {
       emit('update:longitude', result.longitude)
 
       addMarker(result.latitude, result.longitude)
-      // Keep the searched address visible instead of clearing
       addressSearch.value = result.address
     } else {
       searchError.value = 'Nie znaleziono podanego adresu'
@@ -230,6 +242,75 @@ async function searchAddress() {
   } finally {
     isSearching.value = false
   }
+}
+
+function handleAddressInput() {
+  if (searchDebounceTimer) {
+    clearTimeout(searchDebounceTimer)
+  }
+
+  const query = addressSearch.value.trim()
+  if (query.length < 3 || !isOnline.value) {
+    suggestions.value = []
+    showSuggestions.value = false
+    return
+  }
+
+  searchDebounceTimer = setTimeout(() => {
+    fetchSuggestions(query)
+  }, 300)
+}
+
+async function fetchSuggestions(query: string) {
+  isLoadingSuggestions.value = true
+
+  try {
+    const response = await $fetch<NominatimResult[]>(
+      'https://nominatim.openstreetmap.org/search',
+      {
+        params: {
+          q: query,
+          format: 'json',
+          countrycodes: 'pl',
+          limit: 5,
+          addressdetails: 1
+        },
+        headers: {
+          'Accept-Language': 'pl'
+        }
+      }
+    )
+
+    suggestions.value = response
+    showSuggestions.value = response.length > 0
+  } catch (error) {
+    console.error('Nominatim search error:', error)
+    suggestions.value = []
+    showSuggestions.value = false
+  } finally {
+    isLoadingSuggestions.value = false
+  }
+}
+
+function selectSuggestion(suggestion: NominatimResult) {
+  const lat = parseFloat(suggestion.lat)
+  const lng = parseFloat(suggestion.lon)
+
+  emit('update:modelValue', suggestion.display_name)
+  emit('update:latitude', lat)
+  emit('update:longitude', lng)
+
+  addressSearch.value = suggestion.display_name
+  addMarker(lat, lng)
+
+  suggestions.value = []
+  showSuggestions.value = false
+}
+
+function hideSuggestions() {
+  setTimeout(() => {
+    showSuggestions.value = false
+  }, 200)
 }
 
 // Watch dark mode changes and update map tiles
@@ -272,42 +353,78 @@ watch(isDark, (newDark) => {
       Tryb offline - dostępne tylko zapisane lokalizacje
     </div>
 
-    <!-- Address Search (Nominatim OSM) -->
-    <div v-if="isOnline">
+    <!-- Address Search with Autocomplete (Nominatim OSM) -->
+    <div v-if="isOnline" class="relative">
       <div class="flex items-center justify-between mb-2">
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          🇵🇱 Wyszukaj polski adres
+          Wyszukaj adres
         </label>
-        <span class="text-xs text-gray-500 dark:text-gray-400">
-          Nominatim OSM
-        </span>
-      </div>
-      <div class="flex gap-2">
-        <input
-          v-model="addressSearch"
-          type="text"
-          class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          placeholder="np. Rynek Główny 1, Kraków"
-          :disabled="isSearching"
-          @keyup.enter="searchAddress"
-        >
-        <button
-          type="button"
-          class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
-          :disabled="!addressSearch.trim() || isSearching"
-          @click="searchAddress"
-        >
-          <svg v-if="isSearching" class="animate-spin h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <svg v-if="isLoadingSuggestions" class="animate-spin h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          {{ isSearching ? 'Szukam...' : 'Szukaj' }}
-        </button>
+          OpenStreetMap
+        </span>
       </div>
-      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-        Wpisz dowolny polski adres (ulica, miasto, miejsce) i naciśnij Enter lub kliknij Szukaj
+      <div class="relative">
+        <div class="flex gap-2">
+          <div class="relative flex-1">
+            <input
+              v-model="addressSearch"
+              type="text"
+              class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="Wpisz adres, np. Rynek Główny 1, Kraków..."
+              :disabled="isSearching"
+              autocomplete="off"
+              @input="handleAddressInput"
+              @keyup.enter="searchAddress"
+              @blur="hideSuggestions"
+              @focus="showSuggestions = suggestions.length > 0"
+            >
+
+            <!-- Autocomplete Dropdown -->
+            <div
+              v-if="showSuggestions && suggestions.length > 0"
+              class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+            >
+              <button
+                v-for="suggestion in suggestions"
+                :key="suggestion.place_id"
+                type="button"
+                class="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors"
+                @mousedown.prevent="selectSuggestion(suggestion)"
+              >
+                <div class="flex items-start gap-2">
+                  <svg class="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span class="text-sm text-gray-700 dark:text-gray-200 leading-tight">
+                    {{ suggestion.display_name }}
+                  </span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            :disabled="!addressSearch.trim() || isSearching"
+            @click="searchAddress"
+          >
+            <svg v-if="isSearching" class="animate-spin h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span class="hidden sm:inline">{{ isSearching ? 'Szukam...' : 'Szukaj' }}</span>
+          </button>
+        </div>
+      </div>
+      <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+        Zacznij pisać - pojawią się podpowiedzi adresów z całej Polski
       </p>
       <p v-if="searchError" class="mt-1 text-xs text-red-600 dark:text-red-400">
         {{ searchError }}
