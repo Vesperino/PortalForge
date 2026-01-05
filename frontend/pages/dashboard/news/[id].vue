@@ -27,6 +27,7 @@ const mapContainer = ref<HTMLDivElement | null>(null)
 // Local coordinates for map display (can be fetched from Nominatim if not in news)
 const mapLat = ref<number | null>(null)
 const mapLng = ref<number | null>(null)
+const mapInitialized = ref(false)
 
 let map: L.Map | null = null
 
@@ -63,12 +64,6 @@ async function loadNews() {
       // Fetch coordinates from Nominatim if only address is available
       await fetchCoordinatesFromAddress(news.value.eventLocation)
     }
-
-    // Initialize map if we have coordinates
-    if (mapLat.value && mapLng.value) {
-      await nextTick()
-      initializeMap()
-    }
   } catch (err: unknown) {
     error.value = resolveErrorMessage(err, 'Nie udało się załadować aktualności.')
     console.error('fetchNewsById error:', err)
@@ -96,7 +91,7 @@ async function fetchCoordinatesFromAddress(address: string) {
 }
 
 function initializeMap() {
-  if (!import.meta.client || !mapContainer.value || !mapLat.value || !mapLng.value) {
+  if (!import.meta.client || !mapContainer.value || !mapLat.value || !mapLng.value || mapInitialized.value) {
     return
   }
 
@@ -127,7 +122,23 @@ function initializeMap() {
   })
 
   L.marker([lat, lng], { icon: defaultIcon }).addTo(map)
+
+  // Force map to recalculate its size after render
+  setTimeout(() => {
+    map?.invalidateSize()
+  }, 100)
+
+  mapInitialized.value = true
 }
+
+// Watch for mapContainer to become available and initialize map
+watch(mapContainer, (container) => {
+  if (container && mapLat.value && mapLng.value && !mapInitialized.value) {
+    nextTick(() => {
+      initializeMap()
+    })
+  }
+})
 
 async function handleDelete() {
   if (!news.value || !canManageNews.value) {
@@ -212,6 +223,7 @@ onBeforeUnmount(() => {
     map.remove()
     map = null
   }
+  mapInitialized.value = false
 })
 </script>
 

@@ -197,7 +197,7 @@ watch(isDark, (dark) => {
     </label>
 
     <!-- Search Input -->
-    <div class="relative">
+    <div class="relative z-20">
       <input
         v-model="addressSearch"
         type="text"
@@ -220,7 +220,7 @@ watch(isDark, (dark) => {
       <!-- Suggestions Dropdown -->
       <div
         v-if="showSuggestions && suggestions.length > 0"
-        class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+        class="absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto"
       >
         <button
           v-for="s in suggestions"
@@ -242,7 +242,7 @@ watch(isDark, (dark) => {
     <!-- Map -->
     <div
       ref="mapContainer"
-      class="h-72 rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden"
+      class="h-72 rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden relative z-10"
     />
 
     <p class="text-xs text-gray-500 dark:text-gray-400">

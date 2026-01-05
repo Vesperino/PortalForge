@@ -55,6 +55,11 @@ const masks = {
 </template>
 
 <style>
+/* VCalendar popover z-index fix */
+.vc-popover-content-wrapper {
+  z-index: 9999 !important;
+}
+
 /* VCalendar dark mode support */
 .vc-container {
   --vc-bg: theme('colors.white');
