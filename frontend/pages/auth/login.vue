@@ -14,8 +14,8 @@ useHead({
 const { login } = useAuth()
 const router = useRouter()
 
-const email = ref('admin@portalforge.com')
-const password = ref('Admin123!')
+const email = ref('')
+const password = ref('')
 const rememberMe = ref(false)
 const showPassword = ref(false)
 const isLoading = ref(false)
@@ -38,6 +38,16 @@ async function handleLogin() {
     console.error('Login error:', err)
   } finally {
     isLoading.value = false
+  }
+}
+
+function fillCredentials(type: 'admin' | 'user') {
+  if (type === 'admin') {
+    email.value = 'admin@portalforge.com'
+    password.value = 'Admin123!'
+  } else {
+    email.value = 'vesp3r9999@gmail.com'
+    password.value = 'kokolp12345'
   }
 }
 </script>
@@ -233,10 +243,33 @@ async function handleLogin() {
           </NuxtLink>
         </form>
 
+        <!-- Quick Login Buttons (Dev Only) -->
+        <div class="pt-6 border-t border-gray-100 dark:border-gray-700 space-y-3">
+          <p class="text-xs text-center text-gray-500 dark:text-gray-400 mb-3">
+            Szybkie logowanie (testowe)
+          </p>
+          <div class="flex gap-3">
+            <button
+              type="button"
+              class="flex-1 py-2.5 px-4 text-sm font-medium rounded-lg text-white bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 transition-all duration-200 shadow hover:shadow-md"
+              @click="fillCredentials('admin')"
+            >
+              Login Admin
+            </button>
+            <button
+              type="button"
+              class="flex-1 py-2.5 px-4 text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 transition-all duration-200 shadow hover:shadow-md"
+              @click="fillCredentials('user')"
+            >
+              Login User
+            </button>
+          </div>
+        </div>
+
         <!-- Info -->
         <div class="pt-6 border-t border-gray-100 dark:border-gray-700">
           <p class="text-xs text-center text-gray-500 dark:text-gray-400">
-            🔒 Bezpieczne logowanie przez Supabase Auth
+            Bezpieczne logowanie przez Supabase Auth
           </p>
         </div>
       </div>
