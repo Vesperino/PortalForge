@@ -224,15 +224,34 @@ async function searchAddress() {
   showSuggestions.value = false
 
   try {
-    const result = await locationsStore.geocodeAddress(addressSearch.value)
+    // Use Nominatim directly (same as autocomplete) for consistent results
+    const response = await $fetch<NominatimResult[]>(
+      'https://nominatim.openstreetmap.org/search',
+      {
+        params: {
+          q: addressSearch.value,
+          format: 'json',
+          countrycodes: 'pl',
+          limit: 1,
+          addressdetails: 1
+        },
+        headers: {
+          'Accept-Language': 'pl'
+        }
+      }
+    )
 
-    if (result) {
-      emit('update:modelValue', result.address)
-      emit('update:latitude', result.latitude)
-      emit('update:longitude', result.longitude)
+    if (response && response.length > 0) {
+      const result = response[0]
+      const lat = parseFloat(result.lat)
+      const lng = parseFloat(result.lon)
 
-      addMarker(result.latitude, result.longitude)
-      addressSearch.value = result.address
+      emit('update:modelValue', result.display_name)
+      emit('update:latitude', lat)
+      emit('update:longitude', lng)
+
+      addMarker(lat, lng)
+      addressSearch.value = result.display_name
     } else {
       searchError.value = 'Nie znaleziono podanego adresu'
     }
