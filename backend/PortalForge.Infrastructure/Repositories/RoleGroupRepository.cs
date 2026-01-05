@@ -59,6 +59,40 @@ public class RoleGroupRepository : IRoleGroupRepository
             .ToListAsync();
     }
 
+    public async Task<(IEnumerable<RoleGroup> RoleGroups, int TotalCount)> GetFilteredAsync(
+        string? searchTerm,
+        bool? isSystemRole,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.RoleGroups.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.ToLower();
+            query = query.Where(rg =>
+                rg.Name.ToLower().Contains(term) ||
+                rg.Description.ToLower().Contains(term));
+        }
+
+        if (isSystemRole.HasValue)
+        {
+            query = query.Where(rg => rg.IsSystemRole == isSystemRole.Value);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var roleGroups = await query
+            .OrderBy(rg => rg.Name)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return (roleGroups, totalCount);
+    }
+
     public async Task<bool> AnyAsync()
     {
         return await _context.RoleGroups.AnyAsync();

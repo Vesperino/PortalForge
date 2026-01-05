@@ -1,15 +1,11 @@
 using MediatR;
-using PortalForge.Application.DTOs;
 
 namespace PortalForge.Application.UseCases.Positions.Queries.GetAllPositions;
 
-/// <summary>
-/// Query to get all positions.
-/// </summary>
-public class GetAllPositionsQuery : IRequest<List<PositionDto>>
+public class GetAllPositionsQuery : IRequest<GetAllPositionsResult>
 {
-    /// <summary>
-    /// Whether to include only active positions. Default: true.
-    /// </summary>
-    public bool ActiveOnly { get; set; } = true;
+    public string? SearchTerm { get; set; }
+    public bool? IsActive { get; set; } = true;
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
 }

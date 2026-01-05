@@ -1,28 +1,40 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using PortalForge.Application.Common.Interfaces;
 using PortalForge.Application.UseCases.RequestTemplates.DTOs;
 
 namespace PortalForge.Application.UseCases.RequestTemplates.Queries.GetRequestTemplates;
 
-public class GetRequestTemplatesQueryHandler 
+public class GetRequestTemplatesQueryHandler
     : IRequestHandler<GetRequestTemplatesQuery, GetRequestTemplatesResult>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<GetRequestTemplatesQueryHandler> _logger;
 
-    public GetRequestTemplatesQueryHandler(IUnitOfWork unitOfWork)
+    public GetRequestTemplatesQueryHandler(
+        IUnitOfWork unitOfWork,
+        ILogger<GetRequestTemplatesQueryHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<GetRequestTemplatesResult> Handle(
         GetRequestTemplatesQuery request,
         CancellationToken cancellationToken)
     {
-        var templates = await _unitOfWork.RequestTemplateRepository.GetAllAsync();
+        _logger.LogInformation("Getting request templates: SearchTerm={SearchTerm}, Category={Category}, Page={Page}",
+            request.SearchTerm, request.Category, request.PageNumber);
 
-        var templateDtos = templates
-            .Where(t => t.IsActive)
-            .Select(t => new RequestTemplateDto
+        var (templates, totalCount) = await _unitOfWork.RequestTemplateRepository.GetFilteredAsync(
+            request.SearchTerm,
+            request.Category,
+            request.IsActive,
+            request.PageNumber,
+            request.PageSize,
+            cancellationToken);
+
+        var templateDtos = templates.Select(t => new RequestTemplateDto
         {
             Id = t.Id,
             Name = t.Name,
@@ -72,9 +84,14 @@ public class GetRequestTemplatesQueryHandler
             }).ToList()
         }).ToList();
 
+        _logger.LogInformation("Found {Count} request templates (total: {TotalCount})", templateDtos.Count, totalCount);
+
         return new GetRequestTemplatesResult
         {
-            Templates = templateDtos
+            Templates = templateDtos,
+            TotalCount = totalCount,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize
         };
     }
 }

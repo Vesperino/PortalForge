@@ -5,10 +5,7 @@ using PortalForge.Application.DTOs;
 
 namespace PortalForge.Application.UseCases.Positions.Queries.GetAllPositions;
 
-/// <summary>
-/// Handler for getting all positions.
-/// </summary>
-public class GetAllPositionsQueryHandler : IRequestHandler<GetAllPositionsQuery, List<PositionDto>>
+public class GetAllPositionsQueryHandler : IRequestHandler<GetAllPositionsQuery, GetAllPositionsResult>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<GetAllPositionsQueryHandler> _logger;
@@ -21,15 +18,19 @@ public class GetAllPositionsQueryHandler : IRequestHandler<GetAllPositionsQuery,
         _logger = logger;
     }
 
-    public async Task<List<PositionDto>> Handle(GetAllPositionsQuery request, CancellationToken cancellationToken)
+    public async Task<GetAllPositionsResult> Handle(GetAllPositionsQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Getting all positions. ActiveOnly: {ActiveOnly}", request.ActiveOnly);
+        _logger.LogInformation("Getting positions: SearchTerm={SearchTerm}, IsActive={IsActive}, Page={Page}",
+            request.SearchTerm, request.IsActive, request.PageNumber);
 
-        var positions = request.ActiveOnly
-            ? await _unitOfWork.PositionRepository.GetActiveAsync()
-            : await _unitOfWork.PositionRepository.GetAllAsync();
+        var (positions, totalCount) = await _unitOfWork.PositionRepository.GetFilteredAsync(
+            request.SearchTerm,
+            request.IsActive,
+            request.PageNumber,
+            request.PageSize,
+            cancellationToken);
 
-        var result = positions.Select(p => new PositionDto
+        var positionDtos = positions.Select(p => new PositionDto
         {
             Id = p.Id,
             Name = p.Name,
@@ -39,7 +40,14 @@ public class GetAllPositionsQueryHandler : IRequestHandler<GetAllPositionsQuery,
             UpdatedAt = p.UpdatedAt
         }).ToList();
 
-        _logger.LogInformation("Found {Count} positions", result.Count);
-        return result;
+        _logger.LogInformation("Found {Count} positions (total: {TotalCount})", positionDtos.Count, totalCount);
+
+        return new GetAllPositionsResult
+        {
+            Positions = positionDtos,
+            TotalCount = totalCount,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize
+        };
     }
 }

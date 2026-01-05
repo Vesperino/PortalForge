@@ -20,15 +20,15 @@ public class GetPermissionsQueryHandler : IRequestHandler<GetPermissionsQuery, G
 
     public async Task<GetPermissionsResult> Handle(GetPermissionsQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Getting all permissions");
+        _logger.LogInformation("Getting permissions: SearchTerm={SearchTerm}, Category={Category}, Page={Page}",
+            request.SearchTerm, request.Category, request.PageNumber);
 
-        var permissions = (await _unitOfWork.PermissionRepository.GetAllAsync()).ToList();
-
-        // Filter by category if specified
-        if (!string.IsNullOrWhiteSpace(request.Category))
-        {
-            permissions = permissions.Where(p => p.Category == request.Category).ToList();
-        }
+        var (permissions, totalCount) = await _unitOfWork.PermissionRepository.GetFilteredAsync(
+            request.SearchTerm,
+            request.Category,
+            request.PageNumber,
+            request.PageSize,
+            cancellationToken);
 
         var permissionDtos = permissions.Select(p => new PermissionDto
         {
@@ -38,18 +38,20 @@ public class GetPermissionsQueryHandler : IRequestHandler<GetPermissionsQuery, G
             Category = p.Category
         }).ToList();
 
-        // Group by category
         var permissionsByCategory = permissionDtos
             .GroupBy(p => p.Category)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        _logger.LogInformation("Found {Count} permissions in {CategoryCount} categories",
-            permissionDtos.Count, permissionsByCategory.Count);
+        _logger.LogInformation("Found {Count} permissions (total: {TotalCount})",
+            permissionDtos.Count, totalCount);
 
         return new GetPermissionsResult
         {
             Permissions = permissionDtos,
-            PermissionsByCategory = permissionsByCategory
+            PermissionsByCategory = permissionsByCategory,
+            TotalCount = totalCount,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize
         };
     }
 }

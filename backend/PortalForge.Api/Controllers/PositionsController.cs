@@ -27,16 +27,21 @@ public class PositionsController : BaseController
         _logger = logger;
     }
 
-    /// <summary>
-    /// Gets all positions.
-    /// </summary>
-    /// <param name="activeOnly">Whether to return only active positions. Default: true.</param>
-    /// <returns>List of positions</returns>
     [HttpGet]
     [Authorize]
-    public async Task<ActionResult<List<PositionDto>>> GetAll([FromQuery] bool activeOnly = true)
+    public async Task<ActionResult<GetAllPositionsResult>> GetAll(
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] bool? isActive = true,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var query = new GetAllPositionsQuery { ActiveOnly = activeOnly };
+        var query = new GetAllPositionsQuery
+        {
+            SearchTerm = searchTerm,
+            IsActive = isActive,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
         var result = await _mediator.Send(query);
         return Ok(result);
     }

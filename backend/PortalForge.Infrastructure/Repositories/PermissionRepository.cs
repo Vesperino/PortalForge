@@ -46,6 +46,41 @@ public class PermissionRepository : IPermissionRepository
             .ToListAsync();
     }
 
+    public async Task<(IEnumerable<Permission> Permissions, int TotalCount)> GetFilteredAsync(
+        string? searchTerm,
+        string? category,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Permissions.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.ToLower();
+            query = query.Where(p =>
+                p.Name.ToLower().Contains(term) ||
+                p.Description.ToLower().Contains(term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            query = query.Where(p => p.Category == category);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var permissions = await query
+            .OrderBy(p => p.Category)
+            .ThenBy(p => p.Name)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return (permissions, totalCount);
+    }
+
     public async Task<bool> AnyAsync()
     {
         return await _context.Permissions.AnyAsync();

@@ -77,6 +77,51 @@ public class RequestTemplateRepository : IRequestTemplateRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<(IEnumerable<RequestTemplate> Templates, int TotalCount)> GetFilteredAsync(
+        string? searchTerm,
+        string? category,
+        bool? isActive,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.RequestTemplates
+            .Include(rt => rt.Fields)
+            .Include(rt => rt.ApprovalStepTemplates)
+                .ThenInclude(ast => ast.QuizQuestions)
+            .Include(rt => rt.CreatedBy)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.ToLower();
+            query = query.Where(rt =>
+                rt.Name.ToLower().Contains(term) ||
+                (rt.Description != null && rt.Description.ToLower().Contains(term)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            query = query.Where(rt => rt.Category == category);
+        }
+
+        if (isActive.HasValue)
+        {
+            query = query.Where(rt => rt.IsActive == isActive.Value);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var templates = await query
+            .OrderByDescending(rt => rt.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return (templates, totalCount);
+    }
+
     public async Task<Guid> CreateAsync(RequestTemplate template, CancellationToken cancellationToken = default)
     {
         await _context.RequestTemplates.AddAsync(template, cancellationToken);

@@ -46,9 +46,16 @@ public static class DependencyInjection
         // Register File Upload Settings
         services.Configure<FileUploadSettings>(configuration.GetSection(FileUploadSettings.SectionName));
 
-        // Register Supabase Settings, Client Factory, and Auth Service
+        // Register Supabase Settings, Client Factory, and Auth Services
         services.Configure<SupabaseSettings>(configuration.GetSection("Supabase"));
         services.AddSingleton<ISupabaseClientFactory, SupabaseClientFactory>();
+
+        // Register modular auth services (Single Responsibility)
+        services.AddScoped<ISupabaseTokenService, SupabaseTokenService>();
+        services.AddScoped<ISupabasePasswordService, SupabasePasswordService>();
+        services.AddScoped<ISupabaseEmailVerificationService, SupabaseEmailVerificationService>();
+
+        // Register main auth service (facade delegating to modular services)
         services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
 
         // Register File Storage Service for Common.Interfaces
@@ -131,7 +138,7 @@ public static class DependencyInjection
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ValidateIssuer = true,
-                ValidIssuer = "https://mqowlgphivdosieakzjb.supabase.co/auth/v1",
+                ValidIssuer = $"{supabaseUrl}/auth/v1",
                 ValidateAudience = true,
                 ValidAudience = "authenticated",
                 ValidateLifetime = true,

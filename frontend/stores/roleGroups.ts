@@ -20,6 +20,12 @@ export interface RoleGroupDto {
 
 export interface GetRoleGroupsResult {
   roleGroups: RoleGroupDto[]
+  totalCount: number
+  pageNumber: number
+  pageSize: number
+  totalPages: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
 }
 
 export const useRoleGroupsStore = defineStore('roleGroups', {

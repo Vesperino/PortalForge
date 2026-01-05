@@ -9,6 +9,13 @@ public interface IPermissionRepository
     Task<IEnumerable<Permission>> GetAllAsync();
     Task<IEnumerable<Permission>> GetByCategoryAsync(string category);
 
+    Task<(IEnumerable<Permission> Permissions, int TotalCount)> GetFilteredAsync(
+        string? searchTerm,
+        string? category,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Checks if any permissions exist in the database.
     /// Used by seed handlers to avoid loading all records.

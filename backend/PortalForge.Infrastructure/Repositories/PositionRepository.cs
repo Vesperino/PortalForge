@@ -55,6 +55,40 @@ public class PositionRepository : IPositionRepository
             .ToListAsync();
     }
 
+    public async Task<(IEnumerable<Position> Positions, int TotalCount)> GetFilteredAsync(
+        string? searchTerm,
+        bool? isActive,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Positions.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.ToLower();
+            query = query.Where(p =>
+                p.Name.ToLower().Contains(term) ||
+                (p.Description != null && p.Description.ToLower().Contains(term)));
+        }
+
+        if (isActive.HasValue)
+        {
+            query = query.Where(p => p.IsActive == isActive.Value);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var positions = await query
+            .OrderBy(p => p.Name)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return (positions, totalCount);
+    }
+
     public async Task<Guid> CreateAsync(Position position)
     {
         await _context.Positions.AddAsync(position);

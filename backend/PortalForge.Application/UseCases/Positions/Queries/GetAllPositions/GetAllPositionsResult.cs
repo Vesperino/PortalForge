@@ -1,10 +1,10 @@
-using PortalForge.Application.UseCases.RequestTemplates.DTOs;
+using PortalForge.Application.DTOs;
 
-namespace PortalForge.Application.UseCases.RequestTemplates.Queries.GetRequestTemplates;
+namespace PortalForge.Application.UseCases.Positions.Queries.GetAllPositions;
 
-public class GetRequestTemplatesResult
+public class GetAllPositionsResult
 {
-    public List<RequestTemplateDto> Templates { get; set; } = new();
+    public List<PositionDto> Positions { get; set; } = new();
     public int TotalCount { get; set; }
     public int PageNumber { get; set; }
     public int PageSize { get; set; }
@@ -12,4 +12,3 @@ public class GetRequestTemplatesResult
     public bool HasPreviousPage => PageNumber > 1;
     public bool HasNextPage => PageNumber < TotalPages;
 }
-

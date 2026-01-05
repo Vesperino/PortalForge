@@ -4,6 +4,12 @@ import type { PermissionDto } from './roleGroups'
 export interface GetPermissionsResult {
   permissions: PermissionDto[]
   permissionsByCategory: Record<string, PermissionDto[]>
+  totalCount: number
+  pageNumber: number
+  pageSize: number
+  totalPages: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
 }
 
 export const usePermissionsStore = defineStore('permissions', {

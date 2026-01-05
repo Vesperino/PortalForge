@@ -10,6 +10,13 @@ public interface IRoleGroupRepository
     Task<IEnumerable<RoleGroup>> GetByIdsAsync(IEnumerable<Guid> ids);
     Task<IEnumerable<RoleGroup>> GetSystemRolesAsync();
 
+    Task<(IEnumerable<RoleGroup> RoleGroups, int TotalCount)> GetFilteredAsync(
+        string? searchTerm,
+        bool? isSystemRole,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Checks if any role groups exist in the database.
     /// Used by seed handlers to avoid loading all records.

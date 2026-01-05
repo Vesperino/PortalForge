@@ -19,18 +19,24 @@ public class GetRoleGroupsQueryHandler : IRequestHandler<GetRoleGroupsQuery, Get
 
     public async Task<GetRoleGroupsResult> Handle(GetRoleGroupsQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Getting all role groups");
+        _logger.LogInformation("Getting role groups: SearchTerm={SearchTerm}, IsSystemRole={IsSystemRole}, Page={Page}",
+            request.SearchTerm, request.IsSystemRole, request.PageNumber);
 
-        var roleGroups = (await _unitOfWork.RoleGroupRepository.GetAllAsync()).ToList();
-        var roleGroupIds = roleGroups.Select(rg => rg.Id).ToList();
+        var (roleGroups, totalCount) = await _unitOfWork.RoleGroupRepository.GetFilteredAsync(
+            request.SearchTerm,
+            request.IsSystemRole,
+            request.PageNumber,
+            request.PageSize,
+            cancellationToken);
 
-        // Batch load all user role groups for counting (prevents N+1 query)
+        var roleGroupsList = roleGroups.ToList();
+        var roleGroupIds = roleGroupsList.Select(rg => rg.Id).ToList();
+
         var allUserRoleGroups = await _unitOfWork.UserRoleGroupRepository.GetByRoleGroupIdsAsync(roleGroupIds);
         var userCountLookup = allUserRoleGroups
             .GroupBy(urg => urg.RoleGroupId)
             .ToDictionary(g => g.Key, g => g.Count());
 
-        // Batch load all role group permissions if needed (prevents N+1 query)
         Dictionary<Guid, List<PermissionDto>> permissionsLookup = new();
         if (request.IncludePermissions)
         {
@@ -50,7 +56,7 @@ public class GetRoleGroupsQueryHandler : IRequestHandler<GetRoleGroupsQuery, Get
                 );
         }
 
-        var roleGroupDtos = roleGroups.Select(roleGroup => new RoleGroupDto
+        var roleGroupDtos = roleGroupsList.Select(roleGroup => new RoleGroupDto
         {
             Id = roleGroup.Id,
             Name = roleGroup.Name,
@@ -62,11 +68,14 @@ public class GetRoleGroupsQueryHandler : IRequestHandler<GetRoleGroupsQuery, Get
             UserCount = userCountLookup.TryGetValue(roleGroup.Id, out var count) ? count : 0
         }).ToList();
 
-        _logger.LogInformation("Found {Count} role groups", roleGroupDtos.Count);
+        _logger.LogInformation("Found {Count} role groups (total: {TotalCount})", roleGroupDtos.Count, totalCount);
 
         return new GetRoleGroupsResult
         {
-            RoleGroups = roleGroupDtos
+            RoleGroups = roleGroupDtos,
+            TotalCount = totalCount,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize
         };
     }
 }
