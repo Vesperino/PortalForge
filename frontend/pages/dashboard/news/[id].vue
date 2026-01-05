@@ -24,6 +24,10 @@ const error = ref<string | null>(null)
 const showDeleteModal = ref(false)
 const mapContainer = ref<HTMLDivElement | null>(null)
 
+// Local coordinates for map display (can be fetched from Nominatim if not in news)
+const mapLat = ref<number | null>(null)
+const mapLng = ref<number | null>(null)
+
 let map: L.Map | null = null
 
 const resolveErrorMessage = (input: unknown, fallback: string) => {
@@ -50,8 +54,18 @@ async function loadNews() {
   try {
     news.value = await fetchNewsById(newsId.value)
 
-    // Initialize map if coordinates are available (removed isEvent check)
+    // Try to get coordinates for map
     if (news.value.eventLatitude && news.value.eventLongitude) {
+      // Use coordinates from news
+      mapLat.value = news.value.eventLatitude
+      mapLng.value = news.value.eventLongitude
+    } else if (news.value.eventLocation) {
+      // Fetch coordinates from Nominatim if only address is available
+      await fetchCoordinatesFromAddress(news.value.eventLocation)
+    }
+
+    // Initialize map if we have coordinates
+    if (mapLat.value && mapLng.value) {
       await nextTick()
       initializeMap()
     }
@@ -63,13 +77,31 @@ async function loadNews() {
   }
 }
 
+async function fetchCoordinatesFromAddress(address: string) {
+  try {
+    const response = await $fetch<Array<{ lat: string; lon: string }>>(
+      'https://nominatim.openstreetmap.org/search',
+      {
+        params: { q: address, format: 'json', limit: 1 },
+        headers: { 'Accept-Language': 'pl' }
+      }
+    )
+    if (response && response.length > 0) {
+      mapLat.value = Number.parseFloat(response[0].lat)
+      mapLng.value = Number.parseFloat(response[0].lon)
+    }
+  } catch (err) {
+    console.error('Failed to geocode address:', err)
+  }
+}
+
 function initializeMap() {
-  if (!import.meta.client || !mapContainer.value || !news.value) {
+  if (!import.meta.client || !mapContainer.value || !mapLat.value || !mapLng.value) {
     return
   }
 
-  const lat = news.value.eventLatitude!
-  const lng = news.value.eventLongitude!
+  const lat = mapLat.value
+  const lng = mapLng.value
 
   map = L.map(mapContainer.value).setView([lat, lng], 15)
 
@@ -373,8 +405,9 @@ onBeforeUnmount(() => {
                     </div>
                   </div>
 
-                  <!-- Location -->
-                  <div v-if="news.eventLocation || (news.eventLatitude && news.eventLongitude)" class="space-y-4">
+                  <!-- Location with Map -->
+                  <div v-if="news.eventLocation || mapLat" class="space-y-4">
+                    <!-- Address -->
                     <div v-if="news.eventLocation" class="flex items-start gap-3">
                       <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -384,29 +417,25 @@ onBeforeUnmount(() => {
                         <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Lokalizacja</p>
                         <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ news.eventLocation }}</p>
 
-                        <!-- GPS Coordinates & Google Maps Link -->
-                        <div v-if="news.eventLatitude && news.eventLongitude" class="mt-2 space-y-1">
-                          <p class="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                            GPS: {{ news.eventLatitude.toFixed(6) }}, {{ news.eventLongitude.toFixed(6) }}
-                          </p>
-                          <a
-                            :href="`https://www.google.com/maps/search/?api=1&query=${news.eventLatitude},${news.eventLongitude}`"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                          >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                            Otwórz w Google Maps
-                          </a>
-                        </div>
+                        <!-- Google Maps Link -->
+                        <a
+                          v-if="mapLat && mapLng"
+                          :href="`https://www.google.com/maps/search/?api=1&query=${mapLat},${mapLng}`"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="inline-flex items-center gap-1 mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                          Otwórz w Google Maps
+                        </a>
                       </div>
                     </div>
 
-                    <!-- OpenStreetMap -->
+                    <!-- Map -->
                     <div
-                      v-if="news.eventLatitude && news.eventLongitude"
+                      v-if="mapLat && mapLng"
                       ref="mapContainer"
                       class="h-80 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600"
                     />
